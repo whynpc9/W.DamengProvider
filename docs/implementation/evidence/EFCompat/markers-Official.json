@@ -1,0 +1,27 @@
+{
+  "implementation": "O",
+  "nonce": "51F3ABB9BA",
+  "server_version": "8.1.5.60",
+  "session_id_available": true,
+  "markers": {
+    "trigger_new_old_no_parameters": {
+      "threw": false
+    },
+    "select_named_marker_no_parameters": {
+      "threw": true,
+      "type": "DmException",
+      "number": -6804
+    },
+    "select_positional_marker_no_parameters": {
+      "threw": true,
+      "type": "DmException",
+      "number": -6804
+    },
+    "trigger_effect_version": "2"
+  },
+  "cleanup": {
+    "dropped": 2,
+    "failures": [],
+    "fresh_remaining": "0"
+  }
+}

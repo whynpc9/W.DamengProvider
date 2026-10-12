@@ -1,0 +1,159 @@
+{
+  "offline": {
+    "Pool": 259,
+    "Type": 952,
+    "Transaction": 88,
+    "Diagnostics": 83,
+    "Isolation": 78,
+    "Command": 16,
+    "Session": 12,
+    "Async": 134,
+    "Transport": 115,
+    "Configuration": 11,
+    "Lob": 258,
+    "Security": 39
+  },
+  "total": 2045,
+  "tool_builds": "W,Official,TestSchemaPrivilege zero warnings/errors",
+  "markers": "W/Official exit 0; fault exit 1 expected; all fresh_remaining 0; fault exact fresh 0",
+  "privilege_guard": "static early return before DBA_SYS_PRIVS or grant/revoke; no grant/revoke invocation",
+  "date": "2026-10-13",
+  "source": "80e6c284fabc4b47a8c076caba6a789c075b7f13 plus the PR review-fix diff in this commit",
+  "dotnet_environment": {
+    "DOTNET_CLI_HOME": ".local/pr4-verify/dotnet-home",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+  },
+  "dotnet_flags": [
+    "-m:1",
+    "/nodeReuse:false",
+    "/p:UseSharedCompilation=false",
+    "--disable-build-servers"
+  ],
+  "offline_command_template": "dotnet test tests/W.DmProvider.${suite}Tests/W.DmProvider.${suite}Tests.csproj <dotnet_flags>",
+  "tool_build_projects": [
+    "tools/ErrorRecoveryProbe/W.csproj",
+    "tools/ErrorRecoveryProbe/Official.csproj",
+    "tools/TestSchemaPrivilege/TestSchemaPrivilege.csproj",
+    ".local/pr4-verify/fault/Fault.csproj"
+  ],
+  "test_wrapper": "/Users/wanghongyi/Projects/W.DmProvider/scripts/with-dameng-test.sh",
+  "database_identity": "WDM_PROVIDER_TEST checked before DDL in each run; fresh cleanup connections use the same verified configuration",
+  "database_runs": [
+    {
+      "label": "W",
+      "command": "/Users/wanghongyi/Projects/W.DmProvider/scripts/with-dameng-test.sh dotnet tools/ErrorRecoveryProbe/bin/W/net10.0/ErrorRecoveryProbe.W.dll markers",
+      "exit_code": 0,
+      "stderr_empty": true,
+      "result": {
+        "implementation": "W",
+        "nonce": "36FC3ABFC4",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "cleanup": {
+          "dropped": 1,
+          "failures": [],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    {
+      "label": "Official",
+      "command": "/Users/wanghongyi/Projects/W.DmProvider/scripts/with-dameng-test.sh dotnet tools/ErrorRecoveryProbe/bin/Official/net10.0/ErrorRecoveryProbe.Official.dll markers",
+      "exit_code": 0,
+      "stderr_empty": true,
+      "result": {
+        "implementation": "O",
+        "nonce": "CA25383231",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "cleanup": {
+          "dropped": 1,
+          "failures": [],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    {
+      "label": "Fault",
+      "command": "/Users/wanghongyi/Projects/W.DmProvider/scripts/with-dameng-test.sh dotnet .local/pr4-verify/fault/bin/Debug/net10.0/ErrorRecoveryProbe.Fault.dll markers",
+      "exit_code": 1,
+      "stderr_empty": true,
+      "result": {
+        "implementation": "W",
+        "nonce": "4B5A70C433",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "failed": "InvalidOperationException",
+        "cleanup": {
+          "dropped": 1,
+          "failures": [],
+          "fresh_remaining": "0",
+          "fresh_exact_remaining": "0",
+          "exact_owned_names": [
+            "ERP_MARK_4B5A70C433",
+            "ERP_MARK_4B5A70C433_TR",
+            "ERP_MARK_4B5A70C433Q",
+            "ERP_MKR_4B5A70C433",
+            "ERP_MKR_4B5A70C433_TR",
+            "ERP_MKR_4B5A70C433Q"
+          ]
+        }
+      }
+    }
+  ],
+  "fault_injection": "Ignored temporary W source copy throws InvalidOperationException after marker UPDATE and VERSION readback; additionally checks fresh exact registered names including trigger and sequence suffixes.",
+  "limitations": [
+    "No admin credentials or actual grant/revoke invocation; privilege refusal compiled and independently reviewed statically.",
+    "No new 82-case matrix or EF run; historical candidate evidence remains unchanged.",
+    "Fault copy is local verification only, not a product change."
+  ]
+}
