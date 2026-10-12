@@ -9,6 +9,7 @@ using W.Dm.util;
 using W.Dm.Internal.Sessions;
 using W.Dm.Internal.Transport;
 using W.Dm.Internal.Protocol;
+using W.Dm.Internal.Types;
 using AsyncProtocol = W.Dm.Internal.Legacy.A.B;
 namespace W.Dm.Internal.Legacy.A;
 internal partial class c
@@ -158,7 +159,8 @@ internal partial class c
 		string serverEncoding = P_1.G().ConnProperty.ServerEncoding;
 		bool newLobFlag = P_1.G().ConnProperty.NewLobFlag;
 		DmField[] paramsInfo = P_1.F().GetParamsInfo();
-		DmGetValue dmGetValue = new DmGetValue(serverEncoding, P_1, newLobFlag, paramsInfo);
+		// Output parameters are length-prefixed packed scalars, independent of the result set's BDTA format.
+		DmGetValue dmGetValue = new DmGetValue(serverEncoding, P_1, newLobFlag, paramsInfo, DmTemporalResultFormat.OrdinaryPacked);
 		DmParameterInternal[] ParamsInfo = null;
 		DmParameterInternal dmParameterInternal = null;
 		DmParameter dmParameter = null;
