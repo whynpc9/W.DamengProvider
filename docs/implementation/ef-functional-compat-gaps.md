@@ -164,3 +164,12 @@ Cursor 审阅发现 §2.2 的后续缺口：空参数命令现在由服务器拒
 - W/Official 探针和权限工具构建均退出 0，零警告/错误；权限身份拒绝只做编译和独立控制流复核，没有执行 grant/revoke 或加载管理凭据。
 - W 与 Official 正常 markers 均在 TEST / 8.1.5.60 上退出 0，触发器 VERSION=2，无参 `:X`/`?` 均服务器 -6804；两次清理无失败，新连接剩余 0。
 - ignored W 临时副本在 UPDATE 与 VERSION 读回后注入异常，安全记录 `InvalidOperationException`，预期退出 1；finally 清理成功，新连接按本次精确登记名称（含触发器）复查 0。三次实库命令均使用指定绝对 TEST wrapper，先验证 TEST 身份；W 显式 PlaintextAllowed。无新授权，未运行 BACKUP、82 场完整矩阵或 EF 套件。
+
+## 9. PR #4 探针安全收口
+
+后续 Codex 意见确认两处工具缺口，均只修改 `ErrorRecoveryProbe`，产品/测试源码不变：
+
+- 默认矩阵的 CREATE SCHEMA 负例执行前，从已确认身份的 TEST 连接查询 `USER_SYS_PRIVS` 的直接 CREATE SCHEMA 权限。只在精确计数为 0 时继续；否则在任何 CREATE 前输出 `create_schema_privilege_rejected` 并退出 2。markers 与 unbound-markers 不运行 schema 负例，不受此检查影响。没有新增授权，也不通过 DROP SCHEMA 扩大清理范围。
+- `Cleanup` 的收集结果参与退出判定：DROP failures 非空或新连接 remaining 不为 0 时退出 1；原 dropped/failures/fresh_remaining 结果及精确清理范围保持。抛出异常的安全记录方式不变。
+
+root 独立静态审查、Sol Low 独立验证通过；受测源码为 `ad28d7c` 加本次仅工具 diff，执行期间未改动。脱敏输出与命令见 [探针安全验证](evidence/EFCompat/pr4-probe-safety-verification.json)：W/Official 与三个 ignored 临时副本构建均零警告/错误；真实 W markers（VERSION=2）与 unbound-markers（16/16，全部安全与事务断言）退出 0。临时副本模拟权限计数 1 时退出 2，cases 空、CREATE 尝试 0；在真实清理成功并确认 remaining=0 后，分别模拟 failures 非空和返回 remaining=1，均退出 1。**这些是模拟分支验证，不是实际授权、DROP 失败或遗留对象。** 最终新 TEST 连接按 23 个实际创建对象的精确名称确认剩余 0，三次真实 markers/模拟清理运行和定向探针均只使用指定 TEST wrapper，stderr 空。未重跑与工具改动无关的产品离线套件，已有 2050/2050 对应的产品/测试源码保持不变。

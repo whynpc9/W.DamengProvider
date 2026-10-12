@@ -1,0 +1,503 @@
+{
+  "source": "ad28d7cbdcb0a35a494ab23f6b842dde078dcd85 plus the tool-only diff in this commit; no product or test source changed",
+  "builds": "tracked W/Official and three synthetic copies all exit0 zero warnings/errors",
+  "actual_unbound": "16/16 exact -6804; all safety and tx/autocommit visibility/reuse pass; exit0;17 dropped/fresh0",
+  "actual_markers": "VERSION2; both-6804;exit0;1dropped/fresh0",
+  "synthetic_preflight": "privileges1; noDDL; cases[]; dropped0;exit2",
+  "synthetic_failurelist": "realfresh0 then synthetic failure;exit1",
+  "synthetic_remnant": "realfresh0 then synthetic returned remaining1;exit1",
+  "final_exact_names_count": 23,
+  "final_fresh_identity_test": true,
+  "final_fresh_exact_remaining": "0",
+  "offline": "not rerun tool only; prior product2050/2050 unchanged",
+  "run_wrapper": "/Users/wanghongyi/Projects/W.DmProvider/scripts/with-dameng-test.sh",
+  "dotnet_environment": {
+    "DOTNET_CLI_HOME": ".local/pr4-verify/dotnet-home",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+  },
+  "dotnet_flags": [
+    "-m:1",
+    "/nodeReuse:false",
+    "/p:UseSharedCompilation=false",
+    "--disable-build-servers"
+  ],
+  "results": {
+    "markers": {
+      "exit_code": 0,
+      "synthetic_branch": false,
+      "stderr_empty": true,
+      "output": {
+        "implementation": "W",
+        "nonce": "3FB0818D8F",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "cleanup": {
+          "dropped": 1,
+          "failures": [],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    "unbound": {
+      "exit_code": 0,
+      "synthetic_branch": false,
+      "stderr_empty": true,
+      "output": {
+        "implementation": "W",
+        "nonce": "FFD5D0A851",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "mode": "unbound-markers",
+        "cases": [
+          {
+            "case": "unbound_named_select",
+            "async": false,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_select",
+            "async": false,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_select",
+            "async": true,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_select",
+            "async": true,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_select",
+            "async": false,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_select",
+            "async": false,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_select",
+            "async": true,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_select",
+            "async": true,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_insert",
+            "async": false,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_insert",
+            "async": false,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_insert",
+            "async": true,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_named_insert",
+            "async": true,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_insert",
+            "async": false,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_insert",
+            "async": false,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_insert",
+            "async": true,
+            "transaction": false,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": null,
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "autocommit_after_error_visible": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          },
+          {
+            "case": "unbound_positional_insert",
+            "async": true,
+            "transaction": true,
+            "threw": true,
+            "exception_type": "DmException",
+            "number": -6804,
+            "reusable_reported": true,
+            "error_kind": "Server",
+            "transaction_outcome": "Active",
+            "state_after": "Open",
+            "same_connection_usable": true,
+            "same_server_session": true,
+            "tx_prior_work_still_uncommitted": true,
+            "tx_commit_kept_before_and_after": true,
+            "failed_statement_no_effect": true,
+            "no_lock_left": true
+          }
+        ],
+        "cleanup": {
+          "dropped": 17,
+          "failures": [],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    "Preflight": {
+      "exit_code": 2,
+      "synthetic_branch": true,
+      "stderr_empty": true,
+      "output": {
+        "implementation": "W",
+        "nonce": "5EA8E20537",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "synthetic_validation": "privilege_count_1",
+        "ddl_attempts": 0,
+        "create_schema_privileges": "1",
+        "code": "create_schema_privilege_rejected",
+        "cases": [],
+        "cleanup": {
+          "dropped": 0,
+          "failures": [],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    "FailureList": {
+      "exit_code": 1,
+      "synthetic_branch": true,
+      "stderr_empty": true,
+      "output": {
+        "implementation": "W",
+        "nonce": "0099051D8E",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "actual_fresh_remaining": "0",
+        "synthetic_validation": "cleanup_failure_list",
+        "cleanup": {
+          "dropped": 1,
+          "failures": [
+            {
+              "name": "SYNTHETIC_ONLY",
+              "number": null
+            }
+          ],
+          "fresh_remaining": "0"
+        }
+      }
+    },
+    "Remnant": {
+      "exit_code": 1,
+      "synthetic_branch": true,
+      "stderr_empty": true,
+      "output": {
+        "implementation": "W",
+        "nonce": "B434B6ACC7",
+        "server_version": "8.1.5.60",
+        "session_id_available": true,
+        "markers": {
+          "trigger_new_old_no_parameters": {
+            "threw": false
+          },
+          "select_named_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "select_positional_marker_no_parameters": {
+            "threw": true,
+            "type": "DmException",
+            "number": -6804
+          },
+          "trigger_effect_version": "2"
+        },
+        "actual_fresh_remaining": "0",
+        "synthetic_validation": "cleanup_remnant_1",
+        "cleanup": {
+          "dropped": 1,
+          "failures": [],
+          "fresh_remaining": "1"
+        }
+      }
+    },
+    "fresh-exact": {
+      "exit_code": 0,
+      "synthetic_branch": false,
+      "stderr_empty": true,
+      "output": {
+        "identity_test": true,
+        "exact_owned_names": [
+          "ERP_MARK_FFD5D0A851",
+          "ERP_C00SC_FFD5D0A851",
+          "ERP_C00ST_FFD5D0A851",
+          "ERP_C00AC_FFD5D0A851",
+          "ERP_C00AT_FFD5D0A851",
+          "ERP_C01SC_FFD5D0A851",
+          "ERP_C01ST_FFD5D0A851",
+          "ERP_C01AC_FFD5D0A851",
+          "ERP_C01AT_FFD5D0A851",
+          "ERP_C02SC_FFD5D0A851",
+          "ERP_C02ST_FFD5D0A851",
+          "ERP_C02AC_FFD5D0A851",
+          "ERP_C02AT_FFD5D0A851",
+          "ERP_C03SC_FFD5D0A851",
+          "ERP_C03ST_FFD5D0A851",
+          "ERP_C03AC_FFD5D0A851",
+          "ERP_C03AT_FFD5D0A851",
+          "ERP_MKR_3FB0818D8F",
+          "ERP_MKR_3FB0818D8F_TR",
+          "ERP_MKR_0099051D8E",
+          "ERP_MKR_0099051D8E_TR",
+          "ERP_MKR_B434B6ACC7",
+          "ERP_MKR_B434B6ACC7_TR"
+        ],
+        "fresh_exact_remaining": "0"
+      }
+    }
+  },
+  "scope": "Default-matrix preflight and cleanup exit propagation only; synthetic branches use ignored source copies. No actual grant, schema DDL, cleanup failure or database remnant was induced.",
+  "build_projects": [
+    "tools/ErrorRecoveryProbe/W.csproj",
+    "tools/ErrorRecoveryProbe/Official.csproj",
+    ".local/pr4-verify/tool-safety/Preflight/Preflight.csproj",
+    ".local/pr4-verify/tool-safety/FailureList/FailureList.csproj",
+    ".local/pr4-verify/tool-safety/Remnant/Remnant.csproj"
+  ],
+  "commands": {
+    "actual_markers": "dotnet tools/ErrorRecoveryProbe/bin/W/net10.0/ErrorRecoveryProbe.W.dll markers",
+    "actual_unbound": "dotnet tools/ErrorRecoveryProbe/bin/W/net10.0/ErrorRecoveryProbe.W.dll unbound-markers",
+    "synthetic_preflight": "dotnet .local/pr4-verify/tool-safety/Preflight/bin/Debug/net10.0/Preflight.dll",
+    "synthetic_failurelist": "dotnet .local/pr4-verify/tool-safety/FailureList/bin/Debug/net10.0/FailureList.dll markers",
+    "synthetic_remnant": "dotnet .local/pr4-verify/tool-safety/Remnant/bin/Debug/net10.0/Remnant.dll markers",
+    "fresh_exact": "dotnet .local/pr4-verify/unbound/fresh/bin/Debug/net10.0/Fresh.dll .local/pr4-verify/tool-safety/unbound.json .local/pr4-verify/tool-safety/markers.json .local/pr4-verify/tool-safety/FailureList.json .local/pr4-verify/tool-safety/Remnant.json"
+  },
+  "commands_note": "Each run is prefixed with run_wrapper; build commands use dotnet build <build_project> with dotnet_flags and dotnet_environment. All database runs are TEST-only."
+}

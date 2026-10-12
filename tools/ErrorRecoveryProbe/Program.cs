@@ -104,7 +104,8 @@ var definitions = new List<Case>
         t => $"INSRT INTO \"{t}\" VALUES (1)", t => $"SELECT COUNT(*) FROM \"{t}\"", 0, Dml: true),
 };
 
-if (args.Length == 1 && args[0] == "unbound-markers")
+bool unboundMarkersOnly = args.Length == 1 && args[0] == "unbound-markers";
+if (unboundMarkersOnly)
 {
     output["mode"] = "unbound-markers";
     definitions = new List<Case>
@@ -154,11 +155,23 @@ try
     }
     else
     {
-        ExecFresh($"CREATE TABLE \"{mark}\" (ID INT PRIMARY KEY, NOTE VARCHAR(40))");
-        foreach (var definition in definitions)
-        foreach (bool asynchronous in new[] { false, true })
-        foreach (bool inTransaction in definition.Dml ? new[] { false, true } : new[] { false })
-            cases.Add(await RunCase(definition, asynchronous, inTransaction));
+        // The default matrix expects CREATE SCHEMA to be denied; otherwise its
+        // privilege probe could create a schema that table cleanup cannot own.
+        if (!unboundMarkersOnly)
+        {
+            using var preflight = Open();
+            string? privileges = Scalar(preflight, "SELECT COUNT(*) FROM USER_SYS_PRIVS WHERE PRIVILEGE='CREATE SCHEMA'");
+            output["create_schema_privileges"] = privileges;
+            if (privileges != "0") { output["code"] = "create_schema_privilege_rejected"; exit = 2; }
+        }
+        if (exit == 0)
+        {
+            ExecFresh($"CREATE TABLE \"{mark}\" (ID INT PRIMARY KEY, NOTE VARCHAR(40))");
+            foreach (var definition in definitions)
+            foreach (bool asynchronous in new[] { false, true })
+            foreach (bool inTransaction in definition.Dml ? new[] { false, true } : new[] { false })
+                cases.Add(await RunCase(definition, asynchronous, inTransaction));
+        }
     }
 }
 catch (Exception error)
@@ -169,7 +182,12 @@ catch (Exception error)
 finally
 {
     if (!markersOnly) output["cases"] = cases;
-    try { output["cleanup"] = Cleanup(); }
+    try
+    {
+        var cleanup = Cleanup();
+        output["cleanup"] = cleanup.Result;
+        if (!cleanup.Succeeded) exit = 1;
+    }
     catch (Exception error) { output["cleanup"] = new { failed = error.GetType().Name }; exit = 1; }
     Console.WriteLine(JsonSerializer.Serialize(output, new JsonSerializerOptions { WriteIndented = true }));
 }
@@ -258,7 +276,7 @@ bool TryExclusiveLock(DbConnection connection, string table)
     catch (DbException) { return false; }
 }
 
-object Cleanup()
+(object Result, bool Succeeded) Cleanup()
 {
     var dropped = new List<string>();
     var failures = new List<object>();
@@ -275,7 +293,7 @@ object Cleanup()
     }
     using var verify = Open();
     var remaining = Scalar(verify, $"SELECT COUNT(*) FROM USER_OBJECTS WHERE OBJECT_NAME LIKE 'ERP\\_%\\_{nonce}%' ESCAPE '\\'");
-    return new { dropped = dropped.Count, failures, fresh_remaining = remaining };
+    return (new { dropped = dropped.Count, failures, fresh_remaining = remaining }, failures.Count == 0 && remaining == "0");
 }
 
 DbConnection Open() { var connection = new DmConnection(settings); connection.Open(); return connection; }
