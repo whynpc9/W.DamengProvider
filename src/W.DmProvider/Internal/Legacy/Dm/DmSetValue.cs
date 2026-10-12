@@ -1560,6 +1560,7 @@ internal class DmSetValue
 						_ => throw new NotSupportedException("Input does not have supported temporal fields.")
 					};
 					if (binding.CType == 15) fields = fields with { Year = 0, Month = 0, Day = 0, OffsetMinutes = null };
+					else if (binding.CType == 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
 					binding.Profile.ValidateWriteValue(target, fields);
 					encoded = DmTemporalWireCodec.EncodeExact(fields, target.Layout, binding.EncodedScale);
 				}

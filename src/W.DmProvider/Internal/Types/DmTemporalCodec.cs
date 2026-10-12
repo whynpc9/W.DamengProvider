@@ -38,8 +38,9 @@ internal static class DmTemporalCodec
                 }
                 break;
             case DateTimeOffset offset:
-                if (cType is not (23 or 27)) throw new NotSupportedException("DateTimeOffset requires a timezone-aware timestamp.");
+                if (cType is not (22 or 23 or 27)) throw new NotSupportedException("DateTimeOffset requires a timezone-aware temporal type.");
                 fields = DmTemporalInteger.FromDateTimeOffset(offset);
+                if (cType == 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
                 break;
             case TimeSpan:
                 throw new NotSupportedException("TimeSpan requires INTERVAL DAY TO SECOND.");
@@ -83,11 +84,11 @@ internal static class DmTemporalCodec
                 ValidateDateTime(dateTime, cType, scale, serverVersion);
                 return dateTime;
 			case DateTimeOffset offset:
-				if (cType is not (23 or 27))
-					throw new NotSupportedException("DateTimeOffset requires a timezone-aware timestamp parameter.");
+				if (cType is not (22 or 23 or 27))
+					throw new NotSupportedException("DateTimeOffset requires a timezone-aware temporal parameter.");
 				if (offset.Offset.TotalMinutes <= -780 || offset.Offset.TotalMinutes > 840)
 					throw new OverflowException("Timezone offset is outside the server temporal range.");
-				ValidateFraction(offset.Ticks, scale, cType == 23 ? 6 : 7, serverVersion);
+				ValidateFraction(offset.Ticks, scale, cType == 27 ? 7 : 6, serverVersion);
                 return offset;
             case TimeSpan span:
                 if (cType != 21) throw new NotSupportedException("TimeSpan requires INTERVAL DAY TO SECOND.");
