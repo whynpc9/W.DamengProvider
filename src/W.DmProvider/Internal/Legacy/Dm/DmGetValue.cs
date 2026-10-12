@@ -575,8 +575,15 @@ internal class DmGetValue
 			_ => null
 		};
 		if (StringUtil.isNotEmpty(format))
+		{
+			// Login defaults follow column precision; a later explicit NLS assignment keeps its projection.
+			bool automatic = descriptor.CType == 26 ? property.AutomaticTimestampDisplay
+				: descriptor.CType == 27 && property.AutomaticTimestampTZDisplay;
+			if (automatic && descriptor.FractionalScale > 6)
+				format = format.Replace("FF6", "FF" + descriptor.FractionalScale.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
 			return OracleDateFormat.Format(DmTemporalLegacyAdapter.ToSemantic(fields), format,
 				property.nlsDateLang, property.formatNumericChars);
+		}
 		int displayType = descriptor.Mask == DmField.MASK_ORACLE_DATE ? 14 : descriptor.CType;
 		if (displayType == 14)
 			fields = fields with { Hour = 0, Minute = 0, Second = 0, NanosecondsWithinSecond = 0, OffsetMinutes = null };

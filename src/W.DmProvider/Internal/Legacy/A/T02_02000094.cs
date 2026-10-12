@@ -160,8 +160,8 @@ internal partial class c
 		{
 			P_1.oracleDateFormat = "DD-MON-YY";
 			P_1.oracleTimeFormat = "HH12.MI.SS.FF6 AM";
-			P_1.oracleTimestampFormat = "DD-MON-YY HH12.MI.SS.FF6 AM";
-			P_1.oracleTimestampTZFormat = "DD-MON-YY HH12.MI.SS.FF6 AM +TZH:TZM";
+			P_1.SetLoginTimestampFormat(DmConnProperty.DefaultOracleTimestampFormat, withTimezone: false);
+			P_1.SetLoginTimestampFormat(DmConnProperty.DefaultOracleTimestampTZFormat, withTimezone: true);
 			P_1.oracleTimeTZFormat = "HH12.MI.SS.FF6 AM +TZH:TZM";
 			P_1.nlsDateLang = 0;
 		}
@@ -180,12 +180,12 @@ internal partial class c
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))
 			{
-				P_1.oracleTimestampFormat = text;
+				P_1.SetLoginTimestampFormat(text, withTimezone: false);
 			}
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))
 			{
-				P_1.oracleTimestampTZFormat = text;
+				P_1.SetLoginTimestampFormat(text, withTimezone: true);
 			}
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))

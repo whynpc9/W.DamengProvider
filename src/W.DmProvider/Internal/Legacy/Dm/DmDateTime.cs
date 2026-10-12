@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using W.Dm.Internal.Types;
 using W.Dm.util;
 
@@ -609,7 +611,25 @@ public class DmDateTime
 
 	public static DateTime GetTimestampByString(string s)
 	{
-		return DmTemporalInteger.ProjectDateTime(DmTemporalLegacyAdapter.Parse(s).Fields);
+		// Keep the historical culture/offset/Kind conversion, but never let the BCL round sub-tick fractions.
+		if (s != null)
+		{
+			string separator = Regex.Escape(CultureInfo.CurrentCulture.DateTimeFormat.TimeSeparator);
+			string clockSeparator = "(?:[:]|" + separator + ")";
+			var fraction = Regex.Match(s, @"(?<![0-9])[0-9]+[\s\u200F]*" + clockSeparator + @"[\s\u200F]*[0-9]+[\s\u200F]*"
+				+ clockSeparator + @"[\s\u200F]*[0-9]+[.,](?<fraction>[0-9]+)").Groups["fraction"];
+			if (fraction.Success)
+			{
+				if (fraction.Length > 9) throw new FormatException("Temporal fraction has unsupported precision.");
+				if (fraction.Length > 7)
+				{
+					foreach (char digit in fraction.Value.AsSpan(7))
+						if (digit != '0') throw new OverflowException("Temporal fraction is outside .NET tick precision.");
+					s = s.Remove(fraction.Index + 7, fraction.Length - 7);
+				}
+			}
+		}
+		return Convert.ToDateTime(s);
 	}
 
 	public static string GetTimeFromTimestamp(DateTime ts)
