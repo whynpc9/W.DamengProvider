@@ -784,13 +784,11 @@ internal class OracleDateFormat
 		if (temporalType is int type)
 		{
 			if (num != str.Length) throw new FormatException("Temporal text contains trailing data.");
-			if (type is not (15 or 22) && (!(parsedFields.Contains(typeof(YearElement)) || parsedFields.Contains(typeof(SYearElement)))
-				|| !parsedFields.Contains(typeof(MMElement)) || !parsedFields.Contains(typeof(DDElement))))
+			if (type is not (15 or 22) && !HasCalendarFields(parsedFields))
 				throw new FormatException("Temporal text requires complete calendar fields.");
-			if (type != 14 && (!(parsedFields.Contains(typeof(HH24Element)) || parsedFields.Contains(typeof(HH12Element)))
-				|| !parsedFields.Contains(typeof(MIElement)) || !parsedFields.Contains(typeof(SSElement))))
+			if (type != 14 && !HasClockFields(parsedFields))
 				throw new FormatException("Temporal text requires complete clock fields.");
-			if (type is 22 or 23 or 27 && (!parsedFields.Contains(typeof(TZHElement)) || !parsedFields.Contains(typeof(TZMElement))))
+			if (type is 22 or 23 or 27 && !HasOffsetFields(parsedFields))
 				throw new FormatException("Temporal text requires complete timezone fields.");
 			return CompleteTemporal(dt, type, parsedFields);
 		}
@@ -799,19 +797,33 @@ internal class OracleDateFormat
 
 	internal static int[] ParseTemporal(string text, string pattern, int datelang, int type)
 	{
-		string upper = pattern.ToUpperInvariant();
-		bool date = type is not (15 or 22), zone = type is 22 or 23 or 27;
-		if (date && !(upper.Contains("YYYY", StringComparison.Ordinal) && upper.Contains("MM", StringComparison.Ordinal) && upper.Contains("DD", StringComparison.Ordinal)))
-			throw new NotSupportedException("Temporal numeric template must contain complete calendar fields.");
-		if (type != 14 && !(upper.Contains("HH", StringComparison.Ordinal) && upper.Contains("MI", StringComparison.Ordinal) && upper.Contains("SS", StringComparison.Ordinal)))
-			throw new NotSupportedException("Temporal numeric template must contain complete clock fields.");
-		if (zone && !(upper.Contains("TZH", StringComparison.Ordinal) && upper.Contains("TZM", StringComparison.Ordinal)))
-			throw new NotSupportedException("Temporal numeric template must contain an explicit timezone.");
 		var format = GetFormat(datelang);
 		format.SetPattern(pattern);
+		// Check recognized token semantics, including existing YY/MON/MONTH NLS templates.
+		var templateFields = new HashSet<Type>();
+		foreach (object element in format.formatElementList) templateFields.Add(element.GetType());
+		bool date = type is not (15 or 22), zone = type is 22 or 23 or 27;
+		if (date && !HasCalendarFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain complete calendar fields.");
+		if (type != 14 && !HasClockFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain complete clock fields.");
+		if (zone && !HasOffsetFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain an explicit timezone.");
 		try { return format.Parse(text, type); }
 		catch (DmException) { DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT); throw; }
 	}
+
+	private static bool HasCalendarFields(HashSet<Type> fields) =>
+		(fields.Contains(typeof(YearElement)) || fields.Contains(typeof(SYearElement)))
+		&& (fields.Contains(typeof(MMElement)) || fields.Contains(typeof(MonElement)) || fields.Contains(typeof(MonthElement)))
+		&& fields.Contains(typeof(DDElement));
+
+	private static bool HasClockFields(HashSet<Type> fields) =>
+		(fields.Contains(typeof(HH24Element)) || fields.Contains(typeof(HH12Element)))
+		&& fields.Contains(typeof(MIElement)) && fields.Contains(typeof(SSElement));
+
+	private static bool HasOffsetFields(HashSet<Type> fields) =>
+		fields.Contains(typeof(TZHElement)) && fields.Contains(typeof(TZMElement));
 
 	private static int[] CompleteTemporal(int[] dt, int type, HashSet<Type> parsedFields)
 	{
