@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using W.Dm.Internal.Types;
 
 namespace W.Dm.util;
 
@@ -12,13 +14,8 @@ public class DateUtil
 
 	public static string formatMilliSecond(int ms, int prec)
 	{
-		string text = null;
-		text = ((ms < 10) ? ("00000000" + ms) : ((ms < 100) ? ("0000000" + ms) : ((ms < 1000) ? ("000000" + ms) : ((ms < 10000) ? ("00000" + ms) : ((ms < 100000) ? ("0000" + ms) : ((ms < 1000000) ? ("000" + ms) : ((ms < 10000000) ? ("00" + ms) : ((ms >= 100000000) ? Convert.ToString(ms) : ("0" + ms)))))))));
-		if (prec < 9)
-		{
-			text = text.Substring(0, prec);
-		}
-		return text;
+		DmTemporalInteger.ValidateWireFraction(ms, prec);
+		return ms.ToString("D9", CultureInfo.InvariantCulture)[..prec];
 	}
 
 	public static string formatTZ(int tz)

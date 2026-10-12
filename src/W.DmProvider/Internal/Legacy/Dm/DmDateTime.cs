@@ -54,7 +54,7 @@ public class DmDateTime
 
 	private const int LOCAL_TIME_ZONE_MASK = 4096;
 
-	private byte[] dateTime = new byte[3];
+	private byte[] dateTime;
 
 	public const int DMDT_DATE = 0;
 
@@ -118,192 +118,42 @@ public class DmDateTime
 
 	public static void DmTimeGetDateByNdaysFromZero(int ndays, ref int ret_year, ref int ret_month, ref int ret_day)
 	{
-		if (ndays <= 365 || ndays > 3652424)
-		{
-			ret_year = (ret_month = (ret_day = 99));
-			return;
-		}
-		int num = ndays * 100 / 36525;
-		int num2 = ((num - 1) / 100 + 1) * 3 / 4;
-		int num3 = ndays - num * 365 - (num - 1) / 4 + num2;
-		int num4 = (DmTimeIsLeapYear(num) ? 366 : 365);
-		while (num3 > num4)
-		{
-			num3 -= num4;
-			num++;
-			num4 = (DmTimeIsLeapYear(num) ? 366 : 365);
-		}
-		if (num4 == 366 && num3 > 59)
-		{
-			num3--;
-			if (num3 == 59)
-			{
-				ret_year = num;
-				ret_month = 2;
-				ret_day = 29;
-				return;
-			}
-		}
-		int i;
-		for (i = 1; num3 > global_day_by_month[i]; i++)
-		{
-			num3 -= global_day_by_month[i];
-		}
-		ret_year = num;
-		ret_month = i;
-		ret_day = num3;
+		if (ndays <= 365 || ndays > 3652424) { ret_year = ret_month = ret_day = 99; return; }
+		DateOnly date = DateOnly.FromDayNumber(ndays - 366);
+		ret_year = date.Year; ret_month = date.Month; ret_day = date.Day;
 	}
 
 	public static int DmtimeCalcNDaysFromZero(int year, int month, int day)
 	{
-		if (year <= 0 && month <= 0 && day <= 0)
-		{
-			return 0;
-		}
-		int num = year * 365 + global_days_befor_month[month - 1] + day;
-		if (month <= 2)
-		{
-			year--;
-		}
-		int num2 = year / 4 - year / 100 + year / 400;
-		return num + num2;
+		var date = DmTemporalInteger.ProjectDateOnly(new DmTemporalFields(year, month, day, 0, 0, 0, 0));
+		return checked(date.DayNumber + 366);
 	}
 
 	public static void DmTimeDdateAdd(ref int year, ref int month, ref int day, int n)
 	{
-		DmTimeGetDateByNdaysFromZero(DmtimeCalcNDaysFromZero(year, month, day) + n, ref year, ref month, ref day);
+		int[] values = { year, month, day, 0, 0, 0, 0, int.MinValue };
+		DmTemporalLegacyAdapter.AddClock(values, n, 1);
+		year = values[0]; month = values[1]; day = values[2];
 	}
 
 	public static DateTime DmtimeAddByFmt(int prec, DmDateTime dt_new, int fmt, int n)
 	{
-		bool flag = false;
-		bool flag2 = false;
-		bool flag3 = false;
-		bool flag4 = false;
-		int year = dt_new.GetYear();
-		int month = dt_new.GetMonth();
-		int day = dt_new.GetDay();
-		int num = dt_new.GetHour(24);
-		int num2 = dt_new.GetMinute(24);
-		int num3 = dt_new.GetSecond(24);
-		int num4 = dt_new.GetNano(24);
-		short tZ = dt_new.GetTZ(24);
-		if (n != 0)
+		DateTime value = dt_new.GetTimestamp();
+		try
 		{
-			while (true)
+			return fmt switch
 			{
-				if (fmt == 1)
-				{
-					year += n;
-				}
-				else if (fmt == 8 || fmt == 2)
-				{
-					if (fmt == 8)
-					{
-						n *= 3;
-					}
-					month += n;
-					year += month / 12;
-					month %= 12;
-					if (month < 1)
-					{
-						month += 12;
-						year--;
-					}
-					if (day > global_day_by_month[month])
-					{
-						day = global_day_by_month[month];
-						if (month == 2 && DmTimeIsLeapYear(year))
-						{
-							day++;
-						}
-					}
-				}
-				else if (fmt == 7 || fmt == 6 || fmt == 5)
-				{
-					if (fmt == 7)
-					{
-						flag = true;
-						num4 = num4 / 1000 + n;
-						n = num4 / 1000;
-						num4 %= 1000;
-						while (num4 < 0)
-						{
-							num4 += 1000;
-							n--;
-						}
-						num4 *= 1000;
-						if (n == 0)
-						{
-							break;
-						}
-					}
-					if (flag || fmt == 6)
-					{
-						flag2 = true;
-						int num5 = num3 + n;
-						n = num5 / 60;
-						num3 = num5 % 60;
-						if (num3 < 0)
-						{
-							num3 += 60;
-							n--;
-						}
-						if (n == 0)
-						{
-							break;
-						}
-					}
-					if (flag || flag2 || fmt == 5)
-					{
-						flag3 = true;
-						int num6 = num2 + n;
-						n = num6 / 60;
-						num2 = num6 % 60;
-						if (num2 < 0)
-						{
-							num2 += 60;
-							n--;
-						}
-						if (n == 0)
-						{
-							break;
-						}
-					}
-					if (flag || flag2 || flag3 || fmt == 4)
-					{
-						flag4 = true;
-						int num7 = num + n;
-						n = num7 / 24;
-						num = num7 % 24;
-						if (num < 0)
-						{
-							num += 24;
-							n--;
-						}
-						if (n == 0)
-						{
-							break;
-						}
-					}
-				}
-				if (flag4 || fmt == 3 || fmt == 9)
-				{
-					DmTimeDdateAdd(ref year, ref month, ref day, n);
-					break;
-				}
-				if (fmt == 10)
-				{
-					DmTimeDdateAdd(ref year, ref month, ref day, n * 7);
-					break;
-				}
-			}
+				1 => value.AddYears(n), 2 => value.AddMonths(n), 8 => value.AddMonths(checked(n * 3)),
+				3 or 9 => value.AddTicks(checked((long)n * TimeSpan.TicksPerDay)),
+				10 => value.AddTicks(checked((long)n * 7 * TimeSpan.TicksPerDay)),
+				4 => value.AddTicks(checked((long)n * TimeSpan.TicksPerHour)),
+				5 => value.AddTicks(checked((long)n * TimeSpan.TicksPerMinute)),
+				6 => value.AddTicks(checked((long)n * TimeSpan.TicksPerSecond)),
+				7 => value.AddTicks(checked((long)n * TimeSpan.TicksPerMillisecond)),
+				_ => throw new NotSupportedException("Temporal arithmetic format is unsupported.")
+			};
 		}
-		if (year > 9999 || year < 1)
-		{
-			DmError.ThrowDmException(DmErrorDefinition.EC_DATETIME_OVERFLOW);
-		}
-		return DmTimeEncodeTz(prec, year, month, day, num, num2, num3, num4, tZ);
+		catch (ArgumentOutOfRangeException) { throw new OverflowException("Temporal arithmetic exceeds calendar range."); }
 	}
 
 	public static bool DmTimeIsLeapYear(int year)
@@ -389,42 +239,10 @@ public class DmDateTime
 
 	public static DateTime DmTimeEncodeTz(int prec, int year, int month, int day, int hour, int min, int sec, int msec, short tz)
 	{
-		byte[] array = new byte[12];
-		if (DmTimeDataValidate(year, month, day))
-		{
-			if (year == 0 && month == 0 && day == 0)
-			{
-				DateTime today = DateTime.Today;
-				year = today.Year + 1900;
-				month = today.Month + 1;
-				day = today.Day;
-			}
-			else
-			{
-				DmError.ThrowDmException(DmErrorDefinition.EC_DATETIME_OVERFLOW);
-			}
-		}
-		if (DmTimeTimeValidate(hour, min, sec, msec))
-		{
-			DmError.ThrowDmException(DmErrorDefinition.EC_DATETIME_OVERFLOW);
-		}
-		if (DmTimeTzValidate(tz))
-		{
-			DmError.ThrowDmException(DmErrorDefinition.EC_DATETIME_OVERFLOW);
-		}
-		array[0] = (byte)(year & 0xFF);
-		array[1] = (byte)(year >> 8);
-		array[2] = (byte)month;
-		array[3] = (byte)day;
-		array[4] = (byte)hour;
-		array[5] = (byte)min;
-		array[6] = (byte)sec;
-		array[7] = (byte)(msec & 0xFF);
-		array[8] = (byte)((msec >> 8) & 0xFF);
-		array[9] = (byte)((msec >> 16) & 0xFF);
-		array[10] = (byte)(tz & 0xFF);
-		array[11] = (byte)(tz >> 8);
-		return new DmDateTime(array, prec).GetTimestamp();
+		if (msec is < 0 or >= 10_000_000) throw new OverflowException("Temporal fraction exceeds tick range.");
+		var fields = new DmTemporalFields(year, month, day, hour, min, sec, checked(msec * 100), tz);
+		DmTemporalInteger.ProjectDateTimeOffset(fields);
+		return DmTemporalInteger.ProjectDateTime(fields);
 	}
 
 	public DmDateTime()
@@ -436,6 +254,7 @@ public class DmDateTime
 
 	public DmDateTime(byte[] dt, int prec)
 	{
+		DmTemporalLegacyAdapter.ReadHelper(dt);
 		dateTime = dt;
 		this.prec = prec;
 	}
@@ -443,160 +262,37 @@ public class DmDateTime
 	public DmDateTime(string str, int prec, int flag)
 	{
 		this.prec = prec;
-		dateTime = new byte[12];
-		switch (flag)
+		var parsed = DmTemporalLegacyAdapter.Parse(str);
+		var kind = flag switch { 0 => DmTemporalTextKind.Date, 2 or 3 => DmTemporalTextKind.Timestamp,
+			4 => DmTemporalTextKind.Time, _ => throw new NotSupportedException("Temporal constructor flag is unsupported.") };
+		var fields = parsed.Fields;
+		if (kind == DmTemporalTextKind.Timestamp && parsed.Type is not (16 or 23))
+			throw new InvalidCastException("TIMESTAMP constructor requires calendar and clock text.");
+		if (kind == DmTemporalTextKind.Time)
 		{
-		case 0:
-		{
-			char[] separator4 = "-".ToCharArray();
-			string[] array7 = str.Split(separator4);
-			short i3 = short.Parse(array7[0], DmConst.invariantCulture);
-			byte b14 = byte.Parse(array7[1], DmConst.invariantCulture);
-			byte b15 = byte.Parse(array7[2], DmConst.invariantCulture);
-			byte[] array8 = DmConvertion.ShortToByteArray(i3);
-			dateTime[0] = array8[0];
-			dateTime[1] = array8[1];
-			dateTime[2] = b14;
-			dateTime[3] = b15;
-			break;
+			if (parsed.Type != 22) throw new InvalidCastException("TIME constructor requires time-only text with an offset.");
+			fields = fields with { Year = 0, Month = 0, Day = 0 };
 		}
-		case 2:
-		{
-			char[] separator3 = "-: .".ToCharArray();
-			string[] array5 = str.Split(separator3);
-			short i2 = short.Parse(array5[0], DmConst.invariantCulture);
-			byte b9 = byte.Parse(array5[1], DmConst.invariantCulture);
-			byte b10 = byte.Parse(array5[2], DmConst.invariantCulture);
-			byte[] array6 = DmConvertion.ShortToByteArray(i2);
-			dateTime[0] = array6[0];
-			dateTime[1] = array6[1];
-			dateTime[2] = b9;
-			dateTime[3] = b10;
-			byte b11 = byte.Parse(array5[3], DmConst.invariantCulture);
-			byte b12 = byte.Parse(array5[4], DmConst.invariantCulture);
-			byte b13 = byte.Parse(array5[5], DmConst.invariantCulture);
-			dateTime[4] = b11;
-			dateTime[5] = b12;
-			dateTime[6] = b13;
-			Array.Copy(DmConvertion.IntToByteArray((int)(double.Parse(string.Concat("" + "0.", array5[6]), DmConst.invariantCulture) * 1000000.0)), 0, dateTime, 7, 3);
-			break;
-		}
-		case 3:
-		{
-			char[] separator2 = "-: .".ToCharArray();
-			string[] array3 = str.Split(separator2);
-			short i = short.Parse(array3[0], DmConst.invariantCulture);
-			byte b4 = byte.Parse(array3[1], DmConst.invariantCulture);
-			byte b5 = byte.Parse(array3[2], DmConst.invariantCulture);
-			byte[] array4 = DmConvertion.ShortToByteArray(i);
-			dateTime[0] = array4[0];
-			dateTime[1] = array4[1];
-			dateTime[2] = b4;
-			dateTime[3] = b5;
-			byte b6 = byte.Parse(array3[3], DmConst.invariantCulture);
-			byte b7 = byte.Parse(array3[4], DmConst.invariantCulture);
-			byte b8 = byte.Parse(array3[5], DmConst.invariantCulture);
-			dateTime[4] = b6;
-			dateTime[5] = b7;
-			dateTime[6] = b8;
-			Array.Copy(DmConvertion.IntToByteArray((int)(double.Parse(string.Concat("" + "0.", array3[6]), DmConst.invariantCulture) * 1000000.0)), 0, dateTime, 7, 3);
-			short num3 = short.Parse(array3[7], DmConst.invariantCulture);
-			short num4 = short.Parse(array3[8], DmConst.invariantCulture);
-			array4 = DmConvertion.ShortToByteArray((short)(num3 * 60 + num4));
-			dateTime[10] = array4[0];
-			dateTime[11] = array4[1];
-			break;
-		}
-		case 4:
-		{
-			char[] separator = ": .".ToCharArray();
-			string[] array = str.Split(separator);
-			byte b = byte.Parse(array[0], DmConst.invariantCulture);
-			byte b2 = byte.Parse(array[1], DmConst.invariantCulture);
-			byte b3 = byte.Parse(array[2], DmConst.invariantCulture);
-			dateTime[4] = b;
-			dateTime[5] = b2;
-			dateTime[6] = b3;
-			Array.Copy(DmConvertion.IntToByteArray((int)(double.Parse(string.Concat("" + "0.", array[3]), DmConst.invariantCulture) * 1000000.0)), 0, dateTime, 7, 3);
-			short num = short.Parse(array[4], DmConst.invariantCulture);
-			short num2 = short.Parse(array[5], DmConst.invariantCulture);
-			byte[] array2 = DmConvertion.ShortToByteArray((short)(num * 60 + num2));
-			dateTime[10] = array2[0];
-			dateTime[11] = array2[1];
-			break;
-		}
-		}
+		if (flag is 3 or 4 && !fields.OffsetMinutes.HasValue) throw new InvalidCastException("Temporal text requires an offset.");
+		if (flag is 0 or 2 && fields.OffsetMinutes.HasValue) throw new InvalidCastException("Temporal text has an unexpected offset.");
+		dateTime = DmTemporalWireCodec.ToLegacyMicroseconds(fields, kind);
 	}
 
 	public DmDateTime(DateTime dt, int prec, int scale, int flag, short mTimeZone)
 	{
-		if (scale > 7)
-		{
-			scale &= 0xF;
-		}
-		dt = MathUtil.Round(dt, scale);
+		DmTemporalInteger.ValidateUserScale(scale);
+		if (scale > 6) throw new NotSupportedException("Legacy constructor has microsecond precision.");
+		DmTemporalInteger.ValidateFractionalTicks(dt.Ticks, scale);
 		this.prec = prec;
-		dateTime = new byte[12];
-		switch (flag)
-		{
-		case 0:
-		{
-			short i3 = (short)dt.Year;
-			byte b11 = (byte)dt.Month;
-			byte b12 = (byte)dt.Day;
-			byte[] array3 = DmConvertion.ShortToByteArray(i3);
-			dateTime[0] = array3[0];
-			dateTime[1] = array3[1];
-			dateTime[2] = b11;
-			dateTime[3] = b12;
-			break;
-		}
-		case 2:
-		{
-			short i2 = (short)dt.Year;
-			byte b6 = (byte)dt.Month;
-			byte b7 = (byte)dt.Day;
-			byte[] array2 = DmConvertion.ShortToByteArray(i2);
-			dateTime[0] = array2[0];
-			dateTime[1] = array2[1];
-			dateTime[2] = b6;
-			dateTime[3] = b7;
-			byte b8 = (byte)dt.Hour;
-			byte b9 = (byte)dt.Minute;
-			byte b10 = (byte)dt.Second;
-			dateTime[4] = b8;
-			dateTime[5] = b9;
-			dateTime[6] = b10;
-			Array.Copy(DmConvertion.IntToByteArray(GetMicroSecond(dt)), 0, dateTime, 7, 3);
-			break;
-		}
-		case 3:
-		{
-			short i = (short)dt.Year;
-			byte b = (byte)dt.Month;
-			byte b2 = (byte)dt.Day;
-			byte[] array = DmConvertion.ShortToByteArray(i);
-			dateTime[0] = array[0];
-			dateTime[1] = array[1];
-			dateTime[2] = b;
-			dateTime[3] = b2;
-			byte b3 = (byte)dt.Hour;
-			byte b4 = (byte)dt.Minute;
-			byte b5 = (byte)dt.Second;
-			dateTime[4] = b3;
-			dateTime[5] = b4;
-			dateTime[6] = b5;
-			Array.Copy(DmConvertion.IntToByteArray(GetMicroSecond(dt)), 0, dateTime, 7, 3);
-			array = DmConvertion.ShortToByteArray(mTimeZone);
-			dateTime[10] = array[0];
-			dateTime[11] = array[1];
-			break;
-		}
-		}
+		var kind = flag switch { 0 => DmTemporalTextKind.Date, 2 or 3 => DmTemporalTextKind.Timestamp,
+			_ => throw new NotSupportedException("Temporal constructor flag is unsupported.") };
+		var fields = DmTemporalInteger.FromDateTime(dt, flag == 3 ? mTimeZone : null);
+		dateTime = DmTemporalWireCodec.ToLegacyMicroseconds(fields, kind);
 	}
 
 	internal static int GetMicroSecond(DateTime dt)
 	{
+		DmTemporalInteger.ValidateFractionalTicks(dt.Ticks, 6);
 		return (int)(dt.Ticks % TimeSpan.TicksPerSecond / 10);
 	}
 
@@ -607,120 +303,99 @@ public class DmDateTime
 
 	public byte[] GetByteArrayValue()
 	{
+		if (dateTime == null) throw new InvalidOperationException("This operation requires byte representation.");
 		return dateTime;
 	}
 
 	public void GetByteArrayValue(ref byte[] ret)
 	{
-		ret = dateTime;
+		ret = GetByteArrayValue();
+	}
+
+	private DmTemporalFields ReadByteFields() => DmTemporalLegacyAdapter.ReadHelper(dateTime);
+
+	internal static DmTemporalFields DecodeForReader(byte[] bytes, DmField column, int ltz = 0, int dbtz = 0) =>
+		DmTemporalLegacyAdapter.ReadNetwork(bytes, column);
+
+	internal static DmTemporalFields DecodeForReader(byte[] bytes, DmTemporalReadDescriptor descriptor) =>
+		DmTemporalLegacyAdapter.ReadNetwork(bytes, descriptor);
+
+	internal byte[] EncodeWithTarget(DmField column, DmConnection connection, DmTemporalWriteTarget target)
+		=> EncodeWithTarget(DmTemporalLegacyAdapter.Profile(connection), target);
+
+	internal byte[] EncodeWithTarget(DmTemporalCapabilityProfile profile, DmTemporalWriteTarget target)
+	{
+		profile.ValidateWriteTarget(target);
+		var fields = DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale);
+		if (target.CType is 15 or 22 && dtype is not (15 or 22))
+			throw new OverflowException("TIME cannot represent calendar fields from temporal text.");
+		if (target.CType is not (22 or 23 or 27))
+		{
+			if (fields.OffsetMinutes.HasValue) throw new InvalidCastException("Timezone fields cannot be written as an ordinary temporal value.");
+			fields = fields with { OffsetMinutes = null };
+		}
+		profile.ValidateWriteValue(target, fields);
+		return DmTemporalWireCodec.EncodeExact(fields, target.Layout, target.EncodedScale);
 	}
 
 	private short GetYear()
 	{
-		int num;
-		if (dateTime.Length == 12)
-		{
-			num = DmConvertion.TwoByteToShort(new byte[2]
-			{
-				dateTime[0],
-				dateTime[1]
-			});
-			if (num > 9999)
-			{
-				num = (short)((short)num | 0x8000);
-			}
-		}
-		else
-		{
-			num = GetBit(dateTime, 0, 15);
-		}
-		return (short)num;
+		return (short)ReadByteFields().Year;
 	}
 
 	private byte GetMonth()
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, 15, 4) : dateTime[2]);
-		return (byte)num;
+		return (byte)ReadByteFields().Month;
 	}
 
 	private byte GetDay()
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, 19, 5) : dateTime[3]);
-		return (byte)num;
+		return (byte)ReadByteFields().Day;
 	}
 
 	private byte GetHour(int offset)
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, offset, 5) : dateTime[4]);
-		return (byte)num;
+		return (byte)ReadByteFields().Hour;
 	}
 
 	private byte GetMinute(int offset)
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, offset + 5, 6) : dateTime[5]);
-		return (byte)num;
+		return (byte)ReadByteFields().Minute;
 	}
 
 	private byte GetSecond(int offset)
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, offset + 11, 6) : dateTime[6]);
-		return (byte)num;
+		return (byte)ReadByteFields().Second;
 	}
 
 	private short GetTZ(int offset)
 	{
-		int num = ((dateTime.Length != 12) ? GetBit(dateTime, offset + 37, 15) : DmConvertion.TwoByteToShort(new byte[2]
-		{
-			dateTime[10],
-			dateTime[11]
-		}));
-		return (short)num;
+		return checked((short)(ReadByteFields().OffsetMinutes ?? throw new InvalidCastException("Temporal value has no offset.")));
 	}
 
 	private int GetNano(int offset)
 	{
-		if (dateTime.Length == 12)
-		{
-			byte[] array = new byte[4];
-			Array.Copy(dateTime, 7, array, 0, 3);
-			return DmConvertion.FourByteToInt(array);
-		}
-		return GetBit(dateTime, offset + 17, 20);
+		return DmTemporalInteger.FractionalTicksExact(ReadByteFields().NanosecondsWithinSecond);
 	}
 
 	public DateTime GetDate()
 	{
-		return BuildDateTime(GetYear(), GetMonth(), GetDay(), 0, 0, 0, 0);
+		return DmTemporalInteger.ProjectDateOnly(ReadByteFields()).ToDateTime(TimeOnly.MinValue);
 	}
 
 	public DateTime GetTime()
 	{
-		return BuildDateTime(1900, 1, 1, GetHour(0), GetMinute(0), GetSecond(0), GetNano(0));
+		return DmTemporalInteger.ProjectTimeDateTime(ReadByteFields());
 	}
 
 	public DateTimeOffset GetTimeTZ()
 	{
-		return BuildOffset(1900, 1, 1, GetHour(0), GetMinute(0), GetSecond(0), GetNano(0), GetTZ(0));
+		return DmTemporalInteger.ProjectTimeOffset(ReadByteFields());
 	}
 
 	public string GetDateInString()
 	{
-		string text = GetYear().ToString();
-		string text2 = GetMonth().ToString();
-		string text3 = GetDay().ToString();
-		for (int i = text.Length; i < 4; i++)
-		{
-			text = "0" + text;
-		}
-		for (int i = text2.Length; i < 2; i++)
-		{
-			text2 = "0" + text2;
-		}
-		for (int i = text3.Length; i < 2; i++)
-		{
-			text3 = "0" + text3;
-		}
-		return text + "-" + text2 + "-" + text3;
+		return DmTemporalInteger.FormatExact(ReadByteFields() with { Hour = 0, Minute = 0, Second = 0, NanosecondsWithinSecond = 0, OffsetMinutes = null }, 0, DmTemporalTextKind.Date);
 	}
 
 	public string GetDateInString(string oraclefmt, int datelang, string formatNumericChars)
@@ -739,7 +414,7 @@ public class DmDateTime
 		int hour = GetHour(24);
 		int minute = GetMinute(24);
 		int second = GetSecond(24);
-		int nano = GetNano(24);
+		int nano = ReadByteFields().NanosecondsWithinSecond;
 		return OracleDateFormat.Format(new int[10] { year, month, day, hour, minute, second, nano, 0, 0, 0 }, oraclefmt, datelang, formatNumericChars);
 	}
 
@@ -756,7 +431,7 @@ public class DmDateTime
 		int hour = GetHour(24);
 		int minute = GetMinute(24);
 		int second = GetSecond(24);
-		int nano = GetNano(24);
+		int nano = ReadByteFields().NanosecondsWithinSecond;
 		int tZ = GetTZ(24);
 		int[] array = new int[10];
 		array[0] = year;
@@ -773,35 +448,9 @@ public class DmDateTime
 
 	public string GetTimeInString()
 	{
-		int hour = GetHour(0);
-		int minute = GetMinute(0);
-		int second = GetSecond(0);
-		int nano = GetNano(0);
-		string text = hour.ToString() ?? "";
-		string text2 = minute.ToString() ?? "";
-		string text3 = second.ToString() ?? "";
-		string text4 = nano.ToString() ?? "";
-		if (text.Length < 2)
-		{
-			text = "0" + text;
-		}
-		if (text2.Length < 2)
-		{
-			text2 = "0" + text2;
-		}
-		if (text3.Length < 2)
-		{
-			text3 = "0" + text3;
-		}
-		for (int i = text4.Length; i < 7; i++)
-		{
-			text4 = "0" + text4;
-		}
-		if (prec == 0)
-		{
-			return text + ":" + text2 + ":" + text3;
-		}
-		return text + ":" + text2 + ":" + text3 + "." + text4;
+		var fields = ReadByteFields() with { OffsetMinutes = null };
+		DmTemporalInteger.ValidateWireFraction(fields.NanosecondsWithinSecond, 7);
+		return DmTemporalInteger.FormatExact(prec == 0 ? fields with { NanosecondsWithinSecond = 0 } : fields, prec == 0 ? 0 : 7, DmTemporalTextKind.Time);
 	}
 
 	public string GetTimeInString(string oraclefmt, int datelang, string formatNumericChars)
@@ -809,54 +458,16 @@ public class DmDateTime
 		int hour = GetHour(0);
 		int minute = GetMinute(0);
 		int second = GetSecond(0);
-		int nano = GetNano(0);
+		int nano = ReadByteFields().NanosecondsWithinSecond;
 		return OracleDateFormat.Format(new int[10] { 0, 0, 0, hour, minute, second, nano, 0, 0, 0 }, oraclefmt, datelang, formatNumericChars);
 	}
 
 	public string GetTimeTZInString()
 	{
-		int hour = GetHour(0);
-		int minute = GetMinute(0);
-		int second = GetSecond(0);
-		int nano = GetNano(0);
-		int tZ = GetTZ(0);
-		int num = ((tZ < 0) ? (-tZ) : tZ);
-		string text = hour.ToString() ?? "";
-		string text2 = minute.ToString() ?? "";
-		string text3 = second.ToString() ?? "";
-		string text4 = nano.ToString() ?? "";
-		string text5 = (num / 60).ToString() ?? "";
-		string text6 = (num % 60).ToString() ?? "";
-		if (text.Length < 2)
-		{
-			text = "0" + text;
-		}
-		if (text2.Length < 2)
-		{
-			text2 = "0" + text2;
-		}
-		if (text3.Length < 2)
-		{
-			text3 = "0" + text3;
-		}
-		for (int i = text4.Length; i < 7; i++)
-		{
-			text4 = "0" + text4;
-		}
-		if (text5.Length < 2)
-		{
-			text5 = "0" + text5;
-		}
-		text5 = ((tZ < 0) ? ("-" + text5) : ("+" + text5));
-		if (text6.Length < 2)
-		{
-			text6 = "0" + text6;
-		}
-		if (prec == 0)
-		{
-			return text + ":" + text2 + ":" + text3 + " " + text5 + ":" + text6;
-		}
-		return text + ":" + text2 + ":" + text3 + "." + text4 + " " + text5 + ":" + text6;
+		var fields = ReadByteFields();
+		if (!fields.OffsetMinutes.HasValue) throw new InvalidCastException("Temporal value has no offset.");
+		DmTemporalInteger.ValidateWireFraction(fields.NanosecondsWithinSecond, 7);
+		return DmTemporalInteger.FormatExact(prec == 0 ? fields with { NanosecondsWithinSecond = 0 } : fields, prec == 0 ? 0 : 7, DmTemporalTextKind.Time);
 	}
 
 	public string GetTimeTZInString(string oraclefmt, int datelang, string formatNumericChars)
@@ -864,7 +475,7 @@ public class DmDateTime
 		int hour = GetHour(0);
 		int minute = GetMinute(0);
 		int second = GetSecond(0);
-		int nano = GetNano(0);
+		int nano = ReadByteFields().NanosecondsWithinSecond;
 		int tZ = GetTZ(0);
 		int[] array = new int[10];
 		array[3] = hour;
@@ -901,12 +512,12 @@ public class DmDateTime
 
 	public DateTime GetTimestamp()
 	{
-		return BuildDateTime(GetYear(), GetMonth(), GetDay(), GetHour(24), GetMinute(24), GetSecond(24), GetNano(24));
+		return DmTemporalInteger.ProjectDateTime(ReadByteFields());
 	}
 
 	public DateTimeOffset GetTimestampTZ()
 	{
-		return BuildOffset(GetYear(), GetMonth(), GetDay(), GetHour(24), GetMinute(24), GetSecond(24), GetNano(24), GetTZ(24));
+		return DmTemporalInteger.ProjectDateTimeOffset(ReadByteFields());
 	}
 
 	private static DateTime BuildDateTime(int year, int month, int day, int hour, int minute, int second, int fractionalTicks)
@@ -920,13 +531,13 @@ public class DmDateTime
 	private static DateTimeOffset BuildOffset(int year, int month, int day, int hour, int minute, int second, int fractionalTicks, short offsetMinutes)
 	{
 		DateTime local = BuildDateTime(year, month, day, hour, minute, second, fractionalTicks);
-		try { return new DateTimeOffset(local, TimeSpan.FromMinutes(offsetMinutes)); }
+		try { return new DateTimeOffset(local, TimeSpan.FromTicks(offsetMinutes * TimeSpan.TicksPerMinute)); }
 		catch (ArgumentOutOfRangeException) { throw new OverflowException("Server timezone offset is outside the .NET range."); }
 	}
 
 	public static DateTime GetDateByString(string s)
 	{
-		return Convert.ToDateTime(s);
+		return DmTemporalInteger.ProjectDateOnly(DmTemporalLegacyAdapter.Parse(s).Fields).ToDateTime(TimeOnly.MinValue);
 	}
 
 	public static bool DmdtIsLeapYear(int year)
@@ -998,7 +609,7 @@ public class DmDateTime
 
 	public static DateTime GetTimestampByString(string s)
 	{
-		return Convert.ToDateTime(s);
+		return DmTemporalInteger.ProjectDateTime(DmTemporalLegacyAdapter.Parse(s).Fields);
 	}
 
 	public static string GetTimeFromTimestamp(DateTime ts)
@@ -1072,468 +683,85 @@ public class DmDateTime
 
 	public static byte[] DmDateDecodeFast(byte[] val)
 	{
-		byte[] array = new byte[12];
-		short num = DmConvertion.GetShort(val, 0);
-		num &= 0x7FFF;
-		DmConvertion.SetShort(array, 0, num);
-		byte b = (byte)((DmConvertion.GetByte(val, 1) >> 7) + ((DmConvertion.GetByte(val, 2) & 7) << 1));
-		array[2] = b;
-		byte b2 = (byte)((DmConvertion.GetByte(val, 2) & 0xF8) >> 3);
-		array[3] = b2;
-		array[4] = 0;
-		array[5] = 0;
-		array[6] = 0;
-		array[7] = 0;
-		array[8] = 0;
-		array[9] = 0;
-		array[10] = 0;
-		array[11] = 0;
-		return array;
+		if (val == null || val.Length is not (3 or 12)) throw new ArgumentException("DATE decoder requires an explicit date layout.");
+		var fields = DmTemporalLegacyAdapter.ReadHelper(val, DmTemporalTextKind.Date) with { OffsetMinutes = null };
+		return DmTemporalWireCodec.ToLegacyMicroseconds(fields, DmTemporalTextKind.Date);
 	}
 
 	public static byte[] DmTimeDecodeFast(byte[] val)
 	{
-		if (val.Length == 12) return NormalizeRawMicroseconds(val);
-		byte[] array = new byte[12];
-		byte b = (byte)(DmConvertion.GetByte(val, 0) & 0x1F);
-		array[4] = b;
-		byte b2 = (byte)((DmConvertion.GetByte(val, 0) >> 5) + ((DmConvertion.GetByte(val, 1) & 7) << 3));
-		array[5] = b2;
-		byte b3 = (byte)((DmConvertion.GetByte(val, 1) >> 3) + ((DmConvertion.GetByte(val, 2) & 1) << 5));
-		array[6] = b3;
-		int num = (DmConvertion.GetByte(val, 2) >> 1) + (DmConvertion.GetByte(val, 3) << 7) + ((DmConvertion.GetByte(val, 4) & 0x1F) << 15);
-		if (num < 0 || num > 999999) throw new OverflowException("TIME fractional value is outside the supported range.");
-		num = checked(num * 10); // microseconds to 100-ns ticks
-		array[7] = (byte)(num & 0xFF);
-		array[8] = (byte)((num >> 8) & 0xFF);
-		array[9] = (byte)((num >> 16) & 0xFF);
-		array[10] = 0;
-		array[11] = 0;
-		DmConvertion.SetShort(array, 0, 1900);
-		array[2] = 1;
-		array[3] = 1;
-		return array;
+		if (val == null || val.Length is not (5 or 7 or 12)) throw new ArgumentException("TIME helper requires an explicit time layout.");
+		return DmTemporalWireCodec.ToLegacyMicroseconds(DmTemporalLegacyAdapter.ReadHelper(val, DmTemporalTextKind.Time), DmTemporalTextKind.Time);
 	}
 
 	public static byte[] DmDtDecodeFast(byte[] value)
 	{
-		short num = 0;
-		byte b = 0;
-		byte b2 = 0;
-		byte b3 = 0;
-		byte b4 = 0;
-		byte b5 = 0;
-		int num2 = 0;
-		if (value.Length == 12)
-		{
-			return NormalizeRawMicroseconds(value);
-		}
-		byte[] array = new byte[12];
-		int num3 = 0;
-		if (value.Length == 3)
-		{
-			num3 = 14;
-		}
-		else if (value.Length == 5)
-		{
-			num3 = 15;
-		}
-		else if (value.Length == 7)
-		{
-			num3 = 22;
-		}
-		else if (value.Length == 8)
-		{
-			num3 = 16;
-		}
-		else if (value.Length == 9)
-		{
-			num3 = 26;
-		}
-		else if (value.Length == 10)
-		{
-			num3 = 23;
-		}
-		else if (value.Length == 11)
-		{
-			num3 = 27;
-		}
-		switch (num3)
-		{
-		case 16:
-			num = (short)(DmConvertion.GetShort(value, 0) & 0x7FFF);
-			if (num > 9999)
-			{
-				num = (short)(num | 0x8000);
-			}
-			b = (byte)((DmConvertion.GetByte(value, 1) >> 7) + ((DmConvertion.GetByte(value, 2) & 7) << 1));
-			b2 = (byte)((DmConvertion.GetByte(value, 2) & 0xF8) >> 3);
-			b3 = (byte)(DmConvertion.GetByte(value, 3) & 0x1F);
-			b4 = (byte)((DmConvertion.GetByte(value, 3) >> 5) + ((DmConvertion.GetByte(value, 4) & 7) << 3));
-			b5 = (byte)((DmConvertion.GetByte(value, 4) >> 3) + ((DmConvertion.GetByte(value, 5) & 1) << 5));
-			num2 = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0x1F) << 15);
-			num2 *= 1000;
-			break;
-		case 23:
-			num = (short)(DmConvertion.GetShort(value, 0) & 0x7FFF);
-			if (num > 9999)
-			{
-				num = (short)(num | 0x8000);
-			}
-			b = (byte)((DmConvertion.GetByte(value, 1) >> 7) + ((DmConvertion.GetByte(value, 2) & 7) << 1));
-			b2 = (byte)((DmConvertion.GetByte(value, 2) & 0xF8) >> 3);
-			b3 = (byte)(DmConvertion.GetByte(value, 3) & 0x1F);
-			b4 = (byte)((DmConvertion.GetByte(value, 3) >> 5) + ((DmConvertion.GetByte(value, 4) & 7) << 3));
-			b5 = (byte)((DmConvertion.GetByte(value, 4) >> 3) + ((DmConvertion.GetByte(value, 5) & 1) << 5));
-			num2 = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0x1F) << 15);
-			num2 *= 1000;
-			break;
-		case 26:
-			num = (short)(DmConvertion.GetShort(value, 0) & 0x7FFF);
-			if (num > 9999)
-			{
-				num = (short)(num | 0x8000);
-			}
-			b = (byte)((DmConvertion.GetByte(value, 1) >> 7) + ((DmConvertion.GetByte(value, 2) & 7) << 1));
-			b2 = (byte)((DmConvertion.GetByte(value, 2) & 0xF8) >> 3);
-			b3 = (byte)(DmConvertion.GetByte(value, 3) & 0x1F);
-			b4 = (byte)((DmConvertion.GetByte(value, 3) >> 5) + ((DmConvertion.GetByte(value, 4) & 7) << 3));
-			b5 = (byte)((DmConvertion.GetByte(value, 4) >> 3) + ((DmConvertion.GetByte(value, 5) & 1) << 5));
-			num2 = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0xFF) << 15) + ((value[8] & 0x7F) << 23);
-			break;
-		case 27:
-			num = (short)(DmConvertion.GetShort(value, 0) & 0x7FFF);
-			if (num > 9999)
-			{
-				num = (short)(num | 0x8000);
-			}
-			b = (byte)((DmConvertion.GetByte(value, 1) >> 7) + ((DmConvertion.GetByte(value, 2) & 7) << 1));
-			b2 = (byte)((DmConvertion.GetByte(value, 2) & 0xF8) >> 3);
-			b3 = (byte)(DmConvertion.GetByte(value, 3) & 0x1F);
-			b4 = (byte)((DmConvertion.GetByte(value, 3) >> 5) + ((DmConvertion.GetByte(value, 4) & 7) << 3));
-			b5 = (byte)((DmConvertion.GetByte(value, 4) >> 3) + ((DmConvertion.GetByte(value, 5) & 1) << 5));
-			num2 = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0xFF) << 15) + ((value[8] & 0x7F) << 23);
-			break;
-		}
-		DmConvertion.SetShort(array, 0, num);
-		array[2] = b;
-		array[3] = b2;
-		array[4] = b3;
-		array[5] = b4;
-		array[6] = b5;
-		if (num2 < 0 || num2 > 999999999 || num2 % 100 != 0)
-			throw new OverflowException("TIMESTAMP has fractional precision outside .NET ticks.");
-		num2 /= 100; // nanoseconds to exact 100-ns ticks
-		array[7] = (byte)(num2 & 0xFF);
-		array[8] = (byte)((num2 >> 8) & 0xFF);
-		array[9] = (byte)((num2 >> 16) & 0xFF);
-		return array;
+		var fields = DmTemporalLegacyAdapter.ReadHelper(value);
+		var kind = value.Length is 5 or 7 || fields.Year == 0 ? DmTemporalTextKind.Time : value.Length == 3 ? DmTemporalTextKind.Date : DmTemporalTextKind.Timestamp;
+		if (kind == DmTemporalTextKind.Date) fields = fields with { OffsetMinutes = null };
+		return DmTemporalWireCodec.ToLegacyMicroseconds(fields, kind);
 	}
 
 	private static byte[] NormalizeRawMicroseconds(byte[] raw)
 	{
-		int microseconds = raw[7] | (raw[8] << 8) | (raw[9] << 16);
-		if (microseconds > 999999)
-			throw new OverflowException("Temporal fraction is outside the legacy microsecond range.");
-		int ticks = checked(microseconds * 10);
-		byte[] normalized = (byte[])raw.Clone();
-		normalized[7] = (byte)ticks;
-		normalized[8] = (byte)(ticks >> 8);
-		normalized[9] = (byte)(ticks >> 16);
-		return normalized;
+		DmTemporalLegacyAdapter.ReadHelper(raw);
+		return (byte[])raw.Clone();
 	}
 
 	public static byte[] DmTimeFromRec4(byte[] dateTime, int CType)
 	{
-		switch (CType)
-		{
-		case 16:
-		case 26:
-			return DmDtDecodeFast(dateTime);
-		case 23:
-		case 27:
-		{
-			byte[] array2 = DmDtDecodeFast(dateTime);
-			if (dateTime.Length == 10)
-			{
-				array2[10] = dateTime[8];
-				array2[11] = dateTime[9];
-			}
-			else
-			{
-				array2[10] = dateTime[9];
-				array2[11] = dateTime[10];
-			}
-			return array2;
-		}
-		case 14:
-			return DmDateDecodeFast(dateTime);
-		case 15:
-			return DmTimeDecodeFast(dateTime);
-		case 22:
-		{
-			byte[] array = DmTimeDecodeFast(dateTime);
-			array[10] = dateTime[5];
-			array[11] = dateTime[6];
-			return array;
-		}
-		default:
-			throw new InvalidCastException();
-		}
+		var fields = DmTemporalLegacyAdapter.ReadHelper(dateTime, DmTemporalLegacyAdapter.Kind(CType));
+		if (dateTime.Length != 12 && DmTemporalLegacyAdapter.PackedLayout(dateTime.Length) != DmTemporalWireCodec.ForCType(CType))
+			throw new ArgumentException("Temporal helper type and layout do not match.");
+		if (CType is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+		return DmTemporalWireCodec.ToLegacyMicroseconds(fields, DmTemporalLegacyAdapter.Kind(CType));
 	}
 
 	public static byte[] DmdtEncodeFast(byte[] dateTime)
 	{
-		if (dateTime.Length == 8)
-		{
-			return dateTime;
-		}
-		byte[] array = new byte[8];
-		short num = DmConvertion.GetShort(dateTime, 0);
-		byte b = dateTime[2];
-		byte b2 = dateTime[3];
-		array[0] = dateTime[0];
-		if (num >= 0)
-		{
-			array[1] = (byte)((num >> 8) | ((b & 1) << 7));
-		}
-		else
-		{
-			array[1] = (byte)((num >> 8) & (((b & 1) << 7) | 0x7F));
-		}
-		array[2] = (byte)(((b & 0xE) >> 1) | (b2 << 3));
-		byte b3 = dateTime[4];
-		byte b4 = dateTime[5];
-		byte b5 = dateTime[6];
-		int num2 = dateTime[7] + ((dateTime[8] & 0xFF) << 8) + ((dateTime[9] & 0xFF) << 16);
-		array[3] = (byte)(b3 | ((b4 & 7) << 5));
-		array[4] = (byte)(((b4 & 0x38) >> 3) | ((b5 & 0x1F) << 3));
-		array[5] = (byte)(((b5 & 0x20) >> 5) | ((num2 & 0x7F) << 1));
-		array[6] = (byte)((num2 >> 7) & 0xFF);
-		array[7] = (byte)((num2 >> 15) & 0xFF);
-		return array;
+		var fields = DmTemporalLegacyAdapter.ReadHelper(dateTime, DmTemporalTextKind.Timestamp) with { OffsetMinutes = null };
+		if (dateTime.Length == 8) { DmTemporalWireCodec.ValidateFields(fields, DmTemporalWireLayout.Timestamp8, 6); return dateTime; }
+		if (dateTime.Length != 12) throw new ArgumentException("Legacy timestamp encoder requires 12 or 8 bytes.");
+		return DmTemporalWireCodec.EncodeExact(fields, DmTemporalWireLayout.Timestamp8, 6);
 	}
 
 	public static byte[] DmdtEncodeFast(int[] dt)
 	{
-		int num = dt[0];
-		int num2 = dt[1];
-		int num3 = dt[2];
-		int num4 = dt[3];
-		int num5 = dt[4];
-		int num6 = dt[5];
-		int num7 = dt[6];
-		byte[] array = new byte[8]
-		{
-			(byte)(num & 0xFF),
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0
-		};
-		if (num >= 0)
-		{
-			array[1] = (byte)((num >> 8) | ((num2 & 1) << 7));
-		}
-		else
-		{
-			array[1] = (byte)((num >> 8) & (((num2 & 1) << 7) | 0x7F));
-		}
-		array[2] = (byte)(((num2 & 0xE) >> 1) | (num3 << 3));
-		array[3] = (byte)(num4 | ((num5 & 7) << 5));
-		array[4] = (byte)(((num5 & 0x38) >> 3) | ((num6 & 0x1F) << 3));
-		array[5] = (byte)(((num6 & 0x20) >> 5) | ((num7 & 0x7F) << 1));
-		array[6] = (byte)((num7 >> 7) & 0xFF);
-		array[7] = (byte)((num7 >> 15) & 0xFF);
-		return array;
+		return DmTemporalWireCodec.EncodeExact(DmTemporalLegacyAdapter.FromMicroseconds(dt, 16), DmTemporalWireLayout.Timestamp8, 6);
 	}
 
 	public static void DmdtEncodeFast(ref byte[] ret, ref byte[] dateTime)
 	{
-		ret = new byte[8];
-		short num = DmConvertion.GetShort(dateTime, 0);
-		byte b = dateTime[2];
-		byte b2 = dateTime[3];
-		ret[0] = dateTime[0];
-		if (num >= 0)
-		{
-			ret[1] = (byte)((num >> 8) | ((b & 1) << 7));
-		}
-		else
-		{
-			ret[1] = (byte)((num >> 8) & (((b & 1) << 7) | 0x7F));
-		}
-		ret[2] = (byte)(((b & 0xE) >> 1) | (b2 << 3));
-		byte b3 = dateTime[4];
-		byte b4 = dateTime[5];
-		byte b5 = dateTime[6];
-		int num2 = dateTime[7] + ((dateTime[8] & 0xFF) << 8) + ((dateTime[9] & 0xFF) << 16);
-		ret[3] = (byte)(b3 | ((b4 & 7) << 5));
-		ret[4] = (byte)(((b4 & 0x38) >> 3) | ((b5 & 0x1F) << 3));
-		ret[5] = (byte)(((b5 & 0x20) >> 5) | ((num2 & 0x7F) << 1));
-		ret[6] = (byte)((num2 >> 7) & 0xFF);
-		ret[7] = (byte)((num2 >> 15) & 0xFF);
+		ret = DmdtEncodeFast(dateTime);
 	}
 
 	public static void DmdtEncodeFast2(ref byte[] ret, DateTime x)
 	{
-		int year = x.Year;
-		int month = x.Month;
-		int day = x.Day;
-		int hour = x.Hour;
-		int minute = x.Minute;
-		int second = x.Second;
-		int nanoSecond = GetNanoSecond(x);
-		ret = new byte[9];
-		ret[0] = (byte)(year & 0xFF);
-		if (year >= 0)
-		{
-			ret[1] = (byte)((year >> 8) | ((month & 1) << 7));
-		}
-		else
-		{
-			ret[1] = (byte)((year >> 8) & (((month & 1) << 7) | 0x7F));
-		}
-		ret[2] = (byte)(((month & 0xE) >> 1) | (day << 3));
-		ret[3] = (byte)(hour | ((minute & 7) << 5));
-		ret[4] = (byte)(((minute & 0x38) >> 3) | ((second & 0x1F) << 3));
-		ret[5] = (byte)(((second & 0x20) >> 5) | ((nanoSecond & 0x7F) << 1));
-		ret[6] = (byte)((nanoSecond >> 7) & 0xFF);
-		ret[7] = (byte)((nanoSecond >> 15) & 0xFF);
-		ret[8] = (byte)((nanoSecond >> 23) & 0xFF);
+		ret = DmTemporalWireCodec.EncodeExact(DmTemporalInteger.FromDateTime(x), DmTemporalWireLayout.Timestamp9, 7);
 	}
 
 	public static void Dmdt2TzEncodeFast2(ref byte[] ret, DateTime x, short timezone)
 	{
-		int year = x.Year;
-		int month = x.Month;
-		int day = x.Day;
-		int hour = x.Hour;
-		int minute = x.Minute;
-		int second = x.Second;
-		int nanoSecond = GetNanoSecond(x);
-		ret = new byte[11];
-		ret[0] = (byte)(year & 0xFF);
-		if (year >= 0)
-		{
-			ret[1] = (byte)((year >> 8) | ((month & 1) << 7));
-		}
-		else
-		{
-			ret[1] = (byte)((year >> 8) & (((month & 1) << 7) | 0x7F));
-		}
-		ret[2] = (byte)(((month & 0xE) >> 1) | (day << 3));
-		ret[3] = (byte)(hour | ((minute & 7) << 5));
-		ret[4] = (byte)(((minute & 0x38) >> 3) | ((second & 0x1F) << 3));
-		ret[5] = (byte)(((second & 0x20) >> 5) | ((nanoSecond & 0x7F) << 1));
-		ret[6] = (byte)((nanoSecond >> 7) & 0xFF);
-		ret[7] = (byte)((nanoSecond >> 15) & 0xFF);
-		ret[8] = (byte)((nanoSecond >> 23) & 0xFF);
-		byte[] array = DmConvertion.ShortToByteArray(timezone);
-		ret[9] = array[0];
-		ret[10] = array[1];
+		ret = DmTemporalWireCodec.EncodeExact(DmTemporalInteger.FromDateTime(x, timezone), DmTemporalWireLayout.TimestampTz11, 7);
 	}
 
 	public static byte[] DmdttzEncodeFast(byte[] dateTime)
 	{
-		byte[] array = new byte[10];
-		short num = DmConvertion.GetShort(dateTime, 0);
-		byte b = dateTime[2];
-		byte b2 = dateTime[3];
-		array[0] = dateTime[0];
-		if (num >= 0)
-		{
-			array[1] = (byte)((num >> 8) | ((b & 1) << 7));
-		}
-		else
-		{
-			array[1] = (byte)((num >> 8) & (((b & 1) << 7) | 0x7F));
-		}
-		array[2] = (byte)(((b & 0xE) >> 1) | (b2 << 3));
-		byte b3 = dateTime[4];
-		byte b4 = dateTime[5];
-		byte b5 = dateTime[6];
-		int num2 = dateTime[7] + ((dateTime[8] & 0xFF) << 8) + ((dateTime[9] & 0xFF) << 16);
-		array[3] = (byte)(b3 | ((b4 & 7) << 5));
-		array[4] = (byte)(((b4 & 0x38) >> 3) | ((b5 & 0x1F) << 3));
-		array[5] = (byte)(((b5 & 0x20) >> 5) | ((num2 & 0x7F) << 1));
-		array[6] = (byte)((num2 >> 7) & 0xFF);
-		array[7] = (byte)((num2 >> 15) & 0xFF);
-		array[8] = dateTime[10];
-		array[9] = dateTime[11];
-		return array;
+		if (dateTime == null || dateTime.Length is not (10 or 12)) throw new ArgumentException("Legacy timezone timestamp encoder requires 12 or 10 bytes.");
+		return DmTemporalWireCodec.EncodeExact(DmTemporalLegacyAdapter.ReadHelper(dateTime, DmTemporalTextKind.Timestamp), DmTemporalWireLayout.TimestampTz10, 6);
 	}
 
 	public static byte[] DmdttzEncodeFast(int[] dt)
 	{
-		int num = dt[0];
-		int num2 = dt[1];
-		int num3 = dt[2];
-		int num4 = dt[3];
-		int num5 = dt[4];
-		int num6 = dt[5];
-		int num7 = dt[6];
-		byte[] array = DmConvertion.ShortToByteArray((dt[OracleDateFormat.OFFSET_TIMEZONE_SIGN] > 0) ? (-1 * dt[7]) : dt[7]);
-		byte[] array2 = new byte[10]
-		{
-			(byte)(num & 0xFF),
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0
-		};
-		if (num >= 0)
-		{
-			array2[1] = (byte)((num >> 8) | ((num2 & 1) << 7));
-		}
-		else
-		{
-			array2[1] = (byte)((num >> 8) & (((num2 & 1) << 7) | 0x7F));
-		}
-		array2[2] = (byte)(((num2 & 0xE) >> 1) | (num3 << 3));
-		array2[3] = (byte)(num4 | ((num5 & 7) << 5));
-		array2[4] = (byte)(((num5 & 0x38) >> 3) | ((num6 & 0x1F) << 3));
-		array2[5] = (byte)(((num6 & 0x20) >> 5) | ((num7 & 0x7F) << 1));
-		array2[6] = (byte)((num7 >> 7) & 0xFF);
-		array2[7] = (byte)((num7 >> 15) & 0xFF);
-		array2[8] = array[0];
-		array2[9] = array[1];
-		return array2;
+		return DmTemporalWireCodec.EncodeExact(DmTemporalLegacyAdapter.FromMicroseconds(dt, 23), DmTemporalWireLayout.TimestampTz10, 6);
 	}
 
 	public static byte[] DateEncodeFast(byte[] dateTime)
 	{
-		byte[] array = new byte[3];
-		if (dateTime.Length == 3)
-		{
-			return dateTime;
-		}
-		short num = DmConvertion.GetShort(dateTime, 0);
-		byte b = dateTime[2];
-		byte b2 = dateTime[3];
-		if (RevertToGlgl(num, b, b2))
-		{
-			b2 = 15;
-		}
-		array[0] = dateTime[0];
-		if (num >= 0)
-		{
-			array[1] = (byte)((num >> 8) | ((b & 1) << 7));
-		}
-		else
-		{
-			array[1] = (byte)((num >> 8) & (((b & 1) << 7) | 0x7F));
-		}
-		array[2] = (byte)(((b & 0xE) >> 1) | (b2 << 3));
-		return array;
+		if (dateTime == null || dateTime.Length is not (3 or 12)) throw new ArgumentException("DATE encoder requires 12 or 3 bytes.");
+		var fields = DmTemporalLegacyAdapter.ReadHelper(dateTime, DmTemporalTextKind.Date) with { OffsetMinutes = null };
+		DmTemporalWireCodec.ValidateFields(fields, DmTemporalWireLayout.Date3, 0);
+		return dateTime.Length == 3 ? dateTime : DmTemporalWireCodec.EncodeExact(fields, DmTemporalWireLayout.Date3, 0);
 	}
 
 	public static bool RevertToGlgl(short year, byte month, byte day)
@@ -1547,21 +775,7 @@ public class DmDateTime
 
 	public static byte[] DateEncodeFast(int[] dt)
 	{
-		byte[] array = new byte[3];
-		int num = dt[0];
-		int num2 = dt[1];
-		int num3 = dt[2];
-		array[0] = (byte)(num & 0xFF);
-		if (num >= 0)
-		{
-			array[1] = (byte)((num >> 8) | ((num2 & 1) << 7));
-		}
-		else
-		{
-			array[1] = (byte)((num >> 8) & (((num2 & 1) << 7) | 0x7F));
-		}
-		array[2] = (byte)(((num2 & 0xE) >> 1) | (num3 << 3));
-		return array;
+		return DmTemporalWireCodec.EncodeExact(DmTemporalLegacyAdapter.FromMicroseconds(dt, 14), DmTemporalWireLayout.Date3, 0);
 	}
 
 	internal static DmDateTime valueOf(byte[] bytes, DmField column, DmConnection connection)
@@ -1584,54 +798,46 @@ public class DmDateTime
 		string format = connection.getFormat(column);
 		if (StringUtil.isNotEmpty(format))
 		{
-			dmDateTime.dt = OracleDateFormat.Parse(str, format, connection.GetConnInstance().ConnProperty.nlsDateLang);
+			dmDateTime.dt = OracleDateFormat.ParseTemporal(str, format, connection.GetConnInstance().ConnProperty.nlsDateLang, column.type);
 			dmDateTime.dtype = column.type;
-			dmDateTime.scale = column.scale;
+			dmDateTime.scale = 9;
 			return dmDateTime;
 		}
 		dmDateTime.parseString(str);
 		return dmDateTime;
 	}
 
+	// The statement's format/language remain parsing context; type and write decisions
+	// come from the binding rather than a mutable parameter field.
+	internal static DmDateTime valueOf(string str, int cType, DmConnection connection)
+	{
+		var property = connection?.GetConnInstance()?.ConnProperty;
+		string format = cType switch
+		{
+			14 => property?.oracleDateFormat, 15 => property?.oracleTimeFormat,
+			22 => property?.oracleTimeTZFormat, 16 or 26 => property?.oracleTimestampFormat,
+			23 or 27 => property?.oracleTimestampTZFormat, _ => null
+		};
+		if (!StringUtil.isNotEmpty(format)) return valueOf(str);
+		return new DmDateTime
+		{
+			dt = OracleDateFormat.ParseTemporal(str, format, property.nlsDateLang, cType),
+			dtype = cType, scale = 9
+		};
+	}
+
 	private string toString(int dtype, int scale)
 	{
-		switch (dtype)
-		{
-		case 14:
-			return DateUtil.formatYear(dt[0]) + "-" + DateUtil.format2(dt[1]) + "-" + DateUtil.format2(dt[2]);
-		case 15:
-			if (scale > 0)
-			{
-				return DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + "." + DateUtil.formatMilliSecond(dt[6], scale);
-			}
-			return DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]);
-		case 22:
-			if (scale > 0)
-			{
-				return DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + "." + DateUtil.formatMilliSecond(dt[6], scale) + " " + DateUtil.formatTZ(dt[7]);
-			}
-			return DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + " " + DateUtil.formatTZ(dt[7]);
-		case 16:
-		case 26:
-			if (scale > 0)
-			{
-				return DateUtil.formatYear(dt[0]) + "-" + DateUtil.format2(dt[1]) + "-" + DateUtil.format2(dt[2]) + " " + DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + "." + DateUtil.formatMilliSecond(dt[6], scale);
-			}
-			return DateUtil.formatYear(dt[0]) + "-" + DateUtil.format2(dt[1]) + "-" + DateUtil.format2(dt[2]) + " " + DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]);
-		case 23:
-		case 27:
-			if (scale > 0)
-			{
-				return DateUtil.formatYear(dt[0]) + "-" + DateUtil.format2(dt[1]) + "-" + DateUtil.format2(dt[2]) + " " + DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + "." + DateUtil.formatMilliSecond(dt[6], scale) + " " + DateUtil.formatTZ(dt[7]);
-			}
-			return DateUtil.formatYear(dt[0]) + "-" + DateUtil.format2(dt[1]) + "-" + DateUtil.format2(dt[2]) + " " + DateUtil.format2(dt[3]) + ":" + DateUtil.format2(dt[4]) + ":" + DateUtil.format2(dt[5]) + " " + DateUtil.formatTZ(dt[7]);
-		default:
-			return "";
-		}
+		var fields = DmTemporalLegacyAdapter.FromSemantic(dt, this.dtype, this.scale);
+		var kind = DmTemporalLegacyAdapter.Kind(dtype);
+		if (kind == DmTemporalTextKind.Date) fields = fields with { Hour = 0, Minute = 0, Second = 0, NanosecondsWithinSecond = 0, OffsetMinutes = null };
+		if (dtype is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+		return DmTemporalInteger.FormatExact(fields, DmTemporalLegacyAdapter.SemanticScale(dtype, scale), kind);
 	}
 
 	internal string toString(DmField column, DmConnection connection)
 	{
+		DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale);
 		string format = connection.getFormat(column);
 		if (StringUtil.isNotEmpty(format))
 		{
@@ -1643,714 +849,113 @@ public class DmDateTime
 
 	internal DateTime toDate(DmField column, DmConnection connection)
 	{
-		return Convert.ToDateTime(toString(14, column.scale));
+		return DmTemporalInteger.ProjectDateOnly(DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale)).ToDateTime(TimeOnly.MinValue);
 	}
 
 	internal DateTime toTime(DmField column, DmConnection connection)
 	{
-		return Convert.ToDateTime(toString(15, column.scale));
+		return DmTemporalInteger.ProjectTimeDateTime(DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale));
 	}
 
 	internal DateTime toTimestamp(DmField column, DmConnection connection)
 	{
-		return Convert.ToDateTime(toString(16, column.scale));
+		return DmTemporalInteger.ProjectDateTime(DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale));
 	}
 
 	internal int[] decode(byte[] value, DmField column, int ltz, int dbtz)
 	{
-		if (column.isBdta)
-		{
-			dt = dmdtDecodeBdta(value);
-		}
-		else
-		{
-			dt = dmdtDecodeFast(value);
-		}
-		if (column.type is 15 or 16 or 22 or 23 or 26 or 27)
-			DmTemporalCodec.ValidateWireNanoseconds(dt[6], column.scale);
-		if (column.mask == 4)
-		{
-			dt = transformTZ(dt, dbtz, ltz);
-		}
-		dtype = column.type;
-		scale = column.scale;
+		var fields = DecodeForReader(value, column, ltz, dbtz);
+		dt = DmTemporalLegacyAdapter.ToSemantic(fields);
+		dtype = column.type; scale = DmTemporalLegacyAdapter.SemanticScale(column.type, column.scale);
 		return dt;
 	}
 
 	private static int[] dmdtDecodeFast(byte[] value)
 	{
-		int[] array = new int[8] { 0, 0, 0, 0, 0, 0, 0, -2147483648 };
-		int num = 0;
-		if (value.Length == 3)
-		{
-			num = 14;
-		}
-		else if (value.Length == 5)
-		{
-			num = 15;
-		}
-		else if (value.Length == 7)
-		{
-			num = 22;
-		}
-		else if (value.Length == 8)
-		{
-			num = 16;
-		}
-		else if (value.Length == 9)
-		{
-			num = 26;
-		}
-		else if (value.Length == 10)
-		{
-			num = 23;
-		}
-		else if (value.Length == 11)
-		{
-			num = 27;
-		}
-		switch (num)
-		{
-		case 14:
-			array[0] = ByteUtil.getShort(value, 0) & 0x7FFF;
-			if (array[0] > 9999)
-			{
-				array[0] = (short)((short)array[0] | 0x8000);
-			}
-			array[1] = ((value[1] >> 7) & 1) + ((value[2] & 7) << 1);
-			array[2] = ((value[2] & 0xF8) >> 3) & 0x1F;
-			break;
-		case 15:
-			array[3] = (short)(value[0] & 0x1F);
-			array[4] = (short)(((value[0] >> 5) & 7) + ((value[1] & 7) << 3));
-			array[5] = (short)(((value[1] >> 3) & 0x1F) + ((value[2] & 1) << 5));
-			array[6] = ((value[2] >> 1) & 0x7F) + ((value[3] & 0xFF) << 7) + ((value[4] & 0x1F) << 15);
-			array[6] *= 1000;
-			break;
-		case 22:
-			array[3] = (short)(value[0] & 0x1F);
-			array[4] = (short)(((value[0] >> 5) & 7) + ((value[1] & 7) << 3));
-			array[5] = (short)(((value[1] >> 3) & 0x1F) + ((value[2] & 1) << 5));
-			array[6] = ((value[2] >> 1) & 0x7F) + ((value[3] & 0xFF) << 7) + ((value[4] & 0x1F) << 15);
-			array[6] *= 1000;
-			array[7] = ByteUtil.getShort(value, 5);
-			break;
-		case 16:
-			array[0] = ByteUtil.getShort(value, 0) & 0x7FFF;
-			if (array[0] > 9999)
-			{
-				array[0] = (short)((short)array[0] | 0x8000);
-			}
-			array[1] = ((value[1] >> 7) & 1) + ((value[2] & 7) << 1);
-			array[2] = ((value[2] & 0xF8) >> 3) & 0x1F;
-			array[3] = value[3] & 0x1F;
-			array[4] = ((value[3] >> 5) & 7) + ((value[4] & 7) << 3);
-			array[5] = ((value[4] >> 3) & 0x1F) + ((value[5] & 1) << 5);
-			array[6] = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0x1F) << 15);
-			array[6] *= 1000;
-			break;
-		case 23:
-			array[0] = ByteUtil.getShort(value, 0) & 0x7FFF;
-			if (array[0] > 9999)
-			{
-				array[0] = (short)((short)array[0] | 0x8000);
-			}
-			array[1] = ((value[1] >> 7) & 1) + ((value[2] & 7) << 1);
-			array[2] = ((value[2] & 0xF8) >> 3) & 0x1F;
-			array[3] = value[3] & 0x1F;
-			array[4] = ((value[3] >> 5) & 7) + ((value[4] & 7) << 3);
-			array[5] = ((value[4] >> 3) & 0x1F) + ((value[5] & 1) << 5);
-			array[6] = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0x1F) << 15);
-			array[6] *= 1000;
-			array[7] = ByteUtil.getShort(value, value.Length - 2);
-			break;
-		case 26:
-			array[0] = ByteUtil.getShort(value, 0) & 0x7FFF;
-			if (array[0] > 9999)
-			{
-				array[0] = (short)((short)array[0] | 0x8000);
-			}
-			array[1] = ((value[1] >> 7) & 1) + ((value[2] & 7) << 1);
-			array[2] = ((value[2] & 0xF8) >> 3) & 0x1F;
-			array[3] = value[3] & 0x1F;
-			array[4] = ((value[3] >> 5) & 7) + ((value[4] & 7) << 3);
-			array[5] = ((value[4] >> 3) & 0x1F) + ((value[5] & 1) << 5);
-			array[6] = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0xFF) << 15) + ((value[8] & 0x7F) << 23);
-			break;
-		case 27:
-			array[0] = ByteUtil.getShort(value, 0) & 0x7FFF;
-			if (array[0] > 9999)
-			{
-				array[0] = (short)((short)array[0] | 0x8000);
-			}
-			array[1] = ((value[1] >> 7) & 1) + ((value[2] & 7) << 1);
-			array[2] = ((value[2] & 0xF8) >> 3) & 0x1F;
-			array[3] = value[3] & 0x1F;
-			array[4] = ((value[3] >> 5) & 7) + ((value[4] & 7) << 3);
-			array[5] = ((value[4] >> 3) & 0x1F) + ((value[5] & 1) << 5);
-			array[6] = ((value[5] >> 1) & 0x7F) + ((value[6] & 0xFF) << 7) + ((value[7] & 0xFF) << 15) + ((value[8] & 0x7F) << 23);
-			array[7] = ByteUtil.getShort(value, value.Length - 2);
-			break;
-		}
-		return array;
+		return DmTemporalLegacyAdapter.ToSemantic(DmTemporalLegacyAdapter.ReadHelper(value));
 	}
 
 	private static int[] dmdtDecodeBdta(byte[] value)
 	{
-		int[] array = new int[8]
-		{
-			ByteUtil.getShort(value, 0),
-			(short)(value[2] & 0xFF),
-			(short)(value[3] & 0xFF),
-			(short)(value[4] & 0xFF),
-			(short)(value[5] & 0xFF),
-			(short)(value[6] & 0xFF),
-			(value[7] & 0xFF) + (value[8] << 8) + (value[9] << 16),
-			ByteUtil.getShort(value, 10)
-		};
-		if (value.Length > 12)
-		{
-			array[6] += value[12] << 24;
-		}
-		return array;
+		throw new NotSupportedException("Compact temporal decoding requires explicit column metadata.");
 	}
 
 	internal byte[] encode(DmField column, DmConnection connection)
 	{
-		int[] array = dt;
-		int type = dtype;
-		int num = scale;
-		if (column != null)
-		{
-			if ((column.scale & 0x1000) != 0)
-			{
-				column.scale &= -4097;
-				column.mask = 4;
-			}
-			else if ((column.scale & 0x2000) != 0)
-			{
-				column.scale &= -8193;
-				column.mask = 1;
-			}
-			type = column.type;
-			num = column.scale;
-		}
-		if (column != null && column.mask == 4)
-		{
-			array = transformTZ(array, connection.GetConnInstance().ConnProperty.TimeZone, connection.GetConnInstance().ConnProperty.DbTimeZone);
-		}
-		array = roundHalfup(array, type, num);
-		if (array[0] < -4712 || array[0] > 9999)
-		{
-			DmError.ThrowDmException(DmErrorDefinition.EC_DATETIME_OVERFLOW);
-		}
-		int num2 = array[0];
-		int num3 = array[1];
-		int num4 = array[2];
-		int num5 = array[3];
-		int num6 = array[4];
-		int num7 = array[5];
-		int num8 = array[6];
-		int num9 = ((array[7] == int.MinValue && connection != null) ? connection.GetConnInstance().ConnProperty.TimeZone : array[7]);
-		byte[] array2 = null;
-		switch (type)
-		{
-		case 14:
-			array2 = new byte[3]
-			{
-				(byte)(num2 & 0xFF),
-				0,
-				0
-			};
-			if (num2 >= 0)
-			{
-				array2[1] = (byte)((num2 >> 8) | ((num3 & 1) << 7));
-			}
-			else
-			{
-				array2[1] = (byte)((num2 >> 8) & (((num3 & 1) << 7) | 0x7F));
-			}
-			array2[2] = (byte)(((num3 & 0xE) >> 1) | (num4 << 3));
-			break;
-		case 16:
-			num8 /= 1000;
-			array2 = new byte[8]
-			{
-				(byte)(num2 & 0xFF),
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			};
-			if (num2 >= 0)
-			{
-				array2[1] = (byte)((num2 >> 8) | ((num3 & 1) << 7));
-			}
-			else
-			{
-				array2[1] = (byte)((num2 >> 8) & (((num3 & 1) << 7) | 0x7F));
-			}
-			array2[2] = (byte)(((num3 & 0xE) >> 1) | (num4 << 3));
-			array2[3] = (byte)(num5 | ((num6 & 7) << 5));
-			array2[4] = (byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3));
-			array2[5] = (byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1));
-			array2[6] = (byte)((num8 >> 7) & 0xFF);
-			array2[7] = (byte)((num8 >> 15) & 0xFF);
-			break;
-		case 26:
-			array2 = new byte[9]
-			{
-				(byte)(num2 & 0xFF),
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			};
-			if (num2 >= 0)
-			{
-				array2[1] = (byte)((num2 >> 8) | ((num3 & 1) << 7));
-			}
-			else
-			{
-				array2[1] = (byte)((num2 >> 8) & (((num3 & 1) << 7) | 0x7F));
-			}
-			array2[2] = (byte)(((num3 & 0xE) >> 1) | (num4 << 3));
-			array2[3] = (byte)(num5 | ((num6 & 7) << 5));
-			array2[4] = (byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3));
-			array2[5] = (byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1));
-			array2[6] = (byte)((num8 >> 7) & 0xFF);
-			array2[7] = (byte)((num8 >> 15) & 0xFF);
-			array2[8] = (byte)((num8 >> 23) & 0xFF);
-			break;
-		case 23:
-			num8 /= 1000;
-			array2 = new byte[10]
-			{
-				(byte)(num2 & 0xFF),
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			};
-			if (num2 >= 0)
-			{
-				array2[1] = (byte)((num2 >> 8) | ((num3 & 1) << 7));
-			}
-			else
-			{
-				array2[1] = (byte)((num2 >> 8) & (((num3 & 1) << 7) | 0x7F));
-			}
-			array2[2] = (byte)(((num3 & 0xE) >> 1) | (num4 << 3));
-			array2[3] = (byte)(num5 | ((num6 & 7) << 5));
-			array2[4] = (byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3));
-			array2[5] = (byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1));
-			array2[6] = (byte)((num8 >> 7) & 0xFF);
-			array2[7] = (byte)((num8 >> 15) & 0xFF);
-			ByteUtil.setShort(array2, 8, (short)num9);
-			break;
-		case 27:
-			array2 = new byte[11]
-			{
-				(byte)(num2 & 0xFF),
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			};
-			if (num2 >= 0)
-			{
-				array2[1] = (byte)((num2 >> 8) | ((num3 & 1) << 7));
-			}
-			else
-			{
-				array2[1] = (byte)((num2 >> 8) & (((num3 & 1) << 7) | 0x7F));
-			}
-			array2[2] = (byte)(((num3 & 0xE) >> 1) | (num4 << 3));
-			array2[3] = (byte)(num5 | ((num6 & 7) << 5));
-			array2[4] = (byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3));
-			array2[5] = (byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1));
-			array2[6] = (byte)((num8 >> 7) & 0xFF);
-			array2[7] = (byte)((num8 >> 15) & 0xFF);
-			array2[8] = (byte)((num8 >> 23) & 0xFF);
-			ByteUtil.setShort(array2, 9, (short)num9);
-			break;
-		case 15:
-			num8 /= 1000;
-			array2 = new byte[5]
-			{
-				(byte)(num5 | ((num6 & 7) << 5)),
-				(byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3)),
-				(byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1)),
-				(byte)((num8 >> 7) & 0xFF),
-				(byte)((num8 >> 15) & 0xFF)
-			};
-			break;
-		case 22:
-			num8 /= 1000;
-			array2 = new byte[7]
-			{
-				(byte)(num5 | ((num6 & 7) << 5)),
-				(byte)(((num6 & 0x38) >> 3) | ((num7 & 0x1F) << 3)),
-				(byte)(((num7 & 0x20) >> 5) | ((num8 & 0x7F) << 1)),
-				(byte)((num8 >> 7) & 0xFF),
-				(byte)((num8 >> 15) & 0xFF),
-				0,
-				0
-			};
-			ByteUtil.setShort(array2, 5, (short)num9);
-			break;
-		}
-		return array2;
+		int targetType = column?.type ?? dtype;
+		int targetScale = DmTemporalLegacyAdapter.SemanticScale(targetType, column?.scale ?? scale);
+		var target = DmTemporalLegacyAdapter.Target(column, targetType, targetScale);
+		return EncodeWithTarget(column, connection, target);
 	}
 
 	public int parseString(string s)
 	{
-		string extraInfo = s;
-		try
-		{
-			string text = null;
-			string text2 = null;
-			string text3 = null;
-			string text4 = null;
-			int num = 0;
-			int num2 = 0;
-			int num3 = 0;
-			int num4 = 0;
-			int num5 = 0;
-			int num6 = 0;
-			int num7 = 0;
-			int num8 = 0;
-			int num9 = 0;
-			int num10 = 0;
-			int num11 = 0;
-			int num12 = int.MinValue;
-			if (s == null)
-			{
-				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-			}
-			s = s.Trim();
-			if (s.StartsWith("-", StringComparison.CurrentCulture))
-			{
-				s = s.Substring(1).Trim();
-				num11 = 1;
-			}
-			string[] array = s.Split(' ');
-			switch (array.Length)
-			{
-			case 3:
-				text = array[0];
-				text2 = array[1];
-				text4 = array[2];
-				dtype = 23;
-				break;
-			case 2:
-				if (array[0].IndexOf(":") > 0)
-				{
-					text2 = array[0];
-					text4 = array[1];
-					dtype = 22;
-				}
-				else
-				{
-					text = array[0];
-					text2 = array[1];
-					dtype = 16;
-				}
-				break;
-			case 1:
-				if (array[0].IndexOf(":") > 0)
-				{
-					text2 = array[0];
-					dtype = 15;
-				}
-				else
-				{
-					text = array[0];
-					dtype = 14;
-				}
-				break;
-			default:
-				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-				break;
-			}
-			if (text != null)
-			{
-				int num13 = text.IndexOf('-');
-				int num14 = text.IndexOf('-', num13 + 1);
-				if (num13 < 0 || num14 < 0)
-				{
-					num13 = s.IndexOf('.');
-					num14 = s.IndexOf('.', num13 + 1);
-				}
-				if (num13 < 0 || num14 < 0)
-				{
-					num13 = s.IndexOf('/');
-					num14 = s.IndexOf('/', num13 + 1);
-				}
-				if ((num13 > 0 && num14 > 0) & (num14 < text.Length - 1))
-				{
-					num = ((num11 != 1) ? (Convert.ToInt32(text.Substring(0, num13)) - 1900) : (-Convert.ToInt32(text.Substring(0, num13)) - 1900));
-					num2 = Convert.ToInt32(text.Substring(num13 + 1, num14 - (num13 + 1))) - 1;
-					num3 = Convert.ToInt32(text.Substring(num14 + 1));
-					if (!DateUtil.checkDate(num + 1900, num2 + 1, num3))
-					{
-						DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-					}
-				}
-				else
-				{
-					DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-				}
-			}
-			if (text2 != null)
-			{
-				num8 = text2.IndexOf(':');
-				num9 = text2.IndexOf(':', num8 + 1);
-				num10 = text2.IndexOf('.', num9 + 1);
-				if ((num8 > 0 && num9 > 0) & (num9 < text2.Length - 1))
-				{
-					num4 = Convert.ToInt32(text2.Substring(0, num8));
-					num5 = Convert.ToInt32(text2.Substring(num8 + 1, num9 - (num8 + 1)));
-					if ((num10 > 0) & (num10 < text2.Length - 1))
-					{
-						num6 = Convert.ToInt32(text2.Substring(num9 + 1, num10 - (num9 + 1)));
-						text3 = text2.Substring(num10 + 1);
-						if (text3.Length > 9)
-						{
-							DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-						}
-						if (!char.IsDigit(text3[0]))
-						{
-							DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-						}
-						text3 += "000000000".Substring(0, 9 - text3.Length);
-						num7 = Convert.ToInt32(text3);
-					}
-					else if (num10 > 0)
-					{
-						DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-					}
-					else
-					{
-						num6 = Convert.ToInt32(text2.Substring(num9 + 1));
-					}
-					if (num4 >= 24 || num4 < 0 || num5 >= 60 || num5 < 0 || num6 >= 60 || num6 < 0)
-					{
-						DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-					}
-				}
-				else
-				{
-					DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-				}
-			}
-			if (text4 != null)
-			{
-				bool flag = false;
-				if (text4.StartsWith("-"))
-				{
-					flag = true;
-				}
-				if (text4.StartsWith("-") || text4.StartsWith("+"))
-				{
-					text4 = text4.Substring(1).Trim();
-				}
-				string[] array2 = text4.Split(':');
-				short num15 = 0;
-				short num16 = 0;
-				switch (array2.Length)
-				{
-				case 2:
-					num15 = Convert.ToInt16(array2[0].Trim());
-					num16 = Convert.ToInt16(array2[1].Trim());
-					break;
-				case 1:
-					num15 = Convert.ToInt16(array2[0].Trim());
-					break;
-				default:
-					DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-					break;
-				}
-				num12 = (short)(num15 * 60 + num16);
-				if (num12 < 0)
-				{
-					DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-				}
-				if (flag)
-				{
-					num12 *= -1;
-				}
-				if (num12 <= -780 || num12 > 840)
-				{
-					DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-				}
-			}
-			dt[0] = num + 1900;
-			dt[1] = num2 + 1;
-			dt[2] = ((num3 == 0) ? 1 : num3);
-			dt[3] = num4;
-			dt[4] = num5;
-			dt[5] = num6;
-			dt[6] = num7;
-			dt[7] = num12;
-		}
-		catch (Exception)
-		{
-			DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, extraInfo);
-		}
-		scale = ((dtype != 14) ? 6 : 0);
+		var parsed = DmTemporalLegacyAdapter.Parse(s);
+		int[] values = DmTemporalLegacyAdapter.ToSemantic(parsed.Fields);
+		dt = values; dtype = parsed.Type; scale = parsed.Scale;
 		return dtype;
 	}
 
 	public static int[] transformTZ(int[] dt, int defaultSrcTz, int destTz)
 	{
-		int num = defaultSrcTz;
-		if (dt[7] != int.MinValue)
-		{
-			num = dt[7];
-		}
-		if (destTz == num)
-		{
-			return dt;
-		}
-		int[] destinationArray = new int[dt.Length];
-		Array.Copy(dt, destinationArray, dt.Length);
-		destinationArray = AddMinute(destinationArray, destTz - num);
-		if (destinationArray[7] != int.MinValue)
-		{
-			destinationArray[7] = destTz;
-		}
-		return destinationArray;
+		if (dt == null || dt.Length < 8) throw new InvalidOperationException("Timezone arithmetic requires semantic fields.");
+		DmTemporalLegacyAdapter.FromSemantic(dt, 16, 9);
+		int source = dt[7] == int.MinValue ? defaultSrcTz : dt[7];
+		if (source is < short.MinValue or > short.MaxValue || destTz is < short.MinValue or > short.MaxValue)
+			throw new OverflowException("Temporal offset exceeds the helper range.");
+		if (destTz == source) return dt;
+		int[] copy = (int[])dt.Clone();
+		AddMinute(copy, checked(destTz - source));
+		if (copy[7] != int.MinValue) copy[7] = destTz;
+		return copy;
 	}
 
 	private static int[] roundHalfup(int[] dt, int dtype, int scale)
 	{
-		if (((uint)(dtype - 15) <= 1u || (uint)(dtype - 22) <= 1u || (uint)(dtype - 26) <= 1u) && scale < 9)
-		{
-			int[] array = new int[dt.Length];
-			Array.Copy(dt, array, dt.Length);
-			int num = dt[6];
-			int num2 = (int)Math.Pow(10.0, 9 - scale);
-			int num3 = num / (int)Math.Pow(10.0, 9 - scale - 1) % 10;
-			array[6] = num / num2 * num2;
-			if (num3 > 4)
-			{
-				AddNanoSecond(array, num2);
-			}
-			return array;
-		}
+		DmTemporalInteger.ValidateWireFraction(dt[6], scale);
 		return dt;
 	}
 
 	public static int[] AddNanoSecond(int[] dt, int n)
 	{
-		int num = dt[6] + n;
-		int num2 = num / 1000000000;
-		if ((num %= 1000000000) < 0)
-		{
-			num += 1000000000;
-			num2--;
-		}
-		dt[6] = num;
-		AddSecond(dt, num2);
-		return dt;
+		return DmTemporalLegacyAdapter.AddClock(dt, n, 86400000000000L);
 	}
 
 	public static int[] AddSecond(int[] dt, int n)
 	{
-		int num = dt[5] + n;
-		int num2 = num / 60;
-		if ((num %= 60) < 0)
-		{
-			num += 60;
-			num2--;
-		}
-		dt[5] = num;
-		AddMinute(dt, num2);
-		return dt;
+		return DmTemporalLegacyAdapter.AddClock(dt, n, 86400L);
 	}
 
 	public static int[] AddMinute(int[] dt, int n)
 	{
-		int num = dt[4] + n;
-		int num2 = num / 60;
-		if ((num %= 60) < 0)
-		{
-			num += 60;
-			num2--;
-		}
-		dt[4] = num;
-		AddHour(dt, num2);
-		return dt;
+		return DmTemporalLegacyAdapter.AddClock(dt, n, 1440L);
 	}
 
 	private static int[] AddHour(int[] dt, int n)
 	{
-		int num = dt[3] + n;
-		int num2 = num / 24;
-		if ((num %= 24) < 0)
-		{
-			num += 24;
-			num2--;
-		}
-		dt[3] = num;
-		AddDay(dt, num2);
-		return dt;
+		return DmTemporalLegacyAdapter.AddClock(dt, n, 24L);
 	}
 
 	private static int[] AddDay(int[] dt, int n)
 	{
-		int num = dt[2] + n;
-		int num2 = 0;
-		while (num > (num2 = DateUtil.getDaysOfMonth(dt[0], dt[1])) || num <= 0)
-		{
-			AddMonth(dt, (num > num2) ? 1 : (-1));
-			num = ((num > num2) ? (num - num2) : (num + num2));
-		}
-		dt[2] = num;
-		return dt;
+		return DmTemporalLegacyAdapter.AddClock(dt, n, 1L);
 	}
 
 	private static int[] AddMonth(int[] dt, int n)
 	{
-		int num = dt[1] + n;
-		int num2 = num / 12;
-		if ((num %= 12) < 1)
-		{
-			num += 12;
-			num2--;
-		}
-		int daysOfMonth = DateUtil.getDaysOfMonth(dt[0], num);
-		if (dt[2] > daysOfMonth)
-		{
-			dt[2] = daysOfMonth;
-		}
-		dt[1] = num;
-		AddYear(dt, num2);
+		DmTemporalLegacyAdapter.FromSemantic(dt, 16, 9);
+		long total = checked((long)dt[0] * 12 + dt[1] - 1 + n);
+		long year = Math.DivRem(total, 12, out long month);
+		if (month < 0) { month += 12; year--; }
+		if (year == 0) throw new OverflowException("Temporal calendar has no year zero.");
+		int targetYear = checked((int)year), targetMonth = (int)month + 1;
+		int days = targetMonth == 2 ? DmdtIsLeapYear(targetYear) ? 29 : 28 : targetMonth is 4 or 6 or 9 or 11 ? 30 : 31;
+		dt[0] = targetYear; dt[1] = targetMonth; dt[2] = Math.Min(dt[2], days);
 		return dt;
 	}
 
 	private static int[] AddYear(int[] dt, int n)
 	{
-		dt[0] += n;
-		return dt;
+		return AddMonth(dt, checked(n * 12));
 	}
 }

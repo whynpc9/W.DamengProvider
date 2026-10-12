@@ -1,0 +1,438 @@
+{
+  "task": "TP03-v6 full offline validation",
+  "source_manifest_sha256": "60a812bfa42ff8deab78aea325e50e92b0123bd634d92b5d6dbce08aa9e22206",
+  "runs": [
+    {
+      "lane": "sdk",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "--version"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0
+    },
+    {
+      "lane": "restore-W.DmProvider.TypeTests.csproj",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "restore",
+        "tests/W.DmProvider.TypeTests/W.DmProvider.TypeTests.csproj",
+        "--disable-parallel",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0
+    },
+    {
+      "lane": "new_temporal_helper_writer_interval_route_targeted",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "test",
+        "tests/W.DmProvider.TypeTests/W.DmProvider.TypeTests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers",
+        "--filter",
+        "FullyQualifiedName~TemporalNative|FullyQualifiedName~ExtendedTemporalPrecisionTests|FullyQualifiedName~TextTemporalContractTests|FullyQualifiedName~ResolvedWriterTests",
+        "--logger",
+        "trx;LogFileName=tp03-targeted.trx",
+        "--results-directory",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/new_temporal_helper_writer_interval_route_targeted-results"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0,
+      "counters": {
+        "total": "261",
+        "executed": "261",
+        "passed": "261",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "trx_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/new_temporal_helper_writer_interval_route_targeted-results/tp03-targeted.trx",
+      "trx_sha256": "6f47ef29cc080e53c6ef82cf5c5ce9394fa86be1c86d95845392193c759df9e6",
+      "actual_test_codebase_paths": [
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.TypeTests/bin/Release/net10.0/W.DmProvider.TypeTests.dll"
+      ]
+    },
+    {
+      "lane": "full_TypeTests_same_build",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "test",
+        "tests/W.DmProvider.TypeTests/W.DmProvider.TypeTests.csproj",
+        "-c",
+        "Release",
+        "--no-build",
+        "--no-restore",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers",
+        "--logger",
+        "trx;LogFileName=type-tests.trx",
+        "--results-directory",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/full_TypeTests_same_build-results"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0,
+      "counters": {
+        "total": "386",
+        "executed": "386",
+        "passed": "386",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "trx_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/full_TypeTests_same_build-results/type-tests.trx",
+      "trx_sha256": "42de9a92d5e1c13d13ad1b5c47d1d88bba2ed7634bd4a6f95a073bc0cb8d3d68",
+      "actual_test_codebase_paths": [
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.TypeTests/bin/Release/net10.0/W.DmProvider.TypeTests.dll"
+      ]
+    },
+    {
+      "lane": "restore-W.DmProvider.CommandTests.csproj",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "restore",
+        "tests/W.DmProvider.CommandTests/W.DmProvider.CommandTests.csproj",
+        "--disable-parallel",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0
+    },
+    {
+      "lane": "Command_contract_regression",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "test",
+        "tests/W.DmProvider.CommandTests/W.DmProvider.CommandTests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers",
+        "--logger",
+        "trx;LogFileName=command-tests.trx",
+        "--results-directory",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/Command_contract_regression-results"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0,
+      "counters": {
+        "total": "16",
+        "executed": "16",
+        "passed": "16",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "trx_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/Command_contract_regression-results/command-tests.trx",
+      "trx_sha256": "232b4138ec328f3f269cc3eb1854c1e1c0c510bd877afb3ce3eccb8cd9ed9fef",
+      "actual_test_codebase_paths": [
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.CommandTests/bin/Release/net10.0/W.DmProvider.CommandTests.dll"
+      ]
+    },
+    {
+      "lane": "restore-W.DmProvider.AsyncTests.csproj",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "restore",
+        "tests/W.DmProvider.AsyncTests/W.DmProvider.AsyncTests.csproj",
+        "--disable-parallel",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0
+    },
+    {
+      "lane": "Async_contract_regression",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "test",
+        "tests/W.DmProvider.AsyncTests/W.DmProvider.AsyncTests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers",
+        "--logger",
+        "trx;LogFileName=async-tests.trx",
+        "--results-directory",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/Async_contract_regression-results"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0,
+      "counters": {
+        "total": "124",
+        "executed": "124",
+        "passed": "124",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "trx_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/Async_contract_regression-results/async-tests.trx",
+      "trx_sha256": "2a1f34e1fc30e5aff608c96c2133c570e2fbc40cfdc8bab75b3782d77155cb37",
+      "actual_test_codebase_paths": [
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.AsyncTests/bin/Release/net10.0/W.DmProvider.AsyncTests.dll"
+      ]
+    },
+    {
+      "lane": "restore-W.DmProvider.DiagnosticsTests.csproj",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "restore",
+        "tests/W.DmProvider.DiagnosticsTests/W.DmProvider.DiagnosticsTests.csproj",
+        "--disable-parallel",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0
+    },
+    {
+      "lane": "R3_paged_reader_and_diagnostics_contract",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "test",
+        "tests/W.DmProvider.DiagnosticsTests/W.DmProvider.DiagnosticsTests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers",
+        "--filter",
+        "FullyQualifiedName~R3InternalPagedReadDiagnosticTests|FullyQualifiedName~R3CleanupDiagnosticOutcomeTests|FullyQualifiedName~DiagnosticsTests|FullyQualifiedName~T25ReentrantDiagnosticsTests",
+        "--logger",
+        "trx;LogFileName=r3-reader-diagnostics.trx",
+        "--results-directory",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/R3_paged_reader_and_diagnostics_contract-results"
+      ],
+      "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work",
+      "exit_code": 0,
+      "counters": {
+        "total": "83",
+        "executed": "83",
+        "passed": "83",
+        "failed": "0",
+        "error": "0",
+        "timeout": "0",
+        "aborted": "0",
+        "inconclusive": "0",
+        "passedButRunAborted": "0",
+        "notRunnable": "0",
+        "notExecuted": "0",
+        "disconnected": "0",
+        "warning": "0",
+        "completed": "0",
+        "inProgress": "0",
+        "pending": "0"
+      },
+      "trx_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/R3_paged_reader_and_diagnostics_contract-results/r3-reader-diagnostics.trx",
+      "trx_sha256": "01c48bc87aa21cdb3e622ae352c95aa67fef04aba32b25e733485671d526b951",
+      "actual_test_codebase_paths": [
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.DiagnosticsTests/bin/Release/net10.0/W.DmProvider.DiagnosticsTests.dll"
+      ]
+    }
+  ],
+  "status": "offline_passed_root_acceptance_pending",
+  "database_executed": false,
+  "package_created": false,
+  "TP03_accepted": false,
+  "build_window_released": true,
+  "sdk_version": "10.0.203",
+  "source_drift": [],
+  "old_v1_source_drift": [],
+  "finished_utc": "2026-10-08T06:42:20.998827+00:00",
+  "core_Astra_report_sha256": "64fcfbfb5fd8ad7543cd02c0611bc3eed8c98bb69d5471d7258d98c62420ab3f",
+  "wiring_contract_summary_sha256": "e2b90e78412269affe5a45d02bbd44714c2d84353fc4d4ebcd38440be1ccfb75",
+  "v5_source_drift": [],
+  "retained_v5_failure_sha256": "fb6bcd6aa5f5254528a3e1681c8d6b69d886bc162013aa5c9f0522ec462c9461",
+  "retained_v5_package_sha256": "502f16248df703dc01060e50e3791fb28cda6f66935ad42e944045bb16b3070a",
+  "profile_cases_executed": [
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.VerifiedProfileDoesNotAllowCrossTimezoneTypesOrUnrepresentableOffsets",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.UnknownOrDifferentServerProfileStillRejectsSevenDigits(serverVersion: \"8.1.5.61\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.UnknownOrDifferentServerProfileStillRejectsSevenDigits(serverVersion: \"8.1.5.59\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.MandatoryIdentityFactAndCurrentPhysicalSessionCannotInheritLogicalDefaults",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: True)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeCoreTests.KindNeverChangesWallClockEncoding(kind: Unspecified)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.UnknownOrDifferentServerProfileStillRejectsSevenDigits(serverVersion: \"8.1.5.60 \")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.NativeMaximumVectorsStayExactOrFailBeforeLegacyEncoding",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: \"UTF-8\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.UnknownOrDifferentServerProfileStillRejectsSevenDigits(serverVersion: \"\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: \" \")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: \"utf-8\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: False, value: null)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeCoreTests.KindNeverChangesWallClockEncoding(kind: Utc)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.VerifiedProfileDoesNotOpenSubTickInputPrecision(scale: 8)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.VerifiedProfileDoesNotOpenSubTickInputPrecision(scale: 9)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: 123)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.ExtendedTemporalPrecisionTests.UnknownOrDifferentServerProfileStillRejectsSevenDigits(serverVersion: null)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeCoreTests.KindNeverChangesWallClockEncoding(kind: Local)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: \"gb18030\")",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.EncodingOverrideMustBePresentStringAndEmptyBeforeAnyVerifiedCapability(present: True, value: null)",
+      "outcome": "Passed"
+    },
+    {
+      "testName": "W.DmProvider.TypeTests.TemporalNativeWriterAdapterTests.UnknownProfileKeepsLegacyAndReliableFixedExtendedSixOnly",
+      "outcome": "Passed"
+    }
+  ],
+  "assemblies": [
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.TypeTests/bin/Release/net10.0/W.DmProvider.TypeTests.dll",
+      "sha256": "c1678a6b3ab22c9db7c4a6e90f873d76f44787fce1d2acf966e1c851b1b35bbc"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.TypeTests/bin/Release/net10.0/W.DmProvider.dll",
+      "sha256": "92f774783dedcd0525b33555c28841e4468ffdcdfce1b4b022257140eae66322"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.CommandTests/bin/Release/net10.0/W.DmProvider.CommandTests.dll",
+      "sha256": "10b1f01287041313e9121ef1063c580d61e99b1f1481ce5a889699c350b7822c"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.CommandTests/bin/Release/net10.0/W.DmProvider.dll",
+      "sha256": "92f774783dedcd0525b33555c28841e4468ffdcdfce1b4b022257140eae66322"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.AsyncTests/bin/Release/net10.0/W.DmProvider.AsyncTests.dll",
+      "sha256": "60deb813d1c0149081f668d16c9bc43c2e638f111a4b3c4d2eb677816ac0a333"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.AsyncTests/bin/Release/net10.0/W.DmProvider.dll",
+      "sha256": "92f774783dedcd0525b33555c28841e4468ffdcdfce1b4b022257140eae66322"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.DiagnosticsTests/bin/Release/net10.0/W.DmProvider.DiagnosticsTests.dll",
+      "sha256": "8f84c8e73486533477e173e8c2efd84b3f3faf89def11a01eb9756c58aeb3150"
+    },
+    {
+      "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6/build-work/tests/W.DmProvider.DiagnosticsTests/bin/Release/net10.0/W.DmProvider.dll",
+      "sha256": "92f774783dedcd0525b33555c28841e4468ffdcdfce1b4b022257140eae66322"
+    }
+  ]
+}

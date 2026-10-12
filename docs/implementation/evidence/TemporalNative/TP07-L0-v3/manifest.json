@@ -1,0 +1,89 @@
+{
+  "scope": "L0 v3 runtime verification: shared12/TLS2; actual E and D pending; historical v2 failure retained; bare types observed six only",
+  "artifacts": [
+    {
+      "source": "TP07-L0-v3-python-prepare/prepared/source-manifest.json",
+      "artifact": "TP07-L0-v3-python-prepare--prepared--source-manifest.json.gz",
+      "original_sha256": "b894f2c2e82c40c5bb47c14e53b4f552152ee276e537d7ea208f3a5a2bb69b26",
+      "artifact_sha256": "425f20285634243cf32a0b0417ee1e047d94e399ff0839b1b45939d2d5471eee"
+    },
+    {
+      "source": "TP07-L0-v3-build/startup-manifest.json",
+      "artifact": "TP07-L0-v3-build--startup-manifest.json.gz",
+      "original_sha256": "30a12bdcfb842bb783c7e28e2c35036f12c88b74715b70e8a5665e40bd4fa800",
+      "artifact_sha256": "a660b5340b07e88dc91ec9198a9b0514f5a5d2415ac1280d11f8e3ab42ec8771"
+    },
+    {
+      "source": "TP07-L0-v3-build/build-receipt.json",
+      "artifact": "TP07-L0-v3-build--build-receipt.json.gz",
+      "original_sha256": "b2e0881cbdba2d7a838dc0fc5e3f116fc65aaa2ab381188bae8dda1936f3e29f",
+      "artifact_sha256": "b9b8d25a44aadb8ba3dbc1c4e9ab49c8859baf7162246bd0358cd764e8e71a0c"
+    },
+    {
+      "source": "TP07-L0-v3-sdk-control/verification-summary.json",
+      "artifact": "TP07-L0-v3-sdk-control--verification-summary.json.gz",
+      "original_sha256": "d4fc178b31685e40f3a312a052d73ad34065fcf65578b35c3bc883a86fd31c90",
+      "artifact_sha256": "34270a06a97bfed4add0ae961c2e97f4779e012984317c75044f12bfa54efddf"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/run-receipt.json",
+      "artifact": "TP07-L0-v3-runtime--run-receipt.json.gz",
+      "original_sha256": "28eb8022d6eabe29ff7e2a589ca7a4d4df811f699cdbcf081b7aaa5357ad37f1",
+      "artifact_sha256": "d8c49a54cd2c92a745d3e777e7c3d112b9a016d37cc790332554ce3283db90f1"
+    },
+    {
+      "source": "TP07-L0-v3-runtime-validation/validation.json",
+      "artifact": "TP07-L0-v3-runtime-validation--validation.json.gz",
+      "original_sha256": "9767f668d3ff214de78abd10c6c326c2ab233d02eabad769d7b0f19d6e949801",
+      "artifact_sha256": "50beb4e4fec5bc32e4f7af9794d705082816eb19979495dcce4079d8c0ab8b80"
+    },
+    {
+      "source": "TP07-L0-v3-runtime-validation/verification-summary.json",
+      "artifact": "TP07-L0-v3-runtime-validation--verification-summary.json.gz",
+      "original_sha256": "b3b63c2d3ad2d87d1422eaf06359acfc953dc9c2234e86e8f5843f1921713680",
+      "artifact_sha256": "b5c820283e832af4857e25ef88697c1332a78138b989aa7e6ae721d1e9463dbc"
+    },
+    {
+      "source": "TP07-L0-v3-build/literal-grammar/report.json",
+      "artifact": "TP07-L0-v3-build--literal-grammar--report.json.gz",
+      "original_sha256": "9c07298bfbed2de0800f6d087cfa523f5b6bfb12e8c08ca48dff258997eecb30",
+      "artifact_sha256": "f4274d216fe0895a424daa751abe1866eda31f75b2c136e3936e2c8d4e42d907"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/shared/main/report.json",
+      "artifact": "TP07-L0-v3-runtime--shared--main--report.json.gz",
+      "original_sha256": "025be8d133c6fe050037f60b68d991f21a6bd8ad1b1eee56e92df5f8bca949b4",
+      "artifact_sha256": "9f8483665ef630630f78039f522475bbadcd43a50e14acfd24a229b1c5626e90"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/shared/main/ownership.json",
+      "artifact": "TP07-L0-v3-runtime--shared--main--ownership.json.gz",
+      "original_sha256": "55d43255c11521201d102acc1bdbeab769c99a8935f417e8a386fcc54fab83d9",
+      "artifact_sha256": "9449c99a8c6116bc6bdfa54932af21f05ed17b2e8a84d58661bf924a0c71374b"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/shared/cleanup/report.json",
+      "artifact": "TP07-L0-v3-runtime--shared--cleanup--report.json.gz",
+      "original_sha256": "ad9243dc6ae8704b77f0dfa375ba6e369dc8fc5b474c04cf5045aaf7fa268921",
+      "artifact_sha256": "fc58aa163d9d17db2a605004e9422ebeca93dfbfaeba67427b827a8535320595"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/tls/main/report.json",
+      "artifact": "TP07-L0-v3-runtime--tls--main--report.json.gz",
+      "original_sha256": "b6275ea02f848b9e7cea31b0ade612ac20901a1bca56c68fde5429fc42cf46a4",
+      "artifact_sha256": "6de2ac9b71852d416eee77a73df71401a62b4f824e4ca37e9be848b1a2298f8a"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/tls/main/ownership.json",
+      "artifact": "TP07-L0-v3-runtime--tls--main--ownership.json.gz",
+      "original_sha256": "739e08b3d99ab02ecf03fd28cb15069b05ddefe8752467369e1a467704087391",
+      "artifact_sha256": "768a8e4e21a36edca1adc606b2af405eff7deda3a63fb45b9a28c381b9c81da5"
+    },
+    {
+      "source": "TP07-L0-v3-runtime/tls/cleanup/report.json",
+      "artifact": "TP07-L0-v3-runtime--tls--cleanup--report.json.gz",
+      "original_sha256": "d6b1a2ba164c9e8c5361d3890e156c8f6259633b541b688f8d270cbcf1f30ec0",
+      "artifact_sha256": "3c8c93b5c46f5871e153c0fa35ba795ef2a268aad16f1df3135dca8ff5b505ee"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
+index 25d9385..ce65989 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
+@@ -184,16 +184,10 @@
+       "w.entityframeworkcore.dameng": {
+         "type": "Project",
+         "dependencies": {
+-          "DM.DmProvider": "[8.3.1.47463, 8.4.0)",
+-          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)"
++          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
++          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
+         }
+       },
+-      "DM.DmProvider": {
+-        "type": "CentralTransitive",
+-        "requested": "[8.3.1.47463, 8.4.0)",
+-        "resolved": "8.3.1.47463",
+-        "contentHash": "51FUZEWXMLp95+vFgoXiZ0Bt69DpZTmk4pDG+971x3igTs57n9EmyONW8vD/bEf43PlOn/BuQk4PGyTfZ/zBKw=="
+-      },
+       "Microsoft.EntityFrameworkCore.Relational": {
+         "type": "CentralTransitive",
+         "requested": "[10.0.12, 11.0.0)",
+@@ -205,6 +199,12 @@
+           "Microsoft.Extensions.Configuration.Abstractions": "10.0.12",
+           "Microsoft.Extensions.Logging": "10.0.12"
+         }
++      },
++      "W.DmProvider": {
++        "type": "CentralTransitive",
++        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
++        "resolved": "0.1.0-temporal.20261008144915",
++        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
+       }
+     }
+   }
+diff --git a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json b/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
+index a7502e5..4b58eab 100644
+--- a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
++++ b/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
+@@ -456,16 +456,10 @@
+       "w.entityframeworkcore.dameng": {
+         "type": "Project",
+         "dependencies": {
+-          "DM.DmProvider": "[8.3.1.47463, 8.4.0)",
+-          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)"
++          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
++          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
+         }
+       },
+-      "DM.DmProvider": {
+-        "type": "CentralTransitive",
+-        "requested": "[8.3.1.47463, 8.4.0)",
+-        "resolved": "8.3.1.47463",
+-        "contentHash": "51FUZEWXMLp95+vFgoXiZ0Bt69DpZTmk4pDG+971x3igTs57n9EmyONW8vD/bEf43PlOn/BuQk4PGyTfZ/zBKw=="
+-      },
+       "Microsoft.EntityFrameworkCore.Relational": {
+         "type": "CentralTransitive",
+         "requested": "[10.0.12, 11.0.0)",
+@@ -477,6 +471,12 @@
+           "Microsoft.Extensions.Configuration.Abstractions": "10.0.12",
+           "Microsoft.Extensions.Logging": "10.0.12"
+         }
++      },
++      "W.DmProvider": {
++        "type": "CentralTransitive",
++        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
++        "resolved": "0.1.0-temporal.20261008144915",
++        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
+       }
+     }
+   }

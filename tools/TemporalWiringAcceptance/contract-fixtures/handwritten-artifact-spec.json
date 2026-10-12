@@ -1,0 +1,102 @@
+{
+  "artifact_role": "offline_contract_fixture_not_database_evidence",
+  "ordinary_ticks": 639204129160000000,
+  "max_ticks": 3155378975999999999,
+  "first_fraction_ticks": 1234560,
+  "replacement_fraction_ticks": 7654320,
+  "stability_second_fraction_ticks": 1234567,
+  "source_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_file": {
+    "path": "src/W.DmProvider/OfflineContract.cs",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "size": 17
+  },
+  "source_archive_sha256": null,
+  "package_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "dll_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "mvid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "candidate_version": "0.1.0-offline-contract-candidate",
+  "baseline_version": "0.1.0-offline-contract-rebuilt-oldW",
+  "shared_server_version": "8.1.5.60",
+  "shared_physical_profile": {
+    "server_version": "8.1.5.60",
+    "encoding": "utf-8",
+    "negotiated_encoding": "utf-8",
+    "message_version": 21,
+    "timezone": 480,
+    "result_format": "ordinary_non_BDTA",
+    "server_user": "WDM_PROVIDER_TEST",
+    "server_schema": "WDM_PROVIDER_TEST",
+    "encoding_override_empty": true,
+    "profile_origin": "physical_get_conn_instance_conn_property",
+    "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field"
+  },
+  "tls_server_version": "8.1.4.6",
+  "offset_min": -779,
+  "offset_max": 840,
+  "nonce": "1234567890ABCDEF1234567890ABCDEF",
+  "metadata_widths": {
+    "16": 8,
+    "23": 10,
+    "26": 9,
+    "27": 11,
+    "14": 3,
+    "15": 5,
+    "22": 7
+  },
+  "approved_scale8": false,
+  "approved_scale9": false,
+  "known_server_extension_rejection_number": -6118,
+  "cast_scale8_ns1_actual_ns": 0,
+  "description": "Independent synthetic TP03-only facts. No DB, package, source or C# execution evidence.",
+  "ordinary_layout_samples": {
+    "ordinary_date": {
+      "ctype": 14,
+      "scale": 0,
+      "fields": [
+        2026,
+        7,
+        23,
+        0,
+        0,
+        0,
+        0
+      ],
+      "offset_minutes": null,
+      "server_text": "2026-07-23",
+      "payload_length": 3
+    },
+    "ordinary_time6": {
+      "ctype": 15,
+      "scale": 6,
+      "fields": [
+        null,
+        null,
+        null,
+        12,
+        13,
+        14,
+        123456000
+      ],
+      "offset_minutes": null,
+      "server_text": "12:13:14.123456000",
+      "payload_length": 5
+    },
+    "ordinary_time_tz6": {
+      "ctype": 22,
+      "scale": 6,
+      "fields": [
+        null,
+        null,
+        null,
+        12,
+        13,
+        14,
+        123456000
+      ],
+      "offset_minutes": 330,
+      "server_text": "12:13:14.123456000 +05:30",
+      "payload_length": 7
+    }
+  }
+}

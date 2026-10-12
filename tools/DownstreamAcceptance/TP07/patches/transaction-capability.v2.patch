@@ -1,0 +1,438 @@
+diff --git a/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs b/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
+index 466b55f..47f8e54 100644
+--- a/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
+@@ -41,6 +41,7 @@
+             .TryAdd<ISqlGenerationHelper, DamengSqlGenerationHelper>()
+             .TryAdd<IProviderConventionSetBuilder, DamengConventionSetBuilder>()
+             .TryAdd<IRelationalConnection, DamengRelationalConnection>()
++            .TryAdd<IRelationalTransactionFactory, DamengRelationalTransactionFactory>()
+             .TryAdd<IMigrationsSqlGenerator, DamengMigrationsSqlGenerator>()
+             .TryAdd<IRelationalDatabaseCreator, DamengDatabaseCreator>()
+             .TryAdd<IHistoryRepository, DamengHistoryRepository>()
+diff --git a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs
+new file mode 100644
+index 0000000..57593aa
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs
+@@ -0,0 +1,26 @@
++using System.Data.Common;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++internal sealed class DamengRelationalTransaction : RelationalTransaction
++{
++    private readonly DbTransaction _transaction;
++
++    public DamengRelationalTransaction(
++        IRelationalConnection connection,
++        DbTransaction transaction,
++        Guid transactionId,
++        IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
++        bool transactionOwned,
++        ISqlGenerationHelper sqlGenerationHelper)
++        : base(connection, transaction, transactionId, logger, transactionOwned, sqlGenerationHelper)
++    {
++        _transaction = transaction;
++    }
++
++    public override bool SupportsSavepoints
++        => _transaction.SupportsSavepoints;
++}
+diff --git a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs
+new file mode 100644
+index 0000000..520bc7e
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs
+@@ -0,0 +1,23 @@
++using System.Data.Common;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++internal sealed class DamengRelationalTransactionFactory : RelationalTransactionFactory
++{
++    public DamengRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies)
++        : base(dependencies)
++    {
++    }
++
++    public override RelationalTransaction Create(
++        IRelationalConnection connection,
++        DbTransaction transaction,
++        Guid transactionId,
++        IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
++        bool transactionOwned)
++        => new DamengRelationalTransaction(
++            connection, transaction, transactionId, logger, transactionOwned, Dependencies.SqlGenerationHelper);
++}
+diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs b/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs
+new file mode 100644
+index 0000000..4fffc19
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs
+@@ -0,0 +1,359 @@
++using System.Collections;
++using System.Data;
++using System.Data.Common;
++using System.Diagnostics.CodeAnalysis;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Storage;
++using Microsoft.EntityFrameworkCore.Update;
++using Microsoft.Extensions.DependencyInjection;
++using W.EntityFrameworkCore.Dameng.Storage.Internal;
++using Xunit;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++public sealed class DamengRelationalTransactionCapabilityTests
++{
++    private static readonly string[] BatchOnlyOperationEvents = ["batch"];
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task BeginTransactionUsesRegisteredFactoryAndPreservesOwnedLifecycle(
++        bool supportsSavepoints, bool async, bool commit)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        using var context = Context(connection);
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransactionFactory>(context.GetService<IRelationalTransactionFactory>());
++#pragma warning restore EF1001
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalConnection>(context.GetService<IRelationalConnection>());
++#pragma warning restore EF1001
++        Assert.True(context.Database.AutoSavepointsEnabled);
++        Assert.Equal(AutoTransactionBehavior.WhenNeeded, context.Database.AutoTransactionBehavior);
++
++        var transaction = async
++            ? await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)
++            : context.Database.BeginTransaction(IsolationLevel.ReadCommitted);
++        var underlying = Assert.IsType<TestTransaction>(transaction.GetDbTransaction());
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransaction>(transaction);
++#pragma warning restore EF1001
++        Assert.Same(connection.LastTransaction, underlying);
++        Assert.Same(connection, underlying.Connection);
++        Assert.Same(transaction, context.Database.CurrentTransaction);
++        Assert.Equal(IsolationLevel.ReadCommitted, underlying.IsolationLevel);
++        Assert.Equal(supportsSavepoints, transaction.SupportsSavepoints);
++        Assert.NotEqual(Guid.Empty, transaction.TransactionId);
++
++        if (commit)
++        {
++            if (async) await transaction.CommitAsync(); else transaction.Commit();
++        }
++        else
++        {
++            if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        }
++        Assert.Null(context.Database.CurrentTransaction);
++        Assert.Equal(commit ? 1 : 0, underlying.CommitCalls);
++        Assert.Equal(commit ? 0 : 1, underlying.RollbackCalls);
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Equal(1, underlying.DisposeCalls);
++    }
++
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task UseTransactionUsesRegisteredFactoryAndPreservesCallerOwnership(
++        bool supportsSavepoints, bool async, bool commit)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        connection.Open();
++        using var underlying = Assert.IsType<TestTransaction>(connection.BeginTransaction(IsolationLevel.ReadCommitted));
++        using var context = Context(connection);
++        var id = Guid.NewGuid();
++        var transaction = async
++            ? await context.Database.UseTransactionAsync(underlying, id)
++            : context.Database.UseTransaction(underlying, id);
++        Assert.NotNull(transaction);
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransactionFactory>(context.GetService<IRelationalTransactionFactory>());
++#pragma warning restore EF1001
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransaction>(transaction);
++#pragma warning restore EF1001
++        Assert.Equal(id, transaction.TransactionId);
++        Assert.Same(underlying, transaction.GetDbTransaction());
++        Assert.Equal(supportsSavepoints, transaction.SupportsSavepoints);
++
++        if (commit)
++        {
++            if (async) await transaction.CommitAsync(); else transaction.Commit();
++        }
++        else
++        {
++            if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        }
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Null(context.Database.CurrentTransaction);
++        Assert.Equal(0, underlying.DisposeCalls);
++        Assert.Equal(commit ? 1 : 0, underlying.CommitCalls);
++        Assert.Equal(commit ? 0 : 1, underlying.RollbackCalls);
++    }
++
++    [Fact]
++    public void SingletonFactoryUsesEachActualTransactionRatherThanSharedConnectionCapability()
++    {
++        using var services = new ServiceCollection().AddEntityFrameworkDameng().BuildServiceProvider();
++        using var supported = new TestConnection(true);
++        using var unsupported = new TestConnection(false);
++        using var first = Context(supported, services);
++        using var second = Context(unsupported, services);
++        using var firstTransaction = first.Database.BeginTransaction();
++        using var secondTransaction = second.Database.BeginTransaction();
++        Assert.Same(first.GetService<IRelationalTransactionFactory>(), second.GetService<IRelationalTransactionFactory>());
++        Assert.True(firstTransaction.SupportsSavepoints);
++        Assert.False(secondTransaction.SupportsSavepoints);
++        supported.SupportsNextTransaction = false;
++        unsupported.SupportsNextTransaction = true;
++        Assert.True(firstTransaction.SupportsSavepoints);
++        Assert.False(secondTransaction.SupportsSavepoints);
++    }
++
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task RealBatchExecutorHonorsCapabilityAndRollsBackOnlyToSupportedSavepoints(
++        bool supportsSavepoints, bool async, bool failBatch)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        using var context = Context(connection);
++        connection.Sql = context.GetService<ISqlGenerationHelper>();
++        var transaction = async
++            ? await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)
++            : context.Database.BeginTransaction(IsolationLevel.ReadCommitted);
++        var underlying = Assert.IsType<TestTransaction>(transaction.GetDbTransaction());
++        Assert.True(context.Database.AutoSavepointsEnabled);
++        Assert.Equal(AutoTransactionBehavior.WhenNeeded, context.Database.AutoTransactionBehavior);
++        var executor = context.GetService<IBatchExecutor>();
++        Assert.Equal("Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor", executor.GetType().FullName);
++        var expectedFailure = new InvalidOperationException("synthetic_batch_failure");
++        var batch = new TestBatch(connection, failBatch ? expectedFailure : null);
++        if (failBatch)
++        {
++            var actual = async
++                ? await Assert.ThrowsAsync<InvalidOperationException>(() => executor.ExecuteAsync([batch], context.GetService<IRelationalConnection>()))
++                : Assert.Throws<InvalidOperationException>(() => executor.Execute([batch], context.GetService<IRelationalConnection>()));
++            Assert.Same(expectedFailure, actual);
++        }
++        else
++        {
++            int count = async
++                ? await executor.ExecuteAsync([batch], context.GetService<IRelationalConnection>())
++                : executor.Execute([batch], context.GetService<IRelationalConnection>());
++            Assert.Equal(0, count); // Test batch has no model commands; its execution changes the synthetic work counter.
++        }
++        Assert.Equal(async ? 0 : 1, batch.SyncExecutions);
++        Assert.Equal(async ? 1 : 0, batch.AsyncExecutions);
++        Assert.Same(context.GetService<IRelationalConnection>(), batch.ExecutedConnection);
++        Assert.Same(underlying, batch.ExecutedTransaction);
++        Assert.Same(transaction, context.Database.CurrentTransaction);
++        Assert.Equal(0, underlying.CommitCalls);
++        Assert.Equal(0, underlying.RollbackCalls);
++        Assert.Equal(0, underlying.DisposeCalls);
++        if (supportsSavepoints)
++        {
++            string[] expectedEvents = failBatch ? ["create", "batch", "rollback-to", "release"] : ["create", "batch", "release"];
++            Assert.Equal(expectedEvents, connection.OperationEvents);
++            Assert.Equal(failBatch ? 1 : 2, connection.Work);
++            Assert.Equal(async ? 0 : (failBatch ? 3 : 2), connection.SyncCommands);
++            Assert.Equal(async ? (failBatch ? 3 : 2) : 0, connection.AsyncCommands);
++        }
++        else
++        {
++            Assert.Equal(BatchOnlyOperationEvents, connection.OperationEvents);
++            Assert.Equal(2, connection.Work);
++            Assert.Equal(0, connection.SyncCommands + connection.AsyncCommands);
++        }
++        if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        Assert.Equal(1, connection.Work); // A full rollback is still available when savepoints are unsupported.
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Equal(1, underlying.DisposeCalls);
++    }
++
++    private static DbContext Context(TestConnection connection, IServiceProvider? services = null)
++    {
++        var builder = new DbContextOptionsBuilder().UseDameng(connection);
++        if (services != null) builder.UseInternalServiceProvider(services);
++        return new DbContext(builder.Options);
++    }
++
++    private sealed class TestBatch(TestConnection connection, Exception? failure) : ModificationCommandBatch
++    {
++        public int SyncExecutions { get; private set; }
++        public int AsyncExecutions { get; private set; }
++        public IRelationalConnection? ExecutedConnection { get; private set; }
++        public DbTransaction? ExecutedTransaction { get; private set; }
++        public override IReadOnlyList<IReadOnlyModificationCommand> ModificationCommands => [];
++        public override bool RequiresTransaction => true;
++        public override bool AreMoreBatchesExpected => false;
++        public override bool TryAddCommand(IReadOnlyModificationCommand modificationCommand) => throw new NotSupportedException();
++        public override void Complete(bool moreBatchesExpected) { }
++        public override void Execute(IRelationalConnection relationalConnection)
++        {
++            SyncExecutions++;
++            ExecuteCore(relationalConnection);
++        }
++        public override Task ExecuteAsync(IRelationalConnection relationalConnection, CancellationToken cancellationToken = default)
++        {
++            AsyncExecutions++;
++            ExecuteCore(relationalConnection);
++            return Task.CompletedTask;
++        }
++        private void ExecuteCore(IRelationalConnection relationalConnection)
++        {
++            ExecutedConnection = relationalConnection;
++            ExecutedTransaction = relationalConnection.CurrentTransaction!.GetDbTransaction();
++            connection.OperationEvents.Add("batch");
++            connection.Work++;
++            if (failure != null) throw failure;
++        }
++    }
++
++    private sealed class TestConnection(bool supportsSavepoints) : DbConnection
++    {
++        private ConnectionState _state;
++        public bool SupportsNextTransaction { get; set; } = supportsSavepoints;
++        public TestTransaction? LastTransaction { get; private set; }
++        public ISqlGenerationHelper? Sql { get; set; }
++        public List<string> OperationEvents { get; } = [];
++        public int Work { get; set; } = 1;
++        public int SyncCommands { get; set; }
++        public int AsyncCommands { get; set; }
++        [AllowNull] public override string ConnectionString { get; set; } = string.Empty;
++        public override string Database => "synthetic";
++        public override string DataSource => "synthetic";
++        public override string ServerVersion => "unused";
++        public override ConnectionState State => _state;
++        public override void ChangeDatabase(string databaseName) => throw new NotSupportedException();
++        public override void Open() => _state = ConnectionState.Open;
++        public override Task OpenAsync(CancellationToken cancellationToken) { Open(); return Task.CompletedTask; }
++        public override void Close() => _state = ConnectionState.Closed;
++        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
++            => LastTransaction = new TestTransaction(this, isolationLevel, SupportsNextTransaction);
++        protected override DbCommand CreateDbCommand() => new TestCommand(this);
++        public int ExecuteSavepoint(string sql, DbTransaction? transaction)
++        {
++            var active = LastTransaction ?? throw new InvalidOperationException("synthetic_transaction_missing");
++            var helper = Sql ?? throw new InvalidOperationException("synthetic_SQL_helper_missing");
++            Assert.Same(active, transaction);
++            if (!active.SupportsSavepoints) throw new NotSupportedException("synthetic_savepoints_unsupported");
++            if (sql == helper.GenerateCreateSavepointStatement("__EFSavePoint"))
++            {
++                OperationEvents.Add("create"); active.SavepointWork = Work;
++            }
++            else if (sql == helper.GenerateRollbackToSavepointStatement("__EFSavePoint"))
++            {
++                OperationEvents.Add("rollback-to"); Work = active.SavepointWork;
++            }
++            else if (sql == helper.GenerateReleaseSavepointStatement("__EFSavePoint")) OperationEvents.Add("release");
++            else throw new InvalidOperationException("unexpected_synthetic_SQL");
++            return -1;
++        }
++    }
++
++    private sealed class TestTransaction(TestConnection connection, IsolationLevel isolation, bool supports) : DbTransaction
++    {
++        private readonly int _originalWork = connection.Work;
++        private bool _disposed;
++        public int SavepointWork { get; set; }
++        public int CommitCalls { get; private set; }
++        public int RollbackCalls { get; private set; }
++        public int DisposeCalls { get; private set; }
++        public override IsolationLevel IsolationLevel => isolation;
++        public override bool SupportsSavepoints => supports;
++        protected override DbConnection DbConnection => connection;
++        public override void Commit() => CommitCalls++;
++        public override Task CommitAsync(CancellationToken cancellationToken = default) { Commit(); return Task.CompletedTask; }
++        public override void Rollback() { RollbackCalls++; connection.Work = _originalWork; }
++        public override Task RollbackAsync(CancellationToken cancellationToken = default) { Rollback(); return Task.CompletedTask; }
++        protected override void Dispose(bool disposing)
++        {
++            if (disposing && !_disposed) { _disposed = true; DisposeCalls++; }
++            base.Dispose(disposing);
++        }
++    }
++
++    private sealed class TestCommand : DbCommand
++    {
++        private readonly TestConnection _connection;
++        private readonly TestParameters _parameters = new();
++        public TestCommand(TestConnection connection)
++        {
++            _connection = connection;
++            DbConnection = connection;
++        }
++        [AllowNull] public override string CommandText { get; set; } = string.Empty;
++        public override int CommandTimeout { get; set; } = 30;
++        public override CommandType CommandType { get; set; } = CommandType.Text;
++        public override bool DesignTimeVisible { get; set; }
++        public override UpdateRowSource UpdatedRowSource { get; set; }
++        protected override DbConnection? DbConnection { get; set; }
++        protected override DbTransaction? DbTransaction { get; set; }
++        protected override DbParameterCollection DbParameterCollection => _parameters;
++        public override void Cancel() { }
++        public override void Prepare() { }
++        public override int ExecuteNonQuery() { _connection.SyncCommands++; return _connection.ExecuteSavepoint(CommandText, DbTransaction); }
++        public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
++        { _connection.AsyncCommands++; return Task.FromResult(_connection.ExecuteSavepoint(CommandText, DbTransaction)); }
++        public override object? ExecuteScalar() => throw new NotSupportedException();
++        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotSupportedException();
++        protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
++    }
++
++    private sealed class TestParameters : DbParameterCollection
++    {
++        public override int Count => 0;
++        public override object SyncRoot => this;
++        public override void Clear() { }
++        public override bool Contains(object value) => false;
++        public override bool Contains(string value) => false;
++        public override int IndexOf(object value) => -1;
++        public override int IndexOf(string parameterName) => -1;
++        public override IEnumerator GetEnumerator() => Array.Empty<object>().GetEnumerator();
++        public override void CopyTo(Array array, int index) { }
++        public override int Add(object value) => throw new NotSupportedException();
++        public override void AddRange(Array values) => throw new NotSupportedException();
++        public override void Insert(int index, object value) => throw new NotSupportedException();
++        public override void Remove(object value) => throw new NotSupportedException();
++        public override void RemoveAt(int index) => throw new NotSupportedException();
++        public override void RemoveAt(string parameterName) => throw new NotSupportedException();
++        protected override DbParameter GetParameter(int index) => throw new NotSupportedException();
++        protected override DbParameter GetParameter(string parameterName) => throw new NotSupportedException();
++        protected override void SetParameter(int index, DbParameter value) => throw new NotSupportedException();
++        protected override void SetParameter(string parameterName, DbParameter value) => throw new NotSupportedException();
++    }
++}

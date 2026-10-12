@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "nonce": "46511C87AD0D4D71B9E87AC8A7484408",
+  "table": "TPN_46511C87AD0D4D71B9E87AC8",
+  "profile": "shared",
+  "server_version": "8.1.5.60",
+  "owner_package_sha256": "b0af3de1605bf5a066d7ee4af08d806ae2755d56d1f27385be434e04b778c000",
+  "identity_sha256": "fc29762ff5d492eeefd15a2626dc66d86d0b7e3ab82d9979cdc5a9cbecf73734",
+  "absent_before_create": true,
+  "identity_verified": true,
+  "owner_marker": "OWN_46511C87AD0D4D71B9E87AC8",
+  "creation_state": "confirmed"
+}

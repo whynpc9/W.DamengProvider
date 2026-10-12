@@ -1,0 +1,569 @@
+{
+  "W": {
+    "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+    "id": "W.DmProvider",
+    "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+    "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+    "version": "0.1.0-temporal.20261008144915"
+  },
+  "acceptance_scope": "default7 and explicit6 exact literal persistence; bare6 exact value characterization plus local tick1 rejection; bare actual catalog/read tuple remains pending root review, never alias-seven support; no full EF C acceptance",
+  "candidate_identity_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+  "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+  "cases": [
+    {
+      "bare": false,
+      "case_id": "LIT-DT7-tick1",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 7,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 100,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129160000001,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1,
+      "kind": "dt",
+      "parameter_scale": 7,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "TIMESTAMP(7)"
+    },
+    {
+      "bare": false,
+      "case_id": "LIT-DT7-1234567",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 7,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456700,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234567,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1234567,
+      "kind": "dt",
+      "parameter_scale": 7,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "TIMESTAMP(7)"
+    },
+    {
+      "bare": false,
+      "case_id": "LIT-DTO7-tick1",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 7,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 100,
+        "offset_minutes": 330,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129160000001,
+      "expected_offset_minutes": 330,
+      "expected_utc_ticks": 639203931160000001,
+      "fraction_ticks": 1,
+      "kind": "dto",
+      "parameter_scale": 7,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME(7) WITH TIME ZONE"
+    },
+    {
+      "bare": false,
+      "case_id": "LIT-DTO7-1234567",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 7,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456700,
+        "offset_minutes": 330,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234567,
+      "expected_offset_minutes": 330,
+      "expected_utc_ticks": 639203931161234567,
+      "fraction_ticks": 1234567,
+      "kind": "dto",
+      "parameter_scale": 7,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME(7) WITH TIME ZONE"
+    },
+    {
+      "bare": false,
+      "case_id": "LIT-DT6-micro",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 6,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456000,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234560,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1234560,
+      "kind": "dt",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared",
+        "tls"
+      ],
+      "store_type": "TIMESTAMP(6)"
+    },
+    {
+      "bare": false,
+      "case_id": "LIT-DTO6-micro",
+      "catalog_mode": "fixed_explicit_precision",
+      "expected_field_precision": 6,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456000,
+        "offset_minutes": 330,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234560,
+      "expected_offset_minutes": 330,
+      "expected_utc_ticks": 639203931161234560,
+      "fraction_ticks": 1234560,
+      "kind": "dto",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared",
+        "tls"
+      ],
+      "store_type": "DATETIME(6) WITH TIME ZONE"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-timestamp-micro",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456000,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234560,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1234560,
+      "kind": "dt",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "TIMESTAMP"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-timestamp-tick1",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 100,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": true,
+      "expected_local_ticks": 639204129160000001,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1,
+      "kind": "dt",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "TIMESTAMP"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-datetime-micro",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456000,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234560,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1234560,
+      "kind": "dt",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-datetime-tick1",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 100,
+        "offset_minutes": null,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": true,
+      "expected_local_ticks": 639204129160000001,
+      "expected_offset_minutes": null,
+      "expected_utc_ticks": null,
+      "fraction_ticks": 1,
+      "kind": "dt",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-tz-micro",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 123456000,
+        "offset_minutes": 330,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": false,
+      "expected_local_ticks": 639204129161234560,
+      "expected_offset_minutes": 330,
+      "expected_utc_ticks": 639203931161234560,
+      "fraction_ticks": 1234560,
+      "kind": "dto",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME WITH TIME ZONE"
+    },
+    {
+      "bare": true,
+      "case_id": "LIT-BARE-tz-tick1",
+      "catalog_mode": "observed_characterization_unverified",
+      "expected_field_precision": null,
+      "expected_fields": {
+        "day": 23,
+        "hour": 14,
+        "minute": 15,
+        "month": 7,
+        "nanoseconds": 100,
+        "offset_minutes": 330,
+        "second": 16,
+        "year": 2026
+      },
+      "expected_local_overflow": true,
+      "expected_local_ticks": 639204129160000001,
+      "expected_offset_minutes": 330,
+      "expected_utc_ticks": 639203931160000001,
+      "fraction_ticks": 1,
+      "kind": "dto",
+      "parameter_scale": 6,
+      "profiles": [
+        "shared"
+      ],
+      "store_type": "DATETIME WITH TIME ZONE"
+    }
+  ],
+  "ef": {
+    "archive_sha256": "668b5a077db8a0730a251cd639288130526fc51e619dac8574102267b4f13cc8",
+    "commit": "5863d3755dbd2d333ac359bf1c0a789762adbaed",
+    "ef_version": "10.0.12",
+    "sdk": "10.0.401",
+    "tree": "b8f99168225a3742675ae594e8735f481a591fd5"
+  },
+  "future_groups": {
+    "D": "not_activated_pending_L0",
+    "E": "not_activated_pending_L0"
+  },
+  "independent_packed_oracle_sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
+  "literal_format_design_sha256": "dab10f3276860ffca832b6099cfc4cc0c2d0d48b1eee5d8fa1d597e59e94a696",
+  "literal_grammar_cases": [
+    {
+      "case_id": "GRAM-FF7-DT-tick1",
+      "expected_accept": true,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-FF7-DTO-p330",
+      "expected_accept": true,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-FF7-DTO-m30",
+      "expected_accept": true,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 -00:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-FF7-DTO-p840",
+      "expected_accept": true,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +14:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p0",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p1",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.1'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p2",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.12'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p3",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.123'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p4",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.1234'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p5",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.12345'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DT-p6",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.123456'"
+    },
+    {
+      "case_id": "GRAM-LEGACY-DTO-p6",
+      "expected_accept": true,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.123456+05:30'"
+    },
+    {
+      "case_id": "GRAM-REJECT-old-dt7",
+      "expected_accept": false,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.0000001'"
+    },
+    {
+      "case_id": "GRAM-REJECT-old-dto7",
+      "expected_accept": false,
+      "literal": "TIMESTAMP '2026-07-23 14:15:16.0000001+05:30'"
+    },
+    {
+      "case_id": "GRAM-REJECT-function",
+      "expected_accept": false,
+      "literal": "TO_DATE('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-ff9",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.000000100', 'YYYY-MM-DD HH24:MI:SS.FF9')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-ff9",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.000000100 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-six",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.000001', 'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-eight",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.00000010', 'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-six",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.000001 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-eight",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.00000010 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-comma-missing",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001','YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-comma-extra",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001',  'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-offset-missing",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001+05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-offset-extra",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001  +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-comma-missing",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +05:30','YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dt-format",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH12:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-dto-format",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZR')"
+    },
+    {
+      "case_id": "GRAM-REJECT-extra-sql",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7'); SELECT 1 FROM DUAL"
+    },
+    {
+      "case_id": "GRAM-REJECT-comment",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7') -- suffix"
+    },
+    {
+      "case_id": "GRAM-REJECT-wrapped",
+      "expected_accept": false,
+      "literal": "CAST(TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7') AS TIMESTAMP(7))"
+    },
+    {
+      "case_id": "GRAM-REJECT-extra-argument",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7', 1)"
+    },
+    {
+      "case_id": "GRAM-REJECT-clock",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-13-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')"
+    },
+    {
+      "case_id": "GRAM-REJECT-offset",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +05:60', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
+    },
+    {
+      "case_id": "GRAM-REJECT-length",
+      "expected_accept": false,
+      "literal": "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')                                                                                                                                                                                                                                                                 "
+    }
+  ],
+  "literal_template_aggregate_sha256": "e0c551a3466f6681aa80c8044bdd480e5dd08d0b27ca0d8e41bf116738a11e95",
+  "literal_template_source_hashes": {
+    "TP07LiteralProbe/LiteralCases.cs": "7259b460442d370e6b7a9f95fe313dbd96604f70058c82ee004f948a47ab7b52",
+    "TP07LiteralProbe/LiteralOracle.cs": "cb1696d1b305471e12c1a953630ee66454c4ab92d505d650e291e7170c44f492",
+    "TP07LiteralProbe/Program.cs": "37d4c3085f191abd8dbb04ae9c82adb7f2749f2ba25bacb198e2ede94382f5a6",
+    "TP07LiteralProbe/TP07LiteralProbe.csproj": "f0bdfdd8698fdcf17677c878a7d33947c0dfa0c976fde4d01425e51746489f68",
+    "common/CandidateGuard.cs": "b5ffd7f0ff7def12b6f7dc0f22324d981eb1f0a20ee6536ddc9ac7bb96e6f493",
+    "common/OwnedObjects.cs": "80c1d2aa0b6aae04a89d168625f37ca013eb7d7e19fe0482049312db175e5946",
+    "common/SafeEvidence.cs": "44c5e9b5643a3d33ba348ed8acc51780ccad2f94a5b43cc819f5897c9f9c11ef"
+  },
+  "required_case_count": {
+    "shared": 12,
+    "tls": 2
+  },
+  "runtime_design_sha256": "0a7363dfc3839428b0725e18a9a2b7961b5715bdf599659239333bb88234d861",
+  "scale7_literal_contract": "exact_FF7_constructor_comma_space_and_original_DTO_offset_only",
+  "schema_version": 1,
+  "task": "TP07-L0 bounded literal precision",
+  "toolpack_contract": {
+    "bootstrap": "external root-approved manifest SHA256 required on every phase; manifest lives outside the six-file pack",
+    "manifest_schema_version": 1,
+    "manifest_task": "TP07-L0 toolpack",
+    "phase_checks": [
+      "prepare",
+      "lock",
+      "build",
+      "run",
+      "internal-host",
+      "validate"
+    ],
+    "source_files": [
+      "tools/DownstreamAcceptance/TP07/runtime-run.py",
+      "tools/DownstreamAcceptance/TP07/runtime-validate.py",
+      "tools/DownstreamAcceptance/TP07/runtime-cases.json",
+      "tools/DownstreamAcceptance/TP07/test_runtime_contracts.py",
+      "tools/DownstreamAcceptance/TP07/managed_identity.py",
+      "tools/TemporalBoundaryProbe/packed_oracle.py"
+    ]
+  }
+}

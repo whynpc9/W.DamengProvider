@@ -1,0 +1,47 @@
+{
+  "scope": "P1 unfixed mapping baseline only, no DB acceptance",
+  "artifacts": [
+    {
+      "source": "source-manifest.json",
+      "artifact": "source-manifest.json.gz",
+      "original_sha256": "1da00c3ab1fb30b95719b7bb4d583f920bdf30f643ae9fc8a33d757401a2a415",
+      "artifact_sha256": "785e65c4adb697b076436f3c092b6a78d232d2b22b74658946cd4cd76e81bb64"
+    },
+    {
+      "source": "validation/verification-summary.json",
+      "artifact": "validation--verification-summary.json.gz",
+      "original_sha256": "a04252015d2f012733f0bd2fc791b7df8ee39b89be81a3e72cd34d5412fc8258",
+      "artifact_sha256": "14cba7befab6a8c8c9945022febf7c028ca26672f94ecdb35be6108d615808e9"
+    },
+    {
+      "source": "validation-v2/verification-summary.json",
+      "artifact": "validation-v2--verification-summary.json.gz",
+      "original_sha256": "944cb4863cae83a0785e04a147b59ac4df70338ad5ca207704ca3ca340ebc27b",
+      "artifact_sha256": "da4668848e9d7b40522c4a7aaa124294065e7b6c1c3923182aa49bc10291838a"
+    },
+    {
+      "source": "validation-v3/lock-validation-summary.json",
+      "artifact": "validation-v3--lock-validation-summary.json.gz",
+      "original_sha256": "f4880a9da4b9762948a39ce6392aaa0b536e8d982209850a788e01c676816c75",
+      "artifact_sha256": "fbb2162b7a8a347f6102240846723632cf7083bef32633827ee0d6a83baf9e19"
+    },
+    {
+      "source": "validation-v4/execution-source-manifest.json",
+      "artifact": "validation-v4--execution-source-manifest.json.gz",
+      "original_sha256": "fc08ba8e0443b031757a4f01eaf55051c4fa9e2985163f30363df498e1d2a312",
+      "artifact_sha256": "e51de12b6d458b0cc2d8b8a347edb4aaa5e87df99915ba6f889fa4b98eff17a8"
+    },
+    {
+      "source": "validation-v4/execution-summary.json",
+      "artifact": "validation-v4--execution-summary.json.gz",
+      "original_sha256": "9e2f7b85e8d2be350aefb7c621e7d7e75d23194e96726d141d9c640bf9d08e8d",
+      "artifact_sha256": "7a738d832927f997ca1e66b50b416f99c1ffc0ba57f37149529cb1c762a0faf9"
+    },
+    {
+      "source": "validation-v4/observer.log",
+      "artifact": "validation-v4--observer.log.gz",
+      "original_sha256": "a2d5f613a2059c0a2a30670bb5fc8cf43bee180dc630c8afdb900deb2573f127",
+      "artifact_sha256": "4e6ace49af4bafa48bc8d0316b721b178ccb48164c8db0b7483ed2d04b9276b8"
+    }
+  ]
+}

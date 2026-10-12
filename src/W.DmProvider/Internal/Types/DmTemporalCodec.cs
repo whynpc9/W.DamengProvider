@@ -5,6 +5,52 @@ namespace W.Dm.Internal.Types;
 
 internal static class DmTemporalCodec
 {
+    // Production entry: negotiated identity and independent target constraints are captured per call.
+    // The version-only overload below is retained solely for existing internal compatibility consumers.
+    internal static object NormalizeForWrite(object value, int cType, int scale,
+        DmTemporalCapabilityProfile profile, DmTemporalWriteTarget? target)
+    {
+        if (target is not DmTemporalWriteTarget temporal)
+            return NormalizeForWire(value, cType, scale);
+        profile.ValidateWriteTarget(temporal); // NULL never bypasses a closed target.
+        if (value == null || value is DBNull) return value;
+        DmTemporalFields fields;
+        object normalized = value;
+        switch (value)
+        {
+            case DateOnly date:
+                if (cType != 14) throw new NotSupportedException("DateOnly requires DATE.");
+                fields = DmTemporalInteger.FromDateOnly(date);
+                normalized = date.ToDateTime(TimeOnly.MinValue);
+                break;
+            case TimeOnly time:
+                if (cType != 15) throw new NotSupportedException("TimeOnly requires TIME.");
+                fields = DmTemporalInteger.FromTimeOnly(time);
+                normalized = DateTime.MinValue.AddTicks(time.Ticks);
+                break;
+            case DateTime dateTime:
+                if (cType is not (14 or 15 or 16 or 26)) throw new NotSupportedException("DateTime requires a non-timezone temporal type.");
+                fields = DmTemporalInteger.FromDateTime(dateTime);
+                if (cType == 15)
+                {
+                    if (dateTime.Date != DateTime.MinValue.Date) throw new NotSupportedException("Use TimeOnly for TIME without a date component.");
+                    fields = fields with { Year = 0, Month = 0, Day = 0 };
+                }
+                break;
+            case DateTimeOffset offset:
+                if (cType is not (23 or 27)) throw new NotSupportedException("DateTimeOffset requires a timezone-aware timestamp.");
+                fields = DmTemporalInteger.FromDateTimeOffset(offset);
+                break;
+            case TimeSpan:
+                throw new NotSupportedException("TimeSpan requires INTERVAL DAY TO SECOND.");
+            default:
+                // Semantic text is parsed and validated at the same gate in EncodeWithTarget.
+                return value;
+        }
+        profile.ValidateWriteValue(temporal, fields);
+        return normalized;
+    }
+
     private static readonly long[] TickQuantumByScale =
         { 10_000_000, 1_000_000, 100_000, 10_000, 1_000, 100, 10, 1 };
 

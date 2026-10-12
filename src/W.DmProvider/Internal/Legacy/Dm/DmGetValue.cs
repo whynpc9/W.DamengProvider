@@ -21,14 +21,21 @@ internal class DmGetValue
 
 	private bool m_NewLobFlag;
 
+	private readonly DmTemporalResultFormat temporalResultFormat;
+
 	internal DmConnProperty connProperty => m_Statement.G().ConnProperty;
 
 	public DmGetValue(string servEncoding, global::W.Dm.Internal.Legacy.A.A stmt, bool newLobFlag, DmField[] ColInfo)
+		: this(servEncoding, stmt, newLobFlag, ColInfo, DmTemporalResultFormat.Unknown) { }
+
+	public DmGetValue(string servEncoding, global::W.Dm.Internal.Legacy.A.A stmt, bool newLobFlag, DmField[] ColInfo,
+		DmTemporalResultFormat actualFormat)
 	{
 		m_ServerEncoding = servEncoding;
 		m_Statement = stmt;
 		m_NewLobFlag = newLobFlag;
 		m_ColInfo = ColInfo;
+		temporalResultFormat = actualFormat;
 	}
 
 	private void CheckRangeSByte(object tmp_object)
@@ -406,7 +413,10 @@ internal class DmGetValue
 		case 23:
 		case 26:
 		case 27:
-			return DmDateTime.valueOf(val, m_ColInfo[i], m_Statement.G().Conn).toString(m_ColInfo[i], m_Statement.G().Conn);
+		{
+			var descriptor = TemporalDescriptor(i);
+			return FormatTemporal(DmDateTime.DecodeForReader(val, descriptor), descriptor, m_Statement.G().Conn);
+		}
 		case 21:
 			return GetINTERVALDT(i, val, CType, prec, scale)?.GetDTString();
 		case 20:
@@ -540,109 +550,90 @@ internal class DmGetValue
 		return checked((ulong)ReadIntegerExact(i, val, CType, prec, scale, ulong.MinValue, ulong.MaxValue));
 	}
 
+	private DmTemporalReadDescriptor TemporalDescriptor(int ordinal)
+	{
+		if (m_ColInfo == null || ordinal < 0 || ordinal >= m_ColInfo.Length)
+			throw new InvalidOperationException("Temporal getter requires column metadata.");
+		// Capture this result's effective metadata by value. Raw describe format is not a row-format observation.
+		return m_ColInfo[ordinal].GetTemporalReadDescriptor(temporalResultFormat);
+	}
+
+	private DmTemporalFields ReadTemporal(int ordinal, byte[] value) =>
+		DmDateTime.DecodeForReader(value, TemporalDescriptor(ordinal));
+
+	internal static string FormatTemporal(DmTemporalFields fields, DmTemporalReadDescriptor descriptor, DmConnection connection)
+	{
+		// Explicit display templates keep their existing projection rules; default text preserves declared precision.
+		var property = connection?.GetConnInstance()?.ConnProperty;
+		string format = descriptor.CType switch
+		{
+			14 => property?.oracleDateFormat,
+			15 => property?.oracleTimeFormat,
+			22 => property?.oracleTimeTZFormat,
+			16 or 26 => property?.oracleTimestampFormat,
+			23 or 27 => property?.oracleTimestampTZFormat,
+			_ => null
+		};
+		if (StringUtil.isNotEmpty(format))
+			return OracleDateFormat.Format(DmTemporalLegacyAdapter.ToSemantic(fields), format,
+				property.nlsDateLang, property.formatNumericChars);
+		int displayType = descriptor.Mask == DmField.MASK_ORACLE_DATE ? 14 : descriptor.CType;
+		if (displayType == 14)
+			fields = fields with { Hour = 0, Minute = 0, Second = 0, NanosecondsWithinSecond = 0, OffsetMinutes = null };
+		return DmTemporalInteger.FormatExact(fields, displayType == 14 ? 0 : descriptor.FractionalScale,
+			DmTemporalLegacyAdapter.Kind(displayType));
+	}
+
 	public DateTimeOffset GetTimeTZ(int i, byte[] val, int CType, int prec, int scale)
 	{
 		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
 		if (CType != 22) throw new InvalidCastException("Column has no TIME WITH TIME ZONE offset.");
-		return new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec).GetTimeTZ();
+		return DmTemporalInteger.ProjectTimeOffset(ReadTemporal(i, val));
 	}
 
 	public DateTimeOffset GetTimestampTZ(int i, byte[] val, int CType, int prec, int scale)
 	{
 		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
 		if (CType == 22) return GetTimeTZ(i, val, CType, prec, scale);
-		if (CType is not (23 or 27))
-			throw new InvalidCastException("Column has no TIMESTAMP WITH TIME ZONE offset.");
-		return new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec).GetTimestampTZ();
+		if (CType is not (23 or 27)) throw new InvalidCastException("Column has no TIMESTAMP WITH TIME ZONE offset.");
+		return DmTemporalInteger.ProjectDateTimeOffset(ReadTemporal(i, val));
 	}
 
 	public DateTime GetTimestamp(int i, byte[] val, int CType, int prec, int scale)
 	{
-		if (val == null)
+		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
+		return CType switch
 		{
-			DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
-		}
-		DmDateTime dmDateTime = new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec);
-		switch (CType)
-		{
-		case 16:
-		case 26:
-			if (DmDateTime.NTYPE_IS_LOCAL_TIME_ZONE(CType, scale))
-			{
-				return DmDateTime.DmtimeAddByFmt(prec, dmDateTime, 5, m_Statement.G().ConnProperty.TimeZone - m_Statement.G().ConnProperty.DbTimeZone);
-			}
-			return dmDateTime.GetTimestamp();
-		case 23:
-		case 27:
-			return dmDateTime.GetTimestampTZ().DateTime;
-		case 14:
-			return dmDateTime.GetDate();
-		case 15:
-		case 22:
-			return dmDateTime.GetTime();
-		case 0:
-		case 1:
-		case 2:
-		case 19:
-		case 54:
-			return DmDateTime.GetTimestampByString(GetString(i, val, CType, prec, scale).Trim());
-		case 25:
-			return DateTime.MinValue;
-		default:
-			throw new InvalidCastException();
-		}
+			14 or 16 or 26 => DmTemporalInteger.ProjectDateTime(ReadTemporal(i, val)),
+			23 or 27 => DmTemporalInteger.ProjectDateTimeOffset(ReadTemporal(i, val)).DateTime,
+			15 or 22 => DmTemporalInteger.ProjectTimeDateTime(ReadTemporal(i, val)),
+			0 or 1 or 2 or 19 or 54 => DmDateTime.GetTimestampByString(GetString(i, val, CType, prec, scale).Trim()),
+			25 => DateTime.MinValue,
+			_ => throw new InvalidCastException()
+		};
 	}
 
 	public DateTime GetDate(int i, byte[] val, int CType, int prec, int scale)
 	{
-		if (val == null)
+		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
+		return CType switch
 		{
-			DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
-		}
-		DmDateTime dmDateTime = new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec);
-		switch (CType)
-		{
-		case 14:
-		case 16:
-		case 23:
-			return dmDateTime.GetDate();
-		case 0:
-		case 1:
-		case 2:
-		case 19:
-		case 54:
-			return DmDateTime.GetDateByString(GetString(i, val, CType, prec, scale).Trim());
-		case 25:
-			return DateTime.MinValue;
-		default:
-			throw new InvalidCastException();
-		}
+			14 or 16 or 23 => DmTemporalInteger.ProjectDateOnly(ReadTemporal(i, val)).ToDateTime(TimeOnly.MinValue),
+			0 or 1 or 2 or 19 or 54 => DmDateTime.GetDateByString(GetString(i, val, CType, prec, scale).Trim()),
+			25 => DateTime.MinValue,
+			_ => throw new InvalidCastException()
+		};
 	}
 
 	public DateTime GetTime(int i, byte[] val, int CType, int prec, int scale)
 	{
-		if (val == null)
+		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
+		return CType switch
 		{
-			DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
-		}
-		DmDateTime dmDateTime = new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec);
-		switch (CType)
-		{
-		case 15:
-		case 16:
-		case 22:
-		case 23:
-			return dmDateTime.GetTime();
-		case 0:
-		case 1:
-		case 2:
-		case 19:
-		case 25:
-		case 54:
-			return DateTime.MinValue;
-		default:
-			throw new InvalidCastException();
-		}
+			15 or 16 or 22 or 23 => DmTemporalInteger.ProjectTimeDateTime(ReadTemporal(i, val)),
+			0 or 1 or 2 or 19 or 25 or 54 => DateTime.MinValue,
+			_ => throw new InvalidCastException()
+		};
 	}
 
 	public DmIntervalDT GetINTERVALDT(int i, byte[] val, int CType, int prec, int scale)
@@ -789,7 +780,7 @@ internal class DmGetValue
 		case 15:
 			if (m_Statement.G().ConnProperty.DbTimeToTimeSpan)
 			{
-				return TimeSpan.ParseExact(new DmDateTime(DmDateTime.DmTimeFromRec4(val, CType), prec).GetTimeInString(), "c", null);
+				return DmTemporalInteger.ProjectTimeSpanExact(ReadTemporal(i, val));
 			}
 			return GetTime(i, val, CType, prec, scale);
 		case 22:

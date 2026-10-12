@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "task": "TP-01",
+  "status": "baseline_characterization_evidence",
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "artifacts": [
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/runner.json",
+      "source_sha256": "f741373affc7740c7cf6b277e009ab3546aa82d94bdd26e2f9f9deb60ac7b000",
+      "artifact": "shared/runner.json",
+      "artifact_sha256": "f741373affc7740c7cf6b277e009ab3546aa82d94bdd26e2f9f9deb60ac7b000",
+      "encoding": "json"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/characterization-validation.json",
+      "source_sha256": "57b662eed842779a51cdb4488ca903dbdef9ba56923df602d411b4d7835f2de0",
+      "artifact": "shared/characterization-validation.json",
+      "artifact_sha256": "57b662eed842779a51cdb4488ca903dbdef9ba56923df602d411b4d7835f2de0",
+      "encoding": "json"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/verification-summary.json",
+      "source_sha256": "f46bd129251c539380fb8912bdb0941fce7d5bdada1963289853720bd58538a0",
+      "artifact": "shared/verification-summary.json",
+      "artifact_sha256": "f46bd129251c539380fb8912bdb0941fce7d5bdada1963289853720bd58538a0",
+      "encoding": "json"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/profile-layout-facts.json",
+      "source_sha256": "deafa717709ce7301ac1e6a6bd7706ee03d89b48d2ca8293ab698b9c21ffa4c3",
+      "artifact": "shared/profile-layout-facts.json",
+      "artifact_sha256": "deafa717709ce7301ac1e6a6bd7706ee03d89b48d2ca8293ab698b9c21ffa4c3",
+      "encoding": "json"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/core.json",
+      "source_sha256": "b8f675c5ad41272b2807f9f568bd010b4e87c943dce530fb048a84b33cb212d7",
+      "artifact": "shared/core.json.gz",
+      "artifact_sha256": "c1720ec64fddcfebade5161b6be8d3d3a3d19c3dff49c27092ee53076e2b0115",
+      "encoding": "gzip"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/metadata.json",
+      "source_sha256": "e54284c536627aadf7a994029d95deaca3d0209e1336d271257b667773406b3d",
+      "artifact": "shared/metadata.json.gz",
+      "artifact_sha256": "d5df0717b612074731b1081857408b57c4a6b717dc29d843a61cccea0448e10e",
+      "encoding": "gzip"
+    },
+    {
+      "profile": "shared",
+      "source": ".local/temporal-native/verification/TP01-v10-shared-baseline/extended.json",
+      "source_sha256": "308d5db6114f95e73f0d377986819ef59c6728bd1aad681718396cfdf6949294",
+      "artifact": "shared/extended.json.gz",
+      "artifact_sha256": "6ed25a32c91da6b1c3c8fbeba054b67531ea002eacdfc583e719f7973e73b33d",
+      "encoding": "gzip"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/runner.json",
+      "source_sha256": "7cdcdd0ccd2e3d37f051c703e94f29c49e857bf0d1a513df9409584f658a5468",
+      "artifact": "tls/runner.json",
+      "artifact_sha256": "7cdcdd0ccd2e3d37f051c703e94f29c49e857bf0d1a513df9409584f658a5468",
+      "encoding": "json"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/characterization-validation.json",
+      "source_sha256": "d64fe3717e812c8d46f8868cec235c7d79c46c57e9bc9577d71d28a7a8954879",
+      "artifact": "tls/characterization-validation.json",
+      "artifact_sha256": "d64fe3717e812c8d46f8868cec235c7d79c46c57e9bc9577d71d28a7a8954879",
+      "encoding": "json"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/verification-summary.json",
+      "source_sha256": "0e9298324b8beaf2b4c00a3cfc757da1b6fa7635ab045f9e757c172446ff006f",
+      "artifact": "tls/verification-summary.json",
+      "artifact_sha256": "0e9298324b8beaf2b4c00a3cfc757da1b6fa7635ab045f9e757c172446ff006f",
+      "encoding": "json"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/profile-layout-facts.json",
+      "source_sha256": "8435d95447d93252a38a6d9577b7425224459579af14539c59cc718f9f05c669",
+      "artifact": "tls/profile-layout-facts.json",
+      "artifact_sha256": "8435d95447d93252a38a6d9577b7425224459579af14539c59cc718f9f05c669",
+      "encoding": "json"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/core.json",
+      "source_sha256": "098e59e055435cbbcdc9594c89220254a62611c1062e2a8124ebf02b9170bc75",
+      "artifact": "tls/core.json.gz",
+      "artifact_sha256": "70283d8b23d0c7f8fa2c7491e0e62e498caa196cb4a818104a8afadb373e424a",
+      "encoding": "gzip"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/metadata.json",
+      "source_sha256": "ddbfae81665c159b117e157a84c9f66496075c2edbfc28da5e2b371557ac919a",
+      "artifact": "tls/metadata.json.gz",
+      "artifact_sha256": "545ff3601ee5d0d7e72f37574a4ae843cd3bb8f633b5ed9f1e9c0b7630835c49",
+      "encoding": "gzip"
+    },
+    {
+      "profile": "tls",
+      "source": ".local/temporal-native/verification/TP01-v10-tls-baseline/extended.json",
+      "source_sha256": "faee7fe2a13b60ace2b5f2c15db00c5a1414dbe43beee2b157db2799bfdf412c",
+      "artifact": "tls/extended.json.gz",
+      "artifact_sha256": "afd369ee8c8e21443df102e5af5928394f6d9d84d108aa63f702cbec9f4c9945",
+      "encoding": "gzip"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP01-v10/manifest.json",
+      "source_sha256": "48038301a7b902b43f80688ce4a8a6f149f06322d7c84e819336296efbb010ed",
+      "artifact": "tool-source-manifest.json",
+      "artifact_sha256": "48038301a7b902b43f80688ce4a8a6f149f06322d7c84e819336296efbb010ed",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP01-v10/offline-evidence/validation-summary.json",
+      "source_sha256": "30e1c21f1d303fa18fb78cd7e95afe84b2972e87fe3bebfbd1c5007d29bf74e9",
+      "artifact": "offline-validation-summary.json",
+      "artifact_sha256": "30e1c21f1d303fa18fb78cd7e95afe84b2972e87fe3bebfbd1c5007d29bf74e9",
+      "encoding": "json"
+    }
+  ]
+}

@@ -1,0 +1,505 @@
+{
+  "task": "TP06 supplement v6 same-package shared then TLS full candidate runtime verification",
+  "profiles": [
+    {
+      "profile": "shared",
+      "runner_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v6/source/tools/TemporalCandidateAcceptance/run.py",
+        "--feed",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/feed",
+        "--source-manifest",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source-manifest.json",
+        "--source-archive",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source.tar",
+        "--identities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/identities.json",
+        "--capabilities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/capabilities.root-approved.json",
+        "--profile",
+        "shared",
+        "--repo",
+        "/Users/wanghongyi/Projects/W.DmProvider",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v6-shared-candidate",
+        "--deadline",
+        "1800"
+      ],
+      "output": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v6-shared-candidate",
+      "runner_exit_code": 1,
+      "runner_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runner_sha256": "1ce97950ddd4332cf73450ff6e4a8c63c37e8362eeb4bb73e7d05638526fd1d9",
+      "runner_result": {
+        "schema_version": 1,
+        "task": "TP-06-supplement",
+        "phase": "candidate",
+        "profile": "shared",
+        "source_manifest_sha256": "f64884973402ccfedcd45f53f465b847cbf53440f7c9c2b15185a577432850c0",
+        "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+        "identity_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+        "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+        "case_manifest_sha256": "da2e1542f485042f68fe739474fe0367284de9fa109da7582fb87c36116dc37d",
+        "runs": [
+          {
+            "lane": "supplemental",
+            "exit_code": 1,
+            "hard_deadline": false,
+            "cleanup_exit_code": 0,
+            "cleanup_hard_deadline": false,
+            "safe_command": [
+              "TEST_wrapper",
+              "dotnet",
+              "frozen_tool",
+              "run",
+              "frozen_inputs",
+              "profile",
+              "supplemental"
+            ],
+            "elapsed_seconds": 22.898,
+            "ownership_sha256": "0626f1fe6187183d18caf92616c8bf1a6f19e35c0f58f6ce70f95484aac623e0",
+            "recovery_manifest": "supplemental.ownership.json",
+            "report_sha256": "5e8d839907817372bfe9ea99c9039602d26872c7bc91de5274173e80bec7a138",
+            "cleanup_sha256": "3ebef05f4292b156bfaabaf2ecb94292fd0a8f4fb5751f2fc940a8d17c7b6b43"
+          }
+        ],
+        "status": "execution_failed",
+        "sdk_version": "10.0.203",
+        "restore_exit_code": 0,
+        "restore_hard_deadline": false,
+        "build_exit_code": 0,
+        "build_hard_deadline": false,
+        "assets_sha256": "829fba1066d07b79e6fd30024e2da324574365dcd5096c9efdd33f08299d0fa6",
+        "lock_sha256": "9ba2cf438480407b88a307a064b166e034703811a4663a602c3fc7b4c766a4ec",
+        "tool_dll_sha256": "d7d156b5e19abf19361557b00bc885dde50c304d6fc989088df890d23c6f63de",
+        "deps_sha256": "3416aee9066e1ed8fec35e54b840f0cbea8d57d04f23da16877b1a2fb8dfb615",
+        "tool_mvid": "514debad-dc5e-4f60-a687-ab629c28f837",
+        "offline_exit_code": 0,
+        "offline_hard_deadline": false,
+        "offline_report_sha256": "a6cf69f88be70c4d626ef45abe665fc1036d61211b6a14980c8b3e5a52c8de49",
+        "wrapper_sha256": "b2af867921b567045fdeeccb3da490662661976b182e5884d029a738d41e00d8"
+      },
+      "report_sha256": "5e8d839907817372bfe9ea99c9039602d26872c7bc91de5274173e80bec7a138",
+      "report_status": "execution_failed",
+      "completed_cases": null,
+      "server_identity_verified": true,
+      "identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-temporal.20261008144915",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+          "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+          "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "O_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "transport": "PlaintextAllowed_explicit",
+      "safe_failure": {
+        "type": "Program+ToolAssertionException",
+        "number": null,
+        "failure_class": "user_rejection",
+        "verified_server_response": false,
+        "failure_kind": null,
+        "phase": null,
+        "code": null,
+        "outcome": null,
+        "assertion_code": "ReadServerTextGuardFailed"
+      },
+      "diagnostic": [],
+      "cleanup_sha256": "3ebef05f4292b156bfaabaf2ecb94292fd0a8f4fb5751f2fc940a8d17c7b6b43",
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection"
+    }
+  ],
+  "DB_window_released": true,
+  "recovery_pending": false,
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "deadline_seconds": 1800,
+  "status": "failed_shared_supplement_negative_interval_server_text_guard",
+  "preflight_passed": true,
+  "postflight_passed": true,
+  "old_evidence_immutable": true,
+  "build_window_released": true,
+  "finished_utc": "2026-10-08T19:37:37.965405+00:00",
+  "failure_phase": "NATIVE_INTERVAL_neg",
+  "failure_exit_code": 1,
+  "failure_safe": {
+    "type": "Program+ToolAssertionException",
+    "number": null,
+    "failure_class": "user_rejection",
+    "verified_server_response": false,
+    "failure_kind": null,
+    "phase": null,
+    "code": null,
+    "outcome": null,
+    "assertion_code": "ReadServerTextGuardFailed"
+  },
+  "failed_read_step": "ServerTextGuard",
+  "last_completed_read_step": "ServerStringGet",
+  "completed_read_steps": [
+    "Metadata",
+    "Cell",
+    "Raw",
+    "TemporalIsDBNull",
+    "FieldType",
+    "ProviderFieldType",
+    "Schema",
+    "GetValue",
+    "GetProviderSpecificValue",
+    "GenericGetter",
+    "ValueStringGet",
+    "ValueTextGuard",
+    "ServerIsDBNull",
+    "ServerNullGuard",
+    "ServerStringGet"
+  ],
+  "safe_read_attempt": {
+    "case_id": "NATIVE_INTERVAL_neg",
+    "stage_id": "write",
+    "source": "W",
+    "connection_id": "876a8caa85944562afbc40b232b19f1b",
+    "row_id": 10016,
+    "ordinal": 0,
+    "column": "I",
+    "completed": false,
+    "steps": [
+      {
+        "step_id": "Metadata",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "available": true,
+          "c_type": 21,
+          "width": 24,
+          "semantic_scale": 1686,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": 1686,
+          "raw_scale_status": "captured_server_source",
+          "raw_source": "ResultColumn",
+          "raw_c_type": 21,
+          "raw_precision": 24,
+          "raw_mask_before": 0,
+          "raw_derived_mask": 0,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      },
+      {
+        "step_id": "Cell",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "observable": true,
+          "payload_length": 24,
+          "payload_sha256": "1f4635fd456113d5f04b7d24fc3efd3b6dd3ae510b986160c61c95625b971540",
+          "is_null": false,
+          "is_bdta": false,
+          "result_format": "ordinary_non_BDTA",
+          "source": "already_fetched_cell"
+        }
+      },
+      {
+        "step_id": "Raw",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "hex": "FFFFFFFFFFFFFFFF0000000000000000C01DFEFF96060000",
+          "c_type": 21,
+          "scale": 1686,
+          "width": 24,
+          "mask": 0,
+          "source": "ordinary_result_cache_before_temporal_projection",
+          "capture_stage": "before_any_temporal_getter",
+          "payload_sha256": "1f4635fd456113d5f04b7d24fc3efd3b6dd3ae510b986160c61c95625b971540",
+          "is_bdta": false
+        }
+      },
+      {
+        "step_id": "TemporalIsDBNull",
+        "status": "completed",
+        "call_returned": true,
+        "result": false
+      },
+      {
+        "step_id": "FieldType",
+        "status": "completed",
+        "call_returned": true,
+        "result": "W.Dm.DmIntervalDT"
+      },
+      {
+        "step_id": "ProviderFieldType",
+        "status": "completed",
+        "call_returned": true,
+        "result": "W.Dm.DmIntervalDT"
+      },
+      {
+        "step_id": "Schema",
+        "status": "completed",
+        "call_returned": true,
+        "result": "W.Dm.DmIntervalDT"
+      },
+      {
+        "step_id": "GetValue",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "outcome": "returned",
+          "type": "W.Dm.DmIntervalDT",
+          "ticks": null,
+          "offset_minutes": null,
+          "kind": null,
+          "text": null,
+          "error": null
+        }
+      },
+      {
+        "step_id": "GetProviderSpecificValue",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "outcome": "returned",
+          "type": "W.Dm.DmIntervalDT",
+          "ticks": null,
+          "offset_minutes": null,
+          "kind": null,
+          "text": null,
+          "error": null
+        }
+      },
+      {
+        "step_id": "GenericGetter",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "outcome": "returned",
+          "type": "System.TimeSpan",
+          "ticks": -900001234560,
+          "offset_minutes": null,
+          "kind": null,
+          "text": null,
+          "error": null
+        }
+      },
+      {
+        "step_id": "ValueStringGet",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "returned_null": false,
+          "character_length": 57,
+          "processing_limit": 120,
+          "hash_computed": true,
+          "utf8_sha256": "57fafeae47ce4d94248ff102710b9980973288058bc4cf17083a609d5572704e",
+          "category_counts": {
+            "digits": 23,
+            "whitespace": 5,
+            "signs": 1,
+            "quotes": 2,
+            "colons": 2,
+            "dots": 1,
+            "parentheses": 4,
+            "slashes": 0,
+            "letters": 19,
+            "other": 0
+          },
+          "diagnostic_text": "INTERVAL '-000000001 01:00:00.123456' DAY(9) TO SECOND(6)",
+          "shape_status": "bounded_shape"
+        }
+      },
+      {
+        "step_id": "ValueTextGuard",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "accepted": true
+        }
+      },
+      {
+        "step_id": "ServerIsDBNull",
+        "status": "completed",
+        "call_returned": true,
+        "result": false
+      },
+      {
+        "step_id": "ServerNullGuard",
+        "status": "completed",
+        "call_returned": true,
+        "result": true
+      },
+      {
+        "step_id": "ServerStringGet",
+        "status": "completed",
+        "call_returned": true,
+        "result": {
+          "returned_null": false,
+          "character_length": 46,
+          "processing_limit": 120,
+          "hash_computed": true,
+          "utf8_sha256": "c35bb5bc06cc10a5245f3f051d3688a2177b06c54c48f6d5c98d21cc444fac36",
+          "category_counts": {
+            "digits": 12,
+            "whitespace": 5,
+            "signs": 1,
+            "quotes": 2,
+            "colons": 2,
+            "dots": 1,
+            "parentheses": 4,
+            "slashes": 0,
+            "letters": 19,
+            "other": 0
+          },
+          "diagnostic_text": "INTERVAL -'1 1:0:0.123456' DAY(9) TO SECOND(6)",
+          "shape_status": "bounded_shape"
+        }
+      },
+      {
+        "step_id": "ServerTextGuard",
+        "status": "failed",
+        "call_returned": false,
+        "error": {
+          "type": "Program+ToolAssertionException",
+          "number": null,
+          "failure_class": "user_rejection",
+          "verified_server_response": false,
+          "failure_kind": null,
+          "phase": null,
+          "code": null,
+          "outcome": null,
+          "assertion_code": "ReadServerTextGuardFailed"
+        }
+      }
+    ],
+    "last_attempted_step": "ServerTextGuard",
+    "last_completed_step": "ServerStringGet",
+    "server_null_receipt": {
+      "actual_getter_invoked": true,
+      "api": "IsDBNullAsync",
+      "ordinal": 1,
+      "is_null": false,
+      "source": "server_projection"
+    },
+    "failed_step": "ServerTextGuard",
+    "error": {
+      "type": "Program+ToolAssertionException",
+      "number": null,
+      "failure_class": "user_rejection",
+      "verified_server_response": false,
+      "failure_kind": null,
+      "phase": null,
+      "code": null,
+      "outcome": null,
+      "assertion_code": "ReadServerTextGuardFailed"
+    }
+  },
+  "safe_text_channels": {
+    "ValueStringGet": {
+      "returned_null": false,
+      "character_length": 57,
+      "processing_limit": 120,
+      "hash_computed": true,
+      "utf8_sha256": "57fafeae47ce4d94248ff102710b9980973288058bc4cf17083a609d5572704e",
+      "category_counts": {
+        "digits": 23,
+        "whitespace": 5,
+        "signs": 1,
+        "quotes": 2,
+        "colons": 2,
+        "dots": 1,
+        "parentheses": 4,
+        "slashes": 0,
+        "letters": 19,
+        "other": 0
+      },
+      "diagnostic_text": "INTERVAL '-000000001 01:00:00.123456' DAY(9) TO SECOND(6)",
+      "shape_status": "bounded_shape"
+    },
+    "ServerStringGet": {
+      "returned_null": false,
+      "character_length": 46,
+      "processing_limit": 120,
+      "hash_computed": true,
+      "utf8_sha256": "c35bb5bc06cc10a5245f3f051d3688a2177b06c54c48f6d5c98d21cc444fac36",
+      "category_counts": {
+        "digits": 12,
+        "whitespace": 5,
+        "signs": 1,
+        "quotes": 2,
+        "colons": 2,
+        "dots": 1,
+        "parentheses": 4,
+        "slashes": 0,
+        "letters": 19,
+        "other": 0
+      },
+      "diagnostic_text": "INTERVAL -'1 1:0:0.123456' DAY(9) TO SECOND(6)",
+      "shape_status": "bounded_shape"
+    }
+  },
+  "case_records_partial": 29,
+  "case_records_partial_not_acceptance": true,
+  "not_run": [
+    "shared_supplement_validator",
+    "tls_supplement_runner",
+    "tls_supplement_validator"
+  ],
+  "source_manifest_sha256": "86c09b66e7a528b9d49976b2e09279b35507ad3e49e636005d3ab64af3f82636",
+  "runtime_coordinator_sha256": "176282aefcb5f4e7a0625041711b86801ad810cd1798c5c17cda671457c60b30",
+  "source_package_caps_old_evidence_immutable": true,
+  "final_database_state": "owned_table_absent_fresh_connection",
+  "original_safe_reports": {
+    "runner.json": "1ce97950ddd4332cf73450ff6e4a8c63c37e8362eeb4bb73e7d05638526fd1d9",
+    "supplemental.json": "5e8d839907817372bfe9ea99c9039602d26872c7bc91de5274173e80bec7a138",
+    "supplemental.cleanup.json": "3ebef05f4292b156bfaabaf2ecb94292fd0a8f4fb5751f2fc940a8d17c7b6b43",
+    "supplemental.ownership.json": "0626f1fe6187183d18caf92616c8bf1a6f19e35c0f58f6ce70f95484aac623e0",
+    "supplemental.ownership.json.final.json": "3db487eced11384d9968c6fabad8014889195fcd8e3235fa0e3f40ebaba00543"
+  },
+  "root_cause_inference": false,
+  "old_evidence_immutable_hashes": {
+    "v5_runtime_failure": "df03afb41c2ec3ddc132a24e510d6b60ebc0f7a11603ca0f5ec1f6c56a01c422",
+    "v4_runtime_failure": "a9c5af5ae75bd7f6a855300a9e27230cb1ff3a85287a91f58f19eef47c1c430e",
+    "v3_runtime_failure": "c8622fedceeb4e3e2ebe9f5ee166433e86201181f158dc3707504aa1694cc08c",
+    "coordinator_failure": "08593fe20ca77110d9d0b3fd9dd8ffb83e4ba072cb94fec5d577bd2570eb7d5b",
+    "main_shared": "d66f4efc3a50f8081b336e0de08670a0d75a6a7f911535c0017823457f4a69fe",
+    "main_tls": "a82def4346d4f17afbe0a5db42e9361d469f5658bf968fd7a7fa20038152aaa3"
+  }
+}

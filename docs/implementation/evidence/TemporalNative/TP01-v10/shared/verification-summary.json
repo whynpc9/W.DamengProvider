@@ -1,0 +1,665 @@
+{
+  "schema_version": 1,
+  "task": "TP01-v10 shared baseline characterization",
+  "created_utc": "2026-10-08T04:15:46.974699+00:00",
+  "status": "baseline_characterization_accepted",
+  "source_manifest_sha256": "48038301a7b902b43f80688ce4a8a6f149f06322d7c84e819336296efbb010ed",
+  "source_pre_post_drift": [],
+  "old_source_snapshot_drift": [],
+  "historical_evidence_checked": 1546,
+  "historical_drift": [],
+  "invocation": {
+    "command": [
+      "python3",
+      "eng/temporal-precision.py",
+      "--feed",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-package-feed",
+      "--identities",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10/source/tools/TemporalBoundaryProbe/identities.json",
+      "--source-manifest",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-producer-inputs/v23-source-manifest.json",
+      "--repo",
+      "/Users/wanghongyi/Projects/W.DmProvider",
+      "--profile",
+      "shared",
+      "--output",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10-shared-baseline"
+    ],
+    "cwd": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10/working",
+    "started_utc": "2026-10-08T04:05:23.177307+00:00",
+    "source_manifest_sha256": "48038301a7b902b43f80688ce4a8a6f149f06322d7c84e819336296efbb010ed",
+    "output": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10-shared-baseline",
+    "exit_code": 0,
+    "finished_utc": "2026-10-08T04:14:14.653273+00:00"
+  },
+  "validator_invocation": {
+    "command": [
+      "python3",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10/source/eng/temporal-precision.validate.py",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10-shared-baseline",
+      "--gate",
+      "characterization",
+      "--output",
+      "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v10-shared-baseline/characterization-validation.json"
+    ],
+    "exit_code": 0
+  },
+  "runner": {
+    "schema_version": 1,
+    "task": "TP-01",
+    "phase": "baseline",
+    "profile": "shared",
+    "source_manifest_sha256": "10652bfcf39ccea1e90ed04aa908e581412a2d0c4f6ec39b75f081a2b94a6db3",
+    "product_source_manifest_sha256": "241e15b52b436a55fe3a299e777b281cee0d6b3c22782a0323de311e1d87d1d5",
+    "identity_sha256": "9f18cdfee3b8bb4fba7f08477514ecc68ba47b205c0d9b1c3d8ba5ae5248063d",
+    "capabilities_sha256": null,
+    "runs": [
+      {
+        "lane": "core",
+        "exit_code": 0,
+        "hard_deadline": false,
+        "cleanup_exit_code": 0,
+        "cleanup_hard_deadline": false,
+        "safe_command": [
+          "TEST_wrapper",
+          "dotnet",
+          "frozen_tool",
+          "run",
+          "frozen_identities",
+          "frozen_feed",
+          "shared",
+          "core",
+          "original_repo",
+          "exact_ownership",
+          "safe_report",
+          "frozen_manifest"
+        ],
+        "elapsed_seconds": 209.756,
+        "ownership_manifest_present": true,
+        "ownership_manifest_sha256": "57da21b25300b13bd219b2898074ebde6dd7697b21dca01b3ea9a6ce04489b2e",
+        "recovery_manifest": "core.ownership.json",
+        "creation_state": "confirmed",
+        "report_sha256": "b8f675c5ad41272b2807f9f568bd010b4e87c943dce530fb048a84b33cb212d7"
+      },
+      {
+        "lane": "metadata",
+        "exit_code": 0,
+        "hard_deadline": false,
+        "cleanup_exit_code": 0,
+        "cleanup_hard_deadline": false,
+        "safe_command": [
+          "TEST_wrapper",
+          "dotnet",
+          "frozen_tool",
+          "run",
+          "frozen_identities",
+          "frozen_feed",
+          "shared",
+          "metadata",
+          "original_repo",
+          "exact_ownership",
+          "safe_report",
+          "frozen_manifest"
+        ],
+        "elapsed_seconds": 284.313,
+        "ownership_manifest_present": true,
+        "ownership_manifest_sha256": "f397fcf84df9d9b915a5e0cdf7b67f104e47c2f062ca1146a163e4f6ea93fe44",
+        "recovery_manifest": "metadata.ownership.json",
+        "creation_state": "confirmed",
+        "report_sha256": "e54284c536627aadf7a994029d95deaca3d0209e1336d271257b667773406b3d"
+      },
+      {
+        "lane": "extended",
+        "exit_code": 0,
+        "hard_deadline": false,
+        "cleanup_exit_code": 0,
+        "cleanup_hard_deadline": false,
+        "safe_command": [
+          "TEST_wrapper",
+          "dotnet",
+          "frozen_tool",
+          "run",
+          "frozen_identities",
+          "frozen_feed",
+          "shared",
+          "extended",
+          "original_repo",
+          "exact_ownership",
+          "safe_report",
+          "frozen_manifest"
+        ],
+        "elapsed_seconds": 32.299,
+        "ownership_manifest_present": true,
+        "ownership_manifest_sha256": "a2547b09f56c34ad2d42b32441cd3c82d1e9d7c28e6d95358c69667d824bfcd2",
+        "recovery_manifest": "extended.ownership.json",
+        "creation_state": "confirmed",
+        "report_sha256": "308d5db6114f95e73f0d377986819ef59c6728bd1aad681718396cfdf6949294"
+      }
+    ],
+    "status": "execution_complete",
+    "restore_exit_code": 0,
+    "build_exit_code": 0,
+    "offline_exit_code": 0,
+    "offline_deadline": false,
+    "offline_report_sha256": "b48a26c04d6fc9e39b084106f7041868a1c4f3c3d869094fb2b68ab9cb42f6a6",
+    "offline_shape_sha256": "34490f59424052b60661189fea03897ee7a3f79202f53d24953411dc91831753",
+    "assets_sha256": "efa9fd9a914eb172bc2b0a054f34dd5c8b25f175aa6f839c1ba86ffa39558484",
+    "lock_sha256": "4a2aa5172ac5f779020062fc45516255f9b862ab4dd2f0257fa91343d0e59b7c",
+    "tool_dll_sha256": "4ae71f32b36311cde2c54a62c2f50087830d8ce3e142329010159e77bc48deb3",
+    "wrapper_sha256": "b2af867921b567045fdeeccb3da490662661976b182e5884d029a738d41e00d8"
+  },
+  "validator": {
+    "schema_version": 1,
+    "task": "TP-01",
+    "gate": "characterization",
+    "profile": "shared",
+    "status": "baseline_characterization_accepted",
+    "candidate_acceptance": false,
+    "full_temporal_acceptance": false,
+    "baseline_capability_acceptance": false,
+    "baseline_unverified_observations": true,
+    "wire_layout_verified": false,
+    "simple_layout_classifications": {
+      "ordinary_date": "sampled_ordinary_layout_verified",
+      "ordinary_time6": "sampled_ordinary_layout_verified",
+      "ordinary_time_tz6": "sampled_ordinary_layout_verified"
+    },
+    "issues": [],
+    "case_counts": {
+      "core": 260,
+      "metadata": 334,
+      "extended": 106
+    },
+    "runner_sha256": "f741373affc7740c7cf6b277e009ab3546aa82d94bdd26e2f9f9deb60ac7b000"
+  },
+  "lanes": [
+    {
+      "lane": "core",
+      "case_count": 260,
+      "status": "characterization_complete",
+      "runtime_identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-r3.20261007143838",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
+          "dll_sha256": "c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
+          "mvid": "69e5632e-75c4-4672-b924-57b8ffb58a52",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "O_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "server_identity_verified": true,
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection",
+      "independent_cleanup": {
+        "cleanup_verified": true,
+        "final_database_state": "owned_table_absent_fresh_connection",
+        "server_identity_verified": true,
+        "sha256": "92cfa27d2acf9222db1e2037e04e7b76087a69b4fe3ec0f59c95371d47ed65a9"
+      },
+      "report_sha256": "b8f675c5ad41272b2807f9f568bd010b4e87c943dce530fb048a84b33cb212d7"
+    },
+    {
+      "lane": "metadata",
+      "case_count": 334,
+      "status": "characterization_complete",
+      "runtime_identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-r3.20261007143838",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
+          "dll_sha256": "c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
+          "mvid": "69e5632e-75c4-4672-b924-57b8ffb58a52",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "O_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "server_identity_verified": true,
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection",
+      "independent_cleanup": {
+        "cleanup_verified": true,
+        "final_database_state": "owned_table_absent_fresh_connection",
+        "server_identity_verified": true,
+        "sha256": "5130b7d449091d8a357a693e08feb8d540468ef0983615e4b855c00badf250b5"
+      },
+      "report_sha256": "e54284c536627aadf7a994029d95deaca3d0209e1336d271257b667773406b3d"
+    },
+    {
+      "lane": "extended",
+      "case_count": 106,
+      "status": "characterization_complete",
+      "runtime_identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-r3.20261007143838",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
+          "dll_sha256": "c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
+          "mvid": "69e5632e-75c4-4672-b924-57b8ffb58a52",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "O_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST"
+      },
+      "server_identity_verified": true,
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection",
+      "independent_cleanup": {
+        "cleanup_verified": true,
+        "final_database_state": "owned_table_absent_fresh_connection",
+        "server_identity_verified": true,
+        "sha256": "fd21faa64f6c9ee131c922fc8c548d39ae7370090a4c12abaf70f2ba5236927e"
+      },
+      "report_sha256": "308d5db6114f95e73f0d377986819ef59c6728bd1aad681718396cfdf6949294"
+    }
+  ],
+  "simple_layout_observations": [
+    {
+      "case": "ordinary_date",
+      "driver": "O",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 14,
+          "width": 3,
+          "semantic_scale": 0,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 3,
+        "payload_sha256": "4bd3c92176a37030d1338b14e4ee637c85649b99dec728011af09832a4c3b08b",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        0
+      ],
+      "actual_server": {
+        "text": "2026-07-23",
+        "fields": {
+          "year": 2026,
+          "month": 7,
+          "day": 23,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanoseconds": 0,
+          "offset_minutes": null
+        },
+        "semantic_scale": 0,
+        "observable": true
+      }
+    },
+    {
+      "case": "ordinary_date",
+      "driver": "W",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 14,
+          "width": 3,
+          "semantic_scale": 0,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 3,
+        "payload_sha256": "4bd3c92176a37030d1338b14e4ee637c85649b99dec728011af09832a4c3b08b",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        0
+      ],
+      "actual_server": {
+        "text": "2026-07-23",
+        "fields": {
+          "year": 2026,
+          "month": 7,
+          "day": 23,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanoseconds": 0,
+          "offset_minutes": null
+        },
+        "semantic_scale": 0,
+        "observable": true
+      }
+    },
+    {
+      "case": "ordinary_time6",
+      "driver": "O",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 15,
+          "width": 5,
+          "semantic_scale": 6,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 5,
+        "payload_sha256": "596fae0ea04e2ca9f3a2da35b3064214a03e6f07478e7b14adf84f703c439511",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        6
+      ],
+      "actual_server": {
+        "text": "12:13:14.123456000",
+        "fields": {
+          "year": null,
+          "month": null,
+          "day": null,
+          "hour": 12,
+          "minute": 13,
+          "second": 14,
+          "nanoseconds": 123456000,
+          "offset_minutes": null
+        },
+        "semantic_scale": 6,
+        "observable": true
+      }
+    },
+    {
+      "case": "ordinary_time6",
+      "driver": "W",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 15,
+          "width": 5,
+          "semantic_scale": 6,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 5,
+        "payload_sha256": "596fae0ea04e2ca9f3a2da35b3064214a03e6f07478e7b14adf84f703c439511",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        6
+      ],
+      "actual_server": {
+        "text": "12:13:14.123456000",
+        "fields": {
+          "year": null,
+          "month": null,
+          "day": null,
+          "hour": 12,
+          "minute": 13,
+          "second": 14,
+          "nanoseconds": 123456000,
+          "offset_minutes": null
+        },
+        "semantic_scale": 6,
+        "observable": true
+      }
+    },
+    {
+      "case": "ordinary_time_tz6",
+      "driver": "O",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 22,
+          "width": 7,
+          "semantic_scale": 6,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 7,
+        "payload_sha256": "adfe2335faaa5c8bab1cd89151c4a813e163adf45a7241d4356930e5584d1134",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        6
+      ],
+      "actual_server": {
+        "text": "12:13:14.123456000 +05:30",
+        "fields": {
+          "year": null,
+          "month": null,
+          "day": null,
+          "hour": 12,
+          "minute": 13,
+          "second": 14,
+          "nanoseconds": 123456000,
+          "offset_minutes": 330
+        },
+        "semantic_scale": 6,
+        "observable": true
+      }
+    },
+    {
+      "case": "ordinary_time_tz6",
+      "driver": "W",
+      "metadata": [
+        {
+          "available": true,
+          "c_type": 22,
+          "width": 7,
+          "semantic_scale": 6,
+          "mask": 0,
+          "type_flag": 0,
+          "raw_scale": null,
+          "raw_scale_status": "unobservable_after_legacy_normalization_not_inferred",
+          "raw_source": null,
+          "raw_c_type": null,
+          "raw_precision": null,
+          "raw_mask_before": null,
+          "raw_derived_mask": null,
+          "result_format": "ordinary_packed",
+          "is_bdta": false,
+          "metadata_role": "result_column"
+        }
+      ],
+      "cell": {
+        "observable": true,
+        "payload_length": 7,
+        "payload_sha256": "adfe2335faaa5c8bab1cd89151c4a813e163adf45a7241d4356930e5584d1134",
+        "is_null": false,
+        "is_bdta": false,
+        "result_format": "ordinary_non_BDTA",
+        "source": "already_fetched_cell"
+      },
+      "schema_scales": [
+        6
+      ],
+      "actual_server": {
+        "text": "12:13:14.123456000 +05:30",
+        "fields": {
+          "year": null,
+          "month": null,
+          "day": null,
+          "hour": 12,
+          "minute": 13,
+          "second": 14,
+          "nanoseconds": 123456000,
+          "offset_minutes": 330
+        },
+        "semantic_scale": 6,
+        "observable": true
+      }
+    }
+  ],
+  "NULL_observations": {
+    "serialized_occurrences": 444,
+    "O_generic_outcomes": {
+      "error:System.InvalidCastException": 231
+    },
+    "W_typed_6081_with_receipt": 213,
+    "scope": "Observation occurrences, not extra tests"
+  },
+  "objects_cleaned_fresh_absence": true,
+  "DB_window_released": true,
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "baseline_capability_acceptance": false,
+  "TLS_executed_in_this_run": false,
+  "scope": "Accepted old baseline characterization; 700 per-case observations do not imply candidate correctness or universal profile capability."
+}

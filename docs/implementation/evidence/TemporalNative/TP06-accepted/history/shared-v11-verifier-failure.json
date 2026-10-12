@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "task": "TP-01",
+  "gate": "candidate",
+  "status": "validation_failed",
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "issues": [
+    "W:inferred_dt_tail_stability:reprepare:oracle:W:GetString:declared_text_precision"
+  ]
+}

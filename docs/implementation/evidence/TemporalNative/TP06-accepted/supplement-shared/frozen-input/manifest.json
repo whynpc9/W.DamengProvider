@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "task": "TP-06-supplement",
+  "phase": "candidate",
+  "source_commit": "fe89bd44abe99c1608499f71f4634a13e732c826",
+  "comparison_head": "fe89bd44abe99c1608499f71f4634a13e732c826",
+  "producer": {
+    "source_head": "fe89bd44abe99c1608499f71f4634a13e732c826",
+    "source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+    "source_archive_sha256": "836e47fce12756256b483f0e14717f63002be31059555652782d96331e694441",
+    "version": "0.1.0-temporal.20261008144915",
+    "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+    "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+    "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6"
+  },
+  "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+  "source_archive_sha256": "836e47fce12756256b483f0e14717f63002be31059555652782d96331e694441",
+  "identity_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+  "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+  "case_manifest_sha256": "b2d431d8e5006da3e385ac28fbad64cbdde3c972ada14cf6258d1022d46667e3",
+  "tools": [
+    {
+      "path": "build/Cases.cs",
+      "sha256": "0360d2c3887daf50b6cc08437701ce3fe30aa605c65cde88ae4576497c0fa507"
+    },
+    {
+      "path": "build/Leading.cs",
+      "sha256": "a5a34916542a14427b6a614b87a794beb1450bb5107b0e3cb335ea36a729a526"
+    },
+    {
+      "path": "build/Observations.cs",
+      "sha256": "1385627c9a2ec3c5d147e43e40c9d01935fa9415bec2d743c4f490fd615666fb"
+    },
+    {
+      "path": "build/Offline.cs",
+      "sha256": "c265bd3c65a42e3b8ab8dff1f0aa6d6a3c0b83e5934ccdebb326ab8ad860b582"
+    },
+    {
+      "path": "build/Program.cs",
+      "sha256": "8b0a2e7e58fa0a40983105c2eeeaa212ffddbaf6bbb3df75b4fc1fd1d80e5451"
+    },
+    {
+      "path": "build/README.md",
+      "sha256": "00a11a9f7a6fc23e358cfc9685f391c8db108a984d2fc944349d93a43b583866"
+    },
+    {
+      "path": "build/Readers.cs",
+      "sha256": "06b08ea683888e8ada609e1c2eb125afd693c2e17a437096f3aa3ffc09898190"
+    },
+    {
+      "path": "build/Safety.cs",
+      "sha256": "81166c64488dda125bf0d7e92adeefdb6e97249767c5a5251451fcbe6ec7e98f"
+    },
+    {
+      "path": "build/SequentialObservations.cs",
+      "sha256": "d88c33c9e75d7a6c0e2d720f4305435187d127ed2e0e70a3992239b1b982744f"
+    },
+    {
+      "path": "build/TemporalCandidateAcceptance.csproj",
+      "sha256": "b77c120c936a2ad3499e0bd421bbc682a066a7efad8e7a9bbd4de158923227d1"
+    },
+    {
+      "path": "build/case-manifest.json",
+      "sha256": "b2d431d8e5006da3e385ac28fbad64cbdde3c972ada14cf6258d1022d46667e3"
+    },
+    {
+      "path": "build/contracts.py",
+      "sha256": "f7cde0f78df6d58c561881aadcc2ec4b5fae85fa9e1fc7f36db8a22f0efe4886"
+    },
+    {
+      "path": "build/global.json",
+      "sha256": "6863ab1b69640d64946ef783866504ca8dfda9ea05d0c33d013610b64996c7df"
+    },
+    {
+      "path": "build/run.py",
+      "sha256": "8b00acc9ed8d2ef811499a4fc965714c32fc2a196eb98ceaec7786a60a876b17"
+    },
+    {
+      "path": "build/test_runner_contracts.py",
+      "sha256": "9ddf86bfe6354ea0ccbe16f291a4febf6f236e20ea45527ce094b23f00e7a2a4"
+    },
+    {
+      "path": "build/test_validator_contracts.py",
+      "sha256": "9bf585eaea732842c1e645f63ae6182e5e4e2872c3175fa336f99c79467eb5a8"
+    },
+    {
+      "path": "build/validate.py",
+      "sha256": "fbf8be0f35265c5c12554fe805bdabe9fb3add19d3058610b3b0fdc63bd34b36"
+    },
+    {
+      "path": "build/v11-contracts.py",
+      "sha256": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb"
+    },
+    {
+      "path": "build/v11-packed-oracle.py",
+      "sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9"
+    },
+    {
+      "path": "frozen-input/contracts.py",
+      "sha256": "f7cde0f78df6d58c561881aadcc2ec4b5fae85fa9e1fc7f36db8a22f0efe4886"
+    },
+    {
+      "path": "frozen-input/validate.py",
+      "sha256": "fbf8be0f35265c5c12554fe805bdabe9fb3add19d3058610b3b0fdc63bd34b36"
+    },
+    {
+      "path": "frozen-input/case-manifest.json",
+      "sha256": "b2d431d8e5006da3e385ac28fbad64cbdde3c972ada14cf6258d1022d46667e3"
+    },
+    {
+      "path": "frozen-input/run.py",
+      "sha256": "8b00acc9ed8d2ef811499a4fc965714c32fc2a196eb98ceaec7786a60a876b17"
+    }
+  ],
+  "packages": {
+    "O": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+    "W": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d"
+  }
+}

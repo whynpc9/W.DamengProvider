@@ -1,11 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Buffers.Binary;
+using System.IO;
+using W.Dm.Internal.Types;
 
 namespace W.Dm.util;
 
 internal class DB2N
 {
-	internal static string toString(byte[] bytes, DmField column, DmConnection connection)
+	private static DmTemporalFields ReadTemporal(byte[] bytes, DmField column, DmTemporalResultFormat actualFormat) =>
+		DmDateTime.DecodeForReader(bytes, column.GetTemporalReadDescriptor(actualFormat));
+
+	private static DmIntervalDT ReadIntervalDt(byte[] bytes)
+	{
+		if (bytes == null || bytes.Length != 24) throw new InvalidDataException("Invalid interval value length.");
+		int wireScale = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(20));
+		var declaration = DmTemporalMetadataSemantics.Interpret(21, wireScale);
+		return new DmIntervalDT(bytes, declaration.IntervalLeadingPrecision.Value, declaration.FractionalScale);
+	}
+
+	// Standalone conversions have no reader result context. Callers must explicitly supply an observed format.
+	internal static string toString(byte[] bytes, DmField column, DmConnection connection) =>
+		toString(bytes, column, connection, DmTemporalResultFormat.Unknown);
+
+	internal static string toString(byte[] bytes, DmField column, DmConnection connection,
+		DmTemporalResultFormat actualFormat)
 	{
 		string result = null;
 		column.GetCType();
@@ -67,10 +86,13 @@ internal class DB2N
 		case 23:
 		case 26:
 		case 27:
-			result = DmDateTime.valueOf(bytes, column, connection).toString(column, connection);
+		{
+			var descriptor = column.GetTemporalReadDescriptor(actualFormat);
+			result = DmGetValue.FormatTemporal(DmDateTime.DecodeForReader(bytes, descriptor), descriptor, connection);
 			break;
+		}
 		case 21:
-			result = new DmIntervalDT(bytes).GetDTString();
+			result = ReadIntervalDt(bytes).GetDTString();
 			break;
 		case 20:
 			result = new DmIntervalYM(bytes).ToString();
@@ -550,7 +572,11 @@ internal class DB2N
 		return bytes2;
 	}
 
-	internal static DateTime toDate(byte[] bytes, DmField column, DmConnection connection)
+	internal static DateTime toDate(byte[] bytes, DmField column, DmConnection connection) =>
+		toDate(bytes, column, connection, DmTemporalResultFormat.Unknown);
+
+	internal static DateTime toDate(byte[] bytes, DmField column, DmConnection connection,
+		DmTemporalResultFormat actualFormat)
 	{
 		switch (column.GetCType())
 		{
@@ -558,11 +584,10 @@ internal class DB2N
 		case 15:
 		case 16:
 		case 26:
-			return DmDateTime.valueOf(bytes, column, connection).toDate(column, connection);
 		case 22:
 		case 23:
 		case 27:
-			return DmDateTime.valueOf(bytes, column, connection).toDate(column, connection);
+			return DmTemporalInteger.ProjectDateOnly(ReadTemporal(bytes, column, actualFormat)).ToDateTime(TimeOnly.MinValue);
 		case 0:
 		case 1:
 		case 2:
@@ -574,7 +599,11 @@ internal class DB2N
 		}
 	}
 
-	internal static DateTime toTime(byte[] bytes, DmField column, DmConnection connection)
+	internal static DateTime toTime(byte[] bytes, DmField column, DmConnection connection) =>
+		toTime(bytes, column, connection, DmTemporalResultFormat.Unknown);
+
+	internal static DateTime toTime(byte[] bytes, DmField column, DmConnection connection,
+		DmTemporalResultFormat actualFormat)
 	{
 		switch (column.GetCType())
 		{
@@ -582,11 +611,10 @@ internal class DB2N
 		case 15:
 		case 16:
 		case 26:
-			return DmDateTime.valueOf(bytes, column, connection).toTime(column, connection);
 		case 22:
 		case 23:
 		case 27:
-			return DmDateTime.valueOf(bytes, column, connection).toTime(column, connection);
+			return DmTemporalInteger.ProjectTimeDateTime(ReadTemporal(bytes, column, actualFormat));
 		case 0:
 		case 1:
 		case 2:
@@ -616,7 +644,11 @@ internal class DB2N
 		return DmClob.newInstance(toString(bytes, column, connection), connection);
 	}
 
-	internal static object toObject(byte[] bytes, DmField column, DmConnection connection, Dictionary<string, Type> typeMap)
+	internal static object toObject(byte[] bytes, DmField column, DmConnection connection, Dictionary<string, Type> typeMap) =>
+		toObject(bytes, column, connection, typeMap, DmTemporalResultFormat.Unknown);
+
+	internal static object toObject(byte[] bytes, DmField column, DmConnection connection, Dictionary<string, Type> typeMap,
+		DmTemporalResultFormat actualFormat)
 	{
 		object obj = null;
 		switch (column.GetCType())
@@ -647,20 +679,25 @@ internal class DB2N
 			obj = ByteUtil.getDouble(bytes, 0);
 			break;
 		case 14:
-			obj = DmDateTime.valueOf(bytes, column, connection).toDate(column, connection);
+			obj = DmTemporalInteger.ProjectDateOnly(ReadTemporal(bytes, column, actualFormat)).ToDateTime(TimeOnly.MinValue);
 			break;
 		case 15:
-			obj = DmDateTime.valueOf(bytes, column, connection).toTime(column, connection);
+			obj = DmTemporalInteger.ProjectTimeDateTime(ReadTemporal(bytes, column, actualFormat));
 			break;
 		case 16:
 		case 26:
-			obj = DmDateTime.valueOf(bytes, column, connection).toTimestamp(column, connection);
+			obj = DmTemporalInteger.ProjectDateTime(ReadTemporal(bytes, column, actualFormat));
 			break;
 		case 22:
 		case 23:
 		case 27:
-			obj = DmDateTime.valueOf(bytes, column, connection);
+		{
+			var descriptor = column.GetTemporalReadDescriptor(actualFormat);
+			var fields = DmDateTime.DecodeForReader(bytes, descriptor);
+			// This internal conversion historically exposes a DmDateTime, not the public reader's DTO.
+			obj = new DmDateTime { dt = DmTemporalLegacyAdapter.ToSemantic(fields), dtype = descriptor.CType, scale = descriptor.FractionalScale };
 			break;
+		}
 		case 17:
 		case 18:
 			obj = ByteUtil.getBytes(bytes, 0, bytes.Length);
@@ -686,7 +723,7 @@ internal class DB2N
 			obj = new DmIntervalYM(bytes);
 			break;
 		case 21:
-			obj = new DmIntervalDT(bytes);
+			obj = ReadIntervalDt(bytes);
 			break;
 		case 117:
 			obj = ComplexTypeData.bytesToArray(bytes, null, column.ComplexTypeDesc);

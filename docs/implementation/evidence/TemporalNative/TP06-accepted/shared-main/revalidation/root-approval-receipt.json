@@ -1,0 +1,10 @@
+{
+  "root_acceptance_id": "root-20261009-main-verifier-v12",
+  "rules_sha256": "41757213185e451a0780e3b5fd2c156487b4efe2be87982484fc6600dfe7b276",
+  "lineage_sha256": "895075207cb116acd7d2dfef31b3c5996f41e3790ad9ab4a6c05457154a07a67",
+  "astra_review_sha256": "c46ec0baee855a6d6062490acfb320dde6649067ab5559c85393af469bb6431e",
+  "source_manifest_sha256": "87ca22a0fa4576697cf8397ee71bb55e1c40096b0f82483f937bea7429cb3fb3",
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "scope": "permission to independently validate new verifier and re-evaluate immutable evidence; no runtime pass inferred"
+}

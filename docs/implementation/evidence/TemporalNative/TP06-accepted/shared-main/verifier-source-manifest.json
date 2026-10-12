@@ -1,0 +1,159 @@
+{
+  "task": "TP06 main verifier v12 frozen source",
+  "created_utc": "2026-10-08T16:42:19.074764+00:00",
+  "files": [
+    {
+      "path": "eng/temporal-precision.py",
+      "sha256": "85e1601ebe57902a396c7ea15124a78c23d19ab2cec0ac84d4ddde1281de4de4",
+      "bytes": 16222,
+      "v11_sha256": "85e1601ebe57902a396c7ea15124a78c23d19ab2cec0ac84d4ddde1281de4de4",
+      "change": "unchanged"
+    },
+    {
+      "path": "eng/temporal-precision.validate.py",
+      "sha256": "96faba6fe24e488921eeb702bc2c69cccea74316681d34596f6752dab1b3eb14",
+      "bytes": 108761,
+      "v11_sha256": "7b4f23ee1281bfe4e8bc1a5004f39bcab8b5dce27072df1ce4e00d79ef23e72f",
+      "change": "modified"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/ComponentOracleDiagnostic.cs",
+      "sha256": "4eaf7731c869747ab0edafdd70152729188e605a10b54707f328a45e7d9d2393",
+      "bytes": 12257,
+      "v11_sha256": "4eaf7731c869747ab0edafdd70152729188e605a10b54707f328a45e7d9d2393",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/OfflineContracts.cs",
+      "sha256": "7a93bfbbcdc54a2b88be0baec0f7ed84411e996bfc384bd4914889d29dc1833b",
+      "bytes": 45516,
+      "v11_sha256": "7a93bfbbcdc54a2b88be0baec0f7ed84411e996bfc384bd4914889d29dc1833b",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/Program.cs",
+      "sha256": "e01dee6daae69272521df4b2bb2544af02818c438a473713fd7fbfae63ed0ff9",
+      "bytes": 84880,
+      "v11_sha256": "e01dee6daae69272521df4b2bb2544af02818c438a473713fd7fbfae63ed0ff9",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/README.md",
+      "sha256": "b7961fdcb46af3829c779f8b67126fb2ecaaf819660e1f5fe083476513f9cf7e",
+      "bytes": 24098,
+      "v11_sha256": "b7961fdcb46af3829c779f8b67126fb2ecaaf819660e1f5fe083476513f9cf7e",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/TemporalBoundaryProbe.csproj",
+      "sha256": "64519deb5495bfddb86b1d35d4c77a16d46ac2f79cd9e776d1c16b42585035ed",
+      "bytes": 668,
+      "v11_sha256": "64519deb5495bfddb86b1d35d4c77a16d46ac2f79cd9e776d1c16b42585035ed",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/handwritten-artifact-spec.json",
+      "sha256": "b3c8a68222fbd334b0750d6364ffe7e9c3837fd3f90c93ddd7c39382d442be5c",
+      "bytes": 2496,
+      "v11_sha256": "b3c8a68222fbd334b0750d6364ffe7e9c3837fd3f90c93ddd7c39382d442be5c",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/packed_literal_cases.json",
+      "sha256": "df97ea26457079c0b5a3465d9191078cb3e4ae4e5e49ba7a4be48be31f8ed148",
+      "bytes": 6451,
+      "v11_sha256": "df97ea26457079c0b5a3465d9191078cb3e4ae4e5e49ba7a4be48be31f8ed148",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contracts.py",
+      "sha256": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb",
+      "bytes": 25823,
+      "v11_sha256": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/global.json",
+      "sha256": "6863ab1b69640d64946ef783866504ca8dfda9ea05d0c33d013610b64996c7df",
+      "bytes": 55,
+      "v11_sha256": "6863ab1b69640d64946ef783866504ca8dfda9ea05d0c33d013610b64996c7df",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/identities.json",
+      "sha256": "9f18cdfee3b8bb4fba7f08477514ecc68ba47b205c0d9b1c3d8ba5ae5248063d",
+      "bytes": 1395,
+      "v11_sha256": "9f18cdfee3b8bb4fba7f08477514ecc68ba47b205c0d9b1c3d8ba5ae5248063d",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/packed_oracle.py",
+      "sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
+      "bytes": 5626,
+      "v11_sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_packed_oracle_contracts.py",
+      "sha256": "b623848f9c4d783991f5b02786e7372cd2ddb232e9f98463c72ea957c18ac722",
+      "bytes": 5391,
+      "v11_sha256": "b623848f9c4d783991f5b02786e7372cd2ddb232e9f98463c72ea957c18ac722",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_producer_shape_contracts.py",
+      "sha256": "43ee069de10a78c249b4555a473aaf367f3ac9313c7b195c60819cb3ac0aa621",
+      "bytes": 16111,
+      "v11_sha256": "43ee069de10a78c249b4555a473aaf367f3ac9313c7b195c60819cb3ac0aa621",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_runner_contracts.py",
+      "sha256": "92cb535c00287f741d43b98fde8b0601ad15e47ebf8bfcc5a60288baf1df0d04",
+      "bytes": 15357,
+      "v11_sha256": "92cb535c00287f741d43b98fde8b0601ad15e47ebf8bfcc5a60288baf1df0d04",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_validator_contracts.py",
+      "sha256": "dfe4ebf1227e373afd140faa939098dacaf2f1c11012419c77d62e76d962efc9",
+      "bytes": 94589,
+      "v11_sha256": "743cfea2c9f38f2be6d613530dc80d368adc33d0fcbd7aad573fa1755dd78c19",
+      "change": "modified"
+    }
+  ],
+  "count": 17,
+  "unique_file_count": 17,
+  "contract_fixtures": [
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/handwritten-artifact-spec.json",
+      "sha256": "b3c8a68222fbd334b0750d6364ffe7e9c3837fd3f90c93ddd7c39382d442be5c",
+      "bytes": 2496,
+      "v11_sha256": "b3c8a68222fbd334b0750d6364ffe7e9c3837fd3f90c93ddd7c39382d442be5c",
+      "change": "unchanged"
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/packed_literal_cases.json",
+      "sha256": "df97ea26457079c0b5a3465d9191078cb3e4ae4e5e49ba7a4be48be31f8ed148",
+      "bytes": 6451,
+      "v11_sha256": "df97ea26457079c0b5a3465d9191078cb3e4ae4e5e49ba7a4be48be31f8ed148",
+      "change": "unchanged"
+    }
+  ],
+  "count_note": "Original v11 17 entries already include both fixtures; no duplicate paths added",
+  "base_v11_manifest_sha256": "6aedc1ea913f3d5df6598121a322749020584f4d803a09ef7f423710d07d42de",
+  "patch_sha256": "e5a114f21ad4375aa17a73fb7d29c74360d38c864d3da2db75aa6e7b25ae21ad",
+  "modified_paths": [
+    "eng/temporal-precision.validate.py",
+    "tools/TemporalBoundaryProbe/test_validator_contracts.py"
+  ],
+  "all_other_15_hashes_match": true,
+  "execution_performed": false,
+  "tests_performed": false,
+  "build_performed": false,
+  "DB_performed": false,
+  "revalidation_performed": false,
+  "lineage_approval_prepared": false,
+  "preparation_window_released": true,
+  "supplement_v2_manifest_sha256": "fc44c600d81c06fd7ebf01bbfbe0d71cfaa82d7479089009400a5452736039aa"
+}

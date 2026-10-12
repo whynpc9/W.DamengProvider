@@ -1,0 +1,1837 @@
+{
+  "fixture": "native temporal precision expected-only logic vectors",
+  "schema_version": 1,
+  "expected_only": true,
+  "execution_status": "not_run",
+  "server_evidence": false,
+  "generation": {
+    "seed": 20261008,
+    "algorithm": "64-bit LCG: state=(state*6364136223846793005+1) mod 2^64; ticks=state mod (DateTime.MaxValue.Ticks+1)",
+    "randomized_case_count": 4
+  },
+  "source_basis": [
+    "docs/implementation/temporal-dotnet-precision-plan.v2.md sections 4 and 7",
+    "docs/implementation/temporal-native/TP00-astra-design.md sections 2 and 3"
+  ],
+  "cases": [
+    {
+      "id": "datetime_min",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "0",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "0",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 1,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0
+        }
+      },
+      "basis": "DateTime's defined CLR tick range; calendar fields are integer division by ticks per day/second.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_min_plus_1_tick",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "1",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "1",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 1,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "1",
+          "nanosecondsWithinSecond": 100
+        }
+      },
+      "basis": "DateTime's defined CLR tick range; calendar fields are integer division by ticks per day/second.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_max",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "3155378975999999999",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "3155378975999999999",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 9999,
+          "month": 12,
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "second": 59,
+          "fractionalTicks": "9999999",
+          "nanosecondsWithinSecond": 999999900
+        }
+      },
+      "basis": "DateTime's defined CLR tick range; calendar fields are integer division by ticks per day/second.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_max_minus_1_tick",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "3155378975999999998",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "3155378975999999998",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 9999,
+          "month": 12,
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "second": 59,
+          "fractionalTicks": "9999998",
+          "nanosecondsWithinSecond": 999999800
+        }
+      },
+      "basis": "DateTime's defined CLR tick range; calendar fields are integer division by ticks per day/second.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_max_minus_9_ticks",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "3155378975999999990",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "3155378975999999990",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 9999,
+          "month": 12,
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "second": 59,
+          "fractionalTicks": "9999990",
+          "nanosecondsWithinSecond": 999999000
+        }
+      },
+      "basis": "DateTime's defined CLR tick range; calendar fields are integer division by ticks per day/second.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "leap_year_feb_28_to_feb_29_2000",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "630873792000000000",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "630873792000000000",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 2000,
+          "month": 2,
+          "day": 29,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0
+        }
+      },
+      "basis": "Proleptic Gregorian calendar arithmetic; one tick after the final tick of the source day.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "leap_year_feb_29_to_mar_01_2000",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "630874656000000000",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "630874656000000000",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 2000,
+          "month": 3,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0
+        }
+      },
+      "basis": "Proleptic Gregorian calendar arithmetic; one tick after the final tick of the source day.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "nonleap_century_feb_28_to_mar_01_1900",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "599317056000000000",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "599317056000000000",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 1900,
+          "month": 3,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0
+        }
+      },
+      "basis": "Proleptic Gregorian calendar arithmetic; one tick after the final tick of the source day.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "nonleap_century_feb_28_to_mar_01_2100",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "662431392000000000",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "662431392000000000",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 2100,
+          "month": 3,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0
+        }
+      },
+      "basis": "Proleptic Gregorian calendar arithmetic; one tick after the final tick of the source day.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_seed_20261008_00",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "802684646898815313",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "802684646898815313",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 2544,
+          "month": 8,
+          "day": 10,
+          "hour": 3,
+          "minute": 44,
+          "second": 49,
+          "fractionalTicks": "8815313",
+          "nanosecondsWithinSecond": 881531300
+        }
+      },
+      "basis": "Generated by the fixture's documented 64-bit LCG and fixed seed; CLR tick identity only.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_seed_20261008_01",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "987090427538143806",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "987090427538143806",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 3128,
+          "month": 12,
+          "day": 19,
+          "hour": 18,
+          "minute": 32,
+          "second": 33,
+          "fractionalTicks": "8143806",
+          "nanosecondsWithinSecond": 814380600
+        }
+      },
+      "basis": "Generated by the fixture's documented 64-bit LCG and fixed seed; CLR tick identity only.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_seed_20261008_02",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "1533178916583718631",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "1533178916583718631",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 4859,
+          "month": 6,
+          "day": 14,
+          "hour": 15,
+          "minute": 14,
+          "second": 18,
+          "fractionalTicks": "3718631",
+          "nanosecondsWithinSecond": 371863100
+        }
+      },
+      "basis": "Generated by the fixture's documented 64-bit LCG and fixed seed; CLR tick identity only.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetime_seed_20261008_03",
+      "operation": "project_datetime",
+      "input_unit": "DateTime ticks: 100 ns since 0001-01-01T00:00:00",
+      "input": {
+        "type": "DateTime",
+        "ticks": "2395986693436319644",
+        "kind": "Unspecified"
+      },
+      "expected": {
+        "ticks": "2395986693436319644",
+        "kind": "Unspecified",
+        "fields": {
+          "year": 7593,
+          "month": 7,
+          "day": 31,
+          "hour": 17,
+          "minute": 55,
+          "second": 43,
+          "fractionalTicks": "6319644",
+          "nanosecondsWithinSecond": 631964400
+        }
+      },
+      "basis": "Generated by the fixture's documented 64-bit LCG and fixed seed; CLR tick identity only.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_0_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000000",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "decision": "accept_exact",
+        "ticks": "638448068960000000",
+        "fractionalTicks": "0",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000000",
+          "fractionalTicks": "0"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_1_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000001",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "1",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000001",
+          "fractionalTicks": "1"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_2_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000002",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "2",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000002",
+          "fractionalTicks": "2"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_3_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000003",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "3",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000003",
+          "fractionalTicks": "3"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_4_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000004",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "4",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000004",
+          "fractionalTicks": "4"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_5_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000005",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "5",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000005",
+          "fractionalTicks": "5"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_6_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000006",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "6",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000006",
+          "fractionalTicks": "6"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_7_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000007",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "7",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000007",
+          "fractionalTicks": "7"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_8_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000008",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "8",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000008",
+          "fractionalTicks": "8"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "tick_tail_9_scale6",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000009",
+        "kind": "Unspecified",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "9",
+        "quantumTicks": "10",
+        "scale7_exact_control": {
+          "decision": "accept_exact",
+          "ticks": "638448068960000009",
+          "fractionalTicks": "9"
+        }
+      },
+      "basis": "Scale 6 requires fractional ticks divisible by 10; no rounding or carry is permitted.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale0_whole_second",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000000",
+        "kind": "Unspecified",
+        "scale": 0
+      },
+      "expected": {
+        "decision": "accept_exact",
+        "ticks": "638448068960000000",
+        "fractionalTicks": "0",
+        "quantumTicks": "10000000"
+      },
+      "basis": "Scale 0 quantum is 10^(7-scale) CLR ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale0_one_tick",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960000001",
+        "kind": "Unspecified",
+        "scale": 0
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "1",
+        "quantumTicks": "10000000"
+      },
+      "basis": "Scale 0 quantum is 10^(7-scale) CLR ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale3_exact_one_millisecond",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960010000",
+        "kind": "Unspecified",
+        "scale": 3
+      },
+      "expected": {
+        "decision": "accept_exact",
+        "ticks": "638448068960010000",
+        "fractionalTicks": "10000",
+        "quantumTicks": "10000"
+      },
+      "basis": "Scale 3 quantum is 10^(7-scale) CLR ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale3_one_tick_below_quantum",
+      "operation": "validate_fractional_ticks",
+      "input_unit": "DateTime ticks and target decimal-second scale",
+      "input": {
+        "type": "DateTime",
+        "ticks": "638448068960009999",
+        "kind": "Unspecified",
+        "scale": 3
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_scale_quantum",
+        "fractionalTicks": "9999",
+        "quantumTicks": "10000"
+      },
+      "basis": "Scale 3 quantum is 10^(7-scale) CLR ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale8_ns10",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 10,
+          "offsetMinutes": null
+        },
+        "scale": 8,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "00000001",
+        "format_scope": "fractional_digits_only",
+        "clr_exception": "OverflowException"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale8_ns90",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 90,
+          "offsetMinutes": null
+        },
+        "scale": 8,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "00000009",
+        "format_scope": "fractional_digits_only",
+        "clr_exception": "OverflowException"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale8_ns100",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 100,
+          "offsetMinutes": null
+        },
+        "scale": 8,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "00000010",
+        "format_scope": "fractional_digits_only",
+        "ticks": "1"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale8_ns1_invalid",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 1,
+          "offsetMinutes": null
+        },
+        "scale": 8,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format_rejection": "declared_scale_violation",
+        "exception_type": "not_fixed_by_plan"
+      },
+      "basis": "Nanoseconds are checked directly against the declared scale before CLR projection or formatting; exact exception type is not fixed by the plan.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale9_ns1",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 1,
+          "offsetMinutes": null
+        },
+        "scale": 9,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "000000001",
+        "format_scope": "fractional_digits_only",
+        "clr_exception": "OverflowException"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale9_ns99",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 99,
+          "offsetMinutes": null
+        },
+        "scale": 9,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "000000099",
+        "format_scope": "fractional_digits_only",
+        "clr_exception": "OverflowException"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "scale9_ns100",
+      "operation": "format",
+      "input_unit": "Synthetic DmTemporalFields nanosecondsWithinSecond; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 100,
+          "offsetMinutes": null
+        },
+        "scale": 9,
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "format": "000000100",
+        "format_scope": "fractional_digits_only",
+        "ticks": "1"
+      },
+      "basis": "Integer nanosecond formatting preserves the declared digits; CLR projection is exact only when nanoseconds are divisible by 100.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_unset",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": false
+      },
+      "expected": {
+        "decision": "no_explicit_scale_request"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_0",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 0
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_3",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 3
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_6",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 6
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_7",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 7
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_8",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 8
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_9",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 9
+      },
+      "expected": {
+        "decision": "within_user_scale_range",
+        "profile_or_layout_capability": "not_asserted_by_this_vector"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_19_out_of_range",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 19
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_23_out_of_range",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 23
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "user_scale_255_out_of_range",
+      "operation": "validate_user_scale",
+      "input_unit": "DmParameter.Scale decimal fractional-second scale; set/unset state is explicit",
+      "input": {
+        "parameterType": "DateTime",
+        "scaleSet": true,
+        "scale": 255
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException"
+      },
+      "basis": "For a resolved time type, explicit Scale must be in 0..9; the range check does not grant wire/profile support.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "time_precision_unset",
+      "operation": "validate_time_precision",
+      "input_unit": "DmParameter.Precision, distinct from DmParameter.Scale and wire width",
+      "input": {
+        "parameterType": "DateTime",
+        "precisionSet": false
+      },
+      "expected": {
+        "decision": "no_precision_limit_requested"
+      },
+      "basis": "Settled temporal parameter contract: unset/0 imposes no Precision limit; nonzero Precision is unsupported.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "time_precision_explicit_zero",
+      "operation": "validate_time_precision",
+      "input_unit": "DmParameter.Precision, distinct from DmParameter.Scale and wire width",
+      "input": {
+        "parameterType": "DateTime",
+        "precisionSet": true,
+        "precision": 0
+      },
+      "expected": {
+        "decision": "no_precision_limit_requested"
+      },
+      "basis": "Settled temporal parameter contract: unset/0 imposes no Precision limit; nonzero Precision is unsupported.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "time_precision_7_rejected",
+      "operation": "validate_time_precision",
+      "input_unit": "DmParameter.Precision, distinct from DmParameter.Scale and wire width",
+      "input": {
+        "parameterType": "DateTime",
+        "precisionSet": true,
+        "precision": 7
+      },
+      "expected": {
+        "exception": "NotSupportedException"
+      },
+      "basis": "Settled temporal parameter contract: unset/0 imposes no Precision limit; nonzero Precision is unsupported.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "time_precision_9_rejected",
+      "operation": "validate_time_precision",
+      "input_unit": "DmParameter.Precision, distinct from DmParameter.Scale and wire width",
+      "input": {
+        "parameterType": "DateTime",
+        "precisionSet": true,
+        "precision": 9
+      },
+      "expected": {
+        "exception": "NotSupportedException"
+      },
+      "basis": "Settled temporal parameter contract: unset/0 imposes no Precision limit; nonzero Precision is unsupported.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_+0",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 0
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 0,
+        "utcTicks": "630824132961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_+480",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 480
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 480,
+        "utcTicks": "630823844961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_-300",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -300
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -300,
+        "utcTicks": "630824312961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_+330",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 330
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 330,
+        "utcTicks": "630823934961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_-840",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -840
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -840,
+        "utcTicks": "630824636961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "reject",
+          "exception": "OverflowException"
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_-780",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -780
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -780,
+        "utcTicks": "630824600961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "reject",
+          "exception": "OverflowException"
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_-779",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -779
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -779,
+        "utcTicks": "630824600361234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_valid_clr_offset_+840",
+      "operation": "construct_datetime_offset_and_check_current_guard",
+      "input_unit": "DateTimeOffset local ticks (100 ns) plus integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 840
+      },
+      "expected": {
+        "constructible_by_clr": true,
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 840,
+        "utcTicks": "630823628961234567",
+        "currentWWriterGuard": {
+          "rangeInclusiveMinutes": [
+            -779,
+            840
+          ],
+          "decision": "within_guard",
+          "exception": null
+        },
+        "server_acceptance": "not_asserted"
+      },
+      "basis": "DateTimeOffset keeps local ticks and integer offset; UTC ticks equal local ticks minus offset minutes. Current W guard is a source fact, not a claim about all server profiles.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_ctor_offset_plus_14h01",
+      "operation": "construct_datetime_offset",
+      "input_unit": "DateTimeOffset constructor local ticks (100 ns) and integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": 841
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException",
+        "reason": "offset exceeds +14:00"
+      },
+      "basis": "CLR constructor precondition only; no provider invocation or server write is represented.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_ctor_offset_minus_14h01",
+      "operation": "construct_datetime_offset",
+      "input_unit": "DateTimeOffset constructor local ticks (100 ns) and integer offset minutes",
+      "input": {
+        "localTicks": "630824132961234567",
+        "offsetMinutes": -841
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException",
+        "reason": "offset is below -14:00"
+      },
+      "basis": "CLR constructor precondition only; no provider invocation or server write is represented.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_ctor_utc_before_min",
+      "operation": "construct_datetime_offset",
+      "input_unit": "DateTimeOffset constructor local ticks (100 ns) and integer offset minutes",
+      "input": {
+        "localTicks": "0",
+        "offsetMinutes": 1
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException",
+        "reason": "local minus offset is below DateTime.MinValue"
+      },
+      "basis": "CLR constructor precondition only; no provider invocation or server write is represented.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "datetimeoffset_ctor_utc_after_max",
+      "operation": "construct_datetime_offset",
+      "input_unit": "DateTimeOffset constructor local ticks (100 ns) and integer offset minutes",
+      "input": {
+        "localTicks": "3155378975999999999",
+        "offsetMinutes": -1
+      },
+      "expected": {
+        "exception": "ArgumentOutOfRangeException",
+        "reason": "local minus offset is above DateTime.MaxValue"
+      },
+      "basis": "CLR constructor precondition only; no provider invocation or server write is represented.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "raw_wire_local_min_utc_underflow",
+      "operation": "project_raw_fields_to_datetime_offset",
+      "input_unit": "Synthetic timezone fields; local DateTime fields plus offset minutes, with no DateTimeOffset construction",
+      "input": {
+        "layout_candidate": "TS_TZ11",
+        "fields": {
+          "year": 1,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "fractionalTicks": "0",
+          "nanosecondsWithinSecond": 0,
+          "offsetMinutes": 1
+        },
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "raw_fields_retained": true,
+        "clr_exception": "OverflowException",
+        "reason": "localTicks minus offsetMinutes times ticksPerMinute is outside DateTime range"
+      },
+      "basis": "TP-00 requires a wide/checked local-to-UTC range check when projecting raw timezone fields to DateTimeOffset.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "raw_wire_local_max_utc_overflow",
+      "operation": "project_raw_fields_to_datetime_offset",
+      "input_unit": "Synthetic timezone fields; local DateTime fields plus offset minutes, with no DateTimeOffset construction",
+      "input": {
+        "layout_candidate": "TS_TZ11",
+        "fields": {
+          "year": 9999,
+          "month": 12,
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "second": 59,
+          "fractionalTicks": "9999999",
+          "nanosecondsWithinSecond": 999999900,
+          "offsetMinutes": -1
+        },
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "raw_fields_retained": true,
+        "clr_exception": "OverflowException",
+        "reason": "localTicks minus offsetMinutes times ticksPerMinute is outside DateTime range"
+      },
+      "basis": "TP-00 requires a wide/checked local-to-UTC range check when projecting raw timezone fields to DateTimeOffset.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timeonly_last_tick",
+      "operation": "project_timeonly",
+      "input_unit": "TimeOnly ticks since 00:00:00, 100 ns units",
+      "input": {
+        "type": "TimeOnly",
+        "ticks": "863999999999"
+      },
+      "expected": {
+        "ticks": "863999999999",
+        "fields": {
+          "hour": 23,
+          "minute": 59,
+          "second": 59,
+          "fractionalTicks": "9999999",
+          "nanosecondsWithinSecond": 999999900
+        }
+      },
+      "basis": "TimeOnly's last CLR value is one 100 ns tick before 24:00:00.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "time_raw_hour24_projection",
+      "operation": "project_timeonly",
+      "input_unit": "Synthetic TIME fields; logical fields only, not server bytes",
+      "input": {
+        "layout_candidate": "TIME5",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 24,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 0,
+          "offsetMinutes": null
+        },
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "clr_exception": "OverflowException",
+        "forbidden_normalization": "modulo_or_next_day_carry"
+      },
+      "basis": "Plan and TP-00 require hour=24 CLR projection to fail without modulo reduction or day carry.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_positive",
+      "operation": "project_timespan",
+      "input_unit": "TimeSpan ticks: signed 100 ns units",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "1234567890123",
+        "scale": 7
+      },
+      "expected": {
+        "ticks": "1234567890123",
+        "signPreserved": true
+      },
+      "basis": "TimeSpan's CLR tick domain is signed Int64; conversion expectations use integer identity, including long.MinValue.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_negative",
+      "operation": "project_timespan",
+      "input_unit": "TimeSpan ticks: signed 100 ns units",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "-1234567890123",
+        "scale": 7
+      },
+      "expected": {
+        "ticks": "-1234567890123",
+        "signPreserved": true
+      },
+      "basis": "TimeSpan's CLR tick domain is signed Int64; conversion expectations use integer identity, including long.MinValue.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_zero",
+      "operation": "project_timespan",
+      "input_unit": "TimeSpan ticks: signed 100 ns units",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "0",
+        "scale": 7
+      },
+      "expected": {
+        "ticks": "0",
+        "signPreserved": true
+      },
+      "basis": "TimeSpan's CLR tick domain is signed Int64; conversion expectations use integer identity, including long.MinValue.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_long_min",
+      "operation": "project_timespan",
+      "input_unit": "TimeSpan ticks: signed 100 ns units",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "-9223372036854775808",
+        "scale": 7
+      },
+      "expected": {
+        "ticks": "-9223372036854775808",
+        "signPreserved": true
+      },
+      "basis": "TimeSpan's CLR tick domain is signed Int64; conversion expectations use integer identity, including long.MinValue.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_long_max",
+      "operation": "project_timespan",
+      "input_unit": "TimeSpan ticks: signed 100 ns units",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "9223372036854775807",
+        "scale": 7
+      },
+      "expected": {
+        "ticks": "9223372036854775807",
+        "signPreserved": true
+      },
+      "basis": "TimeSpan's CLR tick domain is signed Int64; conversion expectations use integer identity, including long.MinValue.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "timespan_negative_one_tick_scale6_rejected",
+      "operation": "validate_interval_fraction",
+      "input_unit": "TimeSpan ticks and decimal-second scale",
+      "input": {
+        "type": "TimeSpan",
+        "ticks": "-1",
+        "scale": 6
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "fractional_ticks_not_divisible_by_10"
+      },
+      "basis": "The interval path retains strict microsecond precision; negative remainder is checked without Math.Abs.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "interval_leading_precision_2_accepts_12_days",
+      "operation": "validate_interval_leading_precision",
+      "input_unit": "Signed INTERVAL DAY TO SECOND represented by TimeSpan ticks",
+      "input": {
+        "ticks": "10368000000000",
+        "leadingPrecision": 2,
+        "scale": 7
+      },
+      "expected": {
+        "decision": "accept_exact",
+        "ticks": "10368000000000"
+      },
+      "basis": "The leading precision counts decimal digits in the day component; months are not represented as fixed ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "interval_leading_precision_1_rejects_12_days",
+      "operation": "validate_interval_leading_precision",
+      "input_unit": "Signed INTERVAL DAY TO SECOND represented by TimeSpan ticks",
+      "input": {
+        "ticks": "10368000000000",
+        "leadingPrecision": 1,
+        "scale": 7
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "day_component_exceeds_leading_precision"
+      },
+      "basis": "The leading precision counts decimal digits in the day component; months are not represented as fixed ticks.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "legacy12_microseconds_to_internal_ticks",
+      "operation": "decode_legacy12",
+      "input_unit": "Public legacy 12-byte logical buffer fraction in microseconds",
+      "input": {
+        "legacy12Fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "microsecondsWithinSecond": 123456,
+          "offsetMinutes": 0
+        },
+        "raw_byte_array_included": false
+      },
+      "expected": {
+        "fractionalTicks": "1234560",
+        "nanosecondsWithinSecond": 123456000
+      },
+      "basis": "Root-approved D02: every public legacy 12-byte buffer fraction is microseconds; conversion to 100 ns ticks multiplies by 10.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "internal_ticks_to_legacy12_microseconds",
+      "operation": "encode_legacy12",
+      "input_unit": "CLR DateTime fractional ticks in 100 ns units",
+      "input": {
+        "fractionalTicks": "1234560"
+      },
+      "expected": {
+        "microsecondsWithinSecond": 123456
+      },
+      "basis": "Exact whole-microsecond conversion divides 100 ns ticks by 10.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "internal_seventh_digit_rejected_by_legacy12",
+      "operation": "encode_legacy12",
+      "input_unit": "CLR DateTime fractional ticks in 100 ns units",
+      "input": {
+        "fractionalTicks": "1234567"
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "not_an_integral_microsecond"
+      },
+      "basis": "D02 forbids rounding or unit guessing in the public legacy 12-byte path.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "raw_nanoseconds_preserved_as_seven_digit_ticks",
+      "operation": "project_raw_fields_to_internal_ticks",
+      "input_unit": "Synthetic extended timestamp fields; nanosecondsWithinSecond before any DateTime construction",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 123456700,
+          "offsetMinutes": null
+        },
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "fractionalTicks": "1234567",
+        "nanosecondsWithinSecond": 123456700
+      },
+      "basis": "Raw nanoseconds divide by 100 exactly to seven fractional CLR ticks; the vector never passes through DateTime first.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    },
+    {
+      "id": "raw_nanoseconds_not_integral_microsecond_rejected_by_legacy12",
+      "operation": "decode_raw_fields_to_legacy12",
+      "input_unit": "Synthetic extended timestamp fields; nanosecondsWithinSecond before any DateTime construction",
+      "input": {
+        "layout_candidate": "TS9",
+        "fields": {
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "second": 0,
+          "nanosecondsWithinSecond": 123456700,
+          "offsetMinutes": null
+        },
+        "server_source": false,
+        "wire_bytes_included": false
+      },
+      "expected": {
+        "exception": "OverflowException",
+        "reason": "nanoseconds_not_divisible_by_1000"
+      },
+      "basis": "D02's public legacy 12-byte projection requires integral microseconds; internal ns/ticks remain separate and exact.",
+      "expected_only": true,
+      "status": "not_run",
+      "server_evidence": false
+    }
+  ]
+}

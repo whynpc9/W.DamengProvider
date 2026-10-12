@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "TP03_writer_reader_wiring",
+  "status": "tp03_wiring_accepted",
+  "synthetic_expected_only": false,
+  "tp03_wiring_accepted": true,
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "tp04_binding_acceptance": false,
+  "tp05_complete": false,
+  "policy_sha256": "dfa2247a233b19eac4a4c94049ab8d562bbb83bd4bd187fad79eb692b6d4b40f",
+  "dependency_sha256": {
+    "frozen-input/temporal-precision.validate.py": "7b4f23ee1281bfe4e8bc1a5004f39bcab8b5dce27072df1ce4e00d79ef23e72f",
+    "build/contracts.py": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb",
+    "build/packed_oracle.py": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9"
+  },
+  "runner_sha256": "78fff2c278b6bb1de8ad724fede042a271c08bdb2322af4cebb4168ae0b05049",
+  "issues": []
+}

@@ -13,5 +13,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <ProjectReference Include="../../src/W.DmProvider/W.DmProvider.csproj" />
     <None Include="../fixtures/parameters-types/scenarios.json" Link="scenarios.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../fixtures/temporal-native/expectations.json" Link="temporal-native-expectations.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

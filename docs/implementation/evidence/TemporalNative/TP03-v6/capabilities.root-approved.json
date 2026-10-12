@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "source_manifest_sha256": "7603bf84e5df9b5d61d42cc9fab8cc204ef0e663dae05e9254fc13056db53ee3",
+  "source_commit": "fe89bd44abe99c1608499f71f4634a13e732c826",
+  "w_package_sha256": "b0af3de1605bf5a066d7ee4af08d806ae2755d56d1f27385be434e04b778c000",
+  "purpose": "TP03_writer_reader_wiring_preconditions_only",
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "approved_utc": "2026-10-08T06:45:25.798626+00:00",
+  "root_approval_basis": {
+    "physical_profile_handoff_sha256": "9c43dd729f35c3ed55d55518d81ace4a60ce5bb935b805b462302850fc1c1719",
+    "offline_summary_sha256": "abb89bf3088b5a3cb499f4506e6165af13d9ec0f61bb6582e29b2950ac2fd310",
+    "package_preparation_sha256": "9fdd371215a73f35e1442b4ccfcfe869352cd0f9a8e4e7c7b4208cc79e0b6347"
+  },
+  "profiles": {
+    "shared": {
+      "server_version": "8.1.5.60",
+      "root_approved": true,
+      "evidence_id": "TP01-v11-shared-physical-and-TP03-v6-offline",
+      "temporal_families": [
+        "TIMESTAMP",
+        "TIMESTAMP_WITH_TIME_ZONE"
+      ],
+      "message_version": 21,
+      "encoding": "utf-8",
+      "negotiated_encoding": "utf-8",
+      "encoding_override_empty": true,
+      "profile_origin": "physical_get_conn_instance_conn_property",
+      "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+      "result_format": "ordinary_non_BDTA",
+      "seven_write": true,
+      "write_scales": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "tltz_write": false,
+      "tltz_read": false,
+      "local_ticks_min": 0,
+      "local_ticks_max": 3155378975999999999,
+      "utc_ticks_min": 0,
+      "utc_ticks_max": 3155378975999999999,
+      "offset_min_minutes": -779,
+      "offset_max_minutes": 840
+    }
+  }
+}

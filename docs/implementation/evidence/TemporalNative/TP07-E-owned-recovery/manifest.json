@@ -1,0 +1,71 @@
+{
+  "scope": "Original CREATE/cleanup failure retained; readonly N byte/character diagnosis; one exact owned table recovery; fresh table and PK absent plus independent readonly confirmation; no E/C acceptance",
+  "artifacts": [
+    {
+      "source": "TP07-E-v2-runtime-r2-control/verification-summary.json",
+      "artifact": "TP07-E-v2-runtime-r2-control--verification-summary.json.gz",
+      "original_sha256": "bc80be3a19598326852b4be444ffecff578773542fbdbbf2a535d9667df98352",
+      "artifact_sha256": "64a656b7fcf303486193b002aaf8be8d895588becc1b5a20cebf54a6c50dd1c6"
+    },
+    {
+      "source": "TP07-E-v2-runtime-r2/shared/roundtrip/main/runtime.json",
+      "artifact": "TP07-E-v2-runtime-r2--shared--roundtrip--main--runtime.json.gz",
+      "original_sha256": "8b142476d1e42461c16d6235ad298398438994b2e4a664ad91dad72a77a28503",
+      "artifact_sha256": "9dc044d94d32fbc12ba7f22772452f3362ecb53fb54909b6504fe641272f9603"
+    },
+    {
+      "source": "TP07-E-v2-runtime-r2/shared/roundtrip/main/ownership.json",
+      "artifact": "TP07-E-v2-runtime-r2--shared--roundtrip--main--ownership.json.gz",
+      "original_sha256": "10f0c6e81f6c1d91f51cf0424b78c41905f4606d2e6e168144e690a4480430d1",
+      "artifact_sha256": "17681ddf80dbe9d3c69ead0f7244163be52fb68b9bb380d8aff7b10afa06fd3a"
+    },
+    {
+      "source": "TP07-E-v2-runtime-r2/shared/roundtrip/cleanup/report.json",
+      "artifact": "TP07-E-v2-runtime-r2--shared--roundtrip--cleanup--report.json.gz",
+      "original_sha256": "7acb127165baed2f2b1f00f6c65b931fb44d1c995711435ea48e429217a39d9f",
+      "artifact_sha256": "ea0990ee86cafbf86cc65d5d83d86855b59a984cf293ec0071d59e00b5991802"
+    },
+    {
+      "source": "TP07-E-owned-inspection-v2-runtime/inspection.json",
+      "artifact": "TP07-E-owned-inspection-v2-runtime--inspection.json.gz",
+      "original_sha256": "7f76c57340774a76318706bc4c60fe0e2795d7508ba509e59a6fe8d2ffde5aff",
+      "artifact_sha256": "aad87cfecc3f62b911fb22bf795e7b325f19f3581ca861bbb3b4e4ac7ff11c69"
+    },
+    {
+      "source": "TP07-E-owned-inspection-v3-runtime/inspection.json",
+      "artifact": "TP07-E-owned-inspection-v3-runtime--inspection.json.gz",
+      "original_sha256": "d79b7c748bd9dd8a0c86bd46eef5d741c086b89669a370d60e6a258ab0efcfaf",
+      "artifact_sha256": "6c1172913ce801ecf6056de80c5f2405ec15fcd9db7657bd3892fcd8ef8fe7ee"
+    },
+    {
+      "source": "TP07-E-owned-inspection-v3-runtime-control/verification-summary.json",
+      "artifact": "TP07-E-owned-inspection-v3-runtime-control--verification-summary.json.gz",
+      "original_sha256": "46d746428d837c583e64637dc2f751bc0192bcb88c974413f963829c8fc679fd",
+      "artifact_sha256": "80ce96b64ed344f742ee21d8028b6aafa6cb02c52ec7e44c15ba0509e8ed115e"
+    },
+    {
+      "source": "TP07-E-owned-recovery-v1-build/build-manifest.json",
+      "artifact": "TP07-E-owned-recovery-v1-build--build-manifest.json.gz",
+      "original_sha256": "6e1d20890d819d123a98b9b6fd5188f92b60596b641c1b71ec9aceafb956261a",
+      "artifact_sha256": "8b3a88dd98902e04fb1cd85e496e1acb2e21c23b8ae78b0836e05648048ef74a"
+    },
+    {
+      "source": "TP07-E-owned-recovery-v1-runtime/recovery.json",
+      "artifact": "TP07-E-owned-recovery-v1-runtime--recovery.json.gz",
+      "original_sha256": "16eec8596581cda397f9828de1c4de86b00f7f2e8404397f532904443d6af02a",
+      "artifact_sha256": "28d8e8712c155635a3a93ab4ad3551c62e4f9e4c258f39aac4b0584388354701"
+    },
+    {
+      "source": "TP07-E-owned-recovery-v1-independent-readonly/inspection.json",
+      "artifact": "TP07-E-owned-recovery-v1-independent-readonly--inspection.json.gz",
+      "original_sha256": "4449bda66d65b1a882ddfca75ad1322916d16979589e430464e77d79079dd800",
+      "artifact_sha256": "7680b86068e3d8e28f7cfc5658001e93847b99790abeecfbdeffaebfcc0822a3"
+    },
+    {
+      "source": "TP07-E-owned-recovery-v1-runtime-control/verification-summary.json",
+      "artifact": "TP07-E-owned-recovery-v1-runtime-control--verification-summary.json.gz",
+      "original_sha256": "09abbbb5b445c88126beba8f2be9ddf8086cd8966e1815d525901a9f7e4a7838",
+      "artifact_sha256": "6f637874c068434949d0720ec5e7111b95e693d46a715cfbf655df5ef09f19a0"
+    }
+  ]
+}

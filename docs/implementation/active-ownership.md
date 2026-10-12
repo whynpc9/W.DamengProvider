@@ -1,4 +1,98 @@
-# 当前状态：R3 设计与分阶段实施；历史输入和证据只读
+# 当前状态：2026-10-10 .NET 原生时间精度专项
+
+**2026-10-12 用户明确停工；仅交接文档，所有子代理已结束，没有构建/测试/DB在运行。** 当前实现、已验证/待验证与参考文档见 [HANDOFF-2026-10-12.md](temporal-native/HANDOFF-2026-10-12.md)。所有未启动的旧执行窗口失效，含刚写但未下发的project-focused-build-window；恢复必须等待用户新指令。产品/工具/旧证据保持原样；修复后maintenance build/run均不存在，exact2 TEST最终absence仍未证，cleanup_pending。root仅整理本页/status/handoff，不继续设计、实现、审阅或执行。
+
+**2026-10-12 恢复后：** HANDOFF 第 7 节已收口，见 [TP07/TP08 收口报告](temporal-native/TP07-TP08-closure.md)。产品源码未改；未提交、未建 PR。
+
+TP00–TP06 已按各自范围接受；TP06 A/B 同包证据见 [最终验收](temporal-native/TP06-acceptance.md)。所有已接受产品/测试/工具输入保持冻结。TP07 当前分工：tp4_codec_bridge（Sol High）负责新 bridge/协调工具；tp4_binding（Sol High）等待 P1 事实后实施隔离 EF mapping；design_next（Astra High）负责映射设计/验收；tp4_review（Astra High）只读细化后续 EF-R01…R06 实库 harness 设计；verify_next（Sol Low）独占每次由 root 明确开启的构建/实库窗口。其余 High 空闲停写。root 负责范围、能力配置、证据、Git/PR；不替代 High 编码或 Low 验证。
+
+用户新增交付顺序：TP08 完成后，先启动 Claude 会话，对本会话全部实现做本地静态 review；依据 review 修订一轮并独立验证，再创建 PR。既有 review bot babysit 与 merge 授权保持。
+
+下方历史窗口只记录过去归属与失败，不构成当前写入/执行许可。实际任务状态以 [专项 status.json](temporal-native/status.json) 及本页首段为准。
+
+用户已授权按 [时间精度 v2 计划](temporal-dotnet-precision-plan.v2.md) 完成实施、独立验证、创建 PR、处理全部 review bot 意见并在通过后 merge。计划原基线 `ed0c8a1` 已在保留计划文档后 fast-forward 到当前 origin/main `fe89bd44abe99c1608499f71f4634a13e732c826`；R3 已合并，本专项不重写其历史证据。以下为本专项此前窗口的保留记录；当前归属以本页首段 TP07 窗口为准。
+
+| owner | 模型与角色 | 当前唯一写入范围 / 门槛 |
+| --- | --- | --- |
+| root | 协调、范围、Git/PR 收口 | 本节、专项进度、公共报告和审阅决策；不替代 High 编码或 Low 验证 |
+| tp_inventory | GPT-6.1 Sol High，TP-00 实施 | `docs/implementation/temporal-native/TP00-inventory.md`、`TP00-contract-matrix.json`；`.local/temporal-native/historical-baseline/` 新快照 |
+| tp_design | GPT-6 Astra High，关键契约设计与基线审阅 | `docs/implementation/temporal-native/TP00-astra-design.md`；产品源码只读 |
+| tp_verify | GPT-6.1 Sol Low，所有 TP 任务独立验证及唯一构建/实库窗口 | `.local/temporal-native/verification/` 新证据；初段仅环境与只读预检，未获 root 冻结通知前无 dotnet/DB |
+
+TP-00 已由 High 实施、Low 43 项独立核验、Astra/root 设计接受并关闭，见 [准备门验收](temporal-native/TP00-acceptance.md)。当前 TP-01/02 新窗口如下；上述 TP-00 两名编写者已停写。
+
+| owner | 模型与角色 | 新唯一写入范围 |
+| --- | --- | --- |
+| tp_probe | GPT-6.1 Sol High，TP-01 producer/runner | `tools/TemporalBoundaryProbe/` 下 Program/README/csproj/global/identities 与新 test_runner_contracts.py；`eng/temporal-precision.py`；不写下面 validator owner 文件 |
+| tp_inventory | GPT-6.1 Sol High，TP-01 validator（TP-00 已冻结） | `eng/temporal-precision.validate.py`；`tools/TemporalBoundaryProbe/contracts.py`、`test_validator_contracts.py` 及 validator 专属 contract-fixtures |
+| tp_core | GPT-6.1 Sol High，TP-02，后续 codec owner | 新 `src/W.DmProvider/Internal/Types/DmTemporal*.cs`（现有 DmTemporalCodec 暂不接线）、新 `tests/W.DmProvider.TypeTests/TemporalNative*.cs`；TypeTests.csproj 仅新增 fixture 复制项 |
+| tp_vectors | Luna Max，合成数据 | `tests/fixtures/temporal-native/` expected-only 向量/说明，不写运行结果或测试代码 |
+| tp_design | Astra High | 新 TP-01/02 设计/代码审阅记录；产品只读 |
+| tp_verify | Sol Low | `.local/temporal-native/verification/` 新证据；唯一 build/test/DB 窗口，等待各新输入冻结及 root 通知 |
+
+所有 High 禁止 dotnet/DB；Low 独占串行窗口，缺陷交还 High 后新冻结。复杂任务的设计与最终代码由 Astra High 子代理验收。EF 使用固定 commit `5863d3755dbd2d333ac359bf1c0a789762adbaed` 的隔离 worktree，原 `/Users/wanghongyi/Projects/dameng-entityframework-core` 的未提交工作不动，不追随活动 origin/main 漂移。Secrets 仅 TEST wrapper 使用，不读 SA，不复制到 CI或制品。每轮 source/package/evidence 身份保持可追溯；历史失败不回写。
+
+TP-02 v1 已保留为 static_review_rejected（测试公开签名编译问题及异常断言假阳性），未运行 dotnet。High 只修两测试后 v2 经 Astra/root 静态接受；tp_core/tp_vectors 已停写，Low 现独占 TP02-v2 离线构建/测试窗口（先 TemporalNative，再同构建完整 TypeTests），无 DB/打包。使用不可变快照及独立 build-work，TP-01 工具仍可在独占路径编写，不能把它的未冻结输入加入本窗口。
+
+TP02-v2 实际 restore/编译成功，目标56项中52通过/4失败，后续全TypeTests停止，Low窗口已释放。独立Astra/root位置整数推导确认是本轮人工legacy golden漏fraction低位0x80（旧值表示123392us而非123456us），不是产品编码问题；既有官方golden不动。v2失败快照/TRX保留。root现仅授权tp_core修改TemporalNativeWireTests.cs四人工常量及注释，再停写经Astra复审后新v3验证；其余产品/fixture继续冻结。
+
+TP02-v3 单文件修复已停写并经 Astra/root 复审接受，Low 现独占新 v3 离线验证窗口，仍无 DB/包。TP01 七个工具输入也已停写，aggregate `26176e482657d28107ba9041e03584373c82b531da3facfe1da5b75917b9dc2d`，Astra 正独立审阅，未授权运行；各旧轮与历史证据均保留。
+
+TP02-v3 已独立通过目标56/56和同构建全TypeTests218/218，source/fixture/历史哈希不变，root关闭TP-02（仅offline），见[验收报告](temporal-native/TP02-acceptance.md)。Low窗口已释放，core和向量继续冻结。TP-01仍待Astra审阅/必要修复及独立实库门；TP-03尚未激活，不提前接入产品。
+
+TP01-v1 审阅提出8组工具/gate缺口，Low已保存只读v1工具输入且未运行。root开放TP01-v2限定修复，由两名Sol High按上表互斥负责producer/runner与validator/离线合同测试；共同schema先消息对齐，contracts.py仅validator owner写。实际v23 producer source HEAD为`2b39fec0fa1bc8974f8e491f9bdb5a6113d14631`，source manifest须与原包精确绑定；fe89仅本轮比较基线，不伪造晚到的产包身份。High仅静态语法检查，全部Python验收/dotnet/DB仍等新freeze+Astra/root后由Low运行。
+
+TP01-v2 11输入已由Low锁定只读（aggregate `502eb27e2784bb43b6a349d9bae1ce8b1ad2a85aa57273e515c4f9d0fb41dd3f`），Astra整合复审提出B01–B07，未运行。root现授权原两High做v3限定修复：producer owner可新增少量工具C# offline selftest/共用真实判定文件，validator owner可新增相应Python shape合同消费者；不修改产品。修正样本隐式类型、拒绝字段层级、结果列flag0与参数fixed1区别、R3 Reader owned statement取样/失败后新连接恢复、TLS closed7独立请求及真实C# shape/ownership执行门。TP02接受输入保持冻结；下一运行窗口仍须新整体freeze+Astra/root接受后Low执行，先全部离线门再另行批准DB。
+
+TP01-v3 两High已停写，13输入由Low锁只读，aggregate `d9d71dc7d47257f3eb568af87ebe3b92bbc02d6ab1d05aeb9625d307b825316d`，manifest SHA `448fbee3f08fdb37bc3323266a3f2b3fb468a175b7176182a32486ccc5d821a4`。Astra整合复审中，Low准备窗口已释放且尚未运行；后续先portable/local-required/真实source包链CLI、private build、C# offline selftest与实际shape消费者，再由root决定DB窗口，不将离线synthetic报告当实库证据。
+
+TP01-v3 定点复审关闭B01–B05/B07等主要问题，剩C01/C02两个TLS差异。root现授权两High仅修v4：baseline closed7保留真实Overflow/NS表征，candidate仍必须NS；TLS fixed metadata轴明确选择D6/Z6，shared D7/Z7，并核实际target_column/descriptor，不用写能力反推物理列scale。只增加相应实际C# helper与合同负例，其他来源/cleanup/身份门保持；v3只读输入/报告不变，仍未运行。
+
+TP01-v4 两High停写且Astra/root静态接受，13输入由Low锁定（aggregate `5c966c3ff40414a319cf1209fbb5177250935ed2b16746dff8b71c33ec763d65`）。Low现独占完整离线窗口：portable Python、local-required、真实v23源包/MVID CLI、runner offline-only private build/真实C#自测、实际shape消费者；首失败即停止并释放。未授权DB/TEST wrapper，须离线结果通过后root另开；所有产品代码和工具保持冻结，旧输入/证据只读。
+
+TP01-v4 首portable门真实执行52项，20失败/1错误/0skip，后续全部未执行，Low窗口已释放。root独立确认normal synthetic nonce错误写为34位，真实生成器和32位守卫正确；High v5仅改四fixture相关输入为32位并加独立构造检查，不改生产策略/清理/返回码。v4所有失败保留，v5已停写并交Astra限定复审/Low新快照，仍无DB运行。
+
+TP01-v5 经Astra/root接受后已由Low实际通过全部离线：portable52/52、local-required17/17、真实source/package/DLL/纯PE MVID链、SDK10.0.203构建、C#23/23及实际shape消费者，源/历史hash不变。离线未执行O/W完整运行身份loader，不冒称实库通过。root现仅开放Low shared baseline三lane及characterization validator窗口：原仓库TEST wrapper、先身份/profile、nonce对象/marker精确清理与fresh absence，任一失败停止；TLS需shared结果回读后另开。High和全部输入继续冻结，不做产品接线。
+
+TP01-v5 shared真实运行core260场景完成，metadata23场景后在fixed NULL阶段终止，Low窗口已释放；两对象fresh absence已证、无恢复待办，extended/TLS未运行。Astra/root独立triage确认探针把有确切NULL上下文的6081（旧W附Transport/Fetch/NotSent）误归infra，且fixed NonQuery后stmt已释放不适合采样。root现仅开放两High的v6工具修复：局部真实NULL getter回执并保留原FailureInfo，不全局放宽；metadata fixed用公开ExecuteReader在活Reader采样后完成，Core仍NonQuery；补实际C#离线及Python正反合同。产品/R3生命周期不改，旧v5失败保留；新freeze/审阅/离线通过后才另开DB。
+
+TP01-v6 两High已停写，只有Program/OfflineContracts/README与validator/test-validator/shape消费者六项变化；局部known-NULL receipt保留原FailureInfo、O原样NULL表征/W严格6081、metadata fixed真实活Reader与C#调用计数/14负例均待独立验收。Astra限定复审、Low仅准备新13输入快照，未开运行。v5失败/所有旧快照保持，不修改产品接线。
+
+TP01-v6 首 portable 门57项出现7个subtest查找错误、0skip；Low已停止后续并释放窗口，旧证据保留。v7仅由原High修正test_validator_contracts.py至目录中真实成功的scale7固定参数case，并增加mutation前基准通过断言，保留原7负例；已停写。Astra进行极小限定复审，Low仅准备新13输入快照，尚未授权执行；产品和其余工具继续冻结。
+
+TP01-v7 已经Astra/root静态接受，Low独占完整离线重验窗口（全部Python门、真实包链、SDK10.0.203 build、实际C# selftest及shape消费）；首失败停止。新13输入锁定aggregate cd6ac6123cc9ac6bd9db0630d1de133652d74b1f1cfdcfe7169c6809a55c777b。未开放DB，其他owner停写。
+
+TP01-v7 完整offline由Low实际通过（57 portable、17 local-required、41 C#、真实包链和shape），root回读接受。现Low唯一shared baseline实库窗口：新TP01-v7-shared-baseline目录，三lane+characterization validator，TEST身份/profile先验、独立精确清理与fresh absence；首失败停。TLS未开，High仍停写，旧失败保留。
+
+TP01-v7 shared三lane真实完成260/334/106且各主进程/独立cleanup均0，但最终characterization validator在offset_0的EXTRACT秒值缺fraction处失败。Low停止释放窗口；Astra限定triage及producer owner只读分析，不开TLS、不改断言/工具/产品。FF9及typed精确不替代该失败，旧完整记录保留。
+
+root开放TP01 components只读诊断编写窗口：tp_probe仅Program新增独立diagnose-components入口、ComponentOracleDiagnostic.cs新文件、README说明；复用身份/包/来源验证，无DDL/DML/会话设置，主三lane和validator不改。Astra先要求Q0证明TZ→TIMESTAMP(9)保持local全字段及fraction，再分别观察原/CAST后EXTRACT；任何损失不接受该oracle。仅High静态准备，Low尚无新build/DB权限。v7所有失败和700场景记录保留。
+
+components diagnostic-v1 14输入已锁且尚未运行，Astra发现summary未把Q0a/Q0b/Q2的observed+完整Read结尾纳入usable。root仅解冻tp_probe的ComponentOracleDiagnostic.cs补完整证明链及一致分类，Q1原失败仍可保留；其余输入停写。旧v1快照保留，Low窗口无运行；新freeze再短复审。
+
+components diagnostic-v2 已Astra/root定点接受，14输入锁存aggregate a44d72ded6185ca4afab7ca85e1e45390f8ee3e27bc4f68194553c6a8165d65e。Low现仅必要离线private build、实际C#自测及shape/来源链窗口；未变的Python57/17不重复。首失败停，DB须此门通过后再开；其他owner停写。
+
+components diagnostic-v2 必要offline已真实通过（41/41 C#、shape、源包/MVID、SDK10.0.203），root接受后开放同产物唯一shared只读诊断窗口，deadline600s，TEST身份/profile先验，无DDL/DML/会话修改/cleanup，无TLS。未使用ownership路径必须保持不存在；真实projection结果另作接受，不回写v7失败。
+
+components diagnostic-v2 只读执行完成exit0无对象，投影方案未接受：多数源CAST已丢第七位，W数值SECOND的GetDecimal类型拒绝另记。root/Astra改进精确验收方法：真实cached packed bytes经独立Python整数decode，严格交叉serverFF9/FF7、原expected与O/W getter，原EXTRACT结果/error不改、不当精确门。现开放v8两High互斥工具窗口：producer Program/OfflineContracts/README；validator contracts/validator/合同测试及必要新decoder测试。Astra先核cache源链；无新build/DB，产品不改，v7及诊断全部历史保留。
+
+TP01-v8 两High全部停写：17输入（新增独立packed_oracle、其测试、120条mock literal fixture；诊断CS保留冻结）。Astra对producer先行审无阻塞，现做整体验收；Low仅准备新快照无执行。普通TS EXTRACT、NULL/advisory门保留，仅已证TSTZ改独立raw精确门并保留原EXTRACT观察。旧v7/诊断失败不变，产品接线尚未激活。
+
+TP01-v8 17输入已只读锁存且未运行。root/Astra发现独立decoder需自守metadata.width==实际layout长度（producer已守、O后验不另守）。仅授权tp_inventory改packed_oracle.py及其测试补严格int宽度约束与raw/meta同时错宽负例；新freeze称v9，旧v8不改，其余输入冻结。无测试/build/DB窗口。
+
+TP01-v9 已Astra/root静态接受，报告SHA4cd0177c6be52427fdbbcd78b516fe8770b6b7cfe4ef743a7016fb162754adc0。Low独占完整离线所有门，17输入锁aggregate55b890f66dd61a4a28665561363ef808310c68612fc26e9ac0c205fe9066a95a；首失败保存停止，不继承旧通过。无DB/TESTwrapper，失败CAST诊断不再重跑，其他owner停止写入。
+
+TP01-v9 全部offline真实通过66/17/51（portable/local-required/C#），source/package/shape/历史hash闭环通过。root现开放Low新TP01-v9-shared-baseline唯一三lane+validator实库窗口；首次失败停，TEST精确对象清理不变，不跑CAST诊断，TLS仍未开。Astra只读准备最终profile交接草稿，须v9/shared及后续TLS真实证据后才能接受。High产品和工具仍停写。
+
+TP01-v9 shared700场景及3对象fresh清理完成，348 raw独立解码与server一致；最终validator在O generic confirmedNULL的InvalidCast处失败。root/Astra枚举231 O NULL均为此真实形态，不能套W6081。Low已释放。现仅授权tp_inventory修改validator/test_validator两文件为v10，O泛型且严格NULL上下文安全InvalidCast表征；W/其它getter/全局failure/producer不动，旧v9保留，不添加重验绕过框架。
+
+TP01-v10 已Astra/root静态接受，17输入锁存；Low当前仅受影响portable/local/source链及新Python消费旧真实shape离线窗口（producer CS全部不变，复用必须明确标识，不称新C#执行），不先重复dotnet。无DB/TESTwrapper，首失败停；通过后新fullsharedrunner仍自然重build/自测，强身份链不绕过。
+
+TP01-v10 必要offline67/17、包链和有来源旧实际shape通过，root现开放Low新TP01-v10-shared-baseline全三lane+validator窗口。新runner自然重build/实际C#自测，身份/包/对象清理强门不变；任一失败保存停止，无TLS/诊断重跑。High及所有工具冻结。
+
+TP01-v10 shared已正式baseline_characterization_accepted：700场景、全部run/cleanup0、validator0/issues[]，root回读接受但不称candidate/fullcapability。Low完成shared安全汇总后获准同v10新目录TLS唯一窗口：原TLS TEST wrapper、RequireTls/现有本机CA NoCheck、身份/8.1.4.6先验、O closed、nonce精确清理；任何失败停，不改环境/证书/模式、不读admin/bootstrap。Astra最终profile收口待TLS结果。
+
+---
 
 本轮用户指令：实现 R2。基线 `6b3d1796dfdc207ec5c1949f1998ca0df4e9697c` 工作树干净，R1 已验收。本轮新归属见文末，历史窗口均已结束。
 

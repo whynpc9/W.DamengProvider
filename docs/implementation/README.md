@@ -4,6 +4,7 @@
 
 ## 规范包入口
 
+- [.NET 原生时间精度改造计划](temporal-dotnet-precision-plan.md)：独立后续设计，包含任务依赖、兼容策略、实库与 EF 验收；实施状态以该文档为准，不改变历史任务验收。
 - [实际实施进度](progress.json)、[T01 报告](reports/T01.md)、[T02 报告](reports/T02.md)、[T03 报告](reports/T03.md)：任务执行状态和验证证据独立于原始规范包保存。
 - [T04 报告](reports/T04.md)：配置、安全默认值、能力守卫及框架边界的独立验收。
 - [T05 报告](reports/T05.md)：物理会话、执行所有权、Reader/LOB 并发隔离和故障清理的独立验收。
