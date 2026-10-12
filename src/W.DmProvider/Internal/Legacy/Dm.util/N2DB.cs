@@ -406,6 +406,8 @@ internal class N2DB
 			}
 			return result;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -415,11 +417,10 @@ internal class N2DB
 
 	internal static void adjustTime(int[] dt, int scale, string val)
 	{
-		dt = OracleDateFormat.Round(dt, scale);
-		if (val.StartsWith("-"))
-		{
-			dt[0] = -dt[0];
-		}
+		if (dt == null || dt.Length < 8) throw new InvalidOperationException("Temporal adjustment requires semantic nanosecond fields.");
+		DmTemporalInteger.ValidateWireFraction(dt[6], scale);
+		if (val == null) throw new ArgumentNullException(nameof(val));
+		if (val.StartsWith("-", StringComparison.Ordinal) && dt[0] > 0) dt[0] = checked(-dt[0]);
 	}
 
 	public static byte[] toVarBinaryOrBlob(string val, int cType, int scale, int prec)
@@ -581,6 +582,17 @@ internal class N2DB
 
 	public static byte[] fromDate(DateTime val, DmField paraInternal, DmConnection connection)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType()))
+		{
+			int type = paraInternal.GetCType();
+			var fields = DmTemporalInteger.FromDateTime(val);
+			if (type is 15 or 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+			if (type is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+			else if (!fields.OffsetMinutes.HasValue) fields = fields with { OffsetMinutes = connection.GetConnInstance().ConnProperty.TimeZone };
+			var target = DmTemporalLegacyAdapter.Target(paraInternal, type, paraInternal.GetScale());
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteValue(target, fields);
+		}
+
 		try
 		{
 			byte[] result = null;
@@ -605,6 +617,8 @@ internal class N2DB
 			}
 			return result;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -614,6 +628,17 @@ internal class N2DB
 
 	public static byte[] fromTime(DateTime val, DmField paraInternal, DmConnection connection)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType()))
+		{
+			int type = paraInternal.GetCType();
+			var fields = DmTemporalInteger.FromDateTime(val);
+			if (type is 15 or 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+			if (type is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+			else if (!fields.OffsetMinutes.HasValue) fields = fields with { OffsetMinutes = connection.GetConnInstance().ConnProperty.TimeZone };
+			var target = DmTemporalLegacyAdapter.Target(paraInternal, type, paraInternal.GetScale());
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteValue(target, fields);
+		}
+
 		try
 		{
 			byte[] result = null;
@@ -637,6 +662,8 @@ internal class N2DB
 			}
 			return result;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -646,6 +673,8 @@ internal class N2DB
 
 	public static byte[] fromTime(DmTime val, DmField paraInternal, DmConnection connection)
 	{
+		if (paraInternal.GetCType() is 16 or 23)
+			throw new NotSupportedException("TIME helper has no calendar semantics for TIMESTAMP conversion.");
 		if (val == null)
 		{
 			return new byte[0];
@@ -669,14 +698,15 @@ internal class N2DB
 				break;
 			case 16:
 			case 23:
-				result = fromTimestamp(DateTime.Parse(val.ToString(), DmConst.invariantCulture), paraInternal, connection);
-				break;
+				throw new NotSupportedException("TIME helper has no calendar semantics for TIMESTAMP conversion.");
 			default:
 				DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
 				break;
 			}
 			return result;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -686,6 +716,17 @@ internal class N2DB
 
 	public static byte[] fromTimestamp(DateTime val, DmField paraInternal, DmConnection connection)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType()))
+		{
+			int type = paraInternal.GetCType();
+			var fields = DmTemporalInteger.FromDateTime(val);
+			if (type is 15 or 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+			if (type is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+			else if (!fields.OffsetMinutes.HasValue) fields = fields with { OffsetMinutes = connection.GetConnInstance().ConnProperty.TimeZone };
+			var target = DmTemporalLegacyAdapter.Target(paraInternal, type, paraInternal.GetScale());
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteValue(target, fields);
+		}
+
 		try
 		{
 			byte[] ret = null;
@@ -724,6 +765,8 @@ internal class N2DB
 			}
 			return ret;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -733,6 +776,17 @@ internal class N2DB
 
 	public static byte[] fromTimeTZ(DateTimeOffset val, DmField paraInternal, DmConnection connection)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType()))
+		{
+			int type = paraInternal.GetCType();
+			var fields = DmTemporalInteger.FromDateTimeOffset(val);
+			if (type is 15 or 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+			if (type is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+			else if (!fields.OffsetMinutes.HasValue) fields = fields with { OffsetMinutes = connection.GetConnInstance().ConnProperty.TimeZone };
+			var target = DmTemporalLegacyAdapter.Target(paraInternal, type, paraInternal.GetScale());
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteValue(target, fields);
+		}
+
 		try
 		{
 			byte[] result = null;
@@ -745,10 +799,10 @@ internal class N2DB
 				result = toVarchar(val.ToString(), connection.GetConnInstance().ConnProperty.ServerEncoding);
 				break;
 			case 15:
-				result = DmTime.TimeEncodeFast(new DmTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), Convert.ToInt16(val.Offset.TotalMinutes)).GetByteArrayValue());
+				result = DmTime.TimeEncodeFast(new DmTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), checked((short)(val.Offset.Ticks / TimeSpan.TicksPerMinute))).GetByteArrayValue());
 				break;
 			case 22:
-				result = DmTime.TimeTzEncodeFast(new DmTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), Convert.ToInt16(val.Offset.TotalMinutes)).GetTzByteArrayValue());
+				result = DmTime.TimeTzEncodeFast(new DmTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), checked((short)(val.Offset.Ticks / TimeSpan.TicksPerMinute))).GetTzByteArrayValue());
 				break;
 			default:
 				DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -756,6 +810,8 @@ internal class N2DB
 			}
 			return result;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -765,6 +821,17 @@ internal class N2DB
 
 	public static byte[] fromTimestampTZ(DateTimeOffset val, DmField paraInternal, DmConnection connection)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType()))
+		{
+			int type = paraInternal.GetCType();
+			var fields = DmTemporalInteger.FromDateTimeOffset(val);
+			if (type is 15 or 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+			if (type is not (22 or 23 or 27)) fields = fields with { OffsetMinutes = null };
+			else if (!fields.OffsetMinutes.HasValue) fields = fields with { OffsetMinutes = connection.GetConnInstance().ConnProperty.TimeZone };
+			var target = DmTemporalLegacyAdapter.Target(paraInternal, type, paraInternal.GetScale());
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteValue(target, fields);
+		}
+
 		try
 		{
 			byte[] ret = null;
@@ -787,7 +854,7 @@ internal class N2DB
 				break;
 			case 16:
 			{
-				DmDateTime dmDateTime = new DmDateTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), 2, Convert.ToInt16(val.Offset.TotalMinutes));
+				DmDateTime dmDateTime = new DmDateTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), 2, checked((short)(val.Offset.Ticks / TimeSpan.TicksPerMinute)));
 				byte[] ret2 = null;
 				dmDateTime.GetByteArrayValue(ref ret2);
 				if (ret2.Length != 8)
@@ -797,7 +864,7 @@ internal class N2DB
 				break;
 			}
 			case 23:
-				ret = DmDateTime.DmdttzEncodeFast(new DmDateTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), 3, Convert.ToInt16(val.Offset.TotalMinutes)).GetByteArrayValue());
+				ret = DmDateTime.DmdttzEncodeFast(new DmDateTime(val.DateTime, paraInternal.GetPrecision(), paraInternal.GetScale(), 3, checked((short)(val.Offset.Ticks / TimeSpan.TicksPerMinute))).GetByteArrayValue());
 				break;
 			default:
 				DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);
@@ -805,6 +872,8 @@ internal class N2DB
 			}
 			return ret;
 		}
+		catch (NotSupportedException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
+		catch (OverflowException) when (DmTemporalLegacyAdapter.IsTemporal(paraInternal.GetCType())) { throw; }
 		catch (Exception)
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_DATA_CONVERTION_ERROR);

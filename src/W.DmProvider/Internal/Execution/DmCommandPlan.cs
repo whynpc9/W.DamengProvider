@@ -102,6 +102,12 @@ internal sealed class DmCommandPlan : IDisposable
     internal DmParameterCollection Parameters { get; }
     internal DmParameterBinding Binding { get; }
     internal DmParameterMetadata[] ParameterMetadata { get; }
+    internal DmTemporalParameterBinding[] TemporalBindings { get; private set; }
+
+    internal void ClearTemporalBindings() => TemporalBindings = null;
+
+    internal void PublishTemporalBindings(DmTemporalParameterBinding[] bindings) =>
+        TemporalBindings = (DmTemporalParameterBinding[])bindings.Clone();
 
     private DmCommandPlan(string sql, CommandType commandType, int timeoutSeconds,
         DmTransaction transaction, DmConnection connection, DmParameterCollection parameters,
@@ -127,7 +133,11 @@ internal sealed class DmCommandPlan : IDisposable
         DmParameterBinding binding = DmParameterBinding.Create(sql, copy);
         var metadata = new DmParameterMetadata[copy.Count];
         for (int index = 0; index < metadata.Length; index++)
+        {
             metadata[index] = DmParameterMetadata.From((DmParameter)copy[index]);
+            if (DmTemporalMetadataSemantics.IsTemporal(DmSqlType.DmDbTypeToDmSqlType(metadata[index].DmSqlType)))
+                DmTemporalBindingResolver.ValidateRequest(metadata[index]);
+        }
         return new DmCommandPlan(sql, commandType, timeoutSeconds, transaction, connection, copy, binding, metadata);
     }
 
@@ -174,7 +184,8 @@ internal sealed class DmCommandPlan : IDisposable
 internal readonly record struct DmParameterMetadata(string Name, System.Data.DbType DbType, DmDbType DmSqlType,
     W.Dm.Internal.Types.DmParameterTypeSource Source, int Size, byte Precision, byte Scale,
     bool ExplicitSize, bool ExplicitPrecision, bool ExplicitScale, System.Data.ParameterDirection Direction,
-    string TypeName)
+    string TypeName, bool ExplicitDbType, System.Data.DbType DeclaredDbType,
+    bool ExplicitDmSqlType, DmDbType DeclaredDmSqlType, Type ValueType)
 {
     internal static DmParameterMetadata From(DmParameter parameter) => new(
         parameter.do_ParameterName, parameter.do_DbType, parameter.DmSqlType, parameter.TypeSource,
@@ -182,5 +193,7 @@ internal readonly record struct DmParameterMetadata(string Name, System.Data.DbT
         parameter.m_SetPrecFlag ? parameter.do_Precision : (byte)0,
         parameter.m_SetScaleFlag ? parameter.do_Scale : (byte)0,
         parameter.m_SetSizeFlag, parameter.m_SetPrecFlag, parameter.m_SetScaleFlag,
-        parameter.do_Direction, parameter.DmSqlTypeName);
+        parameter.do_Direction, parameter.DmSqlTypeName,
+        parameter.HasExplicitDbType, parameter.DeclaredDbType,
+        parameter.HasExplicitDmSqlType, parameter.DeclaredDmSqlType, parameter.do_Value?.GetType());
 }

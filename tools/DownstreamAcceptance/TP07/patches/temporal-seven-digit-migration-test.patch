@@ -1,0 +1,372 @@
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs
+new file mode 100644
+index 0000000..7dc6c72
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs
+@@ -0,0 +1,366 @@
++using System.Globalization;
++using W.Dm;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Migrations;
++using Microsoft.EntityFrameworkCore.Scaffolding;
++using Microsoft.EntityFrameworkCore.Storage;
++using W.EntityFrameworkCore.Dameng.Scaffolding.Internal;
++using Xunit;
++using Xunit.Abstractions;
++
++#pragma warning disable EF1001 // Scaffolding factory is provider infrastructure.
++
++namespace W.EntityFrameworkCore.Dameng.FunctionalTests;
++
++/// <summary>
++/// End-to-end seven-digit temporal precision through real EF migrations, SaveChanges, queries,
++/// scaffolding and a guarded Down that refuses to drop non-microsecond fractions.
++/// </summary>
++public sealed class DamengTemporalPrecisionMigrationFunctionalTests(ITestOutputHelper output)
++{
++    internal const string CreateId = "20261012000001_TemporalCreate";
++    internal const string WidenId = "20261012000002_TemporalWiden";
++
++    // Migrations are compiled code; the test publishes its unique table before migrating.
++    internal static string TableName = "";
++
++    private static readonly TimeSpan East8 = TimeSpan.FromHours(8);
++    private static readonly TimeSpan West5 = TimeSpan.FromHours(-5);
++
++    [DamengFact]
++    public async Task SixToSevenDigitMigrationPreservesValuesAndGuardsDown()
++    {
++        var suffix = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)[..12].ToUpperInvariant();
++        TableName = $"EF10_TP7_{suffix}";
++        var history = $"EF10_TP7H_{suffix}";
++        var connectionString = DamengTestEnvironment.GetRequiredConnectionString();
++
++        var micro = new DateTime(2026, 10, 12, 8, 9, 10).AddTicks(1_234_560);
++        var microOffset = new DateTimeOffset(micro, East8);
++
++        try
++        {
++            // 1. Six-digit schema: exact microseconds succeed, non-microsecond values fail before sending.
++            await MigrateAsync(connectionString, history, CreateId);
++            Assert.Equal(6, await ScaleAsync(connectionString, "V"));
++
++            await using (var six = Context(connectionString, history, 6))
++            {
++                six.Rows.Add(new TemporalRow { Id = 1, V = micro, O = microOffset });
++                six.Rows.Add(new TemporalRow { Id = 2, V = DateTime.MaxValue.AddTicks(-9), O = new DateTimeOffset(DateTime.MaxValue.AddTicks(-9), East8) });
++                await six.SaveChangesAsync();
++            }
++
++            foreach (var rejected in new[] { DateTime.MaxValue, DateTime.MaxValue.AddTicks(-1), micro.AddTicks(7) })
++            {
++                await using var six = Context(connectionString, history, 6);
++                six.Rows.Add(new TemporalRow { Id = 90, V = rejected, O = microOffset });
++                var error = await Assert.ThrowsAnyAsync<Exception>(() => six.SaveChangesAsync());
++                Assert.IsType<OverflowException>(Root(error));
++            }
++
++            Assert.Equal(2L, await CountAsync(connectionString, null));
++
++            // 2. Widen 6 -> 7 through the real migrator; stored values keep their exact ticks.
++            await MigrateAsync(connectionString, history, WidenId);
++            Assert.Equal(7, await ScaleAsync(connectionString, "V"));
++            await AssertRowAsync(connectionString, 1, micro, microOffset);
++            await AssertRowAsync(connectionString, 2, DateTime.MaxValue.AddTicks(-9), new DateTimeOffset(DateTime.MaxValue.AddTicks(-9), East8));
++
++            // 3. Seven-digit model: the core extrema and a seventh-digit value round-trip exactly.
++            var seven = new (int Id, DateTime V, DateTimeOffset O)[]
++            {
++                (3, DateTime.MaxValue, new DateTimeOffset(DateTime.MaxValue.AddHours(-1), East8)),
++                (4, DateTime.MaxValue.AddTicks(-1), new DateTimeOffset(DateTime.MaxValue.AddTicks(-1), East8)),
++                (5, micro.AddTicks(7), new DateTimeOffset(micro.AddTicks(7), West5)),
++                (6, DateTime.MinValue.AddTicks(1), new DateTimeOffset(DateTime.MinValue.AddTicks(1).AddHours(9), East8)),
++            };
++            await using (var context = Context(connectionString, history, 7))
++            {
++                foreach (var (id, v, o) in seven) context.Rows.Add(new TemporalRow { Id = id, V = v, O = o });
++                await context.SaveChangesAsync();
++            }
++
++            foreach (var (id, v, o) in seven) await AssertRowAsync(connectionString, id, v, o);
++
++            await using (var context = Context(connectionString, history, 7))
++            {
++                var materialized = await context.Rows.AsNoTracking().OrderBy(row => row.Id).ToListAsync();
++                foreach (var (id, v, o) in seven)
++                {
++                    var row = Assert.Single(materialized, candidate => candidate.Id == id);
++                    Assert.Equal(v.Ticks, row.V.Ticks);
++                    Assert.Equal(o.Ticks, row.O.Ticks);
++                    Assert.Equal(o.Offset, row.O.Offset);
++                }
++
++                // Parameterized predicates distinguish neighbouring ticks; nothing rounds into a match.
++                var oneTickBelowMax = DateTime.MaxValue.AddTicks(-1);
++                Assert.Equal([4], await context.Rows.Where(row => row.V == oneTickBelowMax).Select(row => row.Id).ToListAsync());
++                Assert.Equal([3], await context.Rows.Where(row => row.V > oneTickBelowMax).Select(row => row.Id).ToListAsync());
++                var seventh = micro.AddTicks(7);
++                Assert.Equal([5], await context.Rows.Where(row => row.V == seventh).Select(row => row.Id).ToListAsync());
++                Assert.Equal([1], await context.Rows.Where(row => row.V == micro).Select(row => row.Id).ToListAsync());
++
++                // Update and transaction rollback keep exact ticks.
++                var tracked = await context.Rows.SingleAsync(row => row.Id == 1);
++                tracked.V = micro.AddTicks(3);
++                await context.SaveChangesAsync();
++                await using (var transaction = await context.Database.BeginTransactionAsync())
++                {
++                    tracked.V = micro.AddTicks(5);
++                    await context.SaveChangesAsync();
++                    await transaction.RollbackAsync();
++                }
++            }
++
++            await AssertRowAsync(connectionString, 1, micro.AddTicks(3), microOffset);
++
++            // 4. Scaffolding reports the widened facets.
++            await using (var connection = new DmConnection(connectionString))
++            {
++                var table = Assert.Single(CreateFactory(connectionString)
++                    .Create(connection, new DatabaseModelFactoryOptions(tables: [TableName])).Tables);
++                var storeTypes = table.Columns.ToDictionary(column => column.Name, column => column.StoreType, StringComparer.Ordinal);
++                output.WriteLine("scaffold V={0}; O={1}", storeTypes["V"], storeTypes["O"]);
++                Assert.Equal("TIMESTAMP(7)", storeTypes["V"]);
++                Assert.Equal("DATETIME(7) WITH TIME ZONE", storeTypes["O"]);
++            }
++
++            // 5. Down to six digits is refused while any non-microsecond fraction exists; nothing changes.
++            var refused = await Assert.ThrowsAnyAsync<Exception>(() => MigrateAsync(connectionString, history, CreateId));
++            var server = Assert.IsAssignableFrom<DmException>(Root(refused));
++            output.WriteLine("guard number={0}", server.Number);
++            Assert.Equal(-20071, server.Number);
++            Assert.Equal(7, await ScaleAsync(connectionString, "V"));
++            foreach (var (id, v, o) in seven) await AssertRowAsync(connectionString, id, v, o);
++            Assert.Contains(WidenId, await AppliedAsync(connectionString, history));
++
++            // An offset-only column with a seventh digit must also block the Down.
++            await ExecuteAsync(connectionString, $"DELETE FROM \"{TableName}\" WHERE \"ID\" IN (3, 4, 5, 6)");
++            await using (var context = Context(connectionString, history, 7))
++            {
++                var row = await context.Rows.SingleAsync(item => item.Id == 1);
++                row.V = micro;
++                row.O = microOffset.AddTicks(1);
++                await context.SaveChangesAsync();
++            }
++
++            refused = await Assert.ThrowsAnyAsync<Exception>(() => MigrateAsync(connectionString, history, CreateId));
++            Assert.Equal(-20071, Assert.IsAssignableFrom<DmException>(Root(refused)).Number);
++            Assert.Equal(7, await ScaleAsync(connectionString, "O"));
++
++            // 6. With only microsecond-exact data left, Down succeeds and keeps the remaining values.
++            await using (var context = Context(connectionString, history, 7))
++            {
++                var row = await context.Rows.SingleAsync(item => item.Id == 1);
++                row.O = microOffset;
++                await context.SaveChangesAsync();
++            }
++
++            await MigrateAsync(connectionString, history, CreateId);
++            Assert.Equal(6, await ScaleAsync(connectionString, "V"));
++            Assert.Equal(6, await ScaleAsync(connectionString, "O"));
++            Assert.DoesNotContain(WidenId, await AppliedAsync(connectionString, history));
++            await AssertRowAsync(connectionString, 1, micro, microOffset);
++            await AssertRowAsync(connectionString, 2, DateTime.MaxValue.AddTicks(-9), new DateTimeOffset(DateTime.MaxValue.AddTicks(-9), East8));
++        }
++        finally
++        {
++            await using var connection = new DmConnection(connectionString);
++            await connection.OpenAsync();
++            foreach (var name in new[] { TableName, history })
++            {
++                await using var count = connection.CreateCommand();
++                count.CommandText = "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = :name";
++                count.Parameters.Add(new DmParameter("name", name));
++                if (Convert.ToInt64(await count.ExecuteScalarAsync(), CultureInfo.InvariantCulture) == 0) continue;
++                await using var drop = connection.CreateCommand();
++                drop.CommandText = $"DROP TABLE \"{name}\"";
++                await drop.ExecuteNonQueryAsync();
++            }
++        }
++    }
++
++    private static async Task AssertRowAsync(string connectionString, int id, DateTime v, DateTimeOffset o)
++    {
++        await using var connection = new DmConnection(connectionString);
++        await connection.OpenAsync();
++        await using var command = connection.CreateCommand();
++        // Server-side text is an independent oracle; typed getters prove the CLR projection.
++        command.CommandText =
++            $"""
++            SELECT "V", "O", TO_CHAR("V", 'YYYY-MM-DD HH24:MI:SS.FF7'), TO_CHAR("O", 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')
++            FROM "{TableName}" WHERE "ID" = {id.ToString(CultureInfo.InvariantCulture)}
++            """;
++        await using var reader = await command.ExecuteReaderAsync();
++        Assert.True(await reader.ReadAsync());
++        Assert.Equal(v.Ticks, reader.GetDateTime(0).Ticks);
++        var offset = reader.GetFieldValue<DateTimeOffset>(1);
++        Assert.Equal(o.Ticks, offset.Ticks);
++        Assert.Equal(o.Offset, offset.Offset);
++        Assert.Equal(v.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture), reader.GetString(2));
++        var sign = o.Offset < TimeSpan.Zero ? "-" : "+";
++        Assert.Equal(o.DateTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture)
++            + $" {sign}{o.Offset:hh\\:mm}", reader.GetString(3));
++        Assert.False(await reader.ReadAsync());
++    }
++
++    private static async Task<int> ScaleAsync(string connectionString, string column)
++    {
++        await using var connection = new DmConnection(connectionString);
++        await connection.OpenAsync();
++        await using var command = connection.CreateCommand();
++        command.CommandText = "SELECT DATA_SCALE FROM USER_TAB_COLUMNS WHERE TABLE_NAME = :t AND COLUMN_NAME = :c";
++        command.Parameters.Add(new DmParameter("t", TableName));
++        command.Parameters.Add(new DmParameter("c", column));
++        // TIME ZONE variants encode extra flag bits above the fractional digits.
++        return Convert.ToInt32(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture) & 0xF;
++    }
++
++    private static async Task<long> CountAsync(string connectionString, string? where)
++    {
++        await using var connection = new DmConnection(connectionString);
++        await connection.OpenAsync();
++        await using var command = connection.CreateCommand();
++        command.CommandText = $"SELECT COUNT(*) FROM \"{TableName}\"" + (where is null ? "" : " WHERE " + where);
++        return Convert.ToInt64(await command.ExecuteScalarAsync(), CultureInfo.InvariantCulture);
++    }
++
++    private static async Task ExecuteAsync(string connectionString, string sql)
++    {
++        await using var connection = new DmConnection(connectionString);
++        await connection.OpenAsync();
++        await using var command = connection.CreateCommand();
++        command.CommandText = sql;
++        await command.ExecuteNonQueryAsync();
++    }
++
++    private static async Task<List<string>> AppliedAsync(string connectionString, string history)
++    {
++        await using var context = Context(connectionString, history, 7);
++        return (await context.Database.GetAppliedMigrationsAsync()).ToList();
++    }
++
++    private static async Task MigrateAsync(string connectionString, string history, string target)
++    {
++        await using var context = Context(connectionString, history, 7);
++        await context.GetService<IMigrator>().MigrateAsync(target);
++    }
++
++    private static Exception Root(Exception error)
++    {
++        while (error.InnerException is not null && error is not DmException and not OverflowException)
++            error = error.InnerException;
++        return error;
++    }
++
++    private static TemporalPrecisionContext Context(string connectionString, string history, int precision)
++        => new(new DbContextOptionsBuilder<TemporalPrecisionContext>()
++            .UseDameng(connectionString, options => options.MigrationsHistoryTable(history))
++            .ReplaceService<IModelCacheKeyFactory, TemporalPrecisionModelCacheKeyFactory>()
++            .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
++            .EnableDetailedErrors()
++            .Options, precision);
++
++    private static DamengDatabaseModelFactory CreateFactory(string connectionString)
++    {
++        using var context = new DbContext(new DbContextOptionsBuilder().UseDameng(connectionString).Options);
++        return new DamengDatabaseModelFactory(context.GetService<IRelationalTypeMappingSource>(), context.GetService<ISqlGenerationHelper>());
++    }
++}
++
++public sealed class TemporalRow
++{
++    public int Id { get; set; }
++
++    public DateTime V { get; set; }
++
++    public DateTimeOffset O { get; set; }
++}
++
++public sealed class TemporalPrecisionContext(DbContextOptions<TemporalPrecisionContext> options, int precision)
++    : DbContext(options)
++{
++    public int Precision { get; } = precision;
++
++    public DbSet<TemporalRow> Rows => Set<TemporalRow>();
++
++    protected override void OnModelCreating(ModelBuilder modelBuilder)
++        => modelBuilder.Entity<TemporalRow>(entity =>
++        {
++            entity.ToTable(DamengTemporalPrecisionMigrationFunctionalTests.TableName);
++            entity.HasKey(row => row.Id);
++            entity.Property(row => row.Id).HasColumnName("ID").ValueGeneratedNever();
++            entity.Property(row => row.V).HasColumnName("V").HasPrecision(Precision);
++            entity.Property(row => row.O).HasColumnName("O").HasPrecision(Precision);
++        });
++}
++
++internal sealed class TemporalPrecisionModelCacheKeyFactory : IModelCacheKeyFactory
++{
++    public object Create(DbContext context, bool designTime)
++        => context is TemporalPrecisionContext temporal
++            ? (context.GetType(), DamengTemporalPrecisionMigrationFunctionalTests.TableName, temporal.Precision, designTime)
++            : (context.GetType(), designTime);
++}
++
++[DbContext(typeof(TemporalPrecisionContext))]
++[Migration(DamengTemporalPrecisionMigrationFunctionalTests.CreateId)]
++public sealed class TemporalCreateMigration : Migration
++{
++    protected override void Up(MigrationBuilder migrationBuilder)
++        => migrationBuilder.CreateTable(
++            name: DamengTemporalPrecisionMigrationFunctionalTests.TableName,
++            columns: table => new
++            {
++                ID = table.Column<int>(type: "INT", nullable: false),
++                V = table.Column<DateTime>(type: "TIMESTAMP(6)", nullable: false),
++                O = table.Column<DateTimeOffset>(type: "DATETIME(6) WITH TIME ZONE", nullable: false),
++            },
++            constraints: table => table.PrimaryKey("PK_" + DamengTemporalPrecisionMigrationFunctionalTests.TableName, row => row.ID));
++
++    protected override void Down(MigrationBuilder migrationBuilder)
++        => migrationBuilder.DropTable(DamengTemporalPrecisionMigrationFunctionalTests.TableName);
++}
++
++[DbContext(typeof(TemporalPrecisionContext))]
++[Migration(DamengTemporalPrecisionMigrationFunctionalTests.WidenId)]
++public sealed class TemporalWidenMigration : Migration
++{
++    protected override void Up(MigrationBuilder migrationBuilder)
++    {
++        var table = DamengTemporalPrecisionMigrationFunctionalTests.TableName;
++        migrationBuilder.AlterColumn<DateTime>("V", table, type: "TIMESTAMP(7)", nullable: false,
++            oldClrType: typeof(DateTime), oldType: "TIMESTAMP(6)", oldNullable: false);
++        migrationBuilder.AlterColumn<DateTimeOffset>("O", table, type: "DATETIME(7) WITH TIME ZONE", nullable: false,
++            oldClrType: typeof(DateTimeOffset), oldType: "DATETIME(6) WITH TIME ZONE", oldNullable: false);
++    }
++
++    protected override void Down(MigrationBuilder migrationBuilder)
++    {
++        var table = DamengTemporalPrecisionMigrationFunctionalTests.TableName;
++        // FF9 yields integer nanoseconds; six digits are lossless only when they are a multiple of 1000.
++        // Both columns are checked before the first ALTER so a refusal leaves the schema untouched.
++        migrationBuilder.Sql(
++            $"""
++            DECLARE
++                v_bad BIGINT;
++            BEGIN
++                SELECT COUNT(*) INTO v_bad FROM "{table}"
++                 WHERE MOD(TO_NUMBER(TO_CHAR("V", 'FF9')), 1000) <> 0
++                    OR MOD(TO_NUMBER(TO_CHAR("O", 'FF9')), 1000) <> 0;
++                IF v_bad > 0 THEN
++                    RAISE_APPLICATION_ERROR(-20071, 'Seven-digit fractions would be lost by narrowing to six digits.');
++                END IF;
++            END;
++            """,
++            suppressTransaction: true);
++        migrationBuilder.AlterColumn<DateTime>("V", table, type: "TIMESTAMP(6)", nullable: false,
++            oldClrType: typeof(DateTime), oldType: "TIMESTAMP(7)", oldNullable: false);
++        migrationBuilder.AlterColumn<DateTimeOffset>("O", table, type: "DATETIME(6) WITH TIME ZONE", nullable: false,
++            oldClrType: typeof(DateTimeOffset), oldType: "DATETIME(7) WITH TIME ZONE", oldNullable: false);
++    }
++}

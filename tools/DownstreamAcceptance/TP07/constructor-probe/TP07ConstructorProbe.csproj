@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><AssemblyName>TP07LiteralProbe</AssemblyName><TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <NuGetAudit>false</NuGetAudit><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <UseSharedCompilation>false</UseSharedCompilation><EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <TP07ProviderProject Condition="'$(TP07ProviderProject)' == ''">../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj</TP07ProviderProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(TP07ProviderProject)" />
+    <PackageReference Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[10.0.12]" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12]" />
+    <Compile Include="../common/CandidateGuard.cs" Link="common/CandidateGuard.cs" />
+    <Compile Include="../common/SafeEvidence.cs" Link="common/SafeEvidence.cs" />
+    <Compile Include="../common/OwnedObjects.cs" Link="common/OwnedObjects.cs" />
+    <Compile Include="../TP07LiteralProbe/LiteralOracle.cs" Link="common/LiteralOracle.cs" />
+  </ItemGroup>
+</Project>

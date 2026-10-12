@@ -1,0 +1,83 @@
+{
+  "scope": "L0 v2 shared first literal loss; paired typed control not reached; both cleanup checks passed; TLS and full validator not run",
+  "artifacts": [
+    {
+      "source": "TP07-L0-v2-python-prepare/verification-summary.json",
+      "artifact": "TP07-L0-v2-python-prepare--verification-summary.json.gz",
+      "original_sha256": "0e4b8050a974310bd75d4d3e4d695be5ad04d1f2dbf5c9b4d2111d8878dda9d8",
+      "artifact_sha256": "b534bbf581427a788a2d678fddeac868bb1010e0e82ab84b06ec5a1c76beafc8"
+    },
+    {
+      "source": "TP07-L0-v2-lock/lock-manifest.json",
+      "artifact": "TP07-L0-v2-lock--lock-manifest.json.gz",
+      "original_sha256": "61072d99c3452dcdaa845f5bf110d1ace1dd5eb550c3b2eef6d0d29384e52944",
+      "artifact_sha256": "44919225532acef64bad12b280064bab719e4d797309cab4f08cd19cb7d35199"
+    },
+    {
+      "source": "TP07-L0-v2-lock-control/verification-summary.json",
+      "artifact": "TP07-L0-v2-lock-control--verification-summary.json.gz",
+      "original_sha256": "d9de3c11c72695e0a6d886edf1a7c7f1edb462b02dba7c5553e629866ce6c461",
+      "artifact_sha256": "2e62ca1bd1e12fe06bbde60114f6c8201be8c154efde0285242b76f2e7aea8a5"
+    },
+    {
+      "source": "TP07-L0-v2-build/startup-manifest.json",
+      "artifact": "TP07-L0-v2-build--startup-manifest.json.gz",
+      "original_sha256": "b137308c9d0d16259c39b1977155f018237dd3ace4c0eeba1ec82b04d8ea6401",
+      "artifact_sha256": "386a2c666f1fd62d6ab117fac866f073d9d149731256ab771705f501c625d6c8"
+    },
+    {
+      "source": "TP07-L0-v2-build/build-receipt.json",
+      "artifact": "TP07-L0-v2-build--build-receipt.json.gz",
+      "original_sha256": "823c1f403a4ceaca0037837eccf943cac8c9ed9d469d60dccd08d44c576a0c0a",
+      "artifact_sha256": "cda653a7957f839d7f753b294beb79a79ad9b67fb872660aed8da57a8c16d0ff"
+    },
+    {
+      "source": "TP07-L0-v2-build-control/verification-summary.json",
+      "artifact": "TP07-L0-v2-build-control--verification-summary.json.gz",
+      "original_sha256": "3b5559b714cba19d76aff2a7544d96346a485eb5b8210564d2a34ffe1dc96e54",
+      "artifact_sha256": "778f3c1f5349613dd36cddf864c3c6b76aaa75b091aeb8e3d26cbf00a4e6d058"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/run-receipt.json",
+      "artifact": "TP07-L0-v2-runtime--run-receipt.json.gz",
+      "original_sha256": "2450997928ebbd5266e5f9cea07e22c99521763a3298fac1108ed5f7a392965b",
+      "artifact_sha256": "179c07fd61c19208fabe6290ff9fb94ebcc1253ec7a79200e5bcda2d7ae6ba7b"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/shared/main/report.json",
+      "artifact": "TP07-L0-v2-runtime--shared--main--report.json.gz",
+      "original_sha256": "ed5310c8feccfb0705b85a4bda12333a3ffd60a5ae9ea353820e37486757290d",
+      "artifact_sha256": "d76fb403d086d024fdf1594940cc1beac96ceeeee33e59f11461e56321e520d2"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/shared/main/ownership.json",
+      "artifact": "TP07-L0-v2-runtime--shared--main--ownership.json.gz",
+      "original_sha256": "254f8c82b6cacdfb50d19087c9dbc7ec387c82e5efb61e5ddd7a59ccd3b4060a",
+      "artifact_sha256": "fd3a9abfed47efa3dc3b7388feae8a4b5df6bdeef1334929c5bc7d32c38ef6d2"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/shared/main/toolpack-host-receipt.json",
+      "artifact": "TP07-L0-v2-runtime--shared--main--toolpack-host-receipt.json.gz",
+      "original_sha256": "b0e0a11e4a8a7b626079e94c5e1086382c82796463d71acb2dae65b38912f706",
+      "artifact_sha256": "f0cc3dd005ad375efe372a6222b5d090ef8a4382f17e31c9de6a52dd73f36035"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/shared/cleanup/report.json",
+      "artifact": "TP07-L0-v2-runtime--shared--cleanup--report.json.gz",
+      "original_sha256": "0ba9a157ac122d8ff386a3ce30b3f3e6f4028c04e4b28f8a4a7cbba43b7b6679",
+      "artifact_sha256": "16c030643ab19123748325a9074bac6bf7692a9c3fb9a5adc0ed53c9247a3e54"
+    },
+    {
+      "source": "TP07-L0-v2-runtime/shared/cleanup/toolpack-host-receipt.json",
+      "artifact": "TP07-L0-v2-runtime--shared--cleanup--toolpack-host-receipt.json.gz",
+      "original_sha256": "bf82014ef3c57d0066cd46ba4ead8b47f64bd025f58dc588b4ecc31419360c6c",
+      "artifact_sha256": "eb017eed3ceb971589ff00bc921d73ae1c842eaa8a48643ccbaa61010aec5ce4"
+    },
+    {
+      "source": "TP07-L0-v2-runtime-control/verification-summary.json",
+      "artifact": "TP07-L0-v2-runtime-control--verification-summary.json.gz",
+      "original_sha256": "44472875a8dc7666899d961b6f9456dc67711a1b8a4f51627ae1a7ca7e77dd0d",
+      "artifact_sha256": "13422e427871b9721d752eaade8865d20644cc3df44d9e5ad9d9164f0b518f55"
+    }
+  ]
+}

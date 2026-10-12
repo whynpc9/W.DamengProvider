@@ -1,5 +1,6 @@
 using System;
 using W.Dm.util;
+using W.Dm.Internal.Types;
 
 namespace W.Dm;
 
@@ -22,221 +23,60 @@ public class DmTime
 	public const int DMDT_MSEC_LEN = 20;
 
 	private byte[] m_Times = new byte[7];
-
 	private int prec;
 
-	public DmTime()
-	{
-	}
-
+	public DmTime() { }
 	public DmTime(byte[] bt)
 	{
+		ReadFields(bt);
 		m_Times = bt;
 	}
-
 	public DmTime(DateTime dt, int prec, int scale, short mTimeZone)
 	{
-		if (scale > 7)
-		{
-			scale &= 0xF;
-		}
-		dt = MathUtil.Round(dt, scale);
+		DmTemporalInteger.ValidateUserScale(scale);
+		if (scale > 6) throw new NotSupportedException("TIME helper has microsecond precision.");
+		DmTemporalInteger.ValidateFractionalTicks(dt.Ticks, scale);
 		this.prec = prec;
-		byte data = (byte)dt.Hour;
-		byte data2 = (byte)dt.Minute;
-		byte data3 = (byte)dt.Second;
-		DmConvertion.SetBit(m_Times, 0, 5, data);
-		DmConvertion.SetBit(m_Times, 5, 6, data2);
-		DmConvertion.SetBit(m_Times, 11, 6, data3);
-		DmConvertion.SetBit(m_Times, 17, 20, DmDateTime.GetMicroSecond(dt));
-		byte[] array = DmConvertion.ShortToByteArray(mTimeZone);
-		m_Times[5] = array[0];
-		m_Times[6] = array[1];
+		m_Times = DmTemporalWireCodec.EncodeExact(TimeFields(dt, mTimeZone), DmTemporalWireLayout.TimeTz7, scale);
 	}
-
+	private static DmTemporalFields TimeFields(DateTime value, int? offset = null) =>
+		DmTemporalInteger.FromDateTime(value, offset) with { Year = 0, Month = 0, Day = 0 };
+	private static DmTemporalFields ReadFields(byte[] bytes)
+	{
+		if (bytes == null || bytes.Length is not (5 or 7)) throw new ArgumentException("TIME packed helper requires five or seven bytes.");
+		return DmTemporalWireCodec.DecodeRaw(bytes, bytes.Length == 5 ? DmTemporalWireLayout.Time5 : DmTemporalWireLayout.TimeTz7, 6);
+	}
 	public byte[] GetByteArrayValue()
 	{
-		byte[] array = new byte[12];
-		array[4] = GetHour();
-		array[5] = GetMinute();
-		array[6] = GetSecond();
-		int microseconds = GetNano();
-		if (microseconds > 999999) throw new OverflowException("TIME fraction exceeds microsecond precision.");
-		Array.Copy(DmConvertion.IntToByteArray(microseconds), 0, array, 7, 3);
-		return array;
+		byte[] bytes = DmTemporalWireCodec.ToLegacyMicroseconds(ReadFields(m_Times) with { OffsetMinutes = null }, DmTemporalTextKind.Time);
+		Array.Clear(bytes, 0, 4); // This helper's historical raw date slots are zero, unlike DmTimeDecodeFast.
+		return bytes;
 	}
-
 	public byte[] GetTzByteArrayValue()
 	{
-		byte[] array = GetByteArrayValue();
-		byte[] array3 = DmConvertion.ShortToByteArray(GetTZ());
-		array[10] = array3[0];
-		array[11] = array3[1];
-		return array;
+		var fields = ReadFields(m_Times);
+		if (!fields.OffsetMinutes.HasValue) throw new InvalidCastException("TIME helper has no offset.");
+		byte[] bytes = DmTemporalWireCodec.ToLegacyMicroseconds(fields, DmTemporalTextKind.Time);
+		Array.Clear(bytes, 0, 4);
+		return bytes;
 	}
-
-	public byte GetHour()
-	{
-		return (byte)DmConvertion.GetBit(m_Times, 0, 5);
-	}
-
-	public byte GetMinute()
-	{
-		return (byte)DmConvertion.GetBit(m_Times, 5, 6);
-	}
-
-	public byte GetSecond()
-	{
-		return (byte)DmConvertion.GetBit(m_Times, 11, 6);
-	}
-
-	public int GetNano()
-	{
-		return DmConvertion.GetBit(m_Times, 17, 20);
-	}
-
-	public short GetTZ()
-	{
-		return DmConvertion.GetShort(m_Times, 5);
-	}
-
-	public string GetTimeWithoutNano()
-	{
-		int hour = GetHour();
-		int minute = GetMinute();
-		int second = GetSecond();
-		string text = hour.ToString() ?? "";
-		string text2 = minute.ToString() ?? "";
-		string text3 = second.ToString() ?? "";
-		if (text.Length < 2)
-		{
-			text = "0" + text;
-		}
-		if (text2.Length < 2)
-		{
-			text2 = "0" + text2;
-		}
-		if (text3.Length < 2)
-		{
-			text3 = "0" + text3;
-		}
-		return text + ":" + text2 + ":" + text3;
-	}
-
-	public string GetTimeWithNano()
-	{
-		string text = GetNano().ToString() ?? "";
-		for (int i = text.Length; i < 6; i++)
-		{
-			text = "0" + text;
-		}
-		return GetTimeWithoutNano() + "." + text;
-	}
-
-	public override string ToString()
-	{
-		if (prec == 0)
-		{
-			return GetTimeWithoutNano();
-		}
-		return GetTimeWithNano();
-	}
-
-	public static byte[] TimeTzEncodeFast(byte[] dt)
-	{
-		byte[] array = new byte[7];
-		byte b = dt[4];
-		byte b2 = dt[5];
-		byte b3 = dt[6];
-		int num = dt[7] + (dt[8] << 8) + (dt[9] << 16);
-		array[0] = (byte)(b | ((b2 & 7) << 5));
-		array[1] = (byte)(((b2 & 0x38) >> 3) | ((b3 & 0x1F) << 3));
-		array[2] = (byte)(((b3 & 0x20) >> 5) | ((num & 0x7F) << 1));
-		array[3] = (byte)((num >> 7) & 0xFF);
-		array[4] = (byte)((num >> 15) & 0xFF);
-		array[5] = dt[10];
-		array[6] = dt[11];
-		return array;
-	}
-
-	public static byte[] TimeTzEncodeFast(int[] dt)
-	{
-		byte[] array = new byte[7];
-		int num = dt[3];
-		int num2 = dt[4];
-		int num3 = dt[5];
-		int num4 = dt[6];
-		byte[] array2 = DmConvertion.ShortToByteArray((dt[OracleDateFormat.OFFSET_TIMEZONE_SIGN] > 0) ? (-1 * dt[7]) : dt[7]);
-		array[0] = (byte)(num | ((num2 & 7) << 5));
-		array[1] = (byte)(((num2 & 0x38) >> 3) | ((num3 & 0x1F) << 3));
-		array[2] = (byte)(((num3 & 0x20) >> 5) | ((num4 & 0x7F) << 1));
-		array[3] = (byte)((num4 >> 7) & 0xFF);
-		array[4] = (byte)((num4 >> 15) & 0xFF);
-		array[5] = array2[0];
-		array[6] = array2[1];
-		return array;
-	}
-
-	public static byte[] TimeTzEncodeFast(DateTime dt, short mTimeZone)
-	{
-		byte[] array = new byte[7];
-		byte b = (byte)dt.Hour;
-		byte b2 = (byte)dt.Minute;
-		byte b3 = (byte)dt.Second;
-		int microSecond = DmDateTime.GetMicroSecond(dt);
-		array[0] = (byte)(b | ((b2 & 7) << 5));
-		array[1] = (byte)(((b2 & 0x38) >> 3) | ((b3 & 0x1F) << 3));
-		array[2] = (byte)(((b3 & 0x20) >> 5) | ((microSecond & 0x7F) << 1));
-		array[3] = (byte)((microSecond >> 7) & 0xFF);
-		array[4] = (byte)((microSecond >> 15) & 0xFF);
-		byte[] array2 = DmConvertion.ShortToByteArray(mTimeZone);
-		array[5] = array2[0];
-		array[6] = array2[1];
-		return array;
-	}
-
-	public static byte[] TimeEncodeFast(int[] dt)
-	{
-		byte[] array = new byte[5];
-		int num = dt[3];
-		int num2 = dt[4];
-		int num3 = dt[5];
-		int num4 = dt[6];
-		array[0] = (byte)(num | ((num2 & 7) << 5));
-		array[1] = (byte)(((num2 & 0x38) >> 3) | ((num3 & 0x1F) << 3));
-		array[2] = (byte)(((num3 & 0x20) >> 5) | ((num4 & 0x7F) << 1));
-		array[3] = (byte)((num4 >> 7) & 0xFF);
-		array[4] = (byte)((num4 >> 15) & 0xFF);
-		return array;
-	}
-
-	public static byte[] TimeEncodeFast(byte[] dt)
-	{
-		byte[] array = new byte[5];
-		byte b = dt[4];
-		byte b2 = dt[5];
-		byte b3 = dt[6];
-		int num = dt[7] + ((dt[8] & 0xFF) << 8) + ((dt[9] & 0xFF) << 16);
-		array[0] = (byte)(b | ((b2 & 7) << 5));
-		array[1] = (byte)(((b2 & 0x38) >> 3) | ((b3 & 0x1F) << 3));
-		array[2] = (byte)(((b3 & 0x20) >> 5) | ((num & 0x7F) << 1));
-		array[3] = (byte)((num >> 7) & 0xFF);
-		array[4] = (byte)((num >> 15) & 0xFF);
-		return array;
-	}
-
-	public static byte[] TimeEncodeFast(DateTime dt)
-	{
-		byte[] array = new byte[5];
-		byte b = (byte)dt.Hour;
-		byte b2 = (byte)dt.Minute;
-		byte b3 = (byte)dt.Second;
-		int microSecond = DmDateTime.GetMicroSecond(dt);
-		array[0] = (byte)(b | ((b2 & 7) << 5));
-		array[1] = (byte)(((b2 & 0x38) >> 3) | ((b3 & 0x1F) << 3));
-		array[2] = (byte)(((b3 & 0x20) >> 5) | ((microSecond & 0x7F) << 1));
-		array[3] = (byte)((microSecond >> 7) & 0xFF);
-		array[4] = (byte)((microSecond >> 15) & 0xFF);
-		return array;
-	}
+	public byte GetHour() => (byte)ReadFields(m_Times).Hour;
+	public byte GetMinute() => (byte)ReadFields(m_Times).Minute;
+	public byte GetSecond() => (byte)ReadFields(m_Times).Second;
+	public int GetNano() => ReadFields(m_Times).NanosecondsWithinSecond / 1000;
+	public short GetTZ() => checked((short)(ReadFields(m_Times).OffsetMinutes ?? throw new InvalidCastException("TIME helper has no offset.")));
+	public string GetTimeWithoutNano() => DmTemporalInteger.FormatExact(ReadFields(m_Times) with { NanosecondsWithinSecond = 0, OffsetMinutes = null }, 0, DmTemporalTextKind.Time);
+	public string GetTimeWithNano() => DmTemporalInteger.FormatExact(ReadFields(m_Times) with { OffsetMinutes = null }, 6, DmTemporalTextKind.Time);
+	public override string ToString() => prec == 0 ? GetTimeWithoutNano() : GetTimeWithNano();
+	public static byte[] TimeTzEncodeFast(byte[] dt) => DmTemporalWireCodec.EncodeExact(
+		DmTemporalWireCodec.FromLegacyMicroseconds(dt, DmTemporalTextKind.Time, true), DmTemporalWireLayout.TimeTz7, 6);
+	public static byte[] TimeTzEncodeFast(int[] dt) => DmTemporalWireCodec.EncodeExact(
+		DmTemporalLegacyAdapter.FromMicroseconds(dt, 22), DmTemporalWireLayout.TimeTz7, 6);
+	public static byte[] TimeTzEncodeFast(DateTime dt, short mTimeZone) =>
+		DmTemporalWireCodec.EncodeExact(TimeFields(dt, mTimeZone), DmTemporalWireLayout.TimeTz7, 6);
+	public static byte[] TimeEncodeFast(int[] dt) => DmTemporalWireCodec.EncodeExact(
+		DmTemporalLegacyAdapter.FromMicroseconds(dt, 15), DmTemporalWireLayout.Time5, 6);
+	public static byte[] TimeEncodeFast(byte[] dt) => DmTemporalWireCodec.EncodeExact(
+		DmTemporalWireCodec.FromLegacyMicroseconds(dt, DmTemporalTextKind.Time, false), DmTemporalWireLayout.Time5, 6);
+	public static byte[] TimeEncodeFast(DateTime dt) => DmTemporalWireCodec.EncodeExact(TimeFields(dt), DmTemporalWireLayout.Time5, 6);
 }

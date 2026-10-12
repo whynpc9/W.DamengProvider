@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "phase": "baseline",
+  "baseline_kind": "archived_v23",
+  "O": {
+    "id": "DM.DmProvider",
+    "version": "8.3.1.47463",
+    "asset": "lib/net9.0/DM.DmProvider.dll",
+    "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+    "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+    "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361"
+  },
+  "W": {
+    "id": "W.DmProvider",
+    "version": "0.1.0-r3.20261007143838",
+    "asset": "lib/net10.0/W.DmProvider.dll",
+    "package_sha256": "6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
+    "dll_sha256": "c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
+    "mvid": "69e5632e-75c4-4672-b924-57b8ffb58a52"
+  },
+  "comparison_head": "fe89bd44abe99c1608499f71f4634a13e732c826",
+  "source_commit": "2b39fec0fa1bc8974f8e491f9bdb5a6113d14631",
+  "producer": {
+    "source_head": "2b39fec0fa1bc8974f8e491f9bdb5a6113d14631",
+    "source_manifest_sha256": "241e15b52b436a55fe3a299e777b281cee0d6b3c22782a0323de311e1d87d1d5",
+    "source_archive_sha256": null,
+    "version": "0.1.0-r3.20261007143838",
+    "package_sha256": "6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
+    "dll_sha256": "c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
+    "mvid": "69e5632e-75c4-4672-b924-57b8ffb58a52"
+  }
+}

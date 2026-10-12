@@ -34,12 +34,15 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 	private DbType explicitDbTypeValue;
 	private bool explicitDmSqlType;
 	private DmDbType explicitDmSqlTypeValue;
+
+    internal bool HasExplicitDbType => explicitDbType;
+    internal DbType DeclaredDbType => explicitDbTypeValue;
+    internal bool HasExplicitDmSqlType => explicitDmSqlType;
+    internal DmDbType DeclaredDmSqlType => explicitDmSqlTypeValue;
 	private bool inferredTypeKnown;
 	internal DmParameterTypeSource TypeSource => explicitDmSqlType ? DmParameterTypeSource.ExplicitDmSqlType :
 		explicitDbType ? DmParameterTypeSource.ExplicitDbType :
 		inferredTypeKnown ? DmParameterTypeSource.ClrValue : DmParameterTypeSource.Unresolved;
-	internal bool HasExplicitDbType => explicitDbType;
-	internal bool HasExplicitDmSqlType => explicitDmSqlType;
 
 	private string m_DmSqlTypeName = string.Empty;
 

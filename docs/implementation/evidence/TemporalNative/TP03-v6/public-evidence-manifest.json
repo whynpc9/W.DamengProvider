@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "scope": "TP03_writer_reader_wiring",
+  "full_temporal_acceptance": false,
+  "artifacts": [
+    {
+      "source": ".local/temporal-native/verification/TP03-v6/validation-summary.json",
+      "source_sha256": "abb89bf3088b5a3cb499f4506e6165af13d9ec0f61bb6582e29b2950ac2fd310",
+      "artifact": "offline-validation-summary.json",
+      "artifact_sha256": "abb89bf3088b5a3cb499f4506e6165af13d9ec0f61bb6582e29b2950ac2fd310",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-verification-summary.json",
+      "source_sha256": "416cbdecaaca92bdbe2e3751119fb800ff73f8d862b44bd01275ace47f4609c2",
+      "artifact": "shared-verification-summary.json",
+      "artifact_sha256": "416cbdecaaca92bdbe2e3751119fb800ff73f8d862b44bd01275ace47f4609c2",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-wiring-validation.json",
+      "source_sha256": "1ed2cba8771d4f272e30be0847d58bc12feca82e381f922359b4deb2cae3caa2",
+      "artifact": "wiring-validation.json",
+      "artifact_sha256": "1ed2cba8771d4f272e30be0847d58bc12feca82e381f922359b4deb2cae3caa2",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-package/preparation-summary.json",
+      "source_sha256": "9fdd371215a73f35e1442b4ccfcfe869352cd0f9a8e4e7c7b4208cc79e0b6347",
+      "artifact": "package-preparation-summary.json",
+      "artifact_sha256": "9fdd371215a73f35e1442b4ccfcfe869352cd0f9a8e4e7c7b4208cc79e0b6347",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-package/product-source-manifest.json",
+      "source_sha256": "7603bf84e5df9b5d61d42cc9fab8cc204ef0e663dae05e9254fc13056db53ee3",
+      "artifact": "product-source-manifest.json",
+      "artifact_sha256": "7603bf84e5df9b5d61d42cc9fab8cc204ef0e663dae05e9254fc13056db53ee3",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-package/identities.json",
+      "source_sha256": "fc29762ff5d492eeefd15a2626dc66d86d0b7e3ab82d9979cdc5a9cbecf73734",
+      "artifact": "identities.json",
+      "artifact_sha256": "fc29762ff5d492eeefd15a2626dc66d86d0b7e3ab82d9979cdc5a9cbecf73734",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-package/capabilities.root-approved.json",
+      "source_sha256": "f27a8ad52e7b4b49619593e284f5c2db9a6100a85f54c09de8922396887d3ea4",
+      "artifact": "capabilities.root-approved.json",
+      "artifact_sha256": "f27a8ad52e7b4b49619593e284f5c2db9a6100a85f54c09de8922396887d3ea4",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-wiring/runner.json",
+      "source_sha256": "78fff2c278b6bb1de8ad724fede042a271c08bdb2322af4cebb4168ae0b05049",
+      "artifact": "runner.json",
+      "artifact_sha256": "78fff2c278b6bb1de8ad724fede042a271c08bdb2322af4cebb4168ae0b05049",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-wiring/core.cleanup.json",
+      "source_sha256": "cc1c308b12653cbe9856684022acffd11485cf1bd528945ffa512f09c9a46587",
+      "artifact": "core.cleanup.json",
+      "artifact_sha256": "cc1c308b12653cbe9856684022acffd11485cf1bd528945ffa512f09c9a46587",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-wiring/core.ownership.json",
+      "source_sha256": "8f73db8726db35b9a87fe555434ef10d79b0d2845403ef96377ff1852c27fc6d",
+      "artifact": "core.ownership.json",
+      "artifact_sha256": "8f73db8726db35b9a87fe555434ef10d79b0d2845403ef96377ff1852c27fc6d",
+      "encoding": "json"
+    },
+    {
+      "source": ".local/temporal-native/verification/TP03-v6-shared-wiring/core.json",
+      "source_sha256": "a41984b4ad7baac42adf90f602b0ff42189b572d3637002511340a46c8b8fe3d",
+      "artifact": "core.json.gz",
+      "artifact_sha256": "f32cac31d48451f5076fc6d90762377e4e2b7dcf21de0a35453179288b3c570f",
+      "encoding": "gzip"
+    }
+  ]
+}

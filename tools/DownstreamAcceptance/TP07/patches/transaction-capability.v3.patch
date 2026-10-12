@@ -1,0 +1,889 @@
+diff --git a/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs b/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
+index 466b55f..47f8e54 100644
+--- a/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Extensions/DamengServiceCollectionExtensions.cs
+@@ -41,6 +41,7 @@
+             .TryAdd<ISqlGenerationHelper, DamengSqlGenerationHelper>()
+             .TryAdd<IProviderConventionSetBuilder, DamengConventionSetBuilder>()
+             .TryAdd<IRelationalConnection, DamengRelationalConnection>()
++            .TryAdd<IRelationalTransactionFactory, DamengRelationalTransactionFactory>()
+             .TryAdd<IMigrationsSqlGenerator, DamengMigrationsSqlGenerator>()
+             .TryAdd<IRelationalDatabaseCreator, DamengDatabaseCreator>()
+             .TryAdd<IHistoryRepository, DamengHistoryRepository>()
+diff --git a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs
+new file mode 100644
+index 0000000..57593aa
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransaction.cs
+@@ -0,0 +1,26 @@
++using System.Data.Common;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++internal sealed class DamengRelationalTransaction : RelationalTransaction
++{
++    private readonly DbTransaction _transaction;
++
++    public DamengRelationalTransaction(
++        IRelationalConnection connection,
++        DbTransaction transaction,
++        Guid transactionId,
++        IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
++        bool transactionOwned,
++        ISqlGenerationHelper sqlGenerationHelper)
++        : base(connection, transaction, transactionId, logger, transactionOwned, sqlGenerationHelper)
++    {
++        _transaction = transaction;
++    }
++
++    public override bool SupportsSavepoints
++        => _transaction.SupportsSavepoints;
++}
+diff --git a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs
+new file mode 100644
+index 0000000..520bc7e
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalTransactionFactory.cs
+@@ -0,0 +1,23 @@
++using System.Data.Common;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++internal sealed class DamengRelationalTransactionFactory : RelationalTransactionFactory
++{
++    public DamengRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies)
++        : base(dependencies)
++    {
++    }
++
++    public override RelationalTransaction Create(
++        IRelationalConnection connection,
++        DbTransaction transaction,
++        Guid transactionId,
++        IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
++        bool transactionOwned)
++        => new DamengRelationalTransaction(
++            connection, transaction, transactionId, logger, transactionOwned, Dependencies.SqlGenerationHelper);
++}
+diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/DamengExecutionStrategyTests.cs b/test/W.EntityFrameworkCore.Dameng.Tests/DamengExecutionStrategyTests.cs
+index 397ee7b..16f5cc7 100644
+--- a/test/W.EntityFrameworkCore.Dameng.Tests/DamengExecutionStrategyTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/DamengExecutionStrategyTests.cs
+@@ -1,6 +1,9 @@
++using System.Data.Common;
+ using System.Reflection;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Storage;
+ using Xunit;
+ 
+ namespace W.EntityFrameworkCore.Dameng.Tests;
+@@ -21,9 +24,10 @@
+     }
+ 
+     [Fact]
+-    public void EnableRetryOnFailureAppliesCustomSettingsAndCopiesErrorNumbers()
+-    {
+-        var additionalErrors = new List<int> { -12345 };
++    public void EnableRetryOnFailureAppliesCustomSettingsAndCopiesEmptyErrorNumbers()
++    {
++        // W accepts an empty snapshot, not the official driver's number overrides.
++        var additionalErrors = new List<int>();
+         var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
+         optionsBuilder.UseDameng(
+             "Server=localhost;Port=5236;User Id=test;PWD=test",
+@@ -32,6 +36,7 @@
+                 maxRetryDelay: TimeSpan.FromSeconds(4),
+                 additionalErrors));
+ 
++        additionalErrors.Add(-12345);
+         additionalErrors.Add(-54321);
+         using var context = new TestContext(optionsBuilder.Options);
+         var strategy = Assert.IsType<DamengRetryingExecutionStrategy>(
+@@ -39,10 +44,7 @@
+ 
+         Assert.Equal(3, strategy.MaxRetryCount);
+         Assert.Equal(TimeSpan.FromSeconds(4), strategy.MaxRetryDelay);
+-        Assert.Equal([-12345], strategy.AdditionalErrorNumbers);
+-        Assert.False(
+-            strategy.AdditionalErrorNumbers
+-                is ICollection<int> { IsReadOnly: false });
++        AssertImmutableEmptyOverrides(strategy);
+     }
+ 
+     [Theory]
+@@ -56,12 +58,15 @@
+     [InlineData(6060)]
+     [InlineData(6089)]
+     [InlineData(6123)]
+-    public void StrategyRecognizesOnlyExplicitDefaultTransientDamengCodes(int errorNumber)
++    public void StrategyDoesNotRetryUnclassifiedWServerNumbers(int errorNumber)
+     {
+         using var context = CreateContext();
+         var strategy = new TestDamengRetryingExecutionStrategy(context);
+ 
+-        Assert.True(strategy.TestShouldRetryOn(CreateDmException(errorNumber)));
++        var error = CreateDmException(errorNumber);
++        Assert.Equal(errorNumber, error.Number);
++        Assert.False(error.IsTransient);
++        AssertSingleAttemptAndSameException(strategy, error);
+     }
+ 
+     [Theory]
+@@ -75,7 +80,10 @@
+         using var context = CreateContext();
+         var strategy = new TestDamengRetryingExecutionStrategy(context);
+ 
+-        Assert.False(strategy.TestShouldRetryOn(CreateDmException(errorNumber)));
++        var error = CreateDmException(errorNumber);
++        Assert.Equal(errorNumber, error.Number);
++        Assert.False(error.IsTransient);
++        AssertSingleAttemptAndSameException(strategy, error);
+     }
+ 
+     [Fact]
+@@ -84,46 +92,258 @@
+         using var context = CreateContext();
+         var strategy = new TestDamengRetryingExecutionStrategy(context);
+ 
+-        Assert.False(strategy.TestShouldRetryOn(new TimeoutException()));
+-    }
+-
+-    [Fact]
+-    public void StrategyRetriesAnAdditionalErrorNumber()
+-    {
+-        using var context = CreateContext();
+-        var strategy = new TestDamengRetryingExecutionStrategy(
+-            context,
+-            maxRetryCount: 2,
+-            maxRetryDelay: TimeSpan.Zero,
+-            [-77777]);
++        AssertSingleAttemptAndSameException(strategy, new TimeoutException());
++    }
++
++    [Fact]
++    public void StrategyRejectsAdditionalErrorNumberBeforeExecutingDelegate()
++    {
++        using var context = CreateContext();
+         var attempts = 0;
+-
++        Assert.Throws<NotSupportedException>(() =>
++        {
++            var strategy = new TestDamengRetryingExecutionStrategy(
++                context, maxRetryCount: 2, maxRetryDelay: TimeSpan.Zero, [-77777]);
++            _ = strategy.Execute(
++                state: 42,
++                (_, state) =>
++                {
++                    attempts++;
++                    return state;
++                },
++                verifySucceeded: null);
++        });
++        Assert.Equal(0, attempts);
++    }
++
++    [Fact]
++    public void CollectionOverloadRejectsNull()
++    {
++        var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
++
++        Assert.Throws<ArgumentNullException>(
++            () => optionsBuilder.UseDameng(
++                "Server=localhost;Port=5236;User Id=test;PWD=test",
++                options => options.EnableRetryOnFailure((ICollection<int>)null!)));
++    }
++
++    [Fact]
++    public void EnableRetryOnFailureMaxRetryCountPreservesDefaultDelay()
++    {
++        using var context = CreateContext(options => options.EnableRetryOnFailure(3));
++        var strategy = Assert.IsType<DamengRetryingExecutionStrategy>(context.Database.CreateExecutionStrategy());
++        Assert.Equal(3, strategy.MaxRetryCount);
++        Assert.Equal(TimeSpan.FromSeconds(30), strategy.MaxRetryDelay);
++        Assert.True(strategy.RetriesOnFailure);
++        Assert.Null(strategy.AdditionalErrorNumbers);
++    }
++
++    [Fact]
++    public void EnableRetryOnFailureAcceptsNullAdditionalErrorNumbers()
++    {
++        using var context = CreateContext(options => options.EnableRetryOnFailure(
++            maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(4), errorNumbersToAdd: null));
++        var strategy = Assert.IsType<DamengRetryingExecutionStrategy>(context.Database.CreateExecutionStrategy());
++        Assert.Equal(3, strategy.MaxRetryCount);
++        Assert.Equal(TimeSpan.FromSeconds(4), strategy.MaxRetryDelay);
++        Assert.Null(strategy.AdditionalErrorNumbers);
++    }
++
++    [Fact]
++    public void CollectionOverloadCopiesEmptyCollectionBeforeCallerMutation()
++    {
++        var additionalErrors = new List<int>();
++        var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
++        optionsBuilder.UseDameng(
++            "Server=localhost;Port=5236;User Id=test;PWD=test",
++            options => options.EnableRetryOnFailure(additionalErrors));
++        additionalErrors.Add(-12345);
++        additionalErrors.Add(-54321);
++        using var context = new TestContext(optionsBuilder.Options);
++        var strategy = Assert.IsType<DamengRetryingExecutionStrategy>(context.Database.CreateExecutionStrategy());
++        AssertDefaultSettings(strategy);
++        AssertImmutableEmptyOverrides(strategy);
++    }
++
++    [Theory]
++    [InlineData(-12345)]
++    [InlineData(-54321)]
++    [InlineData(-77777)]
++    public void BuilderCollectionOverloadRejectsNonemptyOverrides(int errorNumber)
++    {
++        var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
++        ICollection<int> numbers = new List<int> { errorNumber };
++        Assert.Throws<NotSupportedException>(() => optionsBuilder.UseDameng(
++            "Server=localhost;Port=5236;User Id=test;PWD=test",
++            options => options.EnableRetryOnFailure(numbers)));
++    }
++
++    [Theory]
++    [InlineData(-12345)]
++    [InlineData(-54321)]
++    [InlineData(-77777)]
++    public void BuilderEnumerableOverloadRejectsNonemptyOverrides(int errorNumber)
++    {
++        var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
++        // Iterator values must be refused too, rather than only ICollection.
++        Assert.Throws<NotSupportedException>(() => optionsBuilder.UseDameng(
++            "Server=localhost;Port=5236;User Id=test;PWD=test",
++            options => options.EnableRetryOnFailure(2, TimeSpan.Zero, YieldErrorNumber(errorNumber))));
++    }
++
++    [Theory]
++    [InlineData(-12345)]
++    [InlineData(-54321)]
++    public void ContextConstructorRejectsNonemptyOverrides(int errorNumber)
++    {
++        using var context = CreateContext();
++        Assert.Throws<NotSupportedException>(() => new DamengRetryingExecutionStrategy(
++            context, 2, TimeSpan.Zero, YieldErrorNumber(errorNumber)));
++    }
++
++    [Theory]
++    [InlineData(false, -12345)]
++    [InlineData(false, -54321)]
++    [InlineData(false, -77777)]
++    [InlineData(true, -12345)]
++    [InlineData(true, -54321)]
++    [InlineData(true, -77777)]
++    public void DependenciesConstructorsRejectNonemptyOverrides(bool customSettings, int errorNumber)
++    {
++        using var context = CreateContext();
++        var dependencies = context.GetService<ExecutionStrategyDependencies>();
++        Assert.Throws<NotSupportedException>(() => customSettings
++            ? new DamengRetryingExecutionStrategy(dependencies, 2, TimeSpan.Zero, YieldErrorNumber(errorNumber))
++            : new DamengRetryingExecutionStrategy(dependencies, YieldErrorNumber(errorNumber)));
++    }
++
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public void ContextConstructorAcceptsNullOrCopiesEmptyOverrides(bool empty)
++    {
++        using var context = CreateContext();
++        var numbers = empty ? new List<int>() : null;
++        var strategy = new DamengRetryingExecutionStrategy(context, 3, TimeSpan.FromSeconds(4), numbers);
++        numbers?.Add(-12345);
++        numbers?.Add(-54321);
++        Assert.Equal(3, strategy.MaxRetryCount);
++        Assert.Equal(TimeSpan.FromSeconds(4), strategy.MaxRetryDelay);
++        if (empty) AssertImmutableEmptyOverrides(strategy); else Assert.Null(strategy.AdditionalErrorNumbers);
++    }
++
++    [Theory]
++    [InlineData(false, false)]
++    [InlineData(false, true)]
++    [InlineData(true, false)]
++    [InlineData(true, true)]
++    public void DependenciesConstructorsAcceptNullOrCopyEmptyOverrides(bool customSettings, bool empty)
++    {
++        using var context = CreateContext();
++        var dependencies = context.GetService<ExecutionStrategyDependencies>();
++        var numbers = empty ? new List<int>() : null;
++        var strategy = customSettings
++            ? new DamengRetryingExecutionStrategy(dependencies, 3, TimeSpan.FromSeconds(4), numbers)
++            : new DamengRetryingExecutionStrategy(dependencies, numbers!);
++        numbers?.Add(-12345);
++        numbers?.Add(-54321);
++        Assert.Equal(customSettings ? 3 : 6, strategy.MaxRetryCount);
++        Assert.Equal(customSettings ? TimeSpan.FromSeconds(4) : TimeSpan.FromSeconds(30), strategy.MaxRetryDelay);
++        if (empty) AssertImmutableEmptyOverrides(strategy); else Assert.Null(strategy.AdditionalErrorNumbers);
++    }
++
++    [Fact]
++    public void ContextAndDependenciesConstructorsPreserveDefaultAndCustomRetryCounts()
++    {
++        using var context = CreateContext();
++        var dependencies = context.GetService<ExecutionStrategyDependencies>();
++        AssertDefaultSettings(new DamengRetryingExecutionStrategy(context));
++        AssertDefaultSettings(new DamengRetryingExecutionStrategy(dependencies));
++        var byContext = new DamengRetryingExecutionStrategy(context, 3);
++        var byDependencies = new DamengRetryingExecutionStrategy(dependencies, 3);
++        Assert.Equal(3, byContext.MaxRetryCount);
++        Assert.Equal(3, byDependencies.MaxRetryCount);
++        Assert.Equal(TimeSpan.FromSeconds(30), byContext.MaxRetryDelay);
++        Assert.Equal(TimeSpan.FromSeconds(30), byDependencies.MaxRetryDelay);
++        Assert.Null(byContext.AdditionalErrorNumbers);
++        Assert.Null(byDependencies.AdditionalErrorNumbers);
++    }
++
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public void SyntheticPublicWClassificationControlsActualRetryAttempts(bool transient)
++    {
++        using var context = CreateContext();
++        var strategy = new TestDamengRetryingExecutionStrategy(context, 2, TimeSpan.Zero, null);
++        // Public classification consumption only: no W transport produced this
++        // exception and no private classification/outcome metadata is injected.
++        var error = new SyntheticClassifiedDmException(transient);
++        Assert.Equal(transient, error.IsTransient);
++        Assert.Equal(transient, strategy.TestShouldRetryOn(error));
++        if (!transient)
++        {
++            AssertSingleAttemptAndSameException(strategy, error);
++            return;
++        }
++        var attempts = 0;
+         var result = strategy.Execute(
+             state: 42,
+             (_, state) =>
+             {
+-                if (++attempts < 3)
+-                {
+-                    throw CreateDmException(-77777);
+-                }
+-
++                if (++attempts < 3) throw error;
+                 return state;
+             },
+             verifySucceeded: null);
+-
+         Assert.Equal(42, result);
+         Assert.Equal(3, attempts);
+     }
+ 
+     [Fact]
+-    public void CollectionOverloadRejectsNull()
+-    {
+-        var optionsBuilder = new DbContextOptionsBuilder<TestContext>();
+-
+-        Assert.Throws<ArgumentNullException>(
+-            () => optionsBuilder.UseDameng(
+-                "Server=localhost;Port=5236;User Id=test;PWD=test",
+-                options => options.EnableRetryOnFailure((ICollection<int>)null!)));
++    public void NonWDbExceptionCannotEnableRetriesEvenWhenTransient()
++    {
++        using var context = CreateContext();
++        var strategy = new TestDamengRetryingExecutionStrategy(context, 2, TimeSpan.Zero, null);
++        var error = new SyntheticTransientDbException();
++        Assert.True(error.IsTransient);
++        Assert.False(typeof(DmException).IsAssignableFrom(error.GetType()));
++        AssertSingleAttemptAndSameException(strategy, error);
++    }
++
++    [Fact]
++    public void ActualSealedCommitUnknownExceptionIsPropagatedWithoutRetry()
++    {
++        using var context = CreateContext();
++        var strategy = new TestDamengRetryingExecutionStrategy(context, 2, TimeSpan.Zero, null);
++        var cause = new InvalidOperationException("synthetic lost-result fixture");
++        var constructor = RequireNonpublicConstructor(typeof(DmCommitOutcomeUnknownException), [typeof(Exception)]);
++        var error = Assert.IsType<DmCommitOutcomeUnknownException>(constructor.Invoke([cause]));
++        Assert.True(typeof(DmCommitOutcomeUnknownException).IsSealed);
++        Assert.Same(cause, error.InnerException);
++        Assert.False(error.IsTransient);
++        AssertSingleAttemptAndSameException(strategy, error);
++    }
++
++    [Fact]
++    public void ActualSealedWTimeoutExceptionIsPropagatedWithoutRetry()
++    {
++        using var context = CreateContext();
++        var strategy = new TestDamengRetryingExecutionStrategy(context, 2, TimeSpan.Zero, null);
++        var infoConstructor = RequireNonpublicConstructor(typeof(DmFailureInfo),
++            [typeof(DmErrorKind), typeof(DmFailurePhase), typeof(string), typeof(DmOperationOutcome),
++                typeof(DmTransactionOutcome?), typeof(bool), typeof(DmCancelSource), typeof(int?)]);
++        var info = Assert.IsType<DmFailureInfo>(infoConstructor.Invoke(
++            [DmErrorKind.Timeout, DmFailurePhase.Receive, "synthetic_timeout", DmOperationOutcome.Unknown,
++                null, false, DmCancelSource.TotalDeadline, null]));
++        var cause = new TimeoutException();
++        var constructor = RequireNonpublicConstructor(typeof(DmTimeoutException), [typeof(DmFailureInfo), typeof(Exception)]);
++        var error = Assert.IsType<DmTimeoutException>(constructor.Invoke([info, cause]));
++        Assert.True(typeof(DmTimeoutException).IsSealed);
++        Assert.Same(info, error.FailureInfo);
++        Assert.Same(cause, error.InnerException);
++        Assert.Equal(0, error.Number);
++        Assert.False(error.IsTransient);
++        AssertSingleAttemptAndSameException(strategy, error);
+     }
+ 
+     private static TestContext CreateContext(
+@@ -139,19 +359,64 @@
+ 
+     private static DmException CreateDmException(int errorNumber)
+     {
+-        var errorConstructor = typeof(DmError).GetConstructor(
+-            BindingFlags.Instance | BindingFlags.NonPublic,
+-            binder: null,
+-            [typeof(int), typeof(string)],
+-            modifiers: null)!;
+-        var exceptionConstructor = typeof(DmException).GetConstructor(
+-            BindingFlags.Instance | BindingFlags.NonPublic,
+-            binder: null,
+-            [typeof(DmError)],
+-            modifiers: null)!;
+-        var error = (DmError)errorConstructor.Invoke([errorNumber, $"DM error {errorNumber}"]);
+-
+-        return (DmException)exceptionConstructor.Invoke([error]);
++        var errorConstructor = RequireNonpublicConstructor(typeof(DmError), [typeof(int), typeof(string)]);
++        var exceptionConstructor = RequireNonpublicConstructor(typeof(DmException), [typeof(DmError)]);
++        var error = Assert.IsType<DmError>(errorConstructor.Invoke([errorNumber, $"DM error {errorNumber}"]));
++        return Assert.IsType<DmException>(exceptionConstructor.Invoke([error]));
++    }
++
++    private static ConstructorInfo RequireNonpublicConstructor(Type type, Type[] parameterTypes)
++        => type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, binder: null,
++            parameterTypes, modifiers: null)
++            ?? throw new InvalidOperationException("Expected exact W fixture constructor is unavailable.");
++
++    private static IEnumerable<int> YieldErrorNumber(int errorNumber)
++    {
++        yield return errorNumber;
++    }
++
++    private static void AssertDefaultSettings(DamengRetryingExecutionStrategy strategy)
++    {
++        Assert.Equal(6, strategy.MaxRetryCount);
++        Assert.Equal(TimeSpan.FromSeconds(30), strategy.MaxRetryDelay);
++        Assert.True(strategy.RetriesOnFailure);
++    }
++
++    private static void AssertImmutableEmptyOverrides(DamengRetryingExecutionStrategy strategy)
++    {
++        var numbers = strategy.AdditionalErrorNumbers
++            ?? throw new InvalidOperationException("Expected an immutable empty override snapshot.");
++        Assert.Empty(numbers);
++        Assert.False(numbers is ICollection<int> { IsReadOnly: false });
++    }
++
++    private static void AssertSingleAttemptAndSameException<TException>(
++        TestDamengRetryingExecutionStrategy strategy, TException error)
++        where TException : Exception
++    {
++        Assert.False(strategy.TestShouldRetryOn(error));
++        var attempts = 0;
++        var observed = Assert.Throws<TException>(() => strategy.Execute<int, int>(
++            state: 42,
++            (_, _) =>
++            {
++                attempts++;
++                throw error;
++            },
++            verifySucceeded: null));
++        Assert.Same(error, observed);
++        Assert.Equal(1, attempts);
++    }
++
++    private sealed class SyntheticClassifiedDmException(bool transient)
++        : DmException("synthetic public classification control", new InvalidOperationException())
++    {
++        public override bool IsTransient => transient;
++    }
++
++    private sealed class SyntheticTransientDbException : DbException
++    {
++        public override bool IsTransient => true;
+     }
+ 
+     private sealed class TestContext(DbContextOptions<TestContext> options)
+@@ -168,7 +433,7 @@
+             DbContext context,
+             int maxRetryCount,
+             TimeSpan maxRetryDelay,
+-            IEnumerable<int> errorNumbersToAdd)
++            IEnumerable<int>? errorNumbersToAdd)
+             : base(context, maxRetryCount, maxRetryDelay, errorNumbersToAdd)
+         {
+         }
+diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs b/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs
+new file mode 100644
+index 0000000..4fffc19
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/DamengRelationalTransactionCapabilityTests.cs
+@@ -0,0 +1,359 @@
++using System.Collections;
++using System.Data;
++using System.Data.Common;
++using System.Diagnostics.CodeAnalysis;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Storage;
++using Microsoft.EntityFrameworkCore.Update;
++using Microsoft.Extensions.DependencyInjection;
++using W.EntityFrameworkCore.Dameng.Storage.Internal;
++using Xunit;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++public sealed class DamengRelationalTransactionCapabilityTests
++{
++    private static readonly string[] BatchOnlyOperationEvents = ["batch"];
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task BeginTransactionUsesRegisteredFactoryAndPreservesOwnedLifecycle(
++        bool supportsSavepoints, bool async, bool commit)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        using var context = Context(connection);
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransactionFactory>(context.GetService<IRelationalTransactionFactory>());
++#pragma warning restore EF1001
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalConnection>(context.GetService<IRelationalConnection>());
++#pragma warning restore EF1001
++        Assert.True(context.Database.AutoSavepointsEnabled);
++        Assert.Equal(AutoTransactionBehavior.WhenNeeded, context.Database.AutoTransactionBehavior);
++
++        var transaction = async
++            ? await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)
++            : context.Database.BeginTransaction(IsolationLevel.ReadCommitted);
++        var underlying = Assert.IsType<TestTransaction>(transaction.GetDbTransaction());
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransaction>(transaction);
++#pragma warning restore EF1001
++        Assert.Same(connection.LastTransaction, underlying);
++        Assert.Same(connection, underlying.Connection);
++        Assert.Same(transaction, context.Database.CurrentTransaction);
++        Assert.Equal(IsolationLevel.ReadCommitted, underlying.IsolationLevel);
++        Assert.Equal(supportsSavepoints, transaction.SupportsSavepoints);
++        Assert.NotEqual(Guid.Empty, transaction.TransactionId);
++
++        if (commit)
++        {
++            if (async) await transaction.CommitAsync(); else transaction.Commit();
++        }
++        else
++        {
++            if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        }
++        Assert.Null(context.Database.CurrentTransaction);
++        Assert.Equal(commit ? 1 : 0, underlying.CommitCalls);
++        Assert.Equal(commit ? 0 : 1, underlying.RollbackCalls);
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Equal(1, underlying.DisposeCalls);
++    }
++
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task UseTransactionUsesRegisteredFactoryAndPreservesCallerOwnership(
++        bool supportsSavepoints, bool async, bool commit)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        connection.Open();
++        using var underlying = Assert.IsType<TestTransaction>(connection.BeginTransaction(IsolationLevel.ReadCommitted));
++        using var context = Context(connection);
++        var id = Guid.NewGuid();
++        var transaction = async
++            ? await context.Database.UseTransactionAsync(underlying, id)
++            : context.Database.UseTransaction(underlying, id);
++        Assert.NotNull(transaction);
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransactionFactory>(context.GetService<IRelationalTransactionFactory>());
++#pragma warning restore EF1001
++        // Verify the exact registered provider infrastructure type against EF 10.0.12.
++#pragma warning disable EF1001
++        Assert.IsType<DamengRelationalTransaction>(transaction);
++#pragma warning restore EF1001
++        Assert.Equal(id, transaction.TransactionId);
++        Assert.Same(underlying, transaction.GetDbTransaction());
++        Assert.Equal(supportsSavepoints, transaction.SupportsSavepoints);
++
++        if (commit)
++        {
++            if (async) await transaction.CommitAsync(); else transaction.Commit();
++        }
++        else
++        {
++            if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        }
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Null(context.Database.CurrentTransaction);
++        Assert.Equal(0, underlying.DisposeCalls);
++        Assert.Equal(commit ? 1 : 0, underlying.CommitCalls);
++        Assert.Equal(commit ? 0 : 1, underlying.RollbackCalls);
++    }
++
++    [Fact]
++    public void SingletonFactoryUsesEachActualTransactionRatherThanSharedConnectionCapability()
++    {
++        using var services = new ServiceCollection().AddEntityFrameworkDameng().BuildServiceProvider();
++        using var supported = new TestConnection(true);
++        using var unsupported = new TestConnection(false);
++        using var first = Context(supported, services);
++        using var second = Context(unsupported, services);
++        using var firstTransaction = first.Database.BeginTransaction();
++        using var secondTransaction = second.Database.BeginTransaction();
++        Assert.Same(first.GetService<IRelationalTransactionFactory>(), second.GetService<IRelationalTransactionFactory>());
++        Assert.True(firstTransaction.SupportsSavepoints);
++        Assert.False(secondTransaction.SupportsSavepoints);
++        supported.SupportsNextTransaction = false;
++        unsupported.SupportsNextTransaction = true;
++        Assert.True(firstTransaction.SupportsSavepoints);
++        Assert.False(secondTransaction.SupportsSavepoints);
++    }
++
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(false, false, true)]
++    [InlineData(false, true, false)]
++    [InlineData(false, true, true)]
++    [InlineData(true, false, false)]
++    [InlineData(true, false, true)]
++    [InlineData(true, true, false)]
++    [InlineData(true, true, true)]
++    public async Task RealBatchExecutorHonorsCapabilityAndRollsBackOnlyToSupportedSavepoints(
++        bool supportsSavepoints, bool async, bool failBatch)
++    {
++        using var connection = new TestConnection(supportsSavepoints);
++        using var context = Context(connection);
++        connection.Sql = context.GetService<ISqlGenerationHelper>();
++        var transaction = async
++            ? await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted)
++            : context.Database.BeginTransaction(IsolationLevel.ReadCommitted);
++        var underlying = Assert.IsType<TestTransaction>(transaction.GetDbTransaction());
++        Assert.True(context.Database.AutoSavepointsEnabled);
++        Assert.Equal(AutoTransactionBehavior.WhenNeeded, context.Database.AutoTransactionBehavior);
++        var executor = context.GetService<IBatchExecutor>();
++        Assert.Equal("Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor", executor.GetType().FullName);
++        var expectedFailure = new InvalidOperationException("synthetic_batch_failure");
++        var batch = new TestBatch(connection, failBatch ? expectedFailure : null);
++        if (failBatch)
++        {
++            var actual = async
++                ? await Assert.ThrowsAsync<InvalidOperationException>(() => executor.ExecuteAsync([batch], context.GetService<IRelationalConnection>()))
++                : Assert.Throws<InvalidOperationException>(() => executor.Execute([batch], context.GetService<IRelationalConnection>()));
++            Assert.Same(expectedFailure, actual);
++        }
++        else
++        {
++            int count = async
++                ? await executor.ExecuteAsync([batch], context.GetService<IRelationalConnection>())
++                : executor.Execute([batch], context.GetService<IRelationalConnection>());
++            Assert.Equal(0, count); // Test batch has no model commands; its execution changes the synthetic work counter.
++        }
++        Assert.Equal(async ? 0 : 1, batch.SyncExecutions);
++        Assert.Equal(async ? 1 : 0, batch.AsyncExecutions);
++        Assert.Same(context.GetService<IRelationalConnection>(), batch.ExecutedConnection);
++        Assert.Same(underlying, batch.ExecutedTransaction);
++        Assert.Same(transaction, context.Database.CurrentTransaction);
++        Assert.Equal(0, underlying.CommitCalls);
++        Assert.Equal(0, underlying.RollbackCalls);
++        Assert.Equal(0, underlying.DisposeCalls);
++        if (supportsSavepoints)
++        {
++            string[] expectedEvents = failBatch ? ["create", "batch", "rollback-to", "release"] : ["create", "batch", "release"];
++            Assert.Equal(expectedEvents, connection.OperationEvents);
++            Assert.Equal(failBatch ? 1 : 2, connection.Work);
++            Assert.Equal(async ? 0 : (failBatch ? 3 : 2), connection.SyncCommands);
++            Assert.Equal(async ? (failBatch ? 3 : 2) : 0, connection.AsyncCommands);
++        }
++        else
++        {
++            Assert.Equal(BatchOnlyOperationEvents, connection.OperationEvents);
++            Assert.Equal(2, connection.Work);
++            Assert.Equal(0, connection.SyncCommands + connection.AsyncCommands);
++        }
++        if (async) await transaction.RollbackAsync(); else transaction.Rollback();
++        Assert.Equal(1, connection.Work); // A full rollback is still available when savepoints are unsupported.
++        if (async) await transaction.DisposeAsync(); else transaction.Dispose();
++        Assert.Equal(1, underlying.DisposeCalls);
++    }
++
++    private static DbContext Context(TestConnection connection, IServiceProvider? services = null)
++    {
++        var builder = new DbContextOptionsBuilder().UseDameng(connection);
++        if (services != null) builder.UseInternalServiceProvider(services);
++        return new DbContext(builder.Options);
++    }
++
++    private sealed class TestBatch(TestConnection connection, Exception? failure) : ModificationCommandBatch
++    {
++        public int SyncExecutions { get; private set; }
++        public int AsyncExecutions { get; private set; }
++        public IRelationalConnection? ExecutedConnection { get; private set; }
++        public DbTransaction? ExecutedTransaction { get; private set; }
++        public override IReadOnlyList<IReadOnlyModificationCommand> ModificationCommands => [];
++        public override bool RequiresTransaction => true;
++        public override bool AreMoreBatchesExpected => false;
++        public override bool TryAddCommand(IReadOnlyModificationCommand modificationCommand) => throw new NotSupportedException();
++        public override void Complete(bool moreBatchesExpected) { }
++        public override void Execute(IRelationalConnection relationalConnection)
++        {
++            SyncExecutions++;
++            ExecuteCore(relationalConnection);
++        }
++        public override Task ExecuteAsync(IRelationalConnection relationalConnection, CancellationToken cancellationToken = default)
++        {
++            AsyncExecutions++;
++            ExecuteCore(relationalConnection);
++            return Task.CompletedTask;
++        }
++        private void ExecuteCore(IRelationalConnection relationalConnection)
++        {
++            ExecutedConnection = relationalConnection;
++            ExecutedTransaction = relationalConnection.CurrentTransaction!.GetDbTransaction();
++            connection.OperationEvents.Add("batch");
++            connection.Work++;
++            if (failure != null) throw failure;
++        }
++    }
++
++    private sealed class TestConnection(bool supportsSavepoints) : DbConnection
++    {
++        private ConnectionState _state;
++        public bool SupportsNextTransaction { get; set; } = supportsSavepoints;
++        public TestTransaction? LastTransaction { get; private set; }
++        public ISqlGenerationHelper? Sql { get; set; }
++        public List<string> OperationEvents { get; } = [];
++        public int Work { get; set; } = 1;
++        public int SyncCommands { get; set; }
++        public int AsyncCommands { get; set; }
++        [AllowNull] public override string ConnectionString { get; set; } = string.Empty;
++        public override string Database => "synthetic";
++        public override string DataSource => "synthetic";
++        public override string ServerVersion => "unused";
++        public override ConnectionState State => _state;
++        public override void ChangeDatabase(string databaseName) => throw new NotSupportedException();
++        public override void Open() => _state = ConnectionState.Open;
++        public override Task OpenAsync(CancellationToken cancellationToken) { Open(); return Task.CompletedTask; }
++        public override void Close() => _state = ConnectionState.Closed;
++        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
++            => LastTransaction = new TestTransaction(this, isolationLevel, SupportsNextTransaction);
++        protected override DbCommand CreateDbCommand() => new TestCommand(this);
++        public int ExecuteSavepoint(string sql, DbTransaction? transaction)
++        {
++            var active = LastTransaction ?? throw new InvalidOperationException("synthetic_transaction_missing");
++            var helper = Sql ?? throw new InvalidOperationException("synthetic_SQL_helper_missing");
++            Assert.Same(active, transaction);
++            if (!active.SupportsSavepoints) throw new NotSupportedException("synthetic_savepoints_unsupported");
++            if (sql == helper.GenerateCreateSavepointStatement("__EFSavePoint"))
++            {
++                OperationEvents.Add("create"); active.SavepointWork = Work;
++            }
++            else if (sql == helper.GenerateRollbackToSavepointStatement("__EFSavePoint"))
++            {
++                OperationEvents.Add("rollback-to"); Work = active.SavepointWork;
++            }
++            else if (sql == helper.GenerateReleaseSavepointStatement("__EFSavePoint")) OperationEvents.Add("release");
++            else throw new InvalidOperationException("unexpected_synthetic_SQL");
++            return -1;
++        }
++    }
++
++    private sealed class TestTransaction(TestConnection connection, IsolationLevel isolation, bool supports) : DbTransaction
++    {
++        private readonly int _originalWork = connection.Work;
++        private bool _disposed;
++        public int SavepointWork { get; set; }
++        public int CommitCalls { get; private set; }
++        public int RollbackCalls { get; private set; }
++        public int DisposeCalls { get; private set; }
++        public override IsolationLevel IsolationLevel => isolation;
++        public override bool SupportsSavepoints => supports;
++        protected override DbConnection DbConnection => connection;
++        public override void Commit() => CommitCalls++;
++        public override Task CommitAsync(CancellationToken cancellationToken = default) { Commit(); return Task.CompletedTask; }
++        public override void Rollback() { RollbackCalls++; connection.Work = _originalWork; }
++        public override Task RollbackAsync(CancellationToken cancellationToken = default) { Rollback(); return Task.CompletedTask; }
++        protected override void Dispose(bool disposing)
++        {
++            if (disposing && !_disposed) { _disposed = true; DisposeCalls++; }
++            base.Dispose(disposing);
++        }
++    }
++
++    private sealed class TestCommand : DbCommand
++    {
++        private readonly TestConnection _connection;
++        private readonly TestParameters _parameters = new();
++        public TestCommand(TestConnection connection)
++        {
++            _connection = connection;
++            DbConnection = connection;
++        }
++        [AllowNull] public override string CommandText { get; set; } = string.Empty;
++        public override int CommandTimeout { get; set; } = 30;
++        public override CommandType CommandType { get; set; } = CommandType.Text;
++        public override bool DesignTimeVisible { get; set; }
++        public override UpdateRowSource UpdatedRowSource { get; set; }
++        protected override DbConnection? DbConnection { get; set; }
++        protected override DbTransaction? DbTransaction { get; set; }
++        protected override DbParameterCollection DbParameterCollection => _parameters;
++        public override void Cancel() { }
++        public override void Prepare() { }
++        public override int ExecuteNonQuery() { _connection.SyncCommands++; return _connection.ExecuteSavepoint(CommandText, DbTransaction); }
++        public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
++        { _connection.AsyncCommands++; return Task.FromResult(_connection.ExecuteSavepoint(CommandText, DbTransaction)); }
++        public override object? ExecuteScalar() => throw new NotSupportedException();
++        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => throw new NotSupportedException();
++        protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
++    }
++
++    private sealed class TestParameters : DbParameterCollection
++    {
++        public override int Count => 0;
++        public override object SyncRoot => this;
++        public override void Clear() { }
++        public override bool Contains(object value) => false;
++        public override bool Contains(string value) => false;
++        public override int IndexOf(object value) => -1;
++        public override int IndexOf(string parameterName) => -1;
++        public override IEnumerator GetEnumerator() => Array.Empty<object>().GetEnumerator();
++        public override void CopyTo(Array array, int index) { }
++        public override int Add(object value) => throw new NotSupportedException();
++        public override void AddRange(Array values) => throw new NotSupportedException();
++        public override void Insert(int index, object value) => throw new NotSupportedException();
++        public override void Remove(object value) => throw new NotSupportedException();
++        public override void RemoveAt(int index) => throw new NotSupportedException();
++        public override void RemoveAt(string parameterName) => throw new NotSupportedException();
++        protected override DbParameter GetParameter(int index) => throw new NotSupportedException();
++        protected override DbParameter GetParameter(string parameterName) => throw new NotSupportedException();
++        protected override void SetParameter(int index, DbParameter value) => throw new NotSupportedException();
++        protected override void SetParameter(string parameterName, DbParameter value) => throw new NotSupportedException();
++    }
++}

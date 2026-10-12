@@ -1,0 +1,858 @@
+{
+  "task": "TP06 supplement v7 same-package shared then TLS full candidate runtime verification",
+  "profiles": [
+    {
+      "profile": "shared",
+      "runner_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7/source/tools/TemporalCandidateAcceptance/run.py",
+        "--feed",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/feed",
+        "--source-manifest",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source-manifest.json",
+        "--source-archive",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source.tar",
+        "--identities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/identities.json",
+        "--capabilities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/capabilities.root-approved.json",
+        "--profile",
+        "shared",
+        "--repo",
+        "/Users/wanghongyi/Projects/W.DmProvider",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-shared-candidate",
+        "--deadline",
+        "1800"
+      ],
+      "output": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-shared-candidate",
+      "runner_exit_code": 0,
+      "runner_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runner_sha256": "9f54bbc1e36cd93e72b39e372a85ab53fafe994b1d1a7a2aa49009e02dc3500e",
+      "runner_result": {
+        "schema_version": 1,
+        "task": "TP-06-supplement",
+        "phase": "candidate",
+        "profile": "shared",
+        "source_manifest_sha256": "45794110c03738b7b347f61214034bfbc1e76e5d631ad7f9d9aede2064f2124d",
+        "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+        "identity_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+        "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+        "case_manifest_sha256": "2c08f624c5c40e8f37876c84dc935bd24bf481ed907000af58fb36647cd56ecc",
+        "runs": [
+          {
+            "lane": "supplemental",
+            "exit_code": 0,
+            "hard_deadline": false,
+            "cleanup_exit_code": 0,
+            "cleanup_hard_deadline": false,
+            "safe_command": [
+              "TEST_wrapper",
+              "dotnet",
+              "frozen_tool",
+              "run",
+              "frozen_inputs",
+              "profile",
+              "supplemental"
+            ],
+            "elapsed_seconds": 32.265,
+            "ownership_sha256": "72f969b77e8e96579a2bb3e2bd2fab8131dd8f66d6e66c960ecb015ee221a78f",
+            "recovery_manifest": "supplemental.ownership.json",
+            "report_sha256": "8a0bbd34ab017dcc77de5f522bfd56e03f6f7fe2728cb51d25a8aaf55db3ce9e",
+            "cleanup_sha256": "dac51cd7cd1fae9af96107c782985483ece6a11c4a380e7e2c94dc7fb91a248e"
+          }
+        ],
+        "status": "execution_complete",
+        "sdk_version": "10.0.203",
+        "restore_exit_code": 0,
+        "restore_hard_deadline": false,
+        "build_exit_code": 0,
+        "build_hard_deadline": false,
+        "assets_sha256": "89baaf6e7eec7b9f017e06d7c7c6cdae6c8f9d01d842d6274c806e65586936e0",
+        "lock_sha256": "9ba2cf438480407b88a307a064b166e034703811a4663a602c3fc7b4c766a4ec",
+        "tool_dll_sha256": "f2d014142e888335eddd5e92051506917ba4ecdfbec46c1fefb0cd94265db0a8",
+        "deps_sha256": "3416aee9066e1ed8fec35e54b840f0cbea8d57d04f23da16877b1a2fb8dfb615",
+        "tool_mvid": "9bce335b-c8e4-4172-b545-5b0a5dc12f6a",
+        "offline_exit_code": 0,
+        "offline_hard_deadline": false,
+        "offline_report_sha256": "f77b192466f21dae80013d5d83716508f25a55a1e32abf3339df88e1cd67f793",
+        "wrapper_sha256": "b2af867921b567045fdeeccb3da490662661976b182e5884d029a738d41e00d8"
+      },
+      "report_sha256": "8a0bbd34ab017dcc77de5f522bfd56e03f6f7fe2728cb51d25a8aaf55db3ce9e",
+      "report_status": "observed_complete",
+      "completed_cases": null,
+      "server_identity_verified": true,
+      "identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-temporal.20261008144915",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+          "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+          "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "O_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "transport": "PlaintextAllowed_explicit",
+      "safe_failure": null,
+      "diagnostic": [],
+      "cleanup_sha256": "dac51cd7cd1fae9af96107c782985483ece6a11c4a380e7e2c94dc7fb91a248e",
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection",
+      "validator_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-shared-candidate/frozen-input/validate.py",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-shared-candidate",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-shared-candidate-validation.json"
+      ],
+      "validator_exit_code": 0,
+      "validator_sha256": "40e9bdf2ebd2fe442fa68dddadfe85c4d48712042f58a5f2425f7e149d65414c",
+      "validator_result": {
+        "schema_version": 1,
+        "task": "TP-06-supplement",
+        "profile": "shared",
+        "status": "supplemental_profile_accepted",
+        "candidate_acceptance": true,
+        "full_temporal_acceptance": false,
+        "case_count": 42,
+        "issues": [],
+        "binding_result_observations": [
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dt",
+            "stage_id": "second",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dt",
+            "stage_id": "micro",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dt",
+            "stage_id": "tick",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+            "stage_id": "control",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 16,
+              "scale": 3,
+              "width": 8
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_shared_same_family_retained7_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [
+              {
+                "read_tuple": {
+                  "c_type": 16,
+                  "scale": 3,
+                  "width": 8
+                },
+                "rule_id": "g2_write_read_equal_v1",
+                "policy_status": "design_allowed",
+                "runtime_status": "runtime_pending"
+              }
+            ],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+            "stage_id": "scale3",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 16,
+              "scale": 6,
+              "width": 8
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_shared_same_family_retained7_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [
+              {
+                "read_tuple": {
+                  "c_type": 16,
+                  "scale": 6,
+                  "width": 8
+                },
+                "rule_id": "g2_write_read_equal_v1",
+                "policy_status": "design_allowed",
+                "runtime_status": "runtime_pending"
+              }
+            ],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+            "stage_id": "scale6",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dto",
+            "stage_id": "second",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dto",
+            "stage_id": "micro",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dto",
+            "stage_id": "tick",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dto",
+            "stage_id": "control",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 23,
+              "scale": 3,
+              "width": 10
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_shared_same_family_retained7_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [
+              {
+                "read_tuple": {
+                  "c_type": 23,
+                  "scale": 3,
+                  "width": 10
+                },
+                "rule_id": "g2_write_read_equal_v1",
+                "policy_status": "design_allowed",
+                "runtime_status": "runtime_pending"
+              }
+            ],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dto",
+            "stage_id": "scale3",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 23,
+              "scale": 6,
+              "width": 10
+            },
+            "read_tuple": {
+              "c_type": 27,
+              "scale": 7,
+              "width": 11
+            },
+            "rule_id": "g2_shared_same_family_retained7_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [
+              {
+                "read_tuple": {
+                  "c_type": 23,
+                  "scale": 6,
+                  "width": 10
+                },
+                "rule_id": "g2_write_read_equal_v1",
+                "policy_status": "design_allowed",
+                "runtime_status": "runtime_pending"
+              }
+            ],
+            "case_id": "BIND_METADATA_AUTOREPREPARE_dto",
+            "stage_id": "scale6",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_CLONE_RESET_REOPEN",
+            "stage_id": "clone_control",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_CLONE_RESET_REOPEN",
+            "stage_id": "clone_after_original_mutation",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_CLONE_RESET_REOPEN",
+            "stage_id": "reset",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          },
+          {
+            "write_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "read_tuple": {
+              "c_type": 26,
+              "scale": 7,
+              "width": 9
+            },
+            "rule_id": "g2_write_read_equal_v1",
+            "policy_status": "design_allowed",
+            "unobserved_alternatives": [],
+            "case_id": "BIND_CLONE_RESET_REOPEN",
+            "stage_id": "reopen",
+            "observed": true,
+            "observation_status": "observed",
+            "runtime_status": "observed",
+            "evidence_role": "actual_candidate_run"
+          }
+        ],
+        "runner_sha256": "9f54bbc1e36cd93e72b39e372a85ab53fafe994b1d1a7a2aa49009e02dc3500e"
+      },
+      "case_records_count": 42,
+      "actual_loaded_identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-temporal.20261008144915",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+          "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+          "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_physical_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "O_physical_profile": {
+        "server_version": "8.1.5.60",
+        "encoding": "utf-8",
+        "timezone": 480,
+        "message_version": 21,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "utf-8",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+      "producer_source_head": "fe89bd44abe99c1608499f71f4634a13e732c826"
+    },
+    {
+      "profile": "tls",
+      "runner_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7/source/tools/TemporalCandidateAcceptance/run.py",
+        "--feed",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/feed",
+        "--source-manifest",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source-manifest.json",
+        "--source-archive",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source.tar",
+        "--identities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/identities.json",
+        "--capabilities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/capabilities.root-approved.json",
+        "--profile",
+        "tls",
+        "--repo",
+        "/Users/wanghongyi/Projects/W.DmProvider",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-tls-candidate",
+        "--deadline",
+        "1800"
+      ],
+      "output": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-tls-candidate",
+      "runner_exit_code": 0,
+      "runner_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runner_sha256": "f081ae2d87233b5403615a5915fa048137c4bc55185a32f94cefd60235bea3c6",
+      "runner_result": {
+        "schema_version": 1,
+        "task": "TP-06-supplement",
+        "phase": "candidate",
+        "profile": "tls",
+        "source_manifest_sha256": "45794110c03738b7b347f61214034bfbc1e76e5d631ad7f9d9aede2064f2124d",
+        "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+        "identity_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+        "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+        "case_manifest_sha256": "2c08f624c5c40e8f37876c84dc935bd24bf481ed907000af58fb36647cd56ecc",
+        "runs": [
+          {
+            "lane": "supplemental",
+            "exit_code": 0,
+            "hard_deadline": false,
+            "cleanup_exit_code": 0,
+            "cleanup_hard_deadline": false,
+            "safe_command": [
+              "TEST_wrapper",
+              "dotnet",
+              "frozen_tool",
+              "run",
+              "frozen_inputs",
+              "profile",
+              "supplemental"
+            ],
+            "elapsed_seconds": 18.996,
+            "ownership_sha256": "aca50becf530127e595266c7bae4930272f5c99eca0e8d6c8c24e188773fb0b3",
+            "recovery_manifest": "supplemental.ownership.json",
+            "report_sha256": "cc786a8ed3d35d3219371f4277de505d124df012f497a342a1c9e34b8f748680",
+            "cleanup_sha256": "a47c4cbb7321e1ee40698b191689baf0c6707a909c8e39a2cedd4dce174baff6"
+          }
+        ],
+        "status": "execution_complete",
+        "sdk_version": "10.0.203",
+        "restore_exit_code": 0,
+        "restore_hard_deadline": false,
+        "build_exit_code": 0,
+        "build_hard_deadline": false,
+        "assets_sha256": "860c2d6f87329629745f1816e262f6fe1cfad45e77032da24f36fedefbd424bc",
+        "lock_sha256": "9ba2cf438480407b88a307a064b166e034703811a4663a602c3fc7b4c766a4ec",
+        "tool_dll_sha256": "7926dd167439ae8aebe9119730648846b55375bc1109bbf79184365e2d15264e",
+        "deps_sha256": "3416aee9066e1ed8fec35e54b840f0cbea8d57d04f23da16877b1a2fb8dfb615",
+        "tool_mvid": "99785eea-25d7-403d-8cb1-6a22a1cb5d2e",
+        "offline_exit_code": 0,
+        "offline_hard_deadline": false,
+        "offline_report_sha256": "f77b192466f21dae80013d5d83716508f25a55a1e32abf3339df88e1cd67f793",
+        "wrapper_sha256": "872d722808a7f53415505e2536438d1b644793822b2abeac3cb5b662ac94d706"
+      },
+      "report_sha256": "cc786a8ed3d35d3219371f4277de505d124df012f497a342a1c9e34b8f748680",
+      "report_status": "observed_complete",
+      "completed_cases": null,
+      "server_identity_verified": true,
+      "identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-temporal.20261008144915",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+          "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+          "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_profile": {
+        "server_version": "8.1.4.6",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 11,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "gb18030",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "O_profile": {
+        "status": "closed",
+        "reason": "no_verified_strict_official_tls_configuration"
+      },
+      "transport": "RequireTls_local_CA_explicit_NoCheck",
+      "safe_failure": null,
+      "diagnostic": [],
+      "cleanup_sha256": "a47c4cbb7321e1ee40698b191689baf0c6707a909c8e39a2cedd4dce174baff6",
+      "cleanup_verified": true,
+      "final_database_state": "owned_table_absent_fresh_connection",
+      "validator_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-tls-candidate/frozen-input/validate.py",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-tls-candidate",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-supplement-v7-tls-candidate-validation.json"
+      ],
+      "validator_exit_code": 1,
+      "validator_sha256": "ed124d396d307e3d09c5d97b006d443a41a06167693a96b0a26c713d405e929f",
+      "validator_result": {
+        "schema_version": 1,
+        "task": "TP-06-supplement",
+        "status": "unverified_result_descriptor",
+        "candidate_acceptance": false,
+        "full_temporal_acceptance": false,
+        "issues": [
+          "unverified_result_descriptor"
+        ],
+        "result_descriptor": {
+          "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+          "stage_id": "scale3",
+          "write_tuple": {
+            "c_type": 16,
+            "scale": 3,
+            "width": 8
+          },
+          "read_tuple": {
+            "c_type": 16,
+            "scale": 6,
+            "width": 8
+          },
+          "observation_status": "unverified",
+          "candidate_acceptance": false
+        }
+      },
+      "case_records_count": 36,
+      "actual_loaded_identities": {
+        "O": {
+          "id": "DM.DmProvider",
+          "version": "8.3.1.47463",
+          "asset": "lib/net9.0/DM.DmProvider.dll",
+          "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+          "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+          "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        },
+        "W": {
+          "id": "W.DmProvider",
+          "version": "0.1.0-temporal.20261008144915",
+          "asset": "lib/net10.0/W.DmProvider.dll",
+          "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+          "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+          "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+          "package_reference_verified": true,
+          "actual_asset_verified": true
+        }
+      },
+      "W_physical_profile": {
+        "server_version": "8.1.4.6",
+        "encoding": "gb18030",
+        "timezone": 480,
+        "message_version": 11,
+        "result_format": "ordinary_non_BDTA",
+        "server_user": "WDM_PROVIDER_TEST",
+        "server_schema": "WDM_PROVIDER_TEST",
+        "negotiated_encoding": "gb18030",
+        "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+        "encoding_override_empty": true,
+        "profile_origin": "physical_get_conn_instance_conn_property"
+      },
+      "O_physical_profile": {
+        "status": "closed",
+        "reason": "no_verified_strict_official_tls_configuration"
+      },
+      "product_source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+      "producer_source_head": "fe89bd44abe99c1608499f71f4634a13e732c826"
+    }
+  ],
+  "DB_window_released": true,
+  "recovery_pending": false,
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "deadline_seconds": 1800,
+  "status": "shared_accepted_tls_result_descriptor_pending",
+  "preflight_passed": true,
+  "postflight_passed": true,
+  "old_evidence_immutable": true,
+  "build_window_released": true,
+  "finished_utc": "2026-10-08T19:55:08.139570+00:00",
+  "shared_supplement_acceptance": true,
+  "tls_supplement_acceptance": false,
+  "source_manifest_sha256": "bcb2a2c866dcc7d515c89ead45c1023bfde58f3549ba789b379b270b6a91e0a8",
+  "runtime_coordinator_sha256": "0b3defa0e89a2e4ad7579159b353931497c219c7d315b0964432ce384acf8e8c",
+  "source_package_caps_old_evidence_immutable": true,
+  "final_database_state": "both_owned_tables_absent_fresh_connections",
+  "not_run": [],
+  "safe_pending_result_descriptor": {
+    "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+    "stage_id": "scale3",
+    "write_tuple": {
+      "c_type": 16,
+      "scale": 3,
+      "width": 8
+    },
+    "read_tuple": {
+      "c_type": 16,
+      "scale": 6,
+      "width": 8
+    },
+    "observation_status": "unverified",
+    "candidate_acceptance": false
+  },
+  "root_cause_inference": false,
+  "original_safe_reports": {
+    "shared": {
+      "runner.json": "9f54bbc1e36cd93e72b39e372a85ab53fafe994b1d1a7a2aa49009e02dc3500e",
+      "supplemental.json": "8a0bbd34ab017dcc77de5f522bfd56e03f6f7fe2728cb51d25a8aaf55db3ce9e",
+      "supplemental.cleanup.json": "dac51cd7cd1fae9af96107c782985483ece6a11c4a380e7e2c94dc7fb91a248e",
+      "supplemental.ownership.json": "72f969b77e8e96579a2bb3e2bd2fab8131dd8f66d6e66c960ecb015ee221a78f",
+      "supplemental.ownership.json.final.json": "1f94dcb32aa0aa5838614ad554aacd1e87e57341ce2caa359d967f61cbb43770"
+    },
+    "tls": {
+      "runner.json": "f081ae2d87233b5403615a5915fa048137c4bc55185a32f94cefd60235bea3c6",
+      "supplemental.json": "cc786a8ed3d35d3219371f4277de505d124df012f497a342a1c9e34b8f748680",
+      "supplemental.cleanup.json": "a47c4cbb7321e1ee40698b191689baf0c6707a909c8e39a2cedd4dce174baff6",
+      "supplemental.ownership.json": "aca50becf530127e595266c7bae4930272f5c99eca0e8d6c8c24e188773fb0b3",
+      "supplemental.ownership.json.final.json": "1093cd6ad30fa99ca2d016ffb18093290253fb4514d91ecc0a777b24f271e574"
+    }
+  },
+  "old_evidence_immutable_hashes": {
+    "v6_runtime_failure": "8d2f68a153229bcee3a4e18ee765a9f57a7f5d6ab9939c8940d8c31ae9bb82f1",
+    "v5_runtime_failure": "df03afb41c2ec3ddc132a24e510d6b60ebc0f7a11603ca0f5ec1f6c56a01c422",
+    "v4_runtime_failure": "a9c5af5ae75bd7f6a855300a9e27230cb1ff3a85287a91f58f19eef47c1c430e",
+    "v3_runtime_failure": "c8622fedceeb4e3e2ebe9f5ee166433e86201181f158dc3707504aa1694cc08c",
+    "coordinator_failure": "08593fe20ca77110d9d0b3fd9dd8ffb83e4ba072cb94fec5d577bd2570eb7d5b",
+    "main_shared": "d66f4efc3a50f8081b336e0de08670a0d75a6a7f911535c0017823457f4a69fe",
+    "main_tls": "a82def4346d4f17afbe0a5db42e9361d469f5658bf968fd7a7fa20038152aaa3"
+  }
+}

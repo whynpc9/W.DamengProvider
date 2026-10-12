@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
+using W.Dm.Internal.Types;
 
 namespace W.Dm.util;
 
@@ -508,22 +510,24 @@ internal class OracleDateFormat
 			string text = str.Substring(num, offset - num);
 			if (text.Length > 9)
 			{
-				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, str);
+				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT);
 			}
-			if (!char.IsDigit(text[0]))
+			if (text.Length == 0 || text[0] is < '0' or > '9')
 			{
-				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT, str);
+				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT);
 			}
 			text += "000000000".Substring(0, 9 - text.Length);
-			int num2 = Convert.ToInt32(text);
-			dt[6] = num2;
+			dt[6] = DmTemporalLegacyAdapter.ParseDigits(text);
 			return offset;
 		}
 
 		internal override string Format(int[] dt)
 		{
-			return FormatInt(dt[6], len);
+			DmTemporalInteger.ValidateWireFraction(dt[6], 9);
+			if (len is < 1 or > 9) throw new FormatException("Temporal fraction template has invalid width.");
+			return dt[6].ToString("D9", CultureInfo.InvariantCulture)[..len];
 		}
+
 	}
 
 	internal class TZHElement : Element
@@ -538,7 +542,8 @@ internal class OracleDateFormat
 				DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_TZH);
 			}
 			dt[7] += ((num2 < 0) ? (num2 * -60) : (num2 * 60));
-			dt[OFFSET_TIMEZONE_SIGN] ^= ((num2 < 0) ? 1 : 0);
+			// The sign is lexical: -00:30 must not become +00:30 after integer parsing.
+			dt[OFFSET_TIMEZONE_SIGN] ^= str.Substring(num, offset - num).TrimStart().StartsWith("-", StringComparison.Ordinal) ? 1 : 0;
 			dt[OFFSET_TIMEZONE_DEFAULT] = 1;
 			return offset;
 		}
@@ -747,11 +752,12 @@ internal class OracleDateFormat
 		Mon = new MonElement(datelang);
 	}
 
-	internal int[] Parse(string str)
+	internal int[] Parse(string str, int? temporalType = null)
 	{
 		str = str.Replace('/', '-');
 		int[] dt = new int[11];
 		int num = 0;
+		var parsedFields = new HashSet<Type>();
 		str = str.Trim();
 		if (str.Length < Count + Count - 1)
 		{
@@ -769,12 +775,72 @@ internal class OracleDateFormat
 				}
 			}
 			num = ((Element)formatElementList[i]).Parse(str, num, dt);
+			parsedFields.Add(formatElementList[i].GetType());
 			if (num == str.Length)
 			{
 				break;
 			}
 		}
+		if (temporalType is int type)
+		{
+			if (num != str.Length) throw new FormatException("Temporal text contains trailing data.");
+			if (type is not (15 or 22) && !HasCalendarFields(parsedFields))
+				throw new FormatException("Temporal text requires complete calendar fields.");
+			if (type != 14 && !HasClockFields(parsedFields))
+				throw new FormatException("Temporal text requires complete clock fields.");
+			if (type is 22 or 23 or 27 && !HasOffsetFields(parsedFields))
+				throw new FormatException("Temporal text requires complete timezone fields.");
+			return CompleteTemporal(dt, type, parsedFields);
+		}
 		return AdjustDateTime(dt);
+	}
+
+	internal static int[] ParseTemporal(string text, string pattern, int datelang, int type)
+	{
+		var format = GetFormat(datelang);
+		format.SetPattern(pattern);
+		// Check recognized token semantics, including existing YY/MON/MONTH NLS templates.
+		var templateFields = new HashSet<Type>();
+		foreach (object element in format.formatElementList) templateFields.Add(element.GetType());
+		bool date = type is not (15 or 22), zone = type is 22 or 23 or 27;
+		if (date && !HasCalendarFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain complete calendar fields.");
+		if (type != 14 && !HasClockFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain complete clock fields.");
+		if (zone && !HasOffsetFields(templateFields))
+			throw new NotSupportedException("Temporal template must contain an explicit timezone.");
+		try { return format.Parse(text, type); }
+		catch (DmException) { DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_DATETIME_FORMAT); throw; }
+	}
+
+	private static bool HasCalendarFields(HashSet<Type> fields) =>
+		(fields.Contains(typeof(YearElement)) || fields.Contains(typeof(SYearElement)))
+		&& (fields.Contains(typeof(MMElement)) || fields.Contains(typeof(MonElement)) || fields.Contains(typeof(MonthElement)))
+		&& fields.Contains(typeof(DDElement));
+
+	private static bool HasClockFields(HashSet<Type> fields) =>
+		(fields.Contains(typeof(HH24Element)) || fields.Contains(typeof(HH12Element)))
+		&& fields.Contains(typeof(MIElement)) && fields.Contains(typeof(SSElement));
+
+	private static bool HasOffsetFields(HashSet<Type> fields) =>
+		fields.Contains(typeof(TZHElement)) && fields.Contains(typeof(TZMElement));
+
+	private static int[] CompleteTemporal(int[] dt, int type, HashSet<Type> parsedFields)
+	{
+		bool sourceDate = parsedFields.Contains(typeof(YearElement)) || parsedFields.Contains(typeof(SYearElement))
+			|| parsedFields.Contains(typeof(MMElement)) || parsedFields.Contains(typeof(DDElement))
+			|| parsedFields.Contains(typeof(MonthElement)) || parsedFields.Contains(typeof(MonElement));
+		bool sourceOffset = parsedFields.Contains(typeof(TZHElement)) || parsedFields.Contains(typeof(TZMElement));
+		if (type is 15 or 22 && sourceDate)
+			throw new OverflowException("TIME cannot represent calendar fields from temporal text.");
+		if (type is not (22 or 23 or 27) && sourceOffset)
+			throw new InvalidCastException("Timezone fields cannot be written as an ordinary temporal value.");
+		if (type is 15 or 22) { dt[0] = 1900; dt[1] = 1; dt[2] = 1; }
+		if (dt[OFFSET_PM] == 1) dt[3] = (dt[3] + 12) % 24;
+		if (type is not (22 or 23 or 27)) { dt[7] = int.MinValue; dt[OFFSET_TIMEZONE_SIGN] = 0; }
+		else if (dt[OFFSET_TIMEZONE_DEFAULT] == 0) throw new FormatException("Temporal template did not parse an explicit timezone.");
+		DmTemporalLegacyAdapter.FromSemantic(dt, type, 9);
+		return dt;
 	}
 
 	private int[] AdjustDateTime(int[] dt)
@@ -823,114 +889,8 @@ internal class OracleDateFormat
 
 	internal static int[] Round(int[] dt, int scale)
 	{
-		_ = new int[7]
-		{
-			dt[6],
-			dt[5],
-			dt[4],
-			dt[3],
-			dt[2],
-			dt[1],
-			dt[0]
-		};
-		int num = dt[6];
-		bool flag = false;
-		for (int i = 0; i < 6 - scale; i++)
-		{
-			flag = false;
-			if (num % 10 > 5)
-			{
-				flag = true;
-			}
-			num = num / 10 + (flag ? 1 : 0);
-		}
-		num = (int)(Math.Pow(10.0, 6 - scale) * (double)num);
-		if (num > 999999)
-		{
-			dt[6] = 0;
-			flag = true;
-		}
-		else
-		{
-			dt[6] = num;
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[5]++;
-		}
-		if (dt[5] > 59)
-		{
-			dt[5] = 0;
-			flag = true;
-		}
-		else
-		{
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[4]++;
-		}
-		if (dt[4] > 59)
-		{
-			dt[4] = 0;
-			flag = true;
-		}
-		else
-		{
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[3]++;
-		}
-		if (dt[3] > 23)
-		{
-			dt[3] = 0;
-			flag = true;
-		}
-		else
-		{
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[2]++;
-		}
-		int[] obj = new int[13]
-		{
-			0, 31, 0, 31, 30, 31, 30, 31, 31, 30,
-			31, 30, 31
-		};
-		obj[2] = (DateTime.IsLeapYear(dt[0]) ? 29 : 28);
-		int[] array = obj;
-		if (dt[2] > array[dt[1]])
-		{
-			dt[2] = 1;
-			flag = true;
-		}
-		else
-		{
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[1]++;
-		}
-		if (dt[1] > 12)
-		{
-			dt[1] = 1;
-			flag = true;
-		}
-		else
-		{
-			flag = false;
-		}
-		if (flag)
-		{
-			dt[0]++;
-		}
+		if (dt == null || dt.Length < 7) throw new ArgumentException("Temporal template requires nanosecond fields.");
+		DmTemporalInteger.ValidateWireFraction(dt[6], scale);
 		return dt;
 	}
 
@@ -1134,6 +1094,24 @@ internal class OracleDateFormat
 				else if (num + 3 <= num2 && new string(array, num, 3).Equals("FF6", StringComparison.OrdinalIgnoreCase))
 				{
 					F.len = 6;
+					formatElementList.Add(F);
+					num += 3;
+				}
+				else if (num + 3 <= num2 && new string(array, num, 3).Equals("FF7", StringComparison.OrdinalIgnoreCase))
+				{
+					F.len = 7;
+					formatElementList.Add(F);
+					num += 3;
+				}
+				else if (num + 3 <= num2 && new string(array, num, 3).Equals("FF8", StringComparison.OrdinalIgnoreCase))
+				{
+					F.len = 8;
+					formatElementList.Add(F);
+					num += 3;
+				}
+				else if (num + 3 <= num2 && new string(array, num, 3).Equals("FF9", StringComparison.OrdinalIgnoreCase))
+				{
+					F.len = 9;
 					formatElementList.Add(F);
 					num += 3;
 				}

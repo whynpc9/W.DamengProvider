@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <NuGetAudit>false</NuGetAudit><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <UseSharedCompilation>false</UseSharedCompilation>
+    <WTemporalVersion Condition="'$(WTemporalVersion)' == ''">0.1.0-r3.20261007143838</WTemporalVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DM.DmProvider" Version="[8.3.1.47463]" />
+    <PackageReference Include="W.DmProvider" Version="[$(WTemporalVersion)]" />
+  </ItemGroup>
+</Project>

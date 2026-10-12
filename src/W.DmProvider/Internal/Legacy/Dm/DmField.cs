@@ -1,9 +1,32 @@
 using W.Dm.Internal.Legacy.A;
+using W.Dm.Internal.Types;
 
 namespace W.Dm;
 
 internal class DmField
 {
+    internal DmTemporalRawMetadata? TemporalServerMetadata { get; private set; }
+    internal DmTemporalParameterBinding TemporalBinding { get; private set; }
+
+    internal void CaptureTemporalServerMetadata(DmTemporalRawMetadata? metadata)
+    {
+        TemporalServerMetadata = metadata;
+        TemporalBinding = null;
+        mask = 0;
+    }
+
+    internal void PublishTemporalBinding(DmTemporalParameterBinding binding) => TemporalBinding = binding;
+
+    internal DmTemporalReadDescriptor GetTemporalReadDescriptor(DmTemporalResultFormat actualFormat)
+    {
+        if (TemporalServerMetadata is { Source: DmTemporalMetadataSource.ParameterDescribe,
+            CType: 21, TypeFlag: 2, Scale: 0, MaskBeforeNormalization: 0, DerivedMask: 0 }
+            && type == 21 && scale == 0)
+            throw new System.NotSupportedException("Unresolved interval describe has no read declaration.");
+        var semantic = DmTemporalMetadataSemantics.Interpret(type, scale, mask);
+        return new(TemporalServerMetadata, type, prec, scale, semantic.FractionalScale,
+            semantic.Mask, semantic.IntervalSubtype, semantic.IntervalLeadingPrecision, actualFormat);
+    }
 	internal string schemaName;
 
 	private byte[] m_SchNameForSet;

@@ -1,0 +1,472 @@
+{
+  "db_execution_authorized": false,
+  "ef_commit": "5863d3755dbd2d333ac359bf1c0a789762adbaed",
+  "entries": [
+    {
+      "actions": [
+        "exact_candidate_central_dependency"
+      ],
+      "before_sha256": "6fbaf094eec6064d9811f4460f2ae70da3307202afc01e3607a99c88fb768ec2",
+      "path": "Directory.Packages.props"
+    },
+    {
+      "actions": [
+        "driver_package_reference"
+      ],
+      "before_sha256": "966fb0d3da26cb687d74b00abf5b6c93d5e81db2bd72432fa096a77b227ec7ce",
+      "path": "scripts/local-test/LocalTest.csproj"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "14a5beec621bed914fac78d6e83112642784d85432b8b54e6b867ea5b65aa7b9",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "scripts/local-test/Program.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace",
+        "reject_error_number_retry_overrides"
+      ],
+      "before_sha256": "e1c793cdb05eff0c77f17d9019f93a08cfc3a740283fe5b77f8a1972b0914583",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 2,
+        "using Dm;": 0
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Infrastructure/DamengDbContextOptionsBuilder.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "03173e12d7135558d2211f1eb75d435922010b39b87ab5f83c9eb11879a75ebe",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Scaffolding/Internal/DamengDatabaseModelFactory.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "806e8a7dd4f2a2cf7bd64b9044795957624f43f961b22100c135a4376438bd99",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengByteArrayTypeMapping.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "50bf9f8efe8e46a8da95e8fad49a6de654be4ff0d8f8cd1c1e847f96e9eb3e96",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRelationalConnection.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace",
+        "reject_error_number_retry_overrides"
+      ],
+      "before_sha256": "a868ab680f305ee9d1d59ead97bdf22cf6d5aff40ff5ff6850d6100c1906bb5f",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengRetryingExecutionStrategy.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "09fa50760592e11b61f4d0fc78d475a088df67c9ca38d0fef2471e66d4ab21a6",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengStringTypeMapping.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "d5d718c0cb9bca862fcb6f07820150a8dfee4329b8aed7552bcbe875e2374c8e",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTimeSpanTypeMapping.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace",
+        "safe_retry_detector"
+      ],
+      "before_sha256": "3dc60f4f670fb9f3846df8463029f4d37b50859417585aa6da23db8bf7849743",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTransientExceptionDetector.cs"
+    },
+    {
+      "actions": [
+        "driver_package_reference"
+      ],
+      "before_sha256": "974dc6beb63312cccd91e082a98b62ec003dd710101c871e1b061303d98a7547",
+      "path": "src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj"
+    },
+    {
+      "actions": [
+        "add_fields_only_mapping_observer"
+      ],
+      "before_sha256": null,
+      "path": "test/TP07MappingObservation/Program.cs"
+    },
+    {
+      "actions": [
+        "add_fields_only_mapping_observer"
+      ],
+      "before_sha256": null,
+      "path": "test/TP07MappingObservation/TP07MappingObservation.csproj"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "ccdf6af13b42c7340be841d6d5267169478bc477c5b73d8a62974692e5d885e2",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/ApplicationCompatibilityFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "0f844380844c9afaae610189a674dc72a9f8f91e272cee6dc2902ffa9c954619",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengBasicStringTranslationFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "819466bfe87c4701547bd95f876d90f3bf2a1de9ebd005a416a60e1f8b733eef",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateBucketFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "daaef4744ca78b91de50683958839689569dd0016d342be8a12b25d4839f9aea",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateTimeOffsetMemberFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "68aad1aa90f01d1223d4eb4e4ea4328db23671062f5b52bb7420142bc51232fc",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDesignTimeCapabilityProbeTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace",
+        "cli_candidate_dependency_route"
+      ],
+      "before_sha256": "f7245233d9a31929041f9e267a1b04c7d6315b14ce4396fa152ac8481810a746",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDotNetEfCliFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "bcff6a54e9691c7c8a4c0f73e95e82b2213bace0b0586c730afbd532b53d2a8b",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDropIdentityFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "774f32d02ab882cfc39c91673436dbe1c892780929f7b58b136f210a3374e7e0",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengExtendedTypeMappingFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "f181e7493c981809dd2835e1596d381ac148f42fc44106b1a422beae76dba33d",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengGeneratedValueReadbackFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "d065b99fa4e7c978051c3b6c7b188df31080e26cc14df2bb6080ae6ab9d53430",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengJsonCapabilityProbeTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "09783d031092a72c94d0de8e77f81f2c7ad1a42cb4a91f3065d745ae823648cf",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengLobQueryFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "617afe19a612ec5b5fa8a8fff000a62ba1b82b94abf04665bcfc474a784e2f7a",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMathTranslationFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "dbdc954335c9555e1dc86a3a41c957d483f2f99623d4a0cbfe7b2f744d64bd58",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationScriptFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "d3969cbce409dfdb9598545dcf2178f9be0d67f957a04fba7fa9be5f0bd70db6",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationsFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "5f79becd05d45e83713b1f14b91cfe81f80eb3daac2ef4092e679b10564ec2a3",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengProviderFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "8e2625c3806a2ec36b0889cc838126cdd88c6f001812fc7a8850eef6d142eddb",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengQueryCapabilityProbeTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "9ccb16d0c75713ed0ae3ece3bb8e21b2a284b3c8ec91b8252d38e12c2d0afc1c",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengReverseEngineeringFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "7ccbe2df92767db813aaefd5b23f5e63b4b018834fe2ad5c3c5f532755e5a5bd",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengScriptExecutor.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "0c7905a89f453fb3dbc2680727d921fc592c4b2bbcc07daa6e8f9b1b12e22eed",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengScriptTestDatabase.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "f0567b8cf45880fb691ffdebd7d3ad4d9be62204a9af10ef3abf544ba66ac9a7",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengSequenceAndTranslationFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "d96862d1c833770745c65c4fbff51a964038d9024b7f52cf2e0b4864e657d6bf",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateCapabilityProbeTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "fe5abf9d658a293561b98802f38d3421aa2bfd0f1b20422b5ec04608a651200f",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "612f0158849f85439340432bf85e7c758d4b3b0a14b4d6cc061385492930b2ed",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTestEnvironment.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "6b4a295c2dcf275c7d31ca739290bbe760940b8863723be8c771272b65a9dc86",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTrimCharacterFunctionalTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "4f68cfee0ea22ac9c2e06bfe5044333f479ce2d1d4316933cbf6a1ed54f73ee0",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.Specification.Tests/TestUtilities/DamengTestStore.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "7a98fb5c5c83d33530889cc02d47b4ad6890eb2a35b2c01c62034439982ef98b",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.Tests/DamengExecutionStrategyTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "3d0d77bded6d552efce21ee896e710b85614ddf8ee78fdcc373692f084bb20db",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.Tests/DamengSequenceScaffoldingTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "b7fe7102c185b8d7e0086928f1e88c66da361cbca98aa1ad7a457e67d718e511",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.Tests/DamengTypeMappingTests.cs"
+    },
+    {
+      "actions": [
+        "driver_namespace"
+      ],
+      "before_sha256": "ec3f424b0972175e1628f945ed4ad2356ca1b142e612ca77e6af75a25919bec3",
+      "namespace_anchor_counts": {
+        "cref=\"Dm.": 0,
+        "using Dm;": 1
+      },
+      "path": "test/W.EntityFrameworkCore.Dameng.Tests/ProviderConfigurationTests.cs"
+    }
+  ],
+  "preserve": [
+    "global.json",
+    "all packages.lock.json",
+    "all temporal mapping behavior/literals/migrations",
+    "official assertions except dependency-route string",
+    "all files outside entries"
+  ],
+  "schema": 1,
+  "task": "TP07-P1"
+}

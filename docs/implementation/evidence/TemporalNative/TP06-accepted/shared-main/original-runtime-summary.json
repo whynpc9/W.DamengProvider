@@ -1,0 +1,394 @@
+{
+  "task": "TP06-v2 same-package full temporal candidate verification",
+  "deadline_seconds": 1800,
+  "configuration_change": "CLI --deadline 900 default to supported 1800 only; frozen product and tools unchanged",
+  "retained_v1_summary_sha256": "04741b3c58c57e78e220e1b2dfb67007b3902d4379d85b49ac57e981f9a4665e",
+  "profiles": [
+    {
+      "profile": "shared",
+      "runner_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/frozen-tool-working/eng/temporal-precision.py",
+        "--feed",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/feed",
+        "--source-manifest",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source-manifest.json",
+        "--source-archive",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/product-source.tar",
+        "--identities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/identities.json",
+        "--capabilities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/capabilities.root-approved.json",
+        "--repo",
+        "/Users/wanghongyi/Projects/W.DmProvider",
+        "--profile",
+        "shared",
+        "--lanes",
+        "core,metadata,extended",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v2-shared-candidate",
+        "--deadline",
+        "1800"
+      ],
+      "output": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v2-shared-candidate",
+      "runner_exit_code": 0,
+      "runner_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runner_sha256": "80c288a1504fd56b581af69d6a73c42d98f65624c872bbbd67a8fa3d765b852f",
+      "runner_status": "execution_complete",
+      "lane_runs": [
+        {
+          "lane": "core",
+          "exit_code": 0,
+          "hard_deadline": false,
+          "cleanup_exit_code": 0,
+          "cleanup_hard_deadline": false,
+          "safe_command": [
+            "TEST_wrapper",
+            "dotnet",
+            "frozen_tool",
+            "run",
+            "frozen_identities",
+            "frozen_feed",
+            "shared",
+            "core",
+            "original_repo",
+            "exact_ownership",
+            "safe_report",
+            "frozen_manifest"
+          ],
+          "elapsed_seconds": 1552.842,
+          "ownership_manifest_present": true,
+          "ownership_manifest_sha256": "1d1625f26a0a2ade81b96b6b9af82cd99d590d2f84d33ffc6a94829df7e471b5",
+          "recovery_manifest": "core.ownership.json",
+          "creation_state": "confirmed",
+          "report_sha256": "e9bceb91e2ea88c84177a1fce3caf437af3adf52f221ebc4067ee00355dd08f7"
+        },
+        {
+          "lane": "metadata",
+          "exit_code": 0,
+          "hard_deadline": false,
+          "cleanup_exit_code": 0,
+          "cleanup_hard_deadline": false,
+          "safe_command": [
+            "TEST_wrapper",
+            "dotnet",
+            "frozen_tool",
+            "run",
+            "frozen_identities",
+            "frozen_feed",
+            "shared",
+            "metadata",
+            "original_repo",
+            "exact_ownership",
+            "safe_report",
+            "frozen_manifest"
+          ],
+          "elapsed_seconds": 1751.101,
+          "ownership_manifest_present": true,
+          "ownership_manifest_sha256": "ac7e752e9da6fef2795039b72393a2e659f68f37dbfa21cec2141f744e6fae6b",
+          "recovery_manifest": "metadata.ownership.json",
+          "creation_state": "confirmed",
+          "report_sha256": "4f9215a6b6d95920aa87ec35291bf05e1593087cad7ba6900beae7e3abaebd3d"
+        },
+        {
+          "lane": "extended",
+          "exit_code": 0,
+          "hard_deadline": false,
+          "cleanup_exit_code": 0,
+          "cleanup_hard_deadline": false,
+          "safe_command": [
+            "TEST_wrapper",
+            "dotnet",
+            "frozen_tool",
+            "run",
+            "frozen_identities",
+            "frozen_feed",
+            "shared",
+            "extended",
+            "original_repo",
+            "exact_ownership",
+            "safe_report",
+            "frozen_manifest"
+          ],
+          "elapsed_seconds": 239.499,
+          "ownership_manifest_present": true,
+          "ownership_manifest_sha256": "2d7e8a3b436bd486eabaa194124aee0ab82e4c29d0c07b26fb9ac818c4687fdc",
+          "recovery_manifest": "extended.ownership.json",
+          "creation_state": "confirmed",
+          "report_sha256": "80f44ee0ce2b4c8e805886123caaf7b4503ecee6455bf3005819016ceb044f1a"
+        }
+      ],
+      "restore_exit_code": 0,
+      "build_exit_code": 0,
+      "offline_exit_code": 0,
+      "lane_reports": {
+        "core": {
+          "report_sha256": "e9bceb91e2ea88c84177a1fce3caf437af3adf52f221ebc4067ee00355dd08f7",
+          "status": "characterization_complete",
+          "completed_cases": 260,
+          "server_identity_verified": true,
+          "W_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "O_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "actual_identities": {
+            "O": {
+              "id": "DM.DmProvider",
+              "version": "8.3.1.47463",
+              "asset": "lib/net9.0/DM.DmProvider.dll",
+              "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+              "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+              "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            },
+            "W": {
+              "id": "W.DmProvider",
+              "version": "0.1.0-temporal.20261008144915",
+              "asset": "lib/net10.0/W.DmProvider.dll",
+              "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+              "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+              "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            }
+          },
+          "process_exit_code": 0,
+          "cleanup_report_sha256": "5b21e87551e0a72ca8d8cb09072f5ecea3b54fb3ca614439f7b05a6d29f7bed0",
+          "cleanup_verified": true,
+          "final_database_state": "owned_table_absent_fresh_connection"
+        },
+        "metadata": {
+          "report_sha256": "4f9215a6b6d95920aa87ec35291bf05e1593087cad7ba6900beae7e3abaebd3d",
+          "status": "characterization_complete",
+          "completed_cases": 334,
+          "server_identity_verified": true,
+          "W_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "O_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "actual_identities": {
+            "O": {
+              "id": "DM.DmProvider",
+              "version": "8.3.1.47463",
+              "asset": "lib/net9.0/DM.DmProvider.dll",
+              "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+              "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+              "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            },
+            "W": {
+              "id": "W.DmProvider",
+              "version": "0.1.0-temporal.20261008144915",
+              "asset": "lib/net10.0/W.DmProvider.dll",
+              "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+              "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+              "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            }
+          },
+          "process_exit_code": 0,
+          "cleanup_report_sha256": "1a7bdbfdfa0e22f18fe623518ec5fde15504aa5ccb91e8b626437f7a27835f22",
+          "cleanup_verified": true,
+          "final_database_state": "owned_table_absent_fresh_connection"
+        },
+        "extended": {
+          "report_sha256": "80f44ee0ce2b4c8e805886123caaf7b4503ecee6455bf3005819016ceb044f1a",
+          "status": "characterization_complete",
+          "completed_cases": 106,
+          "server_identity_verified": true,
+          "W_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "O_profile": {
+            "server_version": "8.1.5.60",
+            "encoding": "utf-8",
+            "timezone": 480,
+            "message_version": 21,
+            "result_format": "ordinary_non_BDTA",
+            "server_user": "WDM_PROVIDER_TEST",
+            "server_schema": "WDM_PROVIDER_TEST",
+            "negotiated_encoding": "utf-8",
+            "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+            "encoding_override_empty": true,
+            "profile_origin": "physical_get_conn_instance_conn_property"
+          },
+          "actual_identities": {
+            "O": {
+              "id": "DM.DmProvider",
+              "version": "8.3.1.47463",
+              "asset": "lib/net9.0/DM.DmProvider.dll",
+              "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+              "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+              "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            },
+            "W": {
+              "id": "W.DmProvider",
+              "version": "0.1.0-temporal.20261008144915",
+              "asset": "lib/net10.0/W.DmProvider.dll",
+              "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+              "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+              "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+              "package_reference_verified": true,
+              "actual_asset_verified": true
+            }
+          },
+          "process_exit_code": 0,
+          "cleanup_report_sha256": "b34f43dc5443e8384295e17eee81ac7f74a30c65414be1d9e422fd20b995f14e",
+          "cleanup_verified": true,
+          "final_database_state": "owned_table_absent_fresh_connection"
+        }
+      },
+      "validator_command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v1-package/frozen-tool-working/eng/temporal-precision.validate.py",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v2-shared-candidate",
+        "--gate",
+        "candidate",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP06-v2-shared-candidate-validation.json"
+      ],
+      "validator_exit_code": 1,
+      "validator_sha256": "a7a3134f237caae8334631389f76d3bccc93f27bfc4d790d8dd557fb4e6588f7",
+      "validator_result": {
+        "schema_version": 1,
+        "task": "TP-01",
+        "gate": "candidate",
+        "status": "validation_failed",
+        "candidate_acceptance": false,
+        "full_temporal_acceptance": false,
+        "issues": [
+          "W:inferred_dt_tail_stability:reprepare:oracle:W:GetString:declared_text_precision"
+        ]
+      }
+    }
+  ],
+  "DB_window_released": true,
+  "recovery_pending": false,
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "started_utc": "2026-10-08T15:15:19.016325+00:00",
+  "preflight_passed": true,
+  "source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+  "source_archive_sha256": "836e47fce12756256b483f0e14717f63002be31059555652782d96331e694441",
+  "identities_sha256": "e14eb1baca9a3c07b04f988dd3bcdb652048fd1a61211ad8c2cb117a9e0955a3",
+  "capabilities_sha256": "f10acfd86b5e7158eac0a0aa8cfb972418881837b4bfe63205245d82a08f54fa",
+  "tool_inputs_manifest_sha256": "6aedc1ea913f3d5df6598121a322749020584f4d803a09ef7f423710d07d42de",
+  "expected_identities": {
+    "O": {
+      "id": "DM.DmProvider",
+      "version": "8.3.1.47463",
+      "asset": "lib/net9.0/DM.DmProvider.dll",
+      "package_sha256": "62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
+      "dll_sha256": "8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
+      "mvid": "d909b5af-965f-4cf9-a80a-a6181124e361"
+    },
+    "W": {
+      "id": "W.DmProvider",
+      "version": "0.1.0-temporal.20261008144915",
+      "asset": "lib/net10.0/W.DmProvider.dll",
+      "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+      "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+      "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6"
+    }
+  },
+  "status": "failed_shared_candidate_validator",
+  "postflight_passed": true,
+  "finished_utc": "2026-10-08T16:14:40.132202+00:00",
+  "failure_phase": "shared_candidate_validator",
+  "failure_exit_code": 1,
+  "not_run": [
+    "tls_core",
+    "tls_metadata",
+    "tls_extended",
+    "tls_candidate_validator"
+  ],
+  "source_package_tool_caps_immutable": true,
+  "postflight_source_drift": [],
+  "final_database_state": "all_three_owned_tables_absent_fresh_connections",
+  "mandatory_cleanup_exit_codes": {
+    "core": 0,
+    "metadata": 0,
+    "extended": 0
+  },
+  "completed_cases_by_lane": {
+    "core": 260,
+    "metadata": 334,
+    "extended": 106
+  },
+  "completed_cases_total": 700,
+  "retained_v1_summary_actual_sha256": "04741b3c58c57e78e220e1b2dfb67007b3902d4379d85b49ac57e981f9a4665e",
+  "original_safe_reports": {
+    "core.json": "e9bceb91e2ea88c84177a1fce3caf437af3adf52f221ebc4067ee00355dd08f7",
+    "core.cleanup.json": "5b21e87551e0a72ca8d8cb09072f5ecea3b54fb3ca614439f7b05a6d29f7bed0",
+    "core.ownership.json": "1d1625f26a0a2ade81b96b6b9af82cd99d590d2f84d33ffc6a94829df7e471b5",
+    "core.ownership.json.final.json": "515cab4675f3d45acbb9989684081fd786560a27980c2b96cd08b0cb5fd781a3",
+    "metadata.json": "4f9215a6b6d95920aa87ec35291bf05e1593087cad7ba6900beae7e3abaebd3d",
+    "metadata.cleanup.json": "1a7bdbfdfa0e22f18fe623518ec5fde15504aa5ccb91e8b626437f7a27835f22",
+    "metadata.ownership.json": "ac7e752e9da6fef2795039b72393a2e659f68f37dbfa21cec2141f744e6fae6b",
+    "metadata.ownership.json.final.json": "a55b282412827e3ed5c405cb9073832973be9853a6c08ea972d612a503a920d2",
+    "extended.json": "80f44ee0ce2b4c8e805886123caaf7b4503ecee6455bf3005819016ceb044f1a",
+    "extended.cleanup.json": "b34f43dc5443e8384295e17eee81ac7f74a30c65414be1d9e422fd20b995f14e",
+    "extended.ownership.json": "2d7e8a3b436bd486eabaa194124aee0ab82e4c29d0c07b26fb9ac818c4687fdc",
+    "extended.ownership.json.final.json": "1fcbdc19b63244cd03fcfa35c609ace7559a73ca3f7b8db153cf33ed177c51ac"
+  },
+  "parent_v7_offline_summary_sha256": "268c9d65c0ad0e07b700becedb37b9ab0d2d209a5dfab5a21d77ef02c42fbfe7"
+}

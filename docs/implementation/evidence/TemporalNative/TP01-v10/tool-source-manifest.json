@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "task": "TP01-v10 frozen input preparation",
+  "created_utc": "2026-10-08T04:02:54.177191+00:00",
+  "status": "static_review_pending",
+  "files": [
+    {
+      "path": "eng/temporal-precision.py",
+      "sha256": "85e1601ebe57902a396c7ea15124a78c23d19ab2cec0ac84d4ddde1281de4de4",
+      "bytes": 16222
+    },
+    {
+      "path": "eng/temporal-precision.validate.py",
+      "sha256": "3ff4331e542308763216281b506f15b9bcd44a4a369d326b65c7206d4dedd265",
+      "bytes": 87023
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/ComponentOracleDiagnostic.cs",
+      "sha256": "4eaf7731c869747ab0edafdd70152729188e605a10b54707f328a45e7d9d2393",
+      "bytes": 12257
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/OfflineContracts.cs",
+      "sha256": "5f394887b1bae041e65aad9cacfd6760bef29216c104378681558bbd600ca00b",
+      "bytes": 40894
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/Program.cs",
+      "sha256": "ff126d021ef6edae694ef8f29b60782800aa442cd4219eb5d09d8924475ce260",
+      "bytes": 82283
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/README.md",
+      "sha256": "f0234ec97714674d3d320d8997e235b43fb09eaf84d79040ed086a93314d9662",
+      "bytes": 21540
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/TemporalBoundaryProbe.csproj",
+      "sha256": "64519deb5495bfddb86b1d35d4c77a16d46ac2f79cd9e776d1c16b42585035ed",
+      "bytes": 668
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/handwritten-artifact-spec.json",
+      "sha256": "b3c8a68222fbd334b0750d6364ffe7e9c3837fd3f90c93ddd7c39382d442be5c",
+      "bytes": 2496
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contract-fixtures/packed_literal_cases.json",
+      "sha256": "df97ea26457079c0b5a3465d9191078cb3e4ae4e5e49ba7a4be48be31f8ed148",
+      "bytes": 6451
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/contracts.py",
+      "sha256": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb",
+      "bytes": 25823
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/global.json",
+      "sha256": "6863ab1b69640d64946ef783866504ca8dfda9ea05d0c33d013610b64996c7df",
+      "bytes": 55
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/identities.json",
+      "sha256": "9f18cdfee3b8bb4fba7f08477514ecc68ba47b205c0d9b1c3d8ba5ae5248063d",
+      "bytes": 1395
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/packed_oracle.py",
+      "sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
+      "bytes": 5626
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_packed_oracle_contracts.py",
+      "sha256": "b623848f9c4d783991f5b02786e7372cd2ddb232e9f98463c72ea957c18ac722",
+      "bytes": 5391
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_producer_shape_contracts.py",
+      "sha256": "936598882ecdb7a88d60edc51b6bb82d449b3dabfc6ea4e8e7c34173dae575dc",
+      "bytes": 13794
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_runner_contracts.py",
+      "sha256": "92cb535c00287f741d43b98fde8b0601ad15e47ebf8bfcc5a60288baf1df0d04",
+      "bytes": 15357
+    },
+    {
+      "path": "tools/TemporalBoundaryProbe/test_validator_contracts.py",
+      "sha256": "176f8d35d93c00b048f9a21bfd1bbd782946e0c18ca3b442faebe4f55119b256",
+      "bytes": 72808
+    }
+  ],
+  "count": 17,
+  "all17_aggregate_sha256": "276a08a3ae5645802fb93948c9d4972e7ac9e492930b1096b5441024f767d56e",
+  "changed_vs_v9": [
+    "eng/temporal-precision.validate.py",
+    "tools/TemporalBoundaryProbe/test_validator_contracts.py"
+  ],
+  "unchanged_vs_v9": 15,
+  "mismatches": [],
+  "reused_actual_shape_plan": {
+    "producer_source_unchanged": true,
+    "path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v9/actual-offline-run/offline-producer-shape.json",
+    "sha256": "34490f59424052b60661189fea03897ee7a3f79202f53d24953411dc91831753",
+    "role": "reused actual v9 producer output for new Python consumer only; not new CSharp execution"
+  },
+  "preserved_v9_shared_summary_sha256": "02c3acc78675007acfa72314144875c71019832718926f05eba01c6ab9d09039",
+  "not_run": [
+    "tests",
+    "API",
+    "dotnet",
+    "DB"
+  ],
+  "preparation_window_released": true
+}

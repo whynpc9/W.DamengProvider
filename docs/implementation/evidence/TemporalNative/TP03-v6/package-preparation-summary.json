@@ -1,0 +1,95 @@
+{
+  "task": "TP03 v6 candidate package preparation",
+  "version": "0.1.0-tp03.20261008064351",
+  "runs": [
+    {
+      "lane": "sdk",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "--version"
+      ],
+      "exit_code": 0,
+      "log_sha256": "1a2d1a449dbad20e8bbe9e4c075feb0058d12878eb13ff8924322f2ad20eb7a2"
+    },
+    {
+      "lane": "restore",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "restore",
+        "src/W.DmProvider/W.DmProvider.csproj",
+        "--disable-parallel",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "log_sha256": "593db9568d10b9e6260fcfea8b2e39606d2d2334a3f03ced6a44b7eb4093ea29"
+    },
+    {
+      "lane": "pack",
+      "command": [
+        "/usr/local/share/dotnet/dotnet",
+        "pack",
+        "src/W.DmProvider/W.DmProvider.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-p:Version=0.1.0-tp03.20261008064351",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/feed",
+        "-m:1",
+        "/nodeReuse:false",
+        "/p:UseSharedCompilation=false",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "log_sha256": "c872092de26b820b35a3e85e560d0f638d8f81f94817d193de0f74b6a1d5a8d3"
+    },
+    {
+      "lane": "source-package-chain",
+      "command": [
+        "python3",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP01-v11/source/tools/TemporalBoundaryProbe/contracts.py",
+        "--identities",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/identities.json",
+        "--source-manifest",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/product-source-manifest.json",
+        "--source-archive",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/product-source.tar",
+        "--package",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/feed/W.DmProvider.0.1.0-tp03.20261008064351.nupkg",
+        "--output",
+        "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/source-package-chain.json"
+      ],
+      "exit_code": 0,
+      "log_sha256": "6a76ed6c8572c3ae8fcd4586e3d7a30df79110ef87f002554e9a609ecb692a7d"
+    }
+  ],
+  "DB_executed": false,
+  "package_published": false,
+  "TP03_accepted": false,
+  "build_environment_DAMENG_removed": true,
+  "build_window_released": true,
+  "compile_configuration": "Release net10.0 SDK10.0.203; Version=0.1.0-tp03.20261008064351",
+  "status": "candidate_package_prepared_root_approval_pending",
+  "source_manifest_sha256": "7603bf84e5df9b5d61d42cc9fab8cc204ef0e663dae05e9254fc13056db53ee3",
+  "source_archive_sha256": "642934e501a805ce867ecb8bd509225b5a11f8efec9211b098d316c997dfa7e7",
+  "identities_sha256": "fc29762ff5d492eeefd15a2626dc66d86d0b7e3ab82d9979cdc5a9cbecf73734",
+  "W": {
+    "id": "W.DmProvider",
+    "version": "0.1.0-tp03.20261008064351",
+    "asset": "lib/net10.0/W.DmProvider.dll",
+    "package_sha256": "b0af3de1605bf5a066d7ee4af08d806ae2755d56d1f27385be434e04b778c000",
+    "dll_sha256": "4836ab40673c76eeaae5f55191d04ac9406fa21921c2d5be4c9e56ccb4e4b1aa",
+    "mvid": "2ecd26a7-48dc-4dd8-9fe9-e4cab880b252"
+  },
+  "source_first_last_drift": [],
+  "archive_file_count": 368,
+  "compile_DLL_path": "/Users/wanghongyi/.t3/worktrees/W.DmProvider/t3-62747960/.local/temporal-native/verification/TP03-v6-package/build-work/src/W.DmProvider/bin/Release/net10.0/W.DmProvider.dll",
+  "compile_DLL_sha256": "4836ab40673c76eeaae5f55191d04ac9406fa21921c2d5be4c9e56ccb4e4b1aa",
+  "pure_PE_MVID_verified": true,
+  "tool_inputs_manifest_sha256": "0d7ea41e044ae6d8acf1d1436e93b3092df6bbcbe51b64e16978d4fb1d1c5a58",
+  "derived_record_note": "Initial metadata used parent_v5 key for v6 digest; preserved initial records, corrected final parent_v6 key and repeated source-package CLI.",
+  "final_source_package_chain_exit_code": 0
+}

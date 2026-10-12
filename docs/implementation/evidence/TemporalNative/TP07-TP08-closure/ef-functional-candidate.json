@@ -1,0 +1,942 @@
+{
+ "counters": {
+  "executed": "233",
+  "failed": "46",
+  "passed": "187",
+  "total": "233"
+ },
+ "results": {
+  "ApplicationCompatibilityFunctionalTests.AddDbContextPoolReusesContextWithoutLeakingTenantState": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "ApplicationCompatibilityFunctionalTests.CommonApplicationScalarTypesAndValueConverterRoundtrip": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "ApplicationCompatibilityFunctionalTests.ExecuteUpdateAndExecuteDeleteReportAffectedRowsAndPersistChanges": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "ApplicationCompatibilityFunctionalTests.GlobalTenantAndSoftDeleteFiltersUseTheCurrentContextState": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "ApplicationCompatibilityFunctionalTests.KeylessFromSqlQueryMaterializesUnicodeProjection": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengBasicStringTranslationFunctionalTests.NclobConcatenationDoesNotTruncateLongText": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengBasicStringTranslationFunctionalTests.NullableUnicodeAndNclobStringsHaveServerSideSemantics(useRelationalNulls: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengBasicStringTranslationFunctionalTests.NullableUnicodeAndNclobStringsHaveServerSideSemantics(useRelationalNulls: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ConstantCollectionReturnsExpectedRowsInOneCommand": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.NullAndNegatedCollectionsPreserveNullSemantics": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 0)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 1)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 1000)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 2000)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 499)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 500)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 501)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 998)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ParameterCollectionReturnsExpectedRowsInOneCommand(size: 999)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.ReusedQueryReadsCurrentCollectionAfterSizeChanges": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengCollectionTranslationFunctionalTests.TwoCollectionsFilterAndPaginationExecuteAsSingleCommands": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengDateBucketFunctionalTests.DateBucketsRunOnServerInProjectionFilterGroupAndOrder": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengDateTimeOffsetMemberFunctionalTests.LocalDatePartsRunOnServerAcrossOffsetsAndNulls": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengDotNetEfCliFunctionalTests.MigrationsAndScaffoldRunThroughDotNetEfCli": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengDropIdentityFunctionalTests.ModelDifferenceDropsIdentityWithoutChangingRowsOrPrimaryKey": {
+   "first_message": "Assert.ThrowsAny() Failure: Exception type was not compatible",
+   "outcome": "Failed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.DateOnlyRoundtripsThroughDate": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.DateTimeOffsetColumnComparisonExecutes": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.DateTimeOffsetRawAdoReadbackPreservesServerEvidence": {
+   "first_message": "Assert.IsType() Failure: Value is not the exact type",
+   "outcome": "Failed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.DateTimeOffsetRoundtripsThroughDatetimeWithTimeZone": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.DateTimeRoundtripsTheSeventhFractionalSecondDigit": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.InlineByteArrayRoundtripsThroughVarbinary": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.JsonElementPropertyAccessIsRejectedBeforeExecution": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.JsonElementRoundtripsThroughJson": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.JsonElementWholeValueEqualityIsRejectedByTheServer": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.LargeByteArrayRoundtripsThroughBlob": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.LongUnicodeStringRoundtripsThroughNclob": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.NegativeTimeSpanBeyondTwoDigitDaysRoundtripsThroughIntervalDayToSecond": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.NegativeTimeSpanBeyondTwoDigitDaysRoundtripsWithExplicitDayPrecision": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.NegativeTimeSpanRawAdoReadbackPreservesServerEvidence": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.PositiveTimeSpanBeyondTwoDigitDaysRoundtripsThroughIntervalDayToSecond": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.PositiveTimeSpanBeyondTwoDigitDaysRoundtripsWithExplicitDayPrecision": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.PositiveTimeSpanRawAdoReadbackPreservesServerEvidence": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.TimeOnlyRoundtripsMicrosecondsThroughTime": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengExtendedTypeMappingFunctionalTests.TimeSpanWithinTwoDigitDaysRoundtripsThroughIntervalDayToSecond": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.CallerOwnedTransactionReadsGeneratedValuesAndRollbackRestoresDatabase(async: False)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.CallerOwnedTransactionReadsGeneratedValuesAndRollbackRestoresDatabase(async: True)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.DeletedRowUpdateThrowsWithoutPropagatingAnotherRowsGeneratedValues(async: False)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.DeletedRowUpdateThrowsWithoutPropagatingAnotherRowsGeneratedValues(async: True)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Client, async: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Client, async: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Composite, async: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Composite, async: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Identity, async: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Identity, async: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Sequence, async: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.InsertImmediatelyReadsDefaultsNullAndComputedValues(mode: Sequence, async: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.TriggerValuesBecomeCurrentAndOriginalAcrossRepeatedUpdatesAndStaleFailure(async: False)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengGeneratedValueReadbackFunctionalTests.TriggerValuesBecomeCurrentAndOriginalAcrossRepeatedUpdatesAndStaleFailure(async: True)": {
+   "first_message": "System.InvalidOperationException : SQL marker has no matching parameter.",
+   "outcome": "Failed"
+  },
+  "DamengIsolationLevelFunctionalTests.BeginTransactionRejectsUnsupportedIsolationLevels(isolationLevel: RepeatableRead)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengIsolationLevelFunctionalTests.BeginTransactionRejectsUnsupportedIsolationLevels(isolationLevel: Snapshot)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengIsolationLevelFunctionalTests.ReadCommittedIsolationLevelBeginsCommitsAndRollsBack": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengIsolationLevelFunctionalTests.SaveChangesFailsAfterBeginningReadUncommittedOrSerializable(isolationLevel: ReadUncommitted)": {
+   "first_message": "Assert.Throws() Failure: No exception was thrown",
+   "outcome": "Failed"
+  },
+  "DamengIsolationLevelFunctionalTests.SaveChangesFailsAfterBeginningReadUncommittedOrSerializable(isolationLevel: Serializable)": {
+   "first_message": "Assert.Throws() Failure: No exception was thrown",
+   "outcome": "Failed"
+  },
+  "DamengIsolationLevelFunctionalTests.SerializableExecuteUpdatePersistsChanges": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengIsolationLevelFunctionalTests.SerializableTransactionCanQueryExistingRows": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengLobQueryFunctionalTests.DefaultLobMappingsSupportParameterEqualityAndTextSearch": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMathTranslationFunctionalTests.ExponentialLogarithmicAndRootFunctionsExecuteOnServer(useRelationalNulls: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMathTranslationFunctionalTests.ExponentialLogarithmicAndRootFunctionsExecuteOnServer(useRelationalNulls: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMathTranslationFunctionalTests.MathOverloadsExecuteInServerQueries(useRelationalNulls: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMathTranslationFunctionalTests.MathOverloadsExecuteInServerQueries(useRelationalNulls: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.AnonymousBlockAndFollowingDdlRequireSeparateOperations": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.AnsiSizedStringColumnsUseCharSemanticsAndHoldMultibyteText": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.CommentPrefixedInlineBlocksExecuteAsGeneratedCommands": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.CommentsExecuteAndRoundTripAgainstDameng": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.EnsureSchemaGuardSkipsExistingCurrentSchema": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.GeneratedDdlAndHistoryRepositoryExecuteAgainstDameng": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.IdempotentCommandsApplyIdentitySeedAndHistoryOnlyOnce": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.IdempotentMultiStatementSqlOperationExecutesOnce(includesDdl: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.IdempotentMultiStatementSqlOperationExecutesOnce(includesDdl: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengMigrationsFunctionalTests.IdempotentScriptCarriesMultilineCommentsAsSingleBatches": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.AdoAndEfConnectionsOpenOnNet10": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.OrderedSkipTakeQueryExecutes": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.SavepointRollbackPreservesEarlierWork": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.StaleConcurrencyTokenThrows": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.TransactionRollbackDiscardsChanges": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.UnicodeCrudAndIdentityGeneratedKeyRoundtrip": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengProviderFunctionalTests.UpdateAndDeleteRoundtrip": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"CHAR\", spacedStoreType: False)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"CHAR\", spacedStoreType: True)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"VARCHAR\", spacedStoreType: False)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"VARCHAR\", spacedStoreType: True)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"VARCHAR2\", spacedStoreType: False)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ByteLengthColumnsRetainTheirUnitAndCapacityWhenRecreated(type: \"VARCHAR2\", spacedStoreType: True)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ClusterBtreeStorageSurvivesRecreationAndHeapTablesAreRejected": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ColumnCollateSyntaxDoesNotPersistAColumnFacetOnReferenceServer(collation: \"Chinese_PRC_CS_AS_KS_WS\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ColumnCollateSyntaxDoesNotPersistAColumnFacetOnReferenceServer(collation: \"EF10_NONEXISTENT_COLLATION\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ColumnCollateSyntaxDoesNotPersistAColumnFacetOnReferenceServer(collation: \"utf8mb4_bin\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ColumnCollateSyntaxDoesNotPersistAColumnFacetOnReferenceServer(collation: \"utf8mb4_general_ci\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.CyclicSequenceAtBoundaryKeepsItsWrappedContinuation(descending: False)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.CyclicSequenceAtBoundaryKeepsItsWrappedContinuation(descending: True)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.DecimalSequenceDefaultsKeepTheirSqlAndSequenceDefinition(type: \"DECIMAL(18,2)\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.DecimalSequenceDefaultsKeepTheirSqlAndSequenceDefinition(type: \"NUMBER(18,0)\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.EncryptedColumnsAreRejectedBeforeTheirStorageProtectionIsLost(encryption: \"ENCRYPT MANUAL\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.EncryptedColumnsAreRejectedBeforeTheirStorageProtectionIsLost(encryption: \"ENCRYPT\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ExhaustedSequenceContinuationIsRejectedBeforeGeneratingInvalidDdl(descending: False)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ExhaustedSequenceContinuationIsRejectedBeforeGeneratingInvalidDdl(descending: True)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryKeepsRawDefaultForCrossSchemaSequenceReferences(compound: False)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryKeepsRawDefaultForCrossSchemaSequenceReferences(compound: True)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryLoadsSequencesWithUnquotedDollarAndHashNames": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryMatchesDelimitedTableFiltersContainingDots": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryNormalizesUnquotedFiltersAndPreservesQuotedCase": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryPreservesFloatCatalogPrecisionOnRecreation": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryPreservesPrimaryKeyClusteringThroughGeneratedDdl(clustered: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryPreservesPrimaryKeyClusteringThroughGeneratedDdl(clustered: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryPreservesZeroFractionalSecondPrecision": {
+   "first_message": "System.NotSupportedException : Dameng table 'EF10_<nonce>' has a nonzero or unreadable DISKSPACE LIMIT '128' pages. Reverse engineering cannot preserve its stor",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryReadsIdentityFacetsForDelimitedNamesContainingDots": {
+   "first_message": "System.NotSupportedException : Dameng table 'EF10_<nonce>' has a nonzero or unreadable DISKSPACE LIMIT '128' pages. Reverse engineering cannot preserve its stor",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryReadsIdentityFacetsFromTheSessionSchemaNotTheLoginSchema": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryReadsTablesColumnsConstraintsIndexesCommentsAndValueGeneration": {
+   "first_message": "System.NotSupportedException : Dameng table 'EF10_<nonce>' has a nonzero or unreadable DISKSPACE LIMIT '128' pages. Reverse engineering cannot preserve its stor",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryReadsViewsAndForeignKeys": {
+   "first_message": "System.NotSupportedException : Dameng table 'EF10_<nonce>' has a nonzero or unreadable DISKSPACE LIMIT '128' pages. Reverse engineering cannot preserve its stor",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsAutoIncrementWithoutChangingIdentityOrTableFilters": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsBitmapIndexesAndStillReadsNormalIndexes": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsCompoundLocalSequenceDefaultsWithoutBlockingSimpleDefaults(qualified: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsCompoundLocalSequenceDefaultsWithoutBlockingSimpleDefaults(qualified: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsCrossSchemaForeignKeysAndKeepsFilteredSelfReferences": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsDecimalIdentityBeforeAddingAnUnsupportedStrategy": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsDisabledConstraintsOnlyOnSelectedTables(kind: \"P\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsDisabledConstraintsOnlyOnSelectedTables(kind: \"R\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsDisabledConstraintsOnlyOnSelectedTables(kind: \"U\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsExpressionIndexesAndPreservesFilteredOrdinaryIndexes(unique: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsExpressionIndexesAndPreservesFilteredOrdinaryIndexes(unique: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsGeneratedAlternateKeysOnlyWhenReferencedBySelectedForeignKeys": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsLongRowStorageWithoutBlockingOrdinaryTableFilters": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsMaterializedViewPrebuiltTableAndPreservesTableFiltering": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonIntegralSequencePrimaryKeys(type: \"DECIMAL(18,2)\", composite: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonIntegralSequencePrimaryKeys(type: \"DECIMAL(18,2)\", composite: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonIntegralSequencePrimaryKeys(type: \"NUMBER(18,0)\", composite: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonIntegralSequencePrimaryKeys(type: \"NUMBER(18,0)\", composite: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonPrimaryClustering(uniqueConstraint: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsNonPrimaryClustering(uniqueConstraint: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsPartitionedTablesWithoutBlockingOrdinaryTableFilters(hash: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsPartitionedTablesWithoutBlockingOrdinaryTableFilters(hash: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTableFiltersQualifiedWithAnotherSchema": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTableSpaceLimitsAfterVerifyingTheirWriteCeiling": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTemporaryTablesWithoutBlockingPermanentTableFilters(duration: \"DELETE\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTemporaryTablesWithoutBlockingPermanentTableFilters(duration: \"PRESERVE\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTriggersWithoutBlockingOrdinaryTableFilters(disabled: False, useView: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTriggersWithoutBlockingOrdinaryTableFilters(disabled: False, useView: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsTriggersWithoutBlockingOrdinaryTableFilters(disabled: True, useView: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnmappedColumnsWithoutBlockingSupportedTableFilters(storeType: \"BFILE\", useView: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnmappedColumnsWithoutBlockingSupportedTableFilters(storeType: \"BFILE\", useView: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnmappedColumnsWithoutBlockingSupportedTableFilters(storeType: \"INTERVAL HOUR TO MINUTE\", useView: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnmappedColumnsWithoutBlockingSupportedTableFilters(storeType: \"TIME WITH TIME ZONE\", useView: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnrepresentableLocalSequenceEvenWithOtherTableFilters": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnrepresentedColumnGeneration(onUpdate: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnrepresentedColumnGeneration(onUpdate: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnsupportedTableSemanticsWithoutRejectingNotNull(kind: \"check\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnsupportedTableSemanticsWithoutRejectingNotNull(kind: \"check_not_null\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnsupportedTableSemanticsWithoutRejectingNotNull(kind: \"disabled_check\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnsupportedTableSemanticsWithoutRejectingNotNull(kind: \"virtual\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnvalidatedConstraints(foreignKey: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRejectsUnvalidatedConstraints(foreignKey: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRequiresUncachedUnorderedSequences(options: \"\", supported: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRequiresUncachedUnorderedSequences(options: \"CACHE 2\", supported: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRequiresUncachedUnorderedSequences(options: \"CACHE 50\", supported: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRequiresUncachedUnorderedSequences(options: \"NOCACHE NOORDER\", supported: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.FactoryRequiresUncachedUnorderedSequences(options: \"ORDER\", supported: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyActionsAreCheckedAfterTheirServerBehaviorIsVerified(update: False, action: \"SET DEFAULT\", expected: 1)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyActionsAreCheckedAfterTheirServerBehaviorIsVerified(update: True, action: \"CASCADE\", expected: 3)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyActionsAreCheckedAfterTheirServerBehaviorIsVerified(update: True, action: \"NO ACTION\", expected: 2)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyActionsAreCheckedAfterTheirServerBehaviorIsVerified(update: True, action: \"SET DEFAULT\", expected: 1)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyActionsAreCheckedAfterTheirServerBehaviorIsVerified(update: True, action: \"SET NULL\", expected: null)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyBackingIndexesKeepTheirCatalogRole(physical: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyBackingIndexesKeepTheirCatalogRole(physical: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyMatchSyntaxUsesDefaultSemanticsOnReferenceServer(matchClause: \"\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyMatchSyntaxUsesDefaultSemanticsOnReferenceServer(matchClause: \"MATCH FULL\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyMatchSyntaxUsesDefaultSemanticsOnReferenceServer(matchClause: \"MATCH PARTIAL\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ForeignKeyMatchSyntaxUsesDefaultSemanticsOnReferenceServer(matchClause: \"MATCH SIMPLE\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.IndexFillFactorsSurviveIndependentAndConstraintIndexRecreation": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.LocalSequenceAfterSetSchemaRecreatesAgainstTheCatalogSchema": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.MissingCurrentSchemaSequenceDefaultsAreRejected(qualified: False)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.MissingCurrentSchemaSequenceDefaultsAreRejected(qualified: True)": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.NonDefaultIndexStatesAreRejectedAndRestorationIsObserved(state: \"INVISIBLE\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.NonDefaultIndexStatesAreRejectedAndRestorationIsObserved(state: \"UNUSABLE\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.NotVisibleColumnsKeepTheirServerSemanticsAndAreRejected(notNull: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.NotVisibleColumnsKeepTheirServerSemanticsAndAreRejected(notNull: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.SelectedForeignKeyRequiresItsPrincipalToBeIncluded": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ServerRejectsSmallIdentityTypesAndFactoryKeepsSupportedIdentity(type: \"SMALLINT\", supportedType: \"INT\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.ServerRejectsSmallIdentityTypesAndFactoryKeepsSupportedIdentity(type: \"TINYINT\", supportedType: \"BIGINT\")": {
+   "first_message": "System.InvalidOperationException : Command connection is not open.",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.SpacedNextValDefaultsKeepTheirLocalSequenceDefinition(qualified: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.SpacedNextValDefaultsKeepTheirLocalSequenceDefinition(qualified: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.StandaloneSequencesSurviveSchemaScaffoldingAndRecreation(hasTable: False, filterTable: False)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.StandaloneSequencesSurviveSchemaScaffoldingAndRecreation(hasTable: True, filterTable: False)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.StandaloneSequencesSurviveSchemaScaffoldingAndRecreation(hasTable: True, filterTable: True)": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.TableFillFactorSurvivesScaffoldingAndRecreation(declared: 0, expected: 100)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.TableFillFactorSurvivesScaffoldingAndRecreation(declared: 100, expected: 100)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.TableFillFactorSurvivesScaffoldingAndRecreation(declared: 85, expected: 85)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengReverseEngineeringFunctionalTests.UnsupportedStandaloneSequencesRejectEvenWithoutTables(options: \"CACHE 10\")": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengReverseEngineeringFunctionalTests.UnsupportedStandaloneSequencesRejectEvenWithoutTables(options: \"INCREMENT BY 2147483648 NOCACHE\")": {
+   "first_message": "W.Dm.DmException : 没有创建模式权限",
+   "outcome": "Failed"
+  },
+  "DamengScriptExecutorTests.IdempotentSplitIgnoresBlockKeywordsInsideLiteralsAndComments": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.IdempotentSplitKeepsNestedGuardBlocksAsSingleBatches": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitKeepsDeclareOpenedBlocksWhole": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitKeepsLowercaseAndIndentedBlocksWhole": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"-- lead\\nBEGIN -- body\\n NULL; END; -- tail\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"/* lead ' BEGIN */ DECLARE v INT; BEGIN v := 1; EN\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN -- quote ' in comment\\n NULL; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN /* block\\n/\\nEND; ' */ NULL; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN BEGIN NULL; END; IF 1=1 THEN NULL; END IF; E\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN CASE WHEN 1=1 THEN NULL; END CASE; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN DECLARE v INT; BEGIN v := CASE WHEN 1=1 THEN\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"BEGIN NULL; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"DECLARE FUNCTION f RETURN INT IS BEGIN RETURN CASE\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"DECLARE PROCEDURE p IS BEGIN NULL; END; BEGIN NULL\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"DECLARE PROCEDURE p IS PROCEDURE q IS BEGIN NULL; \"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRecognizesTokensAndPreservesBlockComments(block: \"DECLARE PROCEDURE p; PROCEDURE p IS BEGIN NULL; EN\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsIncompleteCommands(script: \"/* unterminated\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsIncompleteCommands(script: \"BEGIN NULL; END\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsIncompleteCommands(script: \"BEGIN NULL;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsIncompleteCommands(script: \"DECLARE v INT;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsIncompleteCommands(script: \"SELECT 'unterminated\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsStoredDefinitionsBeforeReturningPartialCommands(definition: \"CREATE OR REPLACE FUNCTION f RETURN INT AS BEGIN R\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsStoredDefinitionsBeforeReturningPartialCommands(definition: \"CREATE PACKAGE p AS PROCEDURE q; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsStoredDefinitionsBeforeReturningPartialCommands(definition: \"CREATE PROCEDURE p AS BEGIN NULL; END;\")": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.SplitRejectsStoredDefinitionsBeforeReturningPartialCommands(definition: \"CREATE TRIGGER t AFTER INSERT ON x BEGIN NULL; END\"···)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengScriptExecutorTests.StatementSplitKeepsBlocksWholeWithoutIdempotentMarkers": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengSequenceAndTranslationFunctionalTests.SequenceGeneratedKeysAreReadBackWithCurrval": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengSequenceAndTranslationFunctionalTests.StringCompareAndCompareToExecuteOnServer": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengSequenceAndTranslationFunctionalTests.StringDateTimeAndGuidTranslationsExecuteOnServer": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengStringAggregateFunctionalTests.JoinAndConcatKeepClrElementFilterOrderAndEmptySemantics": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengStringAggregateFunctionalTests.ListAggNullableOrderingMatchesClrInBothDirections": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengStringAggregateFunctionalTests.OverflowFailsExplicitlyWithoutTruncating": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengTrimCharacterFunctionalTests.ConstantCharacterTrimRunsInFiltersAndServerProjections(lob: False)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengTrimCharacterFunctionalTests.ConstantCharacterTrimRunsInFiltersAndServerProjections(lob: True)": {
+   "first_message": null,
+   "outcome": "Passed"
+  },
+  "DamengTrimCharacterFunctionalTests.NclobTrimPreservesLongUnicodeText": {
+   "first_message": null,
+   "outcome": "Passed"
+  }
+ }
+}

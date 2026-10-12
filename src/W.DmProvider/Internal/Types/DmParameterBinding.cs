@@ -3,12 +3,138 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using W.Dm.Internal.Lobs;
+using W.Dm.Internal.Execution;
 
 namespace W.Dm.Internal.Types;
 
 internal readonly record struct DmSqlStatementHead(string First, string Second, string Third);
 internal enum DmSqlSavepointKind { Save, Rollback, Release }
 internal readonly record struct DmSqlSavepointControl(DmSqlSavepointKind Kind, string Name, bool IsQuoted);
+
+// All scales below are fractional decimal digits except WireScale and EncodingPackedScale,
+// which preserve the complete protocol declaration for interval types.
+internal sealed record DmTemporalParameterBinding(
+    DmParameterMetadata Request, DmParameterTypeSource ResolvedSource,
+    DmTemporalRawMetadata? RawMetadata, bool ReliableFixed,
+    DmTemporalCapabilityProfile Profile, int CType, int Precision,
+    DmTemporalWireLayout? Layout, int? ColumnScale, int? RequestedScale,
+    int EncodedScale, int WireScale, int Mask, DmTemporalWriteTarget? Target,
+    int? IntervalSubtype, int? IntervalLeadingPrecision, int? EncodingPackedScale);
+
+// ActualFormat is the row format supplied by the reader; RawMetadata.ResultFormat
+// remains Unknown when describe did not independently establish a row format.
+internal readonly record struct DmTemporalReadDescriptor(
+    DmTemporalRawMetadata? RawMetadata, int CType, int Precision, int WireScale,
+    int FractionalScale, int Mask, int? IntervalSubtype, int? IntervalLeadingPrecision,
+    DmTemporalResultFormat ActualFormat);
+
+internal static class DmTemporalMetadataSemantics
+{
+    internal static bool IsTemporal(int cType) => cType is 14 or 15 or 16 or 20 or 21 or 22 or 23 or 26 or 27;
+
+    internal static (int FractionalScale, int Mask, int? IntervalSubtype, int? IntervalLeadingPrecision)
+        Interpret(int cType, int wireScale, int mask = 0)
+    {
+        if (!IsTemporal(cType)) throw new InvalidCastException("Field has no temporal metadata.");
+        if (cType is 20 or 21)
+        {
+            if (wireScale < 0 || (wireScale & ~0xFFF) != 0)
+                throw new InvalidDataException("Interval metadata contains undefined bits.");
+            int subtype = wireScale >> 8, leading = (wireScale >> 4) & 15, fraction = wireScale & 15;
+            if (leading is < 1 or > 9 || fraction > 9 ||
+                (cType == 20 ? subtype is < 0 or > 2 || fraction != 0 : subtype is < 3 or > 12))
+                throw new InvalidDataException("Interval metadata contains invalid declaration fields.");
+            return (fraction, mask, subtype, leading);
+        }
+        int semantic = wireScale;
+        if (cType is 16 or 26)
+        {
+            int flags = wireScale & 0x3000;
+            if (flags == 0x3000 || wireScale < 0 || (wireScale & ~0x300F) != 0)
+                throw new InvalidDataException("Timestamp metadata contains undefined or conflicting flags.");
+            semantic = wireScale & ~0x3000;
+            if (flags != 0) mask = flags == 0x1000 ? 4 : 1;
+        }
+        if (semantic is < 0 or > 9 || (cType == 14 && semantic != 0))
+            throw new InvalidDataException("Temporal metadata contains invalid fractional precision.");
+        return (semantic, mask, null, null);
+    }
+}
+
+internal static class DmTemporalBindingResolver
+{
+    internal static void ValidateRequest(DmParameterMetadata request)
+    {
+        if (request.ExplicitScale) DmTemporalInteger.ValidateUserScale(request.Scale);
+        if (request.ExplicitPrecision && request.Precision != 0)
+            throw new NotSupportedException("Temporal parameters use Scale rather than nonzero Precision.");
+    }
+
+    internal static DmTemporalParameterBinding Create(DmParameterMetadata request,
+        DmParameterTypeSource source, int selectedType, DmField field, DmTemporalCapabilityProfile profile)
+    {
+        ValidateRequest(request);
+        var raw = field.TemporalServerMetadata;
+        bool fixedMode = field.GetTypeFlag() == 1;
+        bool reliable = raw is { Source: DmTemporalMetadataSource.ParameterDescribe, TypeFlag: 1 }
+            && DmTemporalMetadataSemantics.IsTemporal(raw.Value.CType);
+        if (fixedMode && !reliable)
+            throw new InvalidOperationException("Fixed temporal binding requires original server describe metadata.");
+        int cType = reliable ? raw.Value.CType : selectedType;
+        int mask = 0;
+        int? columnScale = null, subtype = null, leading = null;
+        if (reliable)
+        {
+            var semantic = DmTemporalMetadataSemantics.Interpret(cType, raw.Value.Scale, raw.Value.DerivedMask);
+            columnScale = semantic.FractionalScale;
+            mask = semantic.Mask;
+            subtype = semantic.IntervalSubtype;
+            leading = semantic.IntervalLeadingPrecision;
+        }
+        else if (field.mask != 0)
+            throw new NotSupportedException("Decorated advisory temporal metadata cannot select a new target.");
+        int? requested = request.ExplicitScale ? request.Scale : null;
+        if (cType is 20 or 21)
+        {
+            if ((requested ?? 0) > (cType == 20 ? 0 : 6))
+                throw new NotSupportedException("Interval fractional write precision is unsupported.");
+            if (!reliable)
+            {
+                subtype = cType == 21 ? 6 : 1;
+                leading = 9;
+            }
+            int encoded = reliable ? columnScale.Value : requested ?? (cType == 21 ? 6 : 0);
+            if (encoded > (cType == 21 ? 6 : 0) || mask != 0)
+                throw new NotSupportedException("Interval target declaration is unsupported for writing.");
+            int packed = reliable ? raw.Value.Scale : (subtype.Value << 8) | (leading.Value << 4) | encoded;
+            return new(request, source, raw, reliable, profile, cType,
+                reliable ? raw.Value.Precision : cType == 21 ? 24 : 12,
+                null, columnScale, requested, encoded, packed, mask, null, subtype, leading, packed);
+        }
+        int defaultScale = cType == 14 ? 0 : 6;
+        if (!reliable && cType is 16 or 26 or 23 or 27)
+        {
+            bool explicitDateTime2 = request.ExplicitDbType && request.DeclaredDbType == System.Data.DbType.DateTime2;
+            bool inferred = !request.ExplicitDbType && !request.ExplicitDmSqlType;
+            defaultScale = explicitDateTime2 ? 7 : inferred && profile.DefaultSeven ? 7 : 6;
+        }
+        int scale = requested ?? columnScale ?? defaultScale;
+        if (!reliable && cType is 16 or 26 or 23 or 27)
+            cType = cType is 23 or 27 ? scale >= 7 ? 27 : 23 : scale >= 7 ? 26 : 16;
+        var layout = DmTemporalWireCodec.ForCType(cType);
+        int width = reliable ? raw.Value.Precision : cType switch
+        {
+            14 => 3, 15 => 5, 22 => 7, 16 => 8, 26 => 9, 23 => 10, 27 => 11,
+            _ => throw new NotSupportedException("Temporal target type is unsupported.")
+        };
+        var target = new DmTemporalWriteTarget(cType, layout, DmTemporalResultFormat.OrdinaryPacked,
+            columnScale ?? scale, scale, requested, reliable, mask);
+        profile.ValidateWriteTarget(target); // Includes typed NULL before any marker is written.
+        return new(request, source, raw, reliable, profile, cType, width, layout,
+            columnScale, requested, scale, reliable ? columnScale.Value : scale, mask,
+            target, null, null, null);
+    }
+}
 
 /// <summary>Frozen binding order from SQL lexical markers; never rewrites the SQL.</summary>
 internal sealed class DmParameterBinding

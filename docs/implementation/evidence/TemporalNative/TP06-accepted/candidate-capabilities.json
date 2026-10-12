@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "source_manifest_sha256": "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f",
+  "source_commit": "fe89bd44abe99c1608499f71f4634a13e732c826",
+  "w_package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+  "status": "root_approved_preconditions_only_candidate_pending",
+  "candidate_acceptance": false,
+  "full_temporal_acceptance": false,
+  "profiles": {
+    "shared": {
+      "server_version": "8.1.5.60",
+      "message_version": 21,
+      "encoding": "utf-8",
+      "negotiated_encoding": "utf-8",
+      "encoding_override_empty": true,
+      "profile_origin": "physical_get_conn_instance_conn_property",
+      "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+      "result_format": "ordinary_non_BDTA",
+      "root_approved": true,
+      "evidence_id": "TP01-v11-shared-physical-and-TP04-TP05-v7-offline",
+      "temporal_families": [
+        "TIMESTAMP",
+        "TIMESTAMP_WITH_TIME_ZONE"
+      ],
+      "seven_write": true,
+      "write_scales": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "tltz_write": false,
+      "tltz_read": false,
+      "local_ticks_min": 0,
+      "local_ticks_max": 3155378975999999999,
+      "utc_ticks_min": 0,
+      "utc_ticks_max": 3155378975999999999,
+      "offset_min_minutes": -779,
+      "offset_max_minutes": 840,
+      "bdta_accepted": false,
+      "nondefault_interval_accepted": false,
+      "time_modes_accepted": false,
+      "verified_unsupported_error_numbers": {
+        "year_zero": [
+          -6118
+        ],
+        "time24_scale6": [
+          -6118
+        ],
+        "time24_scale7": [
+          -6121
+        ],
+        "time_fraction_scale7": [
+          -6121
+        ],
+        "time24_scale8": [
+          -6121
+        ],
+        "time_fraction_scale8": [
+          -6121
+        ],
+        "time24_scale9": [
+          -6121
+        ],
+        "time_fraction_scale9": [
+          -6121
+        ]
+      }
+    },
+    "tls": {
+      "server_version": "8.1.4.6",
+      "message_version": 11,
+      "encoding": "gb18030",
+      "negotiated_encoding": "gb18030",
+      "encoding_override_empty": true,
+      "profile_origin": "physical_get_conn_instance_conn_property",
+      "negotiated_encoding_origin": "physical_conn_property_serverEncoding_field",
+      "result_format": "ordinary_non_BDTA",
+      "root_approved": true,
+      "evidence_id": "TP01-v11-tls-physical-and-TP04-TP05-v7-offline",
+      "temporal_families": [
+        "TIMESTAMP",
+        "TIMESTAMP_WITH_TIME_ZONE"
+      ],
+      "seven_write": false,
+      "write_scales": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tltz_write": false,
+      "tltz_read": false,
+      "local_ticks_min": 0,
+      "local_ticks_max": 3155378975999999999,
+      "utc_ticks_min": 0,
+      "utc_ticks_max": 3155378975999999999,
+      "offset_min_minutes": -779,
+      "offset_max_minutes": 840,
+      "bdta_accepted": false,
+      "nondefault_interval_accepted": false,
+      "time_modes_accepted": false,
+      "verified_unsupported_error_numbers": {
+        "year_zero": [
+          -6118
+        ],
+        "time24_scale6": [
+          -6118
+        ],
+        "time24_scale7": [
+          -6121
+        ],
+        "time_fraction_scale7": [
+          -6121
+        ],
+        "time24_scale8": [
+          -6121
+        ],
+        "time_fraction_scale8": [
+          -6121
+        ],
+        "time24_scale9": [
+          -6121
+        ],
+        "time_fraction_scale9": [
+          -6121
+        ]
+      }
+    }
+  },
+  "unsupported_evidence": {
+    "shared": {
+      "path": ".local/temporal-native/verification/TP01-v11-shared-baseline/extended.json",
+      "sha256": "375ae551c020f9688c0054dd988892eba162613ab42b8f03641531f70ff599d6",
+      "cases": {
+        "year_zero": [
+          -6118
+        ],
+        "time24_scale6": [
+          -6118
+        ],
+        "time24_scale7": [
+          -6121
+        ],
+        "time_fraction_scale7": [
+          -6121
+        ],
+        "time24_scale8": [
+          -6121
+        ],
+        "time_fraction_scale8": [
+          -6121
+        ],
+        "time24_scale9": [
+          -6121
+        ],
+        "time_fraction_scale9": [
+          -6121
+        ]
+      }
+    },
+    "tls": {
+      "path": ".local/temporal-native/verification/TP01-v11-tls-baseline/extended.json",
+      "sha256": "9b6327cf417e97927b0b22ce4623689d3e157d91424e074e444617306f52b08a",
+      "cases": {
+        "year_zero": [
+          -6118
+        ],
+        "time24_scale6": [
+          -6118
+        ],
+        "time24_scale7": [
+          -6121
+        ],
+        "time_fraction_scale7": [
+          -6121
+        ],
+        "time24_scale8": [
+          -6121
+        ],
+        "time_fraction_scale8": [
+          -6121
+        ],
+        "time24_scale9": [
+          -6121
+        ],
+        "time_fraction_scale9": [
+          -6121
+        ]
+      }
+    }
+  }
+}

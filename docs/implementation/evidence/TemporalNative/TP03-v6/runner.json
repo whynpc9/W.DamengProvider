@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task": "TP-01",
+  "phase": "candidate",
+  "profile": "shared",
+  "source_manifest_sha256": "80543bc90851fa9dd84d8b959a6e7406417a4479bd3be30870cc203c5de1b6fa",
+  "product_source_manifest_sha256": "7603bf84e5df9b5d61d42cc9fab8cc204ef0e663dae05e9254fc13056db53ee3",
+  "identity_sha256": "fc29762ff5d492eeefd15a2626dc66d86d0b7e3ab82d9979cdc5a9cbecf73734",
+  "capabilities_sha256": "f27a8ad52e7b4b49619593e284f5c2db9a6100a85f54c09de8922396887d3ea4",
+  "runs": [
+    {
+      "lane": "core",
+      "exit_code": 0,
+      "hard_deadline": false,
+      "cleanup_exit_code": 0,
+      "cleanup_hard_deadline": false,
+      "safe_command": [
+        "TEST_wrapper",
+        "dotnet",
+        "frozen_tool",
+        "run",
+        "frozen_identities",
+        "frozen_feed",
+        "shared",
+        "core",
+        "original_repo",
+        "exact_ownership",
+        "safe_report",
+        "frozen_manifest"
+      ],
+      "elapsed_seconds": 136.665,
+      "ownership_manifest_present": true,
+      "ownership_manifest_sha256": "8f73db8726db35b9a87fe555434ef10d79b0d2845403ef96377ff1852c27fc6d",
+      "recovery_manifest": "core.ownership.json",
+      "creation_state": "confirmed",
+      "report_sha256": "a41984b4ad7baac42adf90f602b0ff42189b572d3637002511340a46c8b8fe3d"
+    }
+  ],
+  "status": "execution_complete",
+  "restore_exit_code": 0,
+  "build_exit_code": 0,
+  "offline_exit_code": 0,
+  "offline_deadline": false,
+  "offline_report_sha256": "b3b4edf5914c276f61a57337e201f63fc4fa6f6b3df2c5112babf3aee8105542",
+  "offline_shape_sha256": "064d1501bc02df30b0275c849bfd62f2acef47d83a7457ac29a05a76a693a3ee",
+  "assets_sha256": "5a06838e45423870417b3af4853435b099b1f9e2ddf3bfd27b60f0d083ff3ce4",
+  "lock_sha256": "949cb4522823895dbf719f743a0dc29b11e6d4278f8a1aa494e84c74894ae909",
+  "tool_dll_sha256": "93e346d6039f97a3e432ab1658312a58f887075a34c454290f731fd82b75a3ec",
+  "wrapper_sha256": "b2af867921b567045fdeeccb3da490662661976b182e5884d029a738d41e00d8"
+}

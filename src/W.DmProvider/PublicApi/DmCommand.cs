@@ -1703,6 +1703,11 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = Volatile.Read(ref activePlan) ??
 			throw new InvalidOperationException("Parameter binding requires an active command plan.");
 		plan.Binding.ValidateServerCount(parameterCount);
+        var temporalBindings = new DmTemporalParameterBinding[parameterCount];
+        var temporalProfile = DmTemporalLegacyAdapter.Profile(m_Conn);
+        plan.ClearTemporalBindings();
+        // A failed rebind must not expose a previously successful binding as current.
+        for (int i = 0; i < parameterCount; i++) ParamsInfo[i].PublishTemporalBinding(null);
 		for (int i = 0; i < parameterCount; i++)
 		{
 			DmParameterInternal dmParameterInternal = ParamsInfo[i];
@@ -1711,20 +1716,32 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			{
 				DmParameter dmParameter = plan.Binding.ResolveServerParameter(i, dmParameterInternal.GetName(), parameterCount);
 				var resolved = dmParameter.ResolveType(dmParameterInternal);
-				object obj = dmParameter.do_Value is DmLobInput streaming ? streaming : DmSysTypeConvertion.TypeConvertion(dmParameter);
-				int describedCType = dmParameterInternal.GetCType();
-				int describedScale = dmParameterInternal.GetScale();
 				byte describedFlag = dmParameterInternal.GetTypeFlag();
+                int selectedType = DmSqlType.DmDbTypeToDmSqlType(resolved.Type);
+                bool temporal = DmTemporalMetadataSemantics.IsTemporal(selectedType)
+                    || (describedFlag == 1 && DmTemporalMetadataSemantics.IsTemporal(dmParameterInternal.GetCType()));
+                var request = DmParameterMetadata.From(dmParameter);
+                if (temporal) DmTemporalBindingResolver.ValidateRequest(request);
+                object obj = temporal ? null : dmParameter.do_Value is DmLobInput streaming
+                    ? streaming : DmSysTypeConvertion.TypeConvertion(dmParameter);
 				SelectBoundCType(dmParameterInternal, resolved.Type, resolved.Source);
+                if (temporal)
+                {
+                    var binding = DmTemporalBindingResolver.Create(request, resolved.Source, selectedType,
+                        dmParameterInternal, temporalProfile);
+                    obj = DmSysTypeConvertion.TypeConvertion(dmParameter);
+                    if (!binding.ReliableFixed)
+                    {
+                        dmParameterInternal.resetType(binding.CType);
+                        dmParameterInternal.SetPrecision(binding.Precision);
+                        dmParameterInternal.SetScale(binding.WireScale);
+                    }
+                    m_SetValue.SetResolvedTemporalObject(dmParameterInternal.GetParamValue()[0], obj, m_Conn,
+                        dmParameter.DmSqlTypeName, dmParameterInternal, binding);
+                    temporalBindings[i] = binding;
+                    continue;
+                }
 				int? effectiveScale = dmParameter.m_SetScaleFlag ? dmParameter.do_Scale : null;
-				if (dmParameterInternal.GetCType() == 21)
-				{
-					int packed = ResolveIntervalDayToSecondScale(describedCType, describedScale, describedFlag,
-						dmParameterInternal.mask, effectiveScale);
-					dmParameterInternal.SetScale(packed);
-					if (describedFlag == 2) dmParameterInternal.SetPrecision(24);
-					effectiveScale = packed;
-				}
 				int? effectivePrecision = dmParameter.m_SetPrecFlag ? dmParameter.do_Precision : null;
 				if (describedFlag == 2 && dmParameterInternal.GetCType() == 17 &&
 					(!dmParameter.m_SetSizeFlag || dmParameter.do_Size <= 0))
@@ -1739,6 +1756,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					effectiveScale);
 			}
 		}
+        plan.PublishTemporalBindings(temporalBindings);
+        for (int i = 0; i < parameterCount; i++) ParamsInfo[i].PublishTemporalBinding(temporalBindings[i]);
 		return true;
 	}
 

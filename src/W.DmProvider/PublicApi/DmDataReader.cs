@@ -465,7 +465,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		global::W.Dm.Internal.Legacy.A.A statement = m_Statement;
 		bool newLobFlag = m_Conn.ConnProperty.NewLobFlag;
 		DmField[] colInfo2 = m_ColInfo;
-		m_GetVal = new DmGetValue(serverEncoding, statement, newLobFlag, colInfo2);
+		m_GetVal = new DmGetValue(serverEncoding, statement, newLobFlag, colInfo2,
+			bdta ? DmTemporalResultFormat.Bdta : DmTemporalResultFormat.OrdinaryPacked);
 		m_Behavior = behavior;
 		if ((m_Behavior & CommandBehavior.SequentialAccess) != 0)
 		{
@@ -496,7 +497,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		global::W.Dm.Internal.Legacy.A.A statement = m_Statement;
 		bool newLobFlag = m_Conn.ConnProperty.NewLobFlag;
 		DmField[] colInfo2 = m_ColInfo;
-		m_GetVal = new DmGetValue(serverEncoding, statement, newLobFlag, colInfo2);
+		m_GetVal = new DmGetValue(serverEncoding, statement, newLobFlag, colInfo2,
+			bdta ? DmTemporalResultFormat.Bdta : DmTemporalResultFormat.OrdinaryPacked);
 		m_Behavior = behavior;
 		if ((m_Behavior & CommandBehavior.SequentialAccess) != 0)
 		{
@@ -1218,7 +1220,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		m_StreamPos = 0L;
 		m_Clobs.Clear();
 		m_GetVal = new DmGetValue(m_Conn.ConnProperty.ServerEncoding, statement,
-			m_Conn.ConnProperty.NewLobFlag, m_ColInfo);
+			m_Conn.ConnProperty.NewLobFlag, m_ColInfo,
+			bdta ? DmTemporalResultFormat.Bdta : DmTemporalResultFormat.OrdinaryPacked);
 	}
 
 	internal bool do_Read()
@@ -1942,7 +1945,9 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		row["ColumnOrdinal"] = i;
 		row["ColumnSize"] = dmCol.GetSize();
 		row["NumericPrecision"] = dmCol.GetPrecision();
-		row["NumericScale"] = dmCol.GetScale();
+		row["NumericScale"] = DmTemporalMetadataSemantics.IsTemporal(dmCol.GetCType())
+			? dmCol.GetTemporalReadDescriptor(bdta ? DmTemporalResultFormat.Bdta : DmTemporalResultFormat.OrdinaryPacked).FractionalScale
+			: dmCol.GetScale();
 		row["IsUnique"] = DBNull.Value;
 		row["IsKey"] = DBNull.Value;
 		row["BaseServerName"] = DBNull.Value;
@@ -1950,7 +1955,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		row["BaseSchemaName"] = string.IsNullOrEmpty(dmCol.GetSchema()) ? DBNull.Value : dmCol.GetSchema();
 		row["BaseTableName"] = string.IsNullOrEmpty(dmCol.GetTable()) ? DBNull.Value : dmCol.GetTable();
 		row["BaseColumnName"] = string.IsNullOrEmpty(dmCol.GetBaseColumn()) ? DBNull.Value : dmCol.GetBaseColumn();
-		row["DataType"] = DmSqlType.CTypeToSystemType(dmCol.GetCType(), dmCol.GetPrecision(), m_Conn.ConnProperty);
+		row["DataType"] = DmSqlType.CTypeToSystemType(dmCol.GetCType(), dmCol.GetPrecision(), dmCol.GetScale(), m_Conn.ConnProperty);
 		row["AllowDBNull"] = dmCol.GetNullable();
 		row["ProviderType"] = dmCol.GetCType();
 		row["IsAliased"] = false;

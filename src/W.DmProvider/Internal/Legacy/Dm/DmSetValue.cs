@@ -802,8 +802,25 @@ internal class DmSetValue
 		}
 	}
 
-	private void SetString(DmParamValue paraVal, string x, int cType, int prec, int scale, byte typeFlag, DmParameterInternal paraInternal)
+	private void SetString(DmParamValue paraVal, string x, int cType, int prec, int scale, byte typeFlag, DmParameterInternal paraInternal, DmTemporalWriteTarget? temporalTarget = null)
 	{
+		if (DmTemporalLegacyAdapter.IsTemporal(cType))
+		{
+			var target = temporalTarget ?? DmTemporalLegacyAdapter.Target(paraInternal, cType, scale);
+			if (cType is 26 or 27 && !target.ReliableFixed)
+				throw new NotSupportedException("Extended temporal text requires reliable fixed metadata.");
+			var connection = m_Statement.G().Conn;
+			DmTemporalLegacyAdapter.Profile(connection).ValidateWriteTarget(target);
+			var temporal = DmDateTime.valueOf(x, paraInternal, connection);
+			paraVal.SetInValue(temporal.EncodeWithTarget(paraInternal, connection, target));
+			if (typeFlag != 1)
+			{
+				paraVal.SetSqlType(cType); paraVal.SetPrec(DmTemporalWireCodec.GetLength(target.Layout));
+				paraVal.SetScale(target.EncodedScale);
+			}
+			return;
+		}
+
 		byte[] array = null;
 		if (x == null)
 		{
@@ -959,57 +976,6 @@ internal class DmSetValue
 		case 12:
 		case 18:
 			throw new NotSupportedException("Implicit text-to-binary parameter conversion is not supported.");
-		case 14:
-		{
-			if (typeFlag != 1)
-			{
-				paraVal.SetSqlType(14);
-				paraVal.SetPrec(3);
-				paraVal.SetScale(6);
-				paraInternal.scale = 6;
-			}
-			DmDateTime dmDateTime = DmDateTime.valueOf(x, paraInternal, m_Statement.G().Conn);
-			paraVal.SetInValue(dmDateTime.encode(paraInternal, m_Statement.G().Conn));
-			break;
-		}
-		case 15:
-		{
-			if (typeFlag != 1)
-			{
-				paraVal.SetSqlType(15);
-				paraVal.SetPrec(5);
-				paraVal.SetScale(6);
-				paraInternal.scale = 6;
-			}
-			DmDateTime dmDateTime = DmDateTime.valueOf(x, paraInternal, m_Statement.G().Conn);
-			paraVal.SetInValue(dmDateTime.encode(paraInternal, m_Statement.G().Conn));
-			break;
-		}
-		case 22:
-		{
-			DmDateTime dmDateTime = DmDateTime.valueOf(x, paraInternal, m_Statement.G().Conn);
-			paraVal.SetInValue(dmDateTime.encode(paraInternal, m_Statement.G().Conn));
-			break;
-		}
-		case 16:
-		{
-			DmDateTime dmDateTime = DmDateTime.valueOf(x, paraInternal, m_Statement.G().Conn);
-			if (typeFlag != 1)
-			{
-				paraVal.SetSqlType(16);
-				paraVal.SetPrec(8);
-				paraVal.SetScale(6);
-				paraInternal.scale = 6;
-			}
-			paraVal.SetInValue(dmDateTime.encode(paraInternal, m_Statement.G().Conn));
-			break;
-		}
-		case 23:
-		{
-			DmDateTime dmDateTime = DmDateTime.valueOf(x, paraInternal, m_Statement.G().Conn);
-			paraVal.SetInValue(dmDateTime.encode(paraInternal, m_Statement.G().Conn));
-			break;
-		}
 		case 21:
 		{
 			int secScale = scale & 0xF;
@@ -1275,9 +1241,7 @@ internal class DmSetValue
 		case 16:
 		case 23:
 		{
-			DateTime x = DateTime.Parse(t.ToString(), DmConst.invariantCulture);
-			SetTimestamp(paraVal, x, cType, prec, scale, typeFlag, paraInternal);
-			break;
+			throw new NotSupportedException("TIME helper has no calendar semantics for TIMESTAMP conversion.");
 		}
 		default:
 			SetString(paraVal, t.ToString(), cType, prec, scale, typeFlag, paraInternal);
@@ -1369,7 +1333,7 @@ internal class DmSetValue
 	{
 		if (typeFlag != 1)
 		{
-			DmTime dmTime = new DmTime(x.DateTime, prec, scale, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmTime dmTime = new DmTime(x.DateTime, prec, scale, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			paraVal.SetInValue(DmTime.TimeTzEncodeFast(dmTime.GetByteArrayValue()));
 			paraVal.SetSqlType(22);
 			paraVal.SetPrec(5);
@@ -1380,13 +1344,13 @@ internal class DmSetValue
 		{
 		case 15:
 		{
-			DmTime dmTime2 = new DmTime(x.DateTime, prec, scale, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmTime dmTime2 = new DmTime(x.DateTime, prec, scale, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			paraVal.SetInValue(DmTime.TimeEncodeFast(dmTime2.GetByteArrayValue()));
 			break;
 		}
 		case 22:
 		{
-			DmTime dmTime2 = new DmTime(x.DateTime, prec, scale, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmTime dmTime2 = new DmTime(x.DateTime, prec, scale, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			paraVal.SetInValue(DmTime.TimeTzEncodeFast(dmTime2.GetTzByteArrayValue()));
 			break;
 		}
@@ -1408,7 +1372,7 @@ internal class DmSetValue
 		{
 			if (cType == 23)
 			{
-				DmDateTime dmDateTime = new DmDateTime(x.DateTime, prec, scale, 3, Convert.ToInt16(x.Offset.TotalMinutes));
+				DmDateTime dmDateTime = new DmDateTime(x.DateTime, prec, scale, 3, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 				paraVal.SetInValue(DmDateTime.DmdttzEncodeFast(dmDateTime.GetByteArrayValue()));
 				paraVal.SetSqlType(23);
 				paraVal.SetPrec(prec);
@@ -1416,7 +1380,7 @@ internal class DmSetValue
 			}
 			else if (cType == 27)
 			{
-				DmDateTime.Dmdt2TzEncodeFast2(ref paraVal.m_InValue, x.DateTime, Convert.ToInt16(x.Offset.TotalMinutes));
+				DmDateTime.Dmdt2TzEncodeFast2(ref paraVal.m_InValue, x.DateTime, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 				paraVal.SetInValue();
 				paraVal.SetSqlType(27);
 				paraVal.SetPrec(prec);
@@ -1438,7 +1402,7 @@ internal class DmSetValue
 			break;
 		case 16:
 		{
-			DmDateTime dmDateTime2 = new DmDateTime(x.ToOffset(new TimeSpan(0, m_Statement.G().ConnProperty.TimeZone, 0)).DateTime, prec, scale, 3, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmDateTime dmDateTime2 = new DmDateTime(x.ToOffset(new TimeSpan(0, m_Statement.G().ConnProperty.TimeZone, 0)).DateTime, prec, scale, 3, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			dmDateTime2.GetByteArrayValue(ref ret);
 			if (ret.Length == 8)
 			{
@@ -1458,12 +1422,12 @@ internal class DmSetValue
 		}
 		case 23:
 		{
-			DmDateTime dmDateTime2 = new DmDateTime(x.DateTime, prec, scale, 3, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmDateTime dmDateTime2 = new DmDateTime(x.DateTime, prec, scale, 3, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			paraVal.SetInValue(DmDateTime.DmdttzEncodeFast(dmDateTime2.GetByteArrayValue()));
 			break;
 		}
 		case 27:
-			DmDateTime.Dmdt2TzEncodeFast2(ref paraVal.m_InValue, x.DateTime, Convert.ToInt16(x.Offset.TotalMinutes));
+			DmDateTime.Dmdt2TzEncodeFast2(ref paraVal.m_InValue, x.DateTime, checked((short)(x.Offset.Ticks / TimeSpan.TicksPerMinute)));
 			paraVal.SetInValue();
 			break;
 		case 0:
@@ -1560,6 +1524,96 @@ internal class DmSetValue
 
 	// Command binding has already resolved its wire type. Legacy advisory branches must
 	// not replace it based on the CLR runtime type; the real server flag stays intact.
+	internal void SetResolvedTemporalObject(DmParamValue paraVal, object x, DmConnection conn,
+		string typeName, DmParameterInternal paraInternal, DmTemporalParameterBinding binding)
+	{
+		ArgumentNullException.ThrowIfNull(binding);
+		DmTemporalBindingResolver.ValidateRequest(binding.Request);
+		byte[] encoded = null;
+		if (binding.CType is 20 or 21)
+		{
+			ValidateIntervalBinding(binding); // Typed NULL must not bypass a closed declaration.
+			if (x is not (null or DBNull)) encoded = EncodeFrozenInterval(x, binding);
+		}
+		else
+		{
+			var target = binding.Target ?? throw new InvalidOperationException("Temporal binding has no write target.");
+			binding.Profile.ValidateWriteTarget(target);
+			if (x is not (null or DBNull))
+			{
+				string text = x switch { string value => value, char[] chars => new string(chars), char character => character.ToString(), _ => null };
+				if (text != null)
+				{
+					if (binding.CType is 26 or 27 && !binding.ReliableFixed)
+						throw new NotSupportedException("Extended temporal text requires reliable fixed metadata.");
+					encoded = DmDateTime.valueOf(text, binding.CType, conn).EncodeWithTarget(binding.Profile, target);
+				}
+				else
+				{
+					object normalized = DmTemporalCodec.NormalizeForWrite(x, binding.CType, binding.EncodedScale, binding.Profile, target);
+					DmTemporalFields fields = normalized switch
+					{
+						DateTime value => DmTemporalInteger.FromDateTime(value),
+						DateTimeOffset value => DmTemporalInteger.FromDateTimeOffset(value),
+						DmTime value when binding.CType is 15 or 22 => DmTemporalLegacyAdapter.ReadHelper(
+							binding.CType == 15 ? value.GetByteArrayValue() : value.GetTzByteArrayValue(), DmTemporalTextKind.Time),
+						_ => throw new NotSupportedException("Input does not have supported temporal fields.")
+					};
+					if (binding.CType == 15) fields = fields with { Year = 0, Month = 0, Day = 0, OffsetMinutes = null };
+					else if (binding.CType == 22) fields = fields with { Year = 0, Month = 0, Day = 0 };
+					binding.Profile.ValidateWriteValue(target, fields);
+					encoded = DmTemporalWireCodec.EncodeExact(fields, target.Layout, binding.EncodedScale);
+				}
+			}
+		}
+		// Publish only after the whole value has passed its frozen constraints. Header
+		// scale is distinct from fractional encoder scale for fixed/interval targets.
+		if (x is null or DBNull) paraVal.SetInNull(); else paraVal.SetInValue(encoded);
+		paraVal.SetSqlType(binding.CType);
+		paraVal.SetPrec(binding.Precision);
+		paraVal.SetScale(binding.WireScale);
+	}
+
+	private static void ValidateIntervalBinding(DmTemporalParameterBinding binding)
+	{
+		int packed = binding.EncodingPackedScale ?? throw new InvalidOperationException("Interval binding has no packed declaration.");
+		var semantic = DmTemporalMetadataSemantics.Interpret(binding.CType, packed, binding.Mask);
+		if (semantic.Mask != 0 || semantic.FractionalScale > (binding.CType == 20 ? 0 : 6)
+			|| (binding.RequestedScale ?? 0) > (binding.CType == 20 ? 0 : 6))
+			throw new NotSupportedException("Interval write precision or declaration is unsupported.");
+		if (semantic.FractionalScale != binding.EncodedScale || semantic.IntervalSubtype != binding.IntervalSubtype
+			|| semantic.IntervalLeadingPrecision != binding.IntervalLeadingPrecision || binding.WireScale != packed)
+			throw new InvalidOperationException("Interval binding fields do not match its packed declaration.");
+	}
+
+	private static byte[] EncodeFrozenInterval(object value, DmTemporalParameterBinding binding)
+	{
+		int packed = binding.EncodingPackedScale.Value;
+		string text = value switch { string item => item, char[] chars => new string(chars), char character => character.ToString(), _ => null };
+		if (binding.CType == 20)
+		{
+			DmIntervalYM interval = text != null ? new DmIntervalYM(text, packed) : value switch
+			{
+				DmIntervalYM item => item,
+				long months => new DmIntervalYM(months, binding.IntervalLeadingPrecision.Value),
+				_ => throw new NotSupportedException("Input does not have supported year-month interval fields.")
+			};
+			return interval.encode(packed);
+		}
+		DmIntervalDT dayTime = text != null
+			? new DmIntervalDT(text, checked((byte)binding.IntervalSubtype.Value), binding.IntervalLeadingPrecision.Value, binding.EncodedScale)
+			: value switch
+			{
+				TimeSpan span => new DmIntervalDT(span, packed),
+				DmIntervalDT item => item,
+				_ => throw new NotSupportedException("Input does not have supported day-time interval fields.")
+			};
+		// Public requested fraction and the server declaration are independent quanta.
+		if (binding.RequestedScale is int requested)
+			DmTemporalInteger.ValidateWireFraction(checked(dayTime.getMsec() * 1000), requested);
+		return dayTime.encode(packed);
+	}
+
 	internal void SetResolvedObject(DmParamValue paraVal, object x, DmConnection conn, string typeName,
 		int cType, DmParameterInternal paraInternal, int? precisionOverride = null, int? scaleOverride = null)
 	{
@@ -1595,7 +1649,11 @@ internal class DmSetValue
 				throw new OverflowException("Double input cannot be represented exactly as Single.");
 			x = narrow;
 		}
-		SetObjectCore(paraVal, x, conn, typeName, cType, paraInternal, precision, scale, codecTypeFlag: 1);
+		// Capture requested and column constraints before effective scalar arguments erase explicitness.
+		DmTemporalWriteTarget? temporalTarget = DmTemporalLegacyAdapter.IsTemporal(cType)
+			? DmTemporalLegacyAdapter.Target(paraInternal, cType,
+				paraInternal.GetTypeFlag() == 1 ? paraInternal.GetScale() : scale, scaleOverride) : null;
+		SetObjectCore(paraVal, x, conn, typeName, cType, paraInternal, precision, scale, codecTypeFlag: 1, temporalTarget);
 		if (!paraVal.GetIsInDataNull() && cType is 10 or 11)
 		{
 			byte[] encoded = paraVal.GetInValue();
@@ -1620,7 +1678,7 @@ internal class DmSetValue
 			paraInternal.GetTypeFlag());
 
 	private void SetObjectCore(DmParamValue paraVal, object x, DmConnection conn, string typeName, int cType,
-		DmParameterInternal paraInternal, int? precisionOverride, int? scaleOverride, byte codecTypeFlag)
+		DmParameterInternal paraInternal, int? precisionOverride, int? scaleOverride, byte codecTypeFlag, DmTemporalWriteTarget? capturedTarget = null)
 	{
 		if (54 == cType)
 		{
@@ -1630,6 +1688,12 @@ internal class DmSetValue
 		int precision = precisionOverride ?? paraInternal.GetPrecision();
 		int scale = scaleOverride ?? (cType == 9 && paraInternal.GetTypeFlag() != 1 ? -1 : paraInternal.GetScale());
 		byte typeFlag = codecTypeFlag;
+		DmTemporalWriteTarget? temporalTarget = capturedTarget;
+		if (DmTemporalLegacyAdapter.IsTemporal(cType))
+			temporalTarget ??= DmTemporalLegacyAdapter.Target(paraInternal, cType,
+				paraInternal.GetTypeFlag() == 1 ? paraInternal.GetScale() : scale, scaleOverride);
+		var profile = DmTemporalLegacyAdapter.Profile(conn);
+		if (temporalTarget is DmTemporalWriteTarget temporal) profile.ValidateWriteTarget(temporal);
 		if (x == null)
 		{
 			SetNull(paraVal);
@@ -1644,8 +1708,7 @@ internal class DmSetValue
 			throw new NotSupportedException("Implicit text-to-binary parameter conversion is not supported.");
 		if ((cType is 0 or 1 or 2 or 19) && x is byte[])
 			throw new NotSupportedException("Implicit binary-to-text parameter conversion is not supported.");
-		x = DmTemporalCodec.NormalizeForWire(x, cType, scale,
-			conn?.GetConnInstance()?.ConnProperty.ServerVersion);
+		x = DmTemporalCodec.NormalizeForWrite(x, cType, scale, profile, temporalTarget);
 		if (x is Enum) x = DmNumericInput.ToEnumUnderlying(x);
 		if (x is float or double) x = DmNumericInput.ValidateFiniteFloating(x);
 		if (TrySetExactNumeric(paraVal, x, cType, precision, scale, typeFlag)) return;
@@ -1661,18 +1724,18 @@ internal class DmSetValue
 		}
 		if (x is string)
 		{
-			SetString(paraVal, (string)x, cType, precision, scale, typeFlag, paraInternal);
+			SetString(paraVal, (string)x, cType, precision, scale, typeFlag, paraInternal, temporalTarget);
 			return;
 		}
 		if (x is char)
 		{
-			SetString(paraVal, x.ToString(), cType, precision, scale, typeFlag, paraInternal);
+			SetString(paraVal, x.ToString(), cType, precision, scale, typeFlag, paraInternal, temporalTarget);
 			return;
 		}
 		if (x is char[])
 		{
 			string x2 = new string((char[])x);
-			SetString(paraVal, x2, cType, precision, scale, typeFlag, paraInternal);
+			SetString(paraVal, x2, cType, precision, scale, typeFlag, paraInternal, temporalTarget);
 			return;
 		}
 		if (x is decimal)

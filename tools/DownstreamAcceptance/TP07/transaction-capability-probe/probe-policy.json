@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "task": "TP07-T1-policy",
+  "host_name": "TP07TransactionCapabilityProbe",
+  "sdk_version": "10.0.401",
+  "ef_version": "10.0.12",
+  "product_count_pending": true,
+  "expected_product_count": 178,
+  "expected_replay_count": 187,
+  "expected_locked_count": 188,
+  "source_files": [
+    "README.md",
+    "probe-policy.json",
+    "prepare.py",
+    "run.py",
+    "validate.py",
+    "test_contracts.py",
+    "managed_identity.py",
+    "packed_oracle.py",
+    "host/TP07TransactionCapabilityProbe.csproj",
+    "host/Program.cs",
+    "host/ProbeContext.cs",
+    "host/TransactionEvidence.cs",
+    "host/ProbeIdentity.cs",
+    "host/OfflineContracts.cs",
+    "host/common/OwnedObjects.cs",
+    "host/common/SafeEvidence.cs",
+    "host/common/LiteralOracle.cs"
+  ],
+  "helper_origins": {
+    "host/common/OwnedObjects.cs": {
+      "path": "tools/DownstreamAcceptance/TP07/runtime-templates/common/OwnedObjects.cs",
+      "sha256": "80c1d2aa0b6aae04a89d168625f37ca013eb7d7e19fe0482049312db175e5946"
+    },
+    "host/common/SafeEvidence.cs": {
+      "path": "tools/DownstreamAcceptance/TP07/runtime-templates/common/SafeEvidence.cs",
+      "sha256": "44c5e9b5643a3d33ba348ed8acc51780ccad2f94a5b43cc819f5897c9f9c11ef"
+    },
+    "host/common/LiteralOracle.cs": {
+      "path": "tools/DownstreamAcceptance/TP07/runtime-templates/TP07LiteralProbe/LiteralOracle.cs",
+      "sha256": "cb1696d1b305471e12c1a953630ee66454c4ab92d505d650e291e7170c44f492"
+    },
+    "managed_identity.py": {
+      "path": "tools/DownstreamAcceptance/TP07/managed_identity.py",
+      "sha256": "ca7bb8eba198cf431d2fcfe5cbd4843360ddc80ad71937b1070099e6edd888ac"
+    },
+    "packed_oracle.py": {
+      "path": "tools/TemporalBoundaryProbe/packed_oracle.py",
+      "sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9"
+    }
+  },
+  "budgets": {
+    "main": 180,
+    "cleanup": 180,
+    "validator": 180
+  },
+  "max_events": 256,
+  "cases": [
+    {
+      "ordinal": 0,
+      "case_id": "T1-shared-sync-pair",
+      "profile": "shared",
+      "api": "sync",
+      "scale": 7,
+      "ticks": 639204129161234560,
+      "offset_minutes": 330,
+      "quantum": 1,
+      "supports_savepoints": true
+    },
+    {
+      "ordinal": 1,
+      "case_id": "T1-shared-async-pair",
+      "profile": "shared",
+      "api": "async",
+      "scale": 7,
+      "ticks": 639204129161234560,
+      "offset_minutes": 330,
+      "quantum": 1,
+      "supports_savepoints": true
+    },
+    {
+      "ordinal": 2,
+      "case_id": "T1-tls-sync-pair",
+      "profile": "tls",
+      "api": "sync",
+      "scale": 6,
+      "ticks": 639204129161234560,
+      "offset_minutes": 330,
+      "quantum": 10,
+      "supports_savepoints": false
+    },
+    {
+      "ordinal": 3,
+      "case_id": "T1-tls-async-pair",
+      "profile": "tls",
+      "api": "async",
+      "scale": 6,
+      "ticks": 639204129161234560,
+      "offset_minutes": 330,
+      "quantum": 10,
+      "supports_savepoints": false
+    }
+  ],
+  "step_ids": [
+    "runtime_identity",
+    "create",
+    "seed_SaveChanges",
+    "fresh_before",
+    "begin_transaction",
+    "capabilities",
+    "tracking_query",
+    "transaction_SaveChanges",
+    "query_inside_transaction",
+    "full_Rollback",
+    "dispose_transaction_context",
+    "fresh_after"
+  ],
+  "auxiliary_io": "catalog_raw_oracle_cleanup_synchronous",
+  "core_packages": [
+    "Microsoft.EntityFrameworkCore",
+    "Microsoft.EntityFrameworkCore.Abstractions",
+    "Microsoft.EntityFrameworkCore.Analyzers",
+    "Microsoft.EntityFrameworkCore.Relational",
+    "Microsoft.Extensions.Caching.Abstractions",
+    "Microsoft.Extensions.Caching.Memory",
+    "Microsoft.Extensions.Configuration.Abstractions",
+    "Microsoft.Extensions.DependencyInjection",
+    "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "Microsoft.Extensions.Logging",
+    "Microsoft.Extensions.Logging.Abstractions",
+    "Microsoft.Extensions.Options",
+    "Microsoft.Extensions.Primitives"
+  ],
+  "required_input_keys": [
+    "schema_version",
+    "task",
+    "workspace_root",
+    "original_repo",
+    "sdk",
+    "python",
+    "W_identity",
+    "capabilities",
+    "ef_overlay",
+    "toolpack",
+    "helper_origins",
+    "expected_closure",
+    "probe_source_manifest"
+  ],
+  "probe_source_manifest": {
+    "task": "TP07-T1-probe-source-manifest",
+    "required_keys": [
+      "schema_version",
+      "task",
+      "source_root",
+      "source_hashes",
+      "source_count",
+      "source_aggregate_sha256",
+      "aggregate_format"
+    ],
+    "source_count": 9,
+    "source_paths": [
+      "host/OfflineContracts.cs",
+      "host/ProbeContext.cs",
+      "host/ProbeIdentity.cs",
+      "host/Program.cs",
+      "host/TP07TransactionCapabilityProbe.csproj",
+      "host/TransactionEvidence.cs",
+      "host/common/LiteralOracle.cs",
+      "host/common/OwnedObjects.cs",
+      "host/common/SafeEvidence.cs"
+    ],
+    "aggregate_format": "sorted relative source paths: sha256 two spaces path newline",
+    "source_root_scope": "workspace_verification_snapshot"
+  },
+  "native_hash_domains": {
+    "archive_sidecar": "base64_SHA512_of_actual_full_ZIP_bytes",
+    "nuget_content_hash": "actual_native_metadata_and_native_lock_equal_root_approved_origin_lock_record"
+  },
+  "termination_reap_budget_seconds": 2,
+  "process_receipt_keys": [
+    "argv",
+    "cwd",
+    "exit_code",
+    "elapsed_ms",
+    "timed_out",
+    "termination",
+    "execution_deadline",
+    "termination_reap_budget",
+    "termination_reap_ms",
+    "signal_number"
+  ],
+  "termination_reasons": [
+    "deadline_kill",
+    "signal_kill",
+    "interrupt_kill",
+    "exception_kill",
+    "launch_failed"
+  ],
+  "termination_unknown_suffix": "_reap_unknown",
+  "transaction_event_binding_fields": [
+    "current_connection_object_id",
+    "connection_binding_source",
+    "binding_sequence"
+  ],
+  "connection_binding_sources": [
+    "callback_connection_argument",
+    "current_transaction_connection",
+    "registered_transaction_binding"
+  ],
+  "binding_callbacks": [
+    "TransactionStarted",
+    "TransactionStartedAsync",
+    "TransactionUsed",
+    "TransactionUsedAsync"
+  ],
+  "offline_registry": {
+    "rollback_cases": 16,
+    "factory_cases": 4,
+    "commit_cases": 8,
+    "ordered_blocks": [
+      "rollback",
+      "factory_Create",
+      "commit"
+    ],
+    "case_count": 28,
+    "terminals": [
+      "rollback",
+      "commit"
+    ],
+    "counters_include": [
+      "full_rollbacks",
+      "full_commits"
+    ],
+    "live_commit_allowed": false
+  }
+}

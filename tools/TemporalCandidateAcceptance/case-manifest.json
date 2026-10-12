@@ -1,0 +1,2275 @@
+{
+  "schema_version": 1,
+  "task": "TP-06-supplement",
+  "design_sha256": "c4e1f7cdde9fbb79654a53d6f60189eaf84b667235b91a90ece45e92abe78862",
+  "coverage_addendum_sha256": "4b378e8882814e8f4630a76c8fde3c32615021bbcd4c4b721f5f8c8c35856a8d",
+  "observability_addendum_sha256": "f24005af7472f5e1eab348999605345f015eefba58def18452237bf14619bca7",
+  "vectors": {
+    "ts_second": {
+      "kind": "ts",
+      "ticks": 639204129160000000,
+      "offset_minutes": null
+    },
+    "ts_micro": {
+      "kind": "ts",
+      "ticks": 639204129161234560,
+      "offset_minutes": null
+    },
+    "ts_tick": {
+      "kind": "ts",
+      "ticks": 639204129161234567,
+      "offset_minutes": null
+    },
+    "ts_scale3": {
+      "kind": "ts",
+      "ticks": 639204129161230000,
+      "offset_minutes": null
+    },
+    "tz_second": {
+      "kind": "tz",
+      "ticks": 639204129160000000,
+      "offset_minutes": 330
+    },
+    "tz_micro": {
+      "kind": "tz",
+      "ticks": 639204129161234560,
+      "offset_minutes": 330
+    },
+    "tz_tick": {
+      "kind": "tz",
+      "ticks": 639204129161234567,
+      "offset_minutes": 330
+    },
+    "tz_scale3": {
+      "kind": "tz",
+      "ticks": 639204129161230000,
+      "offset_minutes": 330
+    },
+    "date_min": {
+      "kind": "date",
+      "ticks": 0,
+      "offset_minutes": null
+    },
+    "date_max": {
+      "kind": "date",
+      "ticks": 3155378112000000000,
+      "offset_minutes": null
+    },
+    "date_ordinary": {
+      "kind": "date",
+      "ticks": 639203616000000000,
+      "offset_minutes": null
+    },
+    "time_zero": {
+      "kind": "time",
+      "ticks": 0,
+      "offset_minutes": null
+    },
+    "time_last_micro": {
+      "kind": "time",
+      "ticks": 863999999990,
+      "offset_minutes": null
+    },
+    "time_last_tick": {
+      "kind": "time",
+      "ticks": 863999999999,
+      "offset_minutes": null
+    },
+    "time_ordinary": {
+      "kind": "time",
+      "ticks": 513161234560,
+      "offset_minutes": null
+    },
+    "interval_zero": {
+      "kind": "interval",
+      "ticks": 0,
+      "offset_minutes": null
+    },
+    "interval_pos": {
+      "kind": "interval",
+      "ticks": 900001234560,
+      "offset_minutes": null
+    },
+    "interval_neg": {
+      "kind": "interval",
+      "ticks": -900001234560,
+      "offset_minutes": null
+    },
+    "interval_min_micro": {
+      "kind": "interval",
+      "ticks": -9223372036854775800,
+      "offset_minutes": null
+    },
+    "interval_max_micro": {
+      "kind": "interval",
+      "ticks": 9223372036854775800,
+      "offset_minutes": null
+    },
+    "interval_min": {
+      "kind": "interval",
+      "ticks": -9223372036854775808,
+      "offset_minutes": null
+    },
+    "interval_max": {
+      "kind": "interval",
+      "ticks": 9223372036854775807,
+      "offset_minutes": null
+    },
+    "interval_tick": {
+      "kind": "interval",
+      "ticks": 1,
+      "offset_minutes": null
+    },
+    "interval_99days": {
+      "kind": "interval",
+      "ticks": 85536000000000,
+      "offset_minutes": null
+    },
+    "interval_100days": {
+      "kind": "interval",
+      "ticks": 86400000000000,
+      "offset_minutes": null
+    },
+    "ts_micro_commit": {
+      "kind": "ts",
+      "ticks": 639204129162234560,
+      "offset_minutes": null
+    },
+    "ts_micro_rollback": {
+      "kind": "ts",
+      "ticks": 639204129163234560,
+      "offset_minutes": null
+    },
+    "ts_tick_commit": {
+      "kind": "ts",
+      "ticks": 639204129162234567,
+      "offset_minutes": null
+    },
+    "ts_tick_rollback": {
+      "kind": "ts",
+      "ticks": 639204129163234567,
+      "offset_minutes": null
+    },
+    "tz_micro_commit": {
+      "kind": "tz",
+      "ticks": 639204129162234560,
+      "offset_minutes": 330
+    },
+    "tz_micro_rollback": {
+      "kind": "tz",
+      "ticks": 639204129163234560,
+      "offset_minutes": 330
+    },
+    "tz_tick_commit": {
+      "kind": "tz",
+      "ticks": 639204129162234567,
+      "offset_minutes": 330
+    },
+    "tz_tick_rollback": {
+      "kind": "tz",
+      "ticks": 639204129163234567,
+      "offset_minutes": 330
+    }
+  },
+  "result_descriptor_addendum_sha256": "a926f5632dbc6f6b7902b42857be5c9452676d0e5c024999d62909d99e720d5e",
+  "root_decision_id": "root-20261009-supplement-tls-g2-read6-v1",
+  "shared_g2_read_root_decision_id": "root-20261009-supplement-g2-read-contract-v1",
+  "tls_g2_read6_design_sha256": "259b358661f63b7e897cd5f5891c68081f81e4aab9694e0444d0ca5c420ffae9",
+  "tls_g2_read6_rule_id": "g2_tls_autoreprepare_scale3_same_family_read6_v1",
+  "local_write_recovery_addendum_sha256": "9a9a25433b0631ac7a825df9358d81185da9336b2c57057484665f1f670ce980",
+  "read_observation_diagnostic_design_sha256": "eeb8165bb719a4a757aa3e7d62cf11f3dc006b33537e9ca93dc4c58d3f721bc6",
+  "interval_text_channel_design_sha256": "282c9a4323f9f7fc3d13645a0df0b3723efcfd65a7c1fd80dc9d4f8851e40ef2",
+  "interval_server_outer_minus_design_sha256": "563f52b307cd4692332568174b71e402514b6f3aba7469081f7dfe3c596c1163",
+  "binding_sql_source_sha256": "0360d2c3887daf50b6cc08437701ce3fe30aa605c65cde88ae4576497c0fa507",
+  "profiles": {
+    "shared": [
+      {
+        "case_id": "TX_DIRECT_INSERT_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro_commit",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro_commit",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_DIRECT_INSERT_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_micro_commit",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_micro_commit",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_DIRECT_INSERT_shared7_ts",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "ts_tick",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_shared7_ts",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_tick_commit",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_tick_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_shared7_ts",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_tick_commit",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_tick_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_DIRECT_INSERT_shared7_tz",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "tz_tick",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_shared7_tz",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_tick_commit",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_tick_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_shared7_tz",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_tick_commit",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_tick_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "ASYNC_REJECT_THEN_QUERY",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "fraction",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "ts_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale7_null",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.NotSupportedException",
+            "affected_rows": 0,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dt",
+        "stages": [
+          {
+            "stage_id": "second",
+            "api": "ExecuteReader",
+            "vector": "ts_second",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "micro",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "tick",
+            "api": "ExecuteReader",
+            "vector": "ts_tick",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_tick",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale3",
+            "api": "ExecuteReader",
+            "vector": "ts_scale3",
+            "scale": 3,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_scale3",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale6",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dto",
+        "stages": [
+          {
+            "stage_id": "second",
+            "api": "ExecuteReader",
+            "vector": "tz_second",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "micro",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "tick",
+            "api": "ExecuteReader",
+            "vector": "tz_tick",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_tick",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_METADATA_AUTOREPREPARE_dto",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 7,
+            "c_type": 27,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale3",
+            "api": "ExecuteReader",
+            "vector": "tz_scale3",
+            "scale": 3,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_scale3",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale6",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_CLONE_RESET_REOPEN",
+        "stages": [
+          {
+            "stage_id": "clone_control",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "clone_after_original_mutation",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "reset",
+            "api": "ExecuteReader",
+            "vector": "ts_second",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "reopen",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 7,
+            "c_type": 26,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_min",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_min",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_min",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_max",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_max",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_max",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_ordinary",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_zero",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_zero",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_last_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_last_micro",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_last_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_ordinary",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_zero",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_pos",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_pos",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_pos",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_neg",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_neg",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_neg",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_min_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_min_micro",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_min_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_max_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_max_micro",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_max_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_REJECT_TIME",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_REJECT_LAST_TICK",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "time_last_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_REJECT_SCALE7_NULL",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": "System.NotSupportedException",
+            "affected_rows": 0,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_min",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_min",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_max",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_max",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_tick",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_leading",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_99days",
+            "scale": 1574,
+            "c_type": 21,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_99days",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_99days",
+            "scale": 1574,
+            "c_type": 21,
+            "prepare_calls": 1,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_100days",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "READER_ORDINARY_default",
+        "stages": [],
+        "reader_mode": "default"
+      },
+      {
+        "case_id": "READER_ORDINARY_sequential",
+        "stages": [],
+        "reader_mode": "sequential"
+      },
+      {
+        "case_id": "READER_ORDINARY_FETCH",
+        "stages": [],
+        "reader_mode": "fetch"
+      }
+    ],
+    "tls": [
+      {
+        "case_id": "TX_DIRECT_INSERT_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro_commit",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_legacy6_ts",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro_commit",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_DIRECT_INSERT_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "insert",
+            "api": "ExecuteNonQuery",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_PREPARED_ASYNC_UPDATE_COMMIT_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "commit",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_micro_commit",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro_commit",
+            "transaction": "CommitAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "TX_ASYNC_UPDATE_ROLLBACK_legacy6_tz",
+        "stages": [
+          {
+            "stage_id": "rollback",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "tz_micro_commit",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "tz_micro_rollback",
+            "transaction": "RollbackAsync",
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "ASYNC_REJECT_THEN_QUERY",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "fraction",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "ts_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale7_null",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.NotSupportedException",
+            "affected_rows": 0,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dt",
+        "stages": [
+          {
+            "stage_id": "second",
+            "api": "ExecuteReader",
+            "vector": "ts_second",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "micro",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "tick",
+            "api": "ExecuteReaderAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": null,
+            "input_vector": "ts_tick",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_METADATA_AUTOREPREPARE_dt",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale3",
+            "api": "ExecuteReader",
+            "vector": "ts_scale3",
+            "scale": 3,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_scale3",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale6",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_REUSE_NO_EXPLICIT_PREPARE_dto",
+        "stages": [
+          {
+            "stage_id": "second",
+            "api": "ExecuteReader",
+            "vector": "tz_second",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "micro",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "tick",
+            "api": "ExecuteReaderAsync",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": null,
+            "input_vector": "tz_tick",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_METADATA_AUTOREPREPARE_dto",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale3",
+            "api": "ExecuteReader",
+            "vector": "tz_scale3",
+            "scale": 3,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_scale3",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "scale6",
+            "api": "ExecuteReader",
+            "vector": "tz_micro",
+            "scale": 6,
+            "c_type": 23,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "tz_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "BIND_CLONE_RESET_REOPEN",
+        "stages": [
+          {
+            "stage_id": "clone_control",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "clone_after_original_mutation",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "reset",
+            "api": "ExecuteReader",
+            "vector": "ts_second",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_second",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "reopen",
+            "api": "ExecuteReader",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          },
+          {
+            "stage_id": "tls_default_explicit_reject",
+            "api": "ExecuteReaderAsync",
+            "vector": "ts_micro",
+            "scale": 6,
+            "c_type": 16,
+            "prepare_calls": 0,
+            "exception": "System.NotSupportedException",
+            "affected_rows": null,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": true,
+            "fresh": false,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_min",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_min",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_min",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_max",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_max",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_max",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_ordinary",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_zero",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_zero",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_last_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_last_micro",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_last_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_ordinary",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_zero",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_pos",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_pos",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_pos",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_neg",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_neg",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_neg",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_min_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_min_micro",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_min_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_max_micro",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_max_micro",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_max_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_null",
+        "stages": [
+          {
+            "stage_id": "write",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": true
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_DATE_REJECT_TIME",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "date_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "date_ordinary",
+            "scale": 0,
+            "c_type": 14,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "ts_micro",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_REJECT_LAST_TICK",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "time_last_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_TIME_REJECT_SCALE7_NULL",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "time_ordinary",
+            "scale": 6,
+            "c_type": 15,
+            "prepare_calls": 0,
+            "exception": "System.NotSupportedException",
+            "affected_rows": 0,
+            "input_vector": "time_ordinary",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_min",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_min",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_max",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_max",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_tick",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQuery",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_zero",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_zero",
+            "scale": 1686,
+            "c_type": 21,
+            "prepare_calls": 0,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_tick",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "NATIVE_INTERVAL_REJECT_leading",
+        "stages": [
+          {
+            "stage_id": "control",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_99days",
+            "scale": 1574,
+            "c_type": 21,
+            "prepare_calls": 1,
+            "exception": null,
+            "affected_rows": 1,
+            "input_vector": "interval_99days",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          },
+          {
+            "stage_id": "reject",
+            "api": "ExecuteNonQueryAsync",
+            "vector": "interval_99days",
+            "scale": 1574,
+            "c_type": 21,
+            "prepare_calls": 1,
+            "exception": "System.OverflowException",
+            "affected_rows": 0,
+            "input_vector": "interval_100days",
+            "transaction": null,
+            "binding": false,
+            "fresh": true,
+            "is_null": false
+          }
+        ]
+      },
+      {
+        "case_id": "READER_ORDINARY_default",
+        "stages": [],
+        "reader_mode": "default"
+      },
+      {
+        "case_id": "READER_ORDINARY_sequential",
+        "stages": [],
+        "reader_mode": "sequential"
+      },
+      {
+        "case_id": "READER_ORDINARY_FETCH",
+        "stages": [],
+        "reader_mode": "fetch"
+      }
+    ]
+  }
+}

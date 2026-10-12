@@ -1,0 +1,35 @@
+# Supplement v5 诊断性工具静态验收
+
+2026-10-09。结论：**diagnostic_static_accepted_for_independent_verification**。本轮严格限定于已批准的 [v4运行triage](TP06-supplement-v4-runtime-triage.md)，没有确认的新静态阻塞。可交Low离线及root安排的新完整运行；下一次仍可能在同一原guard失败，以新证据定位。**NATIVE_INTERVAL_zero的具体运行根因仍未判定，未接受其值合同或任何新格式。** 此次没有运行SDK、Python测试、consumer或DB，没有修改产品/工具。
+
+## 冻结身份与范围
+
+Low快照 `.local/temporal-native/verification/TP06-supplement-v5/source-manifest.json` 实读SHA256 `21a107901453161a6e222811094bd1af91ddeed8ad9a0595fb3700431f97d232`；root/owner提供17文件aggregate `46d1ab64f51801382a0f032f84932a25f86a536824d792ebba92d5942a68b4c3`。17份文件SHA已全部实读匹配交接。
+
+关键变化：Observations.cs `59bfb942467cc7ca1d34404afc8c5c3f1941612435dc7de015d0d2f3997374b1`；Offline.cs `a6f24ea3d2fac9925eac114fc78cc8f1ead230019b43bd8314d23b4c33d1f9c8`；contracts.py `0de2c2fdcd1988eef5da79ea2b9482f620407cb78e8f68c0f825202875358f67`；test_validator_contracts.py `56872bc10c1ecdb9c5efeac5a9ef91aa48de2a90db9e7a394f5ad3bc3a9bf891`；case-manifest `9a029a807dafba9dbef3b238a99c639df62d8ede1ed2256649f57b79c5e5c8dc`。Cases.cs仍为0360d2…，Safety.cs、Leading、Readers、Sequential、Program及产品包身份不变。validate.py仍为b1b895…。
+
+v4→v5的manifest只增加诊断设计SHA `eeb8165bb719a4a757aa3e7d62cf11f3dc006b33537e9ca93dc4c58d3f721bc6`；case/vector/API、SQL、成功G2写入合同与来源pin均未变。contracts.py只同步设计pin与44个C#检查ID，不改变接受算法。
+
+## 分步采集与异常边界
+
+ReadTrace在读取metadata之前把attempt附加到可选stage.read_attempts；FreshOnConnection和FreshOfficial显式传入已有stage。每step先写attempted，真实调用返回后先标call_returned，再保存有限结果，最终标completed；失败记录Safe error并重抛。因而可区分getter没返回、getter已返回但诊断转换失败、以及后续guard拒绝。其它caller未传sink时不宣称新增持久诊断。
+
+metadata、cell的实际长度/hash、合法raw、IsDBNull、类型/schema、default/provider/generic getter、两个独立文本通道及fields解析按调用顺序分别留存。Raw之前已有cell事实，ValueStringGet与ValueTextGuard、ServerStringGet与ServerTextGuard明确分开；server IsDBNull实际结果在一致性断言之前保存。
+
+最终完整observations仍只在原ReadObservation完成后返回。read_attempts是采集过程，不是另一个accepted oracle；completed只表示完整采集返回，不等于所有值合同通过。既有可记录的generic错误仍显式留在typed_error，NULL/官方已知投影例外标handled；validator照旧核对该错误是否属于原合同。未处理的getter/guard失败继续向上抛出，partial attempt保持未完成，原cleanup路径不变。
+
+## 安全输出复核
+
+- DiagnosticText先判断null和120字符上限。超过上限立即返回长度与processing_limit_exceeded；hash、类别和diagnostic_text均为空，不回显片段、不计算hash。范围内仅保存UTF-8 SHA256与有限字符类别计数；未知词/非白名单字符不回显。
+- diagnostic_text的词法白名单只有数字、受限时间分隔符/空白和完整固定INTERVAL/DAY/TO/SECOND关键字。输出上下文来自本任务固定列与reader通道，不读取异常message。该白名单独立于原格式parser：能够安全记录不代表能够被接受，不执行Trim/补零/符号改写后送回parser。
+- GuardRawValue保留原ordinary metadata与CType精确宽度门；允许宽度映射最大24 bytes，只有通过门后才生成hex。非法位置/格式/长度不输出任意raw bytes，只留先前有限cell事实。没有认证帧或完整报文采集。
+- getter结果仅经既有Observe保存类型、允许的ticks/offset/Kind/NULL及Safe error；不直接序列化reader或DmIntervalDT对象，不为诊断额外调用其ToString。字符串结果仍受原安全函数约束。
+- 本路径raw/text/server-null guard使用固定ToolAssertionCode。GuardReadText包装的只是已经返回字符串上的工具SafeNativeText拒绝；外部GetString异常在独立getter步骤保持原Safe类型，未复制任意Message/stack/SQL。Safety.cs原枚举白名单输出机制未改。
+
+## 合同与后续验证
+
+新增8项实际C#helper控制使用同一ReadTrace、GuardRawValue、文本与server-null路径，覆盖前序事实保留、value/server guard区分、getter异常、不回显未知词、超长边界和partial不成完整结果。旧36项保留，总44个明确ID在runner/contracts一致。新增8项Python隔离mutants要求诊断记录无论partial或自称completed，都不能替代缺失observations、错误source/packet/ticks/text/connection或失败进程。旧140项保留，现148项尚未由本review执行。
+
+已核对新可选参数/调用点、同步与异步step回调、记录序列化类型的静态可达性，未见确认的编译/API阻塞；实际构建与执行仍由Low完成。原R1–R4、v4状态恢复、有限read tuple、身份/ownership/cleanup及leading未批准号pending全部保持。
+
+Low按新冻结先执行完整离线门，再按root授权进行新的完整运行。若原interval guard再次拒绝，保留此次真实read_attempts与失败，不把诊断性版本说成语义修复成功；有充分事实后再由root/Astra裁决真实修复。旧v3/v4失败、原主矩阵接受和全部历史证据不回写，TP06仍待完整Supplement通过。

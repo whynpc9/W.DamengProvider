@@ -83,9 +83,36 @@ internal class DmConnProperty
 
 	internal string oracleDateFormat = "";
 
-	internal string oracleTimestampFormat = "";
+	internal const string DefaultOracleTimestampFormat = "DD-MON-YY HH12.MI.SS.FF6 AM";
+	internal const string DefaultOracleTimestampTZFormat = "DD-MON-YY HH12.MI.SS.FF6 AM +TZH:TZM";
+	private string timestampFormat = "";
+	private string timestampTZFormat = "";
+	internal bool AutomaticTimestampDisplay { get; private set; }
+	internal bool AutomaticTimestampTZDisplay { get; private set; }
+	internal string oracleTimestampFormat
+	{
+		get => timestampFormat;
+		set { timestampFormat = value; AutomaticTimestampDisplay = false; }
+	}
+	internal string oracleTimestampTZFormat
+	{
+		get => timestampTZFormat;
+		set { timestampTZFormat = value; AutomaticTimestampTZDisplay = false; }
+	}
+	internal void SetLoginTimestampFormat(string value, bool withTimezone)
+	{
+		if (withTimezone)
+		{
+			oracleTimestampTZFormat = value;
+			AutomaticTimestampTZDisplay = string.Equals(value, DefaultOracleTimestampTZFormat, StringComparison.OrdinalIgnoreCase);
+		}
+		else
+		{
+			oracleTimestampFormat = value;
+			AutomaticTimestampDisplay = string.Equals(value, DefaultOracleTimestampFormat, StringComparison.OrdinalIgnoreCase);
+		}
+	}
 
-	internal string oracleTimestampTZFormat = "";
 
 	internal string oracleTimeFormat = "";
 
@@ -1199,6 +1226,8 @@ internal class DmConnProperty
 		dmConnProperty.oracleDateFormat = oracleDateFormat;
 		dmConnProperty.oracleTimestampFormat = oracleTimestampFormat;
 		dmConnProperty.oracleTimestampTZFormat = oracleTimestampTZFormat;
+		dmConnProperty.AutomaticTimestampDisplay = AutomaticTimestampDisplay;
+		dmConnProperty.AutomaticTimestampTZDisplay = AutomaticTimestampTZDisplay;
 		dmConnProperty.oracleTimeFormat = oracleTimeFormat;
 		dmConnProperty.oracleTimeTZFormat = oracleTimeTZFormat;
 		dmConnProperty.formatNumericChars = formatNumericChars;

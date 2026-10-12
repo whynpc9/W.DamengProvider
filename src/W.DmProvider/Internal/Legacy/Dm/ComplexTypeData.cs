@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using W.Dm.Internal.Types;
 using W.Dm.util;
 
 namespace W.Dm;
@@ -967,7 +968,8 @@ public class ComplexTypeData
 		byte[] bytes = DmConvertion.GetBytes(val, offset, num);
 		offset += num;
 		outVal.m_offset = offset;
-		DmGetValue dmGetValue = new DmGetValue(desc.m_conn.GetConnInstance().ConnProperty.ServerEncoding, desc.m_conn.GetConnInstance().GetStmtFromPool((DmCommand)desc.m_conn.CreateCommand()), desc.m_conn.GetConnInstance().ConnProperty.NewLobFlag, new DmField[1] { desc.column });
+		// TypeDataToBytes embeds DmSetValue's packed scalar bytes; members do not use the outer row's BDTA layout.
+		DmGetValue dmGetValue = new DmGetValue(desc.m_conn.GetConnInstance().ConnProperty.ServerEncoding, desc.m_conn.GetConnInstance().GetStmtFromPool((DmCommand)desc.m_conn.CreateCommand()), desc.m_conn.GetConnInstance().ConnProperty.NewLobFlag, new DmField[1] { desc.column }, DmTemporalResultFormat.OrdinaryPacked);
 		object val2 = dmGetValue.GetObject(0, bytes, desc.column.GetCType(), desc.column.GetPrecision(), desc.column.GetScale());
 		dmGetValue.m_Statement.p();
 		return new ComplexTypeData(val2, bytes);

@@ -160,8 +160,8 @@ internal partial class c
 		{
 			P_1.oracleDateFormat = "DD-MON-YY";
 			P_1.oracleTimeFormat = "HH12.MI.SS.FF6 AM";
-			P_1.oracleTimestampFormat = "DD-MON-YY HH12.MI.SS.FF6 AM";
-			P_1.oracleTimestampTZFormat = "DD-MON-YY HH12.MI.SS.FF6 AM +TZH:TZM";
+			P_1.SetLoginTimestampFormat(DmConnProperty.DefaultOracleTimestampFormat, withTimezone: false);
+			P_1.SetLoginTimestampFormat(DmConnProperty.DefaultOracleTimestampTZFormat, withTimezone: true);
 			P_1.oracleTimeTZFormat = "HH12.MI.SS.FF6 AM +TZH:TZM";
 			P_1.nlsDateLang = 0;
 		}
@@ -180,12 +180,12 @@ internal partial class c
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))
 			{
-				P_1.oracleTimestampFormat = text;
+				P_1.SetLoginTimestampFormat(text, withTimezone: false);
 			}
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))
 			{
-				P_1.oracleTimestampTZFormat = text;
+				P_1.SetLoginTimestampFormat(text, withTimezone: true);
 			}
 			text = P_0.a(P_1.ServerEncoding);
 			if (StringUtil.isNotEmpty(text))
@@ -291,9 +291,10 @@ internal partial class c
 		DmFrameReader.ValidateCount(P_1, 32, P_0.a(false));
 		for (int i = 0; i < P_1; i++)
 		{
-			ParamsInfo[i].SetCType(P_0.d());
-			ParamsInfo[i].SetPrecision(P_0.d());
-			ParamsInfo[i].SetScale(P_0.d());
+			int rawType = P_0.d(), rawPrecision = P_0.d(), rawScale = P_0.d();
+			ParamsInfo[i].SetCType(rawType);
+			ParamsInfo[i].SetPrecision(rawPrecision);
+			ParamsInfo[i].SetScale(rawScale);
 			ParamsInfo[i].SetNullable(P_0.d() != 0);
 			short num = P_0.C();
 			ParamsInfo[i].SetTypeFlag((byte)(((num & 8) == 0) ? 1 : 2));
@@ -314,6 +315,21 @@ internal partial class c
 				ParamsInfo[i].SetTableID(P_0.d());
 				ParamsInfo[i].SetColID(P_0.C());
 			}
+            int derivedMask = 0;
+            // This exact server advisory declaration is an unresolved interval placeholder,
+            // not a packed declaration. Keep its source unchanged until command binding.
+            bool unresolvedInterval = rawType == 21 && rawScale == 0 && ParamsInfo[i].GetTypeFlag() == 2;
+            if (DmTemporalMetadataSemantics.IsTemporal(rawType) && !unresolvedInterval)
+                derivedMask = DmTemporalMetadataSemantics.Interpret(rawType, rawScale).Mask;
+            ParamsInfo[i].CaptureTemporalServerMetadata(new(DmTemporalMetadataSource.ParameterDescribe,
+                rawType, rawPrecision, rawScale, ParamsInfo[i].GetTypeFlag(), 0, derivedMask,
+                DmTemporalResultFormat.Unknown));
+            if (DmTemporalMetadataSemantics.IsTemporal(rawType) && !unresolvedInterval)
+            {
+                var semantic = DmTemporalMetadataSemantics.Interpret(rawType, rawScale);
+                ParamsInfo[i].mask = semantic.Mask;
+                if (rawType is 16 or 26) ParamsInfo[i].SetScale(semantic.FractionalScale);
+            }
 			if (9 == ParamsInfo[i].GetCType() && 129 == ParamsInfo[i].GetScale())
 			{
 				ParamsInfo[i].SetPrecision((int)Math.Round((double)ParamsInfo[i].GetPrec() * 0.30103));
@@ -384,19 +400,14 @@ internal partial class c
 				array[i].SetTableID(P_0.d());
 				array[i].SetColID(P_0.C());
 			}
-			if (array[i].type == 16 || array[i].type == 26)
-			{
-				if ((array[i].scale & 0x1000) != 0)
-				{
-					array[i].scale = array[i].scale & -4097;
-					array[i].mask = 4;
-				}
-				else if ((array[i].scale & 0x2000) != 0)
-				{
-					array[i].scale = array[i].scale & -8193;
-					array[i].mask = 1;
-				}
-			}
+            if (DmTemporalMetadataSemantics.IsTemporal(cType))
+            {
+                var semantic = DmTemporalMetadataSemantics.Interpret(cType, scale);
+                array[i].CaptureTemporalServerMetadata(new(DmTemporalMetadataSource.ResultColumn,
+                    cType, num2, scale, 0, 0, semantic.Mask, DmTemporalResultFormat.Unknown));
+                array[i].mask = semantic.Mask;
+                if (cType is 16 or 26) array[i].SetScale(semantic.FractionalScale);
+            }
 			if (array[i].type == 9 && array[i].scale == 129)
 			{
 				array[i].originalPrec = array[i].prec;
@@ -470,7 +481,8 @@ internal partial class c
 		string serverEncoding = P_1.G().ConnProperty.ServerEncoding;
 		bool newLobFlag = P_1.G().ConnProperty.NewLobFlag;
 		DmField[] paramsInfo = P_1.F().GetParamsInfo();
-		DmGetValue dmGetValue = new DmGetValue(serverEncoding, P_1, newLobFlag, paramsInfo);
+		// Output parameters are length-prefixed packed scalars, independent of the result set's BDTA format.
+		DmGetValue dmGetValue = new DmGetValue(serverEncoding, P_1, newLobFlag, paramsInfo, DmTemporalResultFormat.OrdinaryPacked);
 		DmParameterInternal[] ParamsInfo = null;
 		DmParameterInternal dmParameterInternal = null;
 		DmParameter dmParameter = null;

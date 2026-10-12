@@ -1,0 +1,1610 @@
+{
+  "W": {
+    "dll_sha256": "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
+    "id": "W.DmProvider",
+    "mvid": "aa23e673-957c-4b1e-bf0f-291ff60077e6",
+    "package_sha256": "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+    "version": "0.1.0-temporal.20261008144915"
+  },
+  "candidate_acceptance": false,
+  "case_count": 53,
+  "cases": [
+    {
+      "case_id": "F7-V-DT-tail0",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456000,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234560,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 2,
+      "kind": "dt",
+      "ordinal": 1,
+      "suffix": "tail0",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 1
+    },
+    {
+      "case_id": "F7-V-DT-tail1",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456100,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234561,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 4,
+      "kind": "dt",
+      "ordinal": 2,
+      "suffix": "tail1",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 3
+    },
+    {
+      "case_id": "F7-V-DT-tail2",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456200,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234562,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 6,
+      "kind": "dt",
+      "ordinal": 3,
+      "suffix": "tail2",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 5
+    },
+    {
+      "case_id": "F7-V-DT-tail3",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456300,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234563,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 8,
+      "kind": "dt",
+      "ordinal": 4,
+      "suffix": "tail3",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 7
+    },
+    {
+      "case_id": "F7-V-DT-tail4",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456400,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234564,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 10,
+      "kind": "dt",
+      "ordinal": 5,
+      "suffix": "tail4",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 9
+    },
+    {
+      "case_id": "F7-V-DT-tail5",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456500,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234565,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 12,
+      "kind": "dt",
+      "ordinal": 6,
+      "suffix": "tail5",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 11
+    },
+    {
+      "case_id": "F7-V-DT-tail6",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456600,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234566,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 14,
+      "kind": "dt",
+      "ordinal": 7,
+      "suffix": "tail6",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 13
+    },
+    {
+      "case_id": "F7-V-DT-tail7",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 16,
+      "kind": "dt",
+      "ordinal": 8,
+      "suffix": "tail7",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 15
+    },
+    {
+      "case_id": "F7-V-DT-tail8",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456800,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234568,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 18,
+      "kind": "dt",
+      "ordinal": 9,
+      "suffix": "tail8",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 17
+    },
+    {
+      "case_id": "F7-V-DT-tail9",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456900,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234569,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 20,
+      "kind": "dt",
+      "ordinal": 10,
+      "suffix": "tail9",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 19
+    },
+    {
+      "case_id": "F7-V-DT-min",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 0,
+          "offset_minutes": null,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 0,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 22,
+      "kind": "dt",
+      "ordinal": 11,
+      "suffix": "min",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 21
+    },
+    {
+      "case_id": "F7-V-DT-min_tick",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": null,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 1,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 24,
+      "kind": "dt",
+      "ordinal": 12,
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 23
+    },
+    {
+      "case_id": "F7-V-DT-max",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 26,
+      "kind": "dt",
+      "ordinal": 13,
+      "suffix": "max",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 25
+    },
+    {
+      "case_id": "F7-V-DT-max_tick",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999800,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999998,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 28,
+      "kind": "dt",
+      "ordinal": 14,
+      "suffix": "max_tick",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 27
+    },
+    {
+      "case_id": "F7-V-DT-max_9ticks",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999000,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999990,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 30,
+      "kind": "dt",
+      "ordinal": 15,
+      "suffix": "max_9ticks",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 29
+    },
+    {
+      "case_id": "F7-V-DT-carry_last",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 999999900,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129169999999,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 32,
+      "kind": "dt",
+      "ordinal": 16,
+      "suffix": "carry_last",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 31
+    },
+    {
+      "case_id": "F7-V-DT-carry_next",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 0,
+          "offset_minutes": null,
+          "second": 17,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129170000000,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 34,
+      "kind": "dt",
+      "ordinal": 17,
+      "suffix": "carry_next",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 33
+    },
+    {
+      "case_id": "F7-V-DT-NULL",
+      "context": "domain",
+      "expected": {
+        "fields": null,
+        "is_null": true,
+        "kind": "dt",
+        "local_ticks": null,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 36,
+      "kind": "dt",
+      "ordinal": 18,
+      "suffix": "NULL",
+      "table_key": "F7-TABLE-DT",
+      "typed_row_id": 35
+    },
+    {
+      "case_id": "F7-V-DTO-tail0",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456000,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234560,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234560
+      },
+      "expression_row_id": 2,
+      "kind": "dto",
+      "ordinal": 19,
+      "suffix": "tail0",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 1
+    },
+    {
+      "case_id": "F7-V-DTO-tail1",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456100,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234561,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234561
+      },
+      "expression_row_id": 4,
+      "kind": "dto",
+      "ordinal": 20,
+      "suffix": "tail1",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 3
+    },
+    {
+      "case_id": "F7-V-DTO-tail2",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456200,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234562,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234562
+      },
+      "expression_row_id": 6,
+      "kind": "dto",
+      "ordinal": 21,
+      "suffix": "tail2",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 5
+    },
+    {
+      "case_id": "F7-V-DTO-tail3",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456300,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234563,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234563
+      },
+      "expression_row_id": 8,
+      "kind": "dto",
+      "ordinal": 22,
+      "suffix": "tail3",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 7
+    },
+    {
+      "case_id": "F7-V-DTO-tail4",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456400,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234564,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234564
+      },
+      "expression_row_id": 10,
+      "kind": "dto",
+      "ordinal": 23,
+      "suffix": "tail4",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 9
+    },
+    {
+      "case_id": "F7-V-DTO-tail5",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456500,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234565,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234565
+      },
+      "expression_row_id": 12,
+      "kind": "dto",
+      "ordinal": 24,
+      "suffix": "tail5",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 11
+    },
+    {
+      "case_id": "F7-V-DTO-tail6",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456600,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234566,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234566
+      },
+      "expression_row_id": 14,
+      "kind": "dto",
+      "ordinal": 25,
+      "suffix": "tail6",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 13
+    },
+    {
+      "case_id": "F7-V-DTO-tail7",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234567
+      },
+      "expression_row_id": 16,
+      "kind": "dto",
+      "ordinal": 26,
+      "suffix": "tail7",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 15
+    },
+    {
+      "case_id": "F7-V-DTO-tail8",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456800,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234568,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234568
+      },
+      "expression_row_id": 18,
+      "kind": "dto",
+      "ordinal": 27,
+      "suffix": "tail8",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 17
+    },
+    {
+      "case_id": "F7-V-DTO-tail9",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456900,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234569,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234569
+      },
+      "expression_row_id": 20,
+      "kind": "dto",
+      "ordinal": 28,
+      "suffix": "tail9",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 19
+    },
+    {
+      "case_id": "F7-V-DTO-min",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 0,
+          "offset_minutes": 0,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 0,
+        "offset_minutes": 0,
+        "utc_ticks": 0
+      },
+      "expression_row_id": 22,
+      "kind": "dto",
+      "ordinal": 29,
+      "suffix": "min",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 21
+    },
+    {
+      "case_id": "F7-V-DTO-min_tick",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": 0,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 1,
+        "offset_minutes": 0,
+        "utc_ticks": 1
+      },
+      "expression_row_id": 24,
+      "kind": "dto",
+      "ordinal": 30,
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 23
+    },
+    {
+      "case_id": "F7-V-DTO-max",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999999
+      },
+      "expression_row_id": 26,
+      "kind": "dto",
+      "ordinal": 31,
+      "suffix": "max",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 25
+    },
+    {
+      "case_id": "F7-V-DTO-max_tick",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999800,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999998,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999998
+      },
+      "expression_row_id": 28,
+      "kind": "dto",
+      "ordinal": 32,
+      "suffix": "max_tick",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 27
+    },
+    {
+      "case_id": "F7-V-DTO-max_9ticks",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999000,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999990,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999990
+      },
+      "expression_row_id": 30,
+      "kind": "dto",
+      "ordinal": 33,
+      "suffix": "max_9ticks",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 29
+    },
+    {
+      "case_id": "F7-V-DTO-carry_last",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 999999900,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129169999999,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931169999999
+      },
+      "expression_row_id": 32,
+      "kind": "dto",
+      "ordinal": 34,
+      "suffix": "carry_last",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 31
+    },
+    {
+      "case_id": "F7-V-DTO-carry_next",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 0,
+          "offset_minutes": 330,
+          "second": 17,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129170000000,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931170000000
+      },
+      "expression_row_id": 34,
+      "kind": "dto",
+      "ordinal": 35,
+      "suffix": "carry_next",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 33
+    },
+    {
+      "case_id": "F7-V-DTO-NULL",
+      "context": "domain",
+      "expected": {
+        "fields": null,
+        "is_null": true,
+        "kind": "dto",
+        "local_ticks": null,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 36,
+      "kind": "dto",
+      "ordinal": 36,
+      "suffix": "NULL",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 35
+    },
+    {
+      "case_id": "F7-V-DTO-offset_0",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": 0,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": 0,
+        "utc_ticks": 639204129161234567
+      },
+      "expression_row_id": 38,
+      "kind": "dto",
+      "ordinal": 37,
+      "suffix": "offset_0",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 37
+    },
+    {
+      "case_id": "F7-V-DTO-offset_m330",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": -330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": -330,
+        "utc_ticks": 639204327161234567
+      },
+      "expression_row_id": 40,
+      "kind": "dto",
+      "ordinal": 38,
+      "suffix": "offset_m330",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 39
+    },
+    {
+      "case_id": "F7-V-DTO-offset_m779",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": -779,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": -779,
+        "utc_ticks": 639204596561234567
+      },
+      "expression_row_id": 42,
+      "kind": "dto",
+      "ordinal": 39,
+      "suffix": "offset_m779",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 41
+    },
+    {
+      "case_id": "F7-V-DTO-offset_p840",
+      "context": "domain",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": 840,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": 840,
+        "utc_ticks": 639203625161234567
+      },
+      "expression_row_id": 44,
+      "kind": "dto",
+      "ordinal": 40,
+      "suffix": "offset_p840",
+      "table_key": "F7-TABLE-DTO",
+      "typed_row_id": 43
+    },
+    {
+      "case_id": "F7-DEF-DT-min_tick",
+      "context": "default",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": null,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 1,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 2,
+      "kind": "dt",
+      "ordinal": 41,
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DEF-DT-min_tick",
+      "typed_row_id": 1
+    },
+    {
+      "case_id": "F7-DEF-DT-max",
+      "context": "default",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expression_row_id": 2,
+      "kind": "dt",
+      "ordinal": 42,
+      "suffix": "max",
+      "table_key": "F7-TABLE-DEF-DT-max",
+      "typed_row_id": 1
+    },
+    {
+      "case_id": "F7-DEF-DTO-min_tick",
+      "context": "default",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": 0,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 1,
+        "offset_minutes": 0,
+        "utc_ticks": 1
+      },
+      "expression_row_id": 2,
+      "kind": "dto",
+      "ordinal": 43,
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DEF-DTO-min_tick",
+      "typed_row_id": 1
+    },
+    {
+      "case_id": "F7-DEF-DTO-max",
+      "context": "default",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999999
+      },
+      "expression_row_id": 2,
+      "kind": "dto",
+      "ordinal": 44,
+      "suffix": "max",
+      "table_key": "F7-TABLE-DEF-DTO-max",
+      "typed_row_id": 1
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456600,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234566,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "case_id": "F7-P-DT-tail7",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "kind": "dt",
+      "ordinal": 45,
+      "source_case_id": "F7-V-DT-tail7",
+      "suffix": "tail7",
+      "table_key": "F7-TABLE-DT",
+      "target_row_id": 16
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 0,
+          "offset_minutes": null,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 0,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "case_id": "F7-P-DT-min_tick",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": null,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 1,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "kind": "dt",
+      "ordinal": 46,
+      "source_case_id": "F7-V-DT-min_tick",
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DT",
+      "target_row_id": 24
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999800,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999998,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "case_id": "F7-P-DT-max",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": null,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "kind": "dt",
+      "ordinal": 47,
+      "source_case_id": "F7-V-DT-max",
+      "suffix": "max",
+      "table_key": "F7-TABLE-DT",
+      "target_row_id": 26
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456600,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234566,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234566
+      },
+      "case_id": "F7-P-DTO-tail7",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234567
+      },
+      "kind": "dto",
+      "ordinal": 48,
+      "source_case_id": "F7-V-DTO-tail7",
+      "suffix": "tail7",
+      "table_key": "F7-TABLE-DTO",
+      "target_row_id": 16
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 0,
+          "offset_minutes": 0,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 0,
+        "offset_minutes": 0,
+        "utc_ticks": 0
+      },
+      "case_id": "F7-P-DTO-min_tick",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 1,
+          "hour": 0,
+          "minute": 0,
+          "month": 1,
+          "nanoseconds": 100,
+          "offset_minutes": 0,
+          "second": 0,
+          "year": 1
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 1,
+        "offset_minutes": 0,
+        "utc_ticks": 1
+      },
+      "kind": "dto",
+      "ordinal": 49,
+      "source_case_id": "F7-V-DTO-min_tick",
+      "suffix": "min_tick",
+      "table_key": "F7-TABLE-DTO",
+      "target_row_id": 24
+    },
+    {
+      "adjacent": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999800,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999998,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999998
+      },
+      "case_id": "F7-P-DTO-max",
+      "context": "predicate",
+      "expected": {
+        "fields": {
+          "day": 31,
+          "hour": 23,
+          "minute": 59,
+          "month": 12,
+          "nanoseconds": 999999900,
+          "offset_minutes": 0,
+          "second": 59,
+          "year": 9999
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 3155378975999999999,
+        "offset_minutes": 0,
+        "utc_ticks": 3155378975999999999
+      },
+      "kind": "dto",
+      "ordinal": 50,
+      "source_case_id": "F7-V-DTO-max",
+      "suffix": "max",
+      "table_key": "F7-TABLE-DTO",
+      "target_row_id": 26
+    },
+    {
+      "case_id": "F7-U-DT",
+      "context": "assignment",
+      "control_case_id": "F7-V-DT-tail7",
+      "control_row_id": 15,
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "initial": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456000,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234560,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "kind": "dt",
+      "ordinal": 51,
+      "row_id": 37,
+      "table_key": "F7-TABLE-DT"
+    },
+    {
+      "case_id": "F7-U-DTO",
+      "context": "assignment",
+      "control_case_id": "F7-V-DTO-tail7",
+      "control_row_id": 15,
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234567
+      },
+      "initial": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456000,
+          "offset_minutes": 330,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dto",
+        "local_ticks": 639204129161234560,
+        "offset_minutes": 330,
+        "utc_ticks": 639203931161234560
+      },
+      "kind": "dto",
+      "ordinal": 52,
+      "row_id": 45,
+      "table_key": "F7-TABLE-DTO"
+    },
+    {
+      "case_id": "F7-A-DT-second1",
+      "context": "dateadd",
+      "expected": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": null,
+          "second": 17,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129171234567,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "expected_row_id": 39,
+      "initial": {
+        "fields": {
+          "day": 23,
+          "hour": 14,
+          "minute": 15,
+          "month": 7,
+          "nanoseconds": 123456700,
+          "offset_minutes": null,
+          "second": 16,
+          "year": 2026
+        },
+        "is_null": false,
+        "kind": "dt",
+        "local_ticks": 639204129161234567,
+        "offset_minutes": null,
+        "utc_ticks": null
+      },
+      "kind": "dt",
+      "ordinal": 53,
+      "row_id": 38,
+      "table_key": "F7-TABLE-DT"
+    }
+  ],
+  "design_sha256": "ae8d14bd4daceb77692ad5c1225e84cbd676079fa1659cbc76ef66cc51ce9748",
+  "expected_final_rows": {
+    "each_default": 2,
+    "main_dt": 39,
+    "main_dto": 45
+  },
+  "frozen_value_policy_sha256": "cbf6752ce287247c5667fc309c57ef719f03d377c2caa3bf23ef8ab06ac0bb89",
+  "frozen_value_validator_sha256": "d9ea39850a3d394f86f2fef54fe8330d732ea3a46d6823da3da74e84b9188d55",
+  "full_EF_C_accepted": false,
+  "history": {
+    "cleanup": "0ab176b61da0c9082381332f576cfd10c1ae7f8ad640bb1b21bf758fa1789c05",
+    "execution_receipt": "b33b8cb9ca165a0a863f8e9d1a6dbc17096a1b299c07b9379543670beb8f5460",
+    "main": "b9eb4e9a14a4ffbca86d590a80eab92cd962a4fe28f2023064c9ccda4abcfd21",
+    "source_pack": "7a909fb21e72fea1aa912b03ac8a5f638bd1a534747f7ad4788806163b16c75a",
+    "validation": "6be4d0689c05760b15532968bfe0f7f318e2bbb974d60eeb88828bd508096c6a"
+  },
+  "immutable_source_hashes": {
+    "tools/DownstreamAcceptance/TP07/managed_identity.py": "ca7bb8eba198cf431d2fcfe5cbd4843360ddc80ad71937b1070099e6edd888ac",
+    "tools/DownstreamAcceptance/TP07/runtime-templates/TP07LiteralProbe/LiteralOracle.cs": "cb1696d1b305471e12c1a953630ee66454c4ab92d505d650e291e7170c44f492",
+    "tools/DownstreamAcceptance/TP07/runtime-templates/common/CandidateGuard.cs": "b5ffd7f0ff7def12b6f7dc0f22324d981eb1f0a20ee6536ddc9ac7bb96e6f493",
+    "tools/DownstreamAcceptance/TP07/runtime-templates/common/OwnedObjects.cs": "80c1d2aa0b6aae04a89d168625f37ca013eb7d7e19fe0482049312db175e5946",
+    "tools/DownstreamAcceptance/TP07/runtime-templates/common/SafeEvidence.cs": "44c5e9b5643a3d33ba348ed8acc51780ccad2f94a5b43cc819f5897c9f9c11ef"
+  },
+  "independent_packed_oracle_sha256": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
+  "operation_counts": {
+    "insert": 92,
+    "predicate_select": 12,
+    "update": 3
+  },
+  "profile": "shared",
+  "schema_version": 2,
+  "task": "TP07-constructor-ff7-expansion"
+}

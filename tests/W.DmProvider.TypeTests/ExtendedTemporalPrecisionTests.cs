@@ -21,7 +21,7 @@ public sealed class ExtendedTemporalPrecisionTests
         byte[] wire = null!;
         DmDateTime.DmdtEncodeFast2(ref wire, normalized);
         Assert.Equal(Convert.FromHexString("EA87BBEE81C8000000"), wire);
-        DateTime decoded = new DmDateTime(DmDateTime.DmTimeFromRec4(wire, 26), 9).GetTimestamp();
+        DateTime decoded = DmTemporalInteger.ProjectDateTime(DmTemporalWireCodec.DecodeRaw(wire, DmTemporalWireLayout.Timestamp9, 7));
         Assert.Equal(Timestamp.Ticks, decoded.Ticks);
         Assert.Equal(DateTimeKind.Unspecified, decoded.Kind);
     }
@@ -39,9 +39,16 @@ public sealed class ExtendedTemporalPrecisionTests
         byte[] wire = null!;
         DmDateTime.Dmdt2TzEncodeFast2(ref wire, normalized.DateTime, (short)normalized.Offset.TotalMinutes);
         Assert.Equal(Convert.FromHexString(golden), wire);
-        DateTimeOffset decoded = new DmDateTime(DmDateTime.DmTimeFromRec4(wire, 27), 11).GetTimestampTZ();
+        DateTimeOffset decoded = DmTemporalInteger.ProjectDateTimeOffset(DmTemporalWireCodec.DecodeRaw(wire, DmTemporalWireLayout.TimestampTz11, 7));
         Assert.Equal(expected.Ticks, decoded.Ticks);
         Assert.Equal(expected.Offset, decoded.Offset);
+    }
+
+    [Fact]
+    public void PublicLegacyDecoderRejectsOfficialNonMicrosecondGoldens()
+    {
+        Assert.Throws<OverflowException>(() => DmDateTime.DmTimeFromRec4(Convert.FromHexString("EA87BBEE81C8000000"), 26));
+        Assert.Throws<OverflowException>(() => DmDateTime.DmTimeFromRec4(Convert.FromHexString("EA87BBEE81C8000000E001"), 27));
     }
 
     [Theory]

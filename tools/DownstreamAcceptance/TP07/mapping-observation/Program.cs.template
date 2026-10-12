@@ -1,0 +1,92 @@
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using W.Dm;
+
+const string expectedVersion = "0.1.0-temporal.20261008144915";
+const string expectedHash = "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980";
+const string expectedMvid = "aa23e673-957c-4b1e-bf0f-291ff60077e6";
+var driver = typeof(DmConnection).Assembly;
+string loadedHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant();
+string loadedMvid = driver.ManifestModule.ModuleVersionId.ToString();
+string deps = File.ReadAllText(Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".deps.json"));
+using var dependencies = JsonDocument.Parse(deps);
+var libraries = dependencies.RootElement.GetProperty("libraries");
+if (loadedHash != expectedHash || loadedMvid != expectedMvid
+    || !libraries.TryGetProperty("W.DmProvider/" + expectedVersion, out var candidate)
+    || candidate.GetProperty("type").GetString() != "package"
+    || !libraries.TryGetProperty("Microsoft.EntityFrameworkCore/10.0.12", out _)
+    || !libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _)
+    || libraries.EnumerateObject().Any(entry => entry.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)))
+    throw new InvalidOperationException("TP07 exact loaded candidate/deps identity required.");
+
+using var context = new ObservationContext();
+var service = context.GetService<IRelationalTypeMappingSource>();
+var connection = context.Database.GetDbConnection(); // Production relational-connection factory, never Open.
+using var command = connection.CreateCommand();
+if (connection.GetType() != typeof(DmConnection) || command.GetType() != typeof(DmCommand))
+    throw new InvalidOperationException("TP07 EF service connection and command must use W.");
+var observations = new List<object>();
+foreach (var property in context.Model.FindEntityType(typeof(ObservationRow))!.GetProperties().Where(item => item.Name != nameof(ObservationRow.Id)))
+{
+    var mapping = service.FindMapping(property) ?? throw new InvalidOperationException("TP07 missing model mapping.");
+    object control = property.ClrType == typeof(DateTime) ? new DateTime(2026, 7, 23)
+        : property.ClrType == typeof(DateTimeOffset) ? new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero)
+        : property.ClrType == typeof(TimeOnly) ? TimeOnly.MinValue
+        : property.ClrType == typeof(TimeSpan) ? TimeSpan.Zero : 12.34m;
+    foreach (bool isNull in new[] { false, true })
+    {
+        var parameter = mapping.CreateParameter(command, "p", isNull ? null : control, nullable: true);
+        if (parameter.GetType() != typeof(DmParameter)) throw new InvalidOperationException("TP07 actual W parameter required.");
+        observations.Add(new
+        {
+            case_id = property.Name + (isNull ? "_null" : "_value"), mapping_type = mapping.GetType().FullName,
+            store_type = mapping.StoreType, model_precision = property.GetPrecision(), model_scale = property.GetScale(),
+            mapping_precision = mapping.Precision, mapping_scale = mapping.Scale,
+            parameter_type = parameter.GetType().FullName, db_type = parameter.DbType.ToString(),
+            provider_type = ((DmParameter)parameter).DmSqlType.ToString(), parameter_precision = parameter.Precision,
+            parameter_scale = parameter.Scale,
+            explicit_precision = typeof(DmParameter).GetField("m_SetPrecFlag", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(parameter),
+            explicit_scale = typeof(DmParameter).GetField("m_SetScaleFlag", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(parameter)
+        });
+    }
+}
+Console.WriteLine(JsonSerializer.Serialize(new
+{
+    schema = 1, task = "TP07-P1", evidence_kind = "unfixed_mapping_observation", temporal_mapping_accepted = false,
+    ef_commit = "5863d3755dbd2d333ac359bf1c0a789762adbaed", sdk_pin = "10.0.401",
+    package_version = expectedVersion, package_sha256 = "da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
+    driver_location = driver.Location, driver_sha256 = loadedHash, driver_mvid = loadedMvid,
+    deps_sha256 = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(deps))).ToLowerInvariant(),
+    ef_version = typeof(DbContext).Assembly.GetName().Version!.ToString(),
+    ef_provider_location = service.GetType().Assembly.Location,
+    ef_provider_sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(service.GetType().Assembly.Location))).ToLowerInvariant(),
+    connection_type = connection.GetType().FullName,
+    command_type = command.GetType().FullName, observations
+}));
+
+internal sealed class ObservationContext : DbContext
+{
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseDameng("Server=127.0.0.1;Port=1;User Id=SYNTHETIC_TP07;PWD=SYNTHETIC_ONLY");
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ObservationRow>().Property(item => item.ExplicitSix).HasPrecision(6);
+        modelBuilder.Entity<ObservationRow>().Property(item => item.ExplicitStoreSix).HasColumnType("TIMESTAMP(6)");
+        modelBuilder.Entity<ObservationRow>().Property(item => item.DecimalControl).HasPrecision(12, 2);
+    }
+}
+internal sealed class ObservationRow
+{
+    public int Id { get; set; }
+    public DateTime DefaultDateTime { get; set; }
+    public DateTime ExplicitSix { get; set; }
+    public DateTime ExplicitStoreSix { get; set; }
+    public DateTimeOffset DefaultOffset { get; set; }
+    public TimeOnly DefaultTime { get; set; }
+    public TimeSpan DefaultInterval { get; set; }
+    public decimal DecimalControl { get; set; }
+}

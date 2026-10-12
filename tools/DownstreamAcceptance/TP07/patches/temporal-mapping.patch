@@ -1,0 +1,1102 @@
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengDateOnlyTypeMapping.cs
+@@ -0,0 +1,18 @@
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++// Parameter creation remains the inherited DATE contract. Only the inline literal
++// path adds the already accepted calendar-domain guard, which cannot run in W binding.
++internal sealed class DamengDateOnlyTypeMapping : DateOnlyTypeMapping
++{
++    public DamengDateOnlyTypeMapping() : base("DATE", System.Data.DbType.Date) { }
++    private DamengDateOnlyTypeMapping(RelationalTypeMappingParameters parameters) : base(parameters) { }
++    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
++        => new DamengDateOnlyTypeMapping(parameters);
++    protected override string GenerateNonNullSqlLiteral(object value)
++    {
++        DamengTemporalParameterFacets.LiteralDomain(((DateOnly)value).ToDateTime(TimeOnly.MinValue));
++        return base.GenerateNonNullSqlLiteral(value);
++    }
++}
+--- a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengDateTimeOffsetTypeMapping.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengDateTimeOffsetTypeMapping.cs
+@@ -1,50 +1,48 @@
+-using System.Data;
+ using System.Data.Common;
+ using System.Globalization;
+ using System.Linq.Expressions;
+ using System.Reflection;
+ using Microsoft.EntityFrameworkCore.Storage;
++using W.Dm;
+ 
+ namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
+ 
+-internal sealed class DamengDateTimeOffsetTypeMapping
+-    : DateTimeOffsetTypeMapping
++// W-only isolated successor: the immutable official mapping retains GetString/Parse.
++internal sealed class DamengDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
+ {
+-    private static readonly MethodInfo GetStringMethod =
+-        typeof(DbDataReader).GetRuntimeMethod(
+-            nameof(DbDataReader.GetString),
+-            [typeof(int)])!;
+-
+-    private static readonly MethodInfo ParseMethod =
+-        typeof(DamengDateTimeOffsetTypeMapping).GetRuntimeMethod(
+-            nameof(Parse),
+-            [typeof(string)])!;
++    private static readonly MethodInfo GetOffsetMethod = typeof(DmDataReader).GetMethod(
++        nameof(DmDataReader.GetDateTimeOffset), [typeof(int)])!;
+ 
+     public DamengDateTimeOffsetTypeMapping(string storeType)
+-        : base(storeType, System.Data.DbType.DateTimeOffset)
++        : base(storeType, System.Data.DbType.DateTimeOffset) { }
++
++    private DamengDateTimeOffsetTypeMapping(RelationalTypeMappingParameters parameters) : base(parameters) { }
++
++    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
++        => new DamengDateTimeOffsetTypeMapping(parameters);
++
++    public override MethodInfo GetDataReaderMethod() => GetOffsetMethod;
++    public override Expression CustomizeDataReaderExpression(Expression expression) => expression;
++
++    // Retained only for the original direct helper unit contract. The W materializer
++    // above never selects GetString or calls this legacy text helper.
++    public static DateTimeOffset Parse(string value)
++        => DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces);
++
++    protected override void ConfigureParameter(DbParameter parameter)
+     {
++        var fraction = DamengTemporalParameterFacets.Fraction(Precision, 9);
++        if (parameter.Value is DateTimeOffset value)
++            DamengTemporalParameterFacets.ExactTicks(value.Ticks, fraction);
++        base.ConfigureParameter(parameter);
++        parameter.Scale = checked((byte)fraction);
+     }
+ 
+-    private DamengDateTimeOffsetTypeMapping(
+-        RelationalTypeMappingParameters parameters)
+-        : base(parameters)
++    protected override string GenerateNonNullSqlLiteral(object value)
+     {
++        DamengTemporalParameterFacets.RejectLocalTimezoneLiteral(StoreType);
++        var offset = (DateTimeOffset)value;
++        return DamengTemporalParameterFacets.TimestampLiteral(offset.DateTime,
++            DamengTemporalParameterFacets.Fraction(Precision, 9), offset.Offset);
+     }
+-
+-    protected override RelationalTypeMapping Clone(
+-        RelationalTypeMappingParameters parameters)
+-        => new DamengDateTimeOffsetTypeMapping(parameters);
+-
+-    public override MethodInfo GetDataReaderMethod()
+-        => GetStringMethod;
+-
+-    public override Expression CustomizeDataReaderExpression(
+-        Expression expression)
+-        => Expression.Call(ParseMethod, expression);
+-
+-    public static DateTimeOffset Parse(string value)
+-        => DateTimeOffset.Parse(
+-            value,
+-            CultureInfo.InvariantCulture,
+-            DateTimeStyles.AllowWhiteSpaces);
+ }
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengDateTimeTypeMapping.cs
+@@ -0,0 +1,55 @@
++using System.Data;
++using System.Data.Common;
++using System.Globalization;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++internal sealed class DamengDateTimeTypeMapping : DateTimeTypeMapping
++{
++    public DamengDateTimeTypeMapping(string storeType, DbType dbType = System.Data.DbType.DateTime2)
++        : base(storeType, dbType) { }
++
++    private DamengDateTimeTypeMapping(RelationalTypeMappingParameters parameters) : base(parameters) { }
++
++    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
++        => new DamengDateTimeTypeMapping(parameters);
++
++    private bool IsDate => DbType == System.Data.DbType.Date;
++    private int Fraction
++    {
++        get
++        {
++            if (!IsDate) return DamengTemporalParameterFacets.Fraction(Precision, 9);
++            if (Precision is not null and not 0)
++                throw new InvalidOperationException("DATE has no fractional precision facet.");
++            return 0;
++        }
++    }
++
++    protected override void ConfigureParameter(DbParameter parameter)
++    {
++        var fraction = Fraction;
++        if (parameter.Value is DateTime value)
++        {
++            if (IsDate) DamengTemporalParameterFacets.Midnight(value);
++            else DamengTemporalParameterFacets.ExactTicks(value.Ticks, fraction);
++        }
++        base.ConfigureParameter(parameter);
++        // P1 observed Precision=0 unset. Ordinary timestamp mappings retain that state;
++        // DATE explicitly publishes the root-approved Precision0/Scale0 declaration.
++        if (IsDate) parameter.Precision = 0;
++        parameter.Scale = checked((byte)fraction);
++    }
++
++    protected override string GenerateNonNullSqlLiteral(object value)
++    {
++        DamengTemporalParameterFacets.RejectLocalTimezoneLiteral(StoreType);
++        var dateTime = (DateTime)value;
++        var fraction = Fraction;
++        if (!IsDate) return DamengTemporalParameterFacets.TimestampLiteral(dateTime, fraction);
++        DamengTemporalParameterFacets.Midnight(dateTime);
++        DamengTemporalParameterFacets.LiteralDomain(dateTime);
++        return "DATE '" + dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "'";
++    }
++}
+--- /dev/null
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTemporalParameterFacets.cs
+@@ -0,0 +1,88 @@
++using System.Globalization;
++using System.Numerics;
++using System.Text.RegularExpressions;
++
++namespace W.EntityFrameworkCore.Dameng.Storage.Internal;
++
++// Model precision stays on the mapping. Parameter Scale alone is fractional seconds;
++// no connection/profile lookup or new driver capability is introduced here.
++internal static class DamengTemporalParameterFacets
++{
++    internal static int Fraction(int? configured, int maximum, int fallback = 6)
++    {
++        var fraction = configured ?? fallback;
++        if (fraction < 0 || fraction > maximum)
++            throw new InvalidOperationException("Temporal fractional precision is outside the mapping range.");
++        return fraction;
++    }
++
++    internal static long PowerOfTen(int exponent)
++    {
++        var value = 1L;
++        for (var index = 0; index < exponent; index++) value *= 10;
++        return value;
++    }
++
++    internal static void ExactTicks(long ticks, int fraction)
++    {
++        if (fraction < 7 && ticks % PowerOfTen(7 - fraction) != 0)
++            throw new OverflowException("Temporal value cannot be represented at the declared fractional precision.");
++    }
++
++    internal static void Midnight(DateTime value)
++    {
++        if (value.TimeOfDay.Ticks != 0)
++            throw new OverflowException("DATE cannot represent clock fields.");
++    }
++
++    internal static void RejectLocalTimezoneLiteral(string storeType)
++    {
++        // Registry and public clones both carry this semantic store type. A literal
++        // has no fixed-mask parameter gate, so reject before rendering any value.
++        if (Regex.IsMatch(storeType,
++            @"^\s*(?:TIMESTAMP|DATETIME2|DATETIME|SMALLDATETIME)(?:\s*\(\s*\d+\s*\))?\s+WITH\s+LOCAL\s+TIME\s+ZONE\s*$",
++            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
++            throw new NotSupportedException("Local timezone temporal literal writes are not verified.");
++    }
++
++    internal static string TimestampLiteral(DateTime value, int fraction, TimeSpan? offset = null)
++    {
++        if (fraction > 7)
++            throw new NotSupportedException("Eight and nine digit temporal literal writes are not verified.");
++        LiteralDomain(value, offset);
++        ExactTicks(value.Ticks, fraction);
++        var clock = value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
++        if (fraction > 0)
++            clock += "." + (value.Ticks % TimeSpan.TicksPerSecond).ToString("D7", CultureInfo.InvariantCulture)[..fraction];
++        if (offset is { } zone)
++        {
++            var minutes = checked((int)(zone.Ticks / TimeSpan.TicksPerMinute));
++            if (fraction == 7) clock += " ";
++            clock += FormattableString.Invariant($"{(minutes < 0 ? "-" : "+")}{Math.Abs(minutes) / 60:D2}:{Math.Abs(minutes) % 60:D2}");
++        }
++        if (fraction == 7)
++            return offset.HasValue
++                ? $"TO_TIMESTAMP_TZ('{clock}', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
++                : $"TO_TIMESTAMP('{clock}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
++        return $"TIMESTAMP '{clock}'";
++    }
++
++    internal static void LiteralDomain(DateTime value, TimeSpan? offset = null)
++    {
++        if (value.Year == 1582 && value.Month == 10 && value.Day is >= 5 and <= 14)
++            throw new NotSupportedException("Temporal literal is in an unverified calendar transform region.");
++        // TP06 accepted W write contract: offset minutes [-779,840], not a claim
++        // about every server. SQL literal preservation still has its own real gate.
++        if (offset is { } zone && zone.Ticks / TimeSpan.TicksPerMinute is < -779 or > 840)
++            throw new OverflowException("Temporal literal offset exceeds the supported server range.");
++    }
++
++    internal static void IntervalLeading(TimeSpan value, int leading)
++    {
++        if (leading is < 1 or > 9)
++            throw new InvalidOperationException("INTERVAL leading precision must be between one and nine.");
++        var days = BigInteger.Abs(new BigInteger(value.Ticks)) / TimeSpan.TicksPerDay;
++        if (days >= PowerOfTen(leading))
++            throw new OverflowException("INTERVAL day component exceeds its declared leading precision.");
++    }
++}
+--- a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTimeOnlyTypeMapping.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTimeOnlyTypeMapping.cs
+@@ -60,7 +60,7 @@
+     }
+ 
+     private int GetFractionalSecondPrecision()
+-        => Precision ?? 6;
++        => DamengTemporalParameterFacets.Fraction(Precision, 6);
+ 
+     private static long Pow10(int exponent)
+     {
+--- a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTimeSpanTypeMapping.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTimeSpanTypeMapping.cs
+@@ -41,6 +41,8 @@
+ 
+     protected override void ConfigureParameter(DbParameter parameter)
+     {
++        var fraction = DamengTemporalParameterFacets.Fraction(Scale, 6);
++        DamengTemporalParameterFacets.IntervalLeading(TimeSpan.Zero, GetLeadingPrecision());
+         if (parameter.Value is TimeSpan value)
+         {
+             ValidateFractionalSecondPrecision(value);
+@@ -53,7 +55,7 @@
+             dmParameter.DmSqlType = DmDbType.IntervalDayToSecond;
+         }
+ 
+-        parameter.Scale = (byte)Math.Clamp(Scale ?? 6, 0, 6);
++        parameter.Scale = checked((byte)fraction);
+     }
+ 
+     protected override string GenerateNonNullSqlLiteral(object value)
+@@ -175,7 +177,8 @@
+ 
+     private void ValidateFractionalSecondPrecision(TimeSpan value)
+     {
+-        var scale = Scale ?? 6;
++        var scale = DamengTemporalParameterFacets.Fraction(Scale, 6);
++        DamengTemporalParameterFacets.IntervalLeading(value, GetLeadingPrecision());
+         var tickQuantum = Pow10(7 - scale);
+         if (value.Ticks % tickQuantum != 0)
+         {
+@@ -186,6 +189,17 @@
+         }
+     }
+ 
++    private int GetLeadingPrecision()
++    {
++        if (Precision is { } configured) return configured;
++        var declaration = System.Text.RegularExpressions.Regex.Match(StoreType,
++            @"^INTERVAL\s+DAY(?:\((?<leading>\d+)\))?\s+TO\s+SECOND",
++            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
++        // Explicit DAY(n) is preserved. A bare DAY keeps the existing two-digit declaration.
++        return declaration.Groups["leading"].Success
++            ? int.Parse(declaration.Groups["leading"].Value, CultureInfo.InvariantCulture) : 2;
++    }
++
+     private static long Pow10(int exponent)
+     {
+         var result = 1L;
+--- a/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTypeMappingSource.cs
++++ b/src/W.EntityFrameworkCore.Dameng/Storage/Internal/DamengTypeMappingSource.cs
+@@ -53,17 +53,17 @@
+         new DamengDecimalTypeMapping("DECIMAL");
+     private static readonly RelationalTypeMapping Char = new DamengCharTypeMapping("NVARCHAR2(1)");
+     private static readonly RelationalTypeMapping Guid = new GuidTypeMapping("CHAR(36)", DbType.Guid);
+-    private static readonly RelationalTypeMapping DateOnly = new DateOnlyTypeMapping("DATE", DbType.Date);
++    private static readonly RelationalTypeMapping DateOnly = new DamengDateOnlyTypeMapping();
+     private static readonly RelationalTypeMapping TimeOnly =
+         new DamengTimeOnlyTypeMapping("TIME(6)")
+             .WithPrecisionAndScale(6, scale: null);
+     private static readonly RelationalTypeMapping TimeOnlyStoreType =
+         new DamengTimeOnlyTypeMapping("TIME");
+     private static readonly RelationalTypeMapping DateTime =
+-        new DateTimeTypeMapping("TIMESTAMP(7)", DbType.DateTime2)
++        new DamengDateTimeTypeMapping("TIMESTAMP(7)", DbType.DateTime2)
+             .WithPrecisionAndScale(7, scale: null);
+     private static readonly RelationalTypeMapping DateTimeStoreType =
+-        new DateTimeTypeMapping("TIMESTAMP", DbType.DateTime2);
++        new DamengDateTimeTypeMapping("TIMESTAMP", DbType.DateTime2);
+     private static readonly RelationalTypeMapping DateTimeOffset =
+         new DamengDateTimeOffsetTypeMapping("DATETIME(7) WITH TIME ZONE")
+             .WithPrecisionAndScale(7, scale: null);
+@@ -146,8 +146,8 @@
+             ["BLOB"] = [CreateStoreBinary("BLOB", lob: true)],
+             ["IMAGE"] = [CreateStoreBinary("IMAGE", lob: true)],
+             ["LONGVARBINARY"] = [CreateStoreBinary("LONGVARBINARY", lob: true)],
+-            ["DATE"] = [DateOnly, new DateTimeTypeMapping("DATE", DbType.Date)],
+-            ["TIME"] = [TimeOnlyStoreType, new TimeSpanTypeMapping("TIME", DbType.Time)],
++            ["DATE"] = [DateOnly, new DamengDateTimeTypeMapping("DATE", DbType.Date)],
++            ["TIME"] = [TimeOnlyStoreType],
+             ["DATETIME"] = [DateTimeStoreType],
+             ["DATETIME2"] = [DateTimeStoreType],
+             ["SMALLDATETIME"] = [DateTimeStoreType],
+@@ -178,6 +178,7 @@
+         int? precision = null,
+         int? scale = null)
+     {
++        RejectTimeSpanTime(type, storeTypeName);
+         // Scaffolding probes this CLR/facet overload before retaining an explicit store
+         // type. Do not throw for that probe or allow EF's string-to-bytes fallback.
+         if (type == typeof(string) && storeTypeName is null
+@@ -185,11 +186,20 @@
+         return base.FindMapping(type, storeTypeName, keyOrIndex, unicode, size, rowVersion, fixedLength, precision, scale);
+     }
+ 
++    private static void RejectTimeSpanTime(Type? clrType, string? storeType)
++    {
++        if ((clrType is not null && (Nullable.GetUnderlyingType(clrType) ?? clrType) == typeof(TimeSpan))
++            && storeType is not null && Regex.IsMatch(storeType.Trim(), @"^TIME(?:\(\s*[+-]?\d+\s*\))?$",
++                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
++            throw new NotSupportedException("Use TimeOnly/TIME for a clock or TimeSpan/INTERVAL DAY TO SECOND for a duration.");
++    }
++
+     internal static bool RequiresExplicitFixedAnsiStoreType(bool? unicode, bool? fixedLength, int? size)
+         => unicode == false && fixedLength == true && size * 4L > MaxCharSemanticsBytes;
+ 
+     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
+     {
++        RejectTimeSpanTime(mappingInfo.ClrType, mappingInfo.StoreTypeNameBase ?? mappingInfo.StoreTypeName);
+         var mapping = base.FindMapping(mappingInfo) ?? FindRawMapping(mappingInfo);
+ 
+         return mappingInfo.StoreTypeName is null
+@@ -282,6 +292,10 @@
+             ValidateTimestampPrecision(configuredTimestampPrecision);
+         }
+ 
++        if (clrType == typeof(TimeSpan) && mappingInfo.Precision is int configuredLeading
++            && configuredLeading is < 1 or > 9)
++            throw new InvalidOperationException("Dameng INTERVAL leading precision must be between one and nine.");
++
+         if (clrType == typeof(TimeSpan)
+             && mappingInfo.Scale is int configuredIntervalScale)
+         {
+@@ -353,7 +367,7 @@
+ 
+         if (clrType == typeof(DateTime) && mappingInfo.Precision is int dateTimePrecision)
+         {
+-            return new DateTimeTypeMapping(
++            return new DamengDateTimeTypeMapping(
+                     $"TIMESTAMP({dateTimePrecision})",
+                     DbType.DateTime2)
+                 .WithPrecisionAndScale(dateTimePrecision, scale: null);
+--- a/test/W.EntityFrameworkCore.Dameng.Tests/DamengTypeMappingTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/DamengTypeMappingTests.cs
+@@ -761,10 +761,10 @@
+                 .AddTicks(1);
+ 
+         Assert.Equal(
+-            "TIMESTAMP '2026-07-24 13:14:15.0000001'",
++            "TO_TIMESTAMP('2026-07-24 13:14:15.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')",
+             source.FindMapping(typeof(DateTime))!.GenerateSqlLiteral(timestamp));
+         Assert.Equal(
+-            "TIMESTAMP '2026-07-24 13:14:15.0000001+08:00'",
++            "TO_TIMESTAMP_TZ('2026-07-24 13:14:15.0000001 +08:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')",
+             source.FindMapping(typeof(DateTimeOffset))!
+                 .GenerateSqlLiteral(timestampWithTimeZone));
+     }
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMappingTests.cs
+@@ -0,0 +1,194 @@
++#pragma warning disable EF1001
++using System.Data;
++using System.Reflection;
++using System.Security.Cryptography;
++using System.Text.Json;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Storage;
++using W.Dm;
++using W.EntityFrameworkCore.Dameng.Storage.Internal;
++using Xunit;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++public sealed class TP07TemporalMappingTests
++{
++    internal static DbContext Context()
++    {
++        CandidateIdentity();
++        return new DbContext(new DbContextOptionsBuilder().UseDameng(new DmConnection(), contextOwnsConnection: true).Options);
++    }
++    private static void CandidateIdentity()
++    {
++        var driver = typeof(DmConnection).Assembly;
++        Assert.Equal("aa23e673-957c-4b1e-bf0f-291ff60077e6", driver.ManifestModule.ModuleVersionId.ToString());
++        Assert.Equal("843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
++            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant());
++        using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(typeof(TP07TemporalMappingTests).Assembly.Location, ".deps.json")));
++        var libraries = deps.RootElement.GetProperty("libraries");
++        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
++        Assert.True(libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _));
++        Assert.DoesNotContain(libraries.EnumerateObject(), item => item.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase));
++    }
++    internal static IRelationalTypeMappingSource Source(DbContext context) => context.GetService<IRelationalTypeMappingSource>();
++
++    [Theory]
++    [InlineData(false)] [InlineData(true)]
++    public void DefaultsTransferFractionButKeepObservedUnsetPrecision(bool isNull)
++    {
++        using var context = Context(); using var command = new DmCommand();
++        var source = Source(context);
++        foreach (var type in new[] { typeof(DateTime), typeof(DateTimeOffset), typeof(TimeOnly), typeof(TimeSpan) })
++        {
++            var mapping = source.FindMapping(type)!;
++            object value;
++            if (type == typeof(DateTime)) value = new DateTime(2026, 7, 23);
++            else if (type == typeof(DateTimeOffset)) value = new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.FromHours(8));
++            else if (type == typeof(TimeOnly)) value = TimeOnly.MinValue;
++            else value = TimeSpan.Zero;
++            var parameter = Assert.IsType<DmParameter>(mapping.CreateParameter(command, "p", isNull ? null : value, nullable: true));
++            Assert.Equal((byte)(type == typeof(DateTime) || type == typeof(DateTimeOffset) ? 7 : 6), parameter.Scale);
++            Assert.Equal((byte)0, parameter.Precision);
++            Assert.False(Explicit(parameter, "m_SetPrecFlag"));
++            Assert.True(Explicit(parameter, "m_SetScaleFlag"));
++            if (type == typeof(TimeSpan)) Assert.Equal(DmDbType.IntervalDayToSecond, parameter.DmSqlType);
++        }
++        var decimalMapping = source.FindMapping(typeof(decimal), null, precision: 12, scale: 2)!;
++        var number = decimalMapping.CreateParameter(command, "d", 12.34m);
++        Assert.Equal((byte)12, number.Precision); Assert.Equal((byte)2, number.Scale);
++    }
++
++    [Theory]
++    [InlineData(0)] [InlineData(3)] [InlineData(6)] [InlineData(7)] [InlineData(8)] [InlineData(9)]
++    public void TimestampFacetsNullAndClonesKeepFractionAndSubclass(int fraction)
++    {
++        using var context = Context(); using var command = new DmCommand();
++        foreach (var type in new[] { typeof(DateTime), typeof(DateTimeOffset) })
++        {
++            var mapping = Source(context).FindMapping(type, null, precision: fraction)!;
++            var clone = mapping.WithPrecisionAndScale(fraction, null);
++            Assert.Equal(mapping.GetType(), clone.GetType()); Assert.Equal(fraction, clone.Precision);
++            foreach (object? value in new object?[] { null, type == typeof(DateTime) ? (object)new DateTime(2026, 7, 23) : new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero) })
++            {
++                var parameter = clone.CreateParameter(command, "p", value, nullable: true);
++                Assert.Equal((byte)fraction, parameter.Scale); Assert.Equal((byte)0, parameter.Precision);
++                Assert.Equal(type == typeof(DateTime) ? DbType.DateTime2 : DbType.DateTimeOffset, parameter.DbType);
++            }
++        }
++        // 8/9 are metadata/parameter declaration controls, not successful write evidence.
++    }
++
++    [Fact]
++    public void ParameterQuantumIsCheckedBeforeAnyValueCouldBeLost()
++    {
++        using var context = Context(); using var command = new DmCommand(); var source = Source(context);
++        var dt = new DateTime(2026, 7, 23).AddTicks(1);
++        var dto = new DateTimeOffset(dt, TimeSpan.Zero);
++        var six = source.FindMapping(typeof(DateTime), null, precision: 6)!;
++        Assert.Throws<OverflowException>(() => six.CreateParameter(command, "p", dt));
++        Assert.Throws<OverflowException>(() => source.FindMapping(typeof(DateTimeOffset), null, precision: 6)!.CreateParameter(command, "p", dto));
++        Assert.Equal(dt, source.FindMapping(typeof(DateTime))!.CreateParameter(command, "p", dt).Value);
++        Assert.Equal(dto, source.FindMapping(typeof(DateTimeOffset))!.CreateParameter(command, "p", dto).Value);
++        var clone = source.FindMapping(typeof(DateTime))!.WithPrecisionAndScale(6, null);
++        Assert.IsType<DamengDateTimeTypeMapping>(clone);
++        Assert.Throws<OverflowException>(() => clone.CreateParameter(command, "p", dt));
++    }
++
++    [Theory]
++    [InlineData("TIMESTAMP")] [InlineData("DATETIME")] [InlineData("DATETIME2")] [InlineData("SMALLDATETIME")]
++    public void BareTimestampCompatibilityIsSixAndDoesNotRewriteTheStoreType(string storeType)
++    {
++        using var context = Context(); using var command = new DmCommand();
++        var mapping = Source(context).FindMapping(typeof(DateTime), storeType)!;
++        Assert.Equal(storeType, mapping.StoreType); Assert.Null(mapping.Precision);
++        Assert.Equal((byte)6, mapping.CreateParameter(command, "p", null).Scale);
++        var explicitSix = Source(context).FindMapping(typeof(DateTime), "TIMESTAMP(6)")!;
++        Assert.Equal(6, explicitSix.Precision); Assert.Equal("TIMESTAMP(6)", explicitSix.StoreType);
++        Assert.Equal((byte)6, explicitSix.CreateParameter(command, "q", null).Scale);
++    }
++
++    [Theory]
++    [InlineData("TIMESTAMP WITH TIME ZONE")] [InlineData("DATETIME WITH TIME ZONE")]
++    public void BareOffsetKeepsNullFacetAndSixDigitCompatibility(string storeType)
++    {
++        using var context = Context(); using var command = new DmCommand();
++        var mapping = Source(context).FindMapping(typeof(DateTimeOffset), storeType)!;
++        Assert.Null(mapping.Precision); Assert.Equal(storeType, mapping.StoreType);
++        Assert.Equal((byte)6, mapping.CreateParameter(command, "p", null).Scale);
++    }
++
++    [Fact]
++    public void DateMidnightAndNullPublishExplicitZeroWithoutDroppingClock()
++    {
++        using var context = Context(); using var command = new DmCommand();
++        var mapping = Source(context).FindMapping(typeof(DateTime), "DATE")!;
++        foreach (var value in new object?[] { null, new DateTime(2026, 7, 23) })
++        {
++            var parameter = Assert.IsType<DmParameter>(mapping.CreateParameter(command, "p", value, nullable: true));
++            Assert.Equal(DbType.Date, parameter.DbType); Assert.Equal((byte)0, parameter.Scale); Assert.Equal((byte)0, parameter.Precision);
++            Assert.True(Explicit(parameter, "m_SetPrecFlag")); Assert.True(Explicit(parameter, "m_SetScaleFlag"));
++        }
++        Assert.Throws<OverflowException>(() => mapping.CreateParameter(command, "p", new DateTime(2026, 7, 23).AddTicks(1)));
++        Assert.Throws<OverflowException>(() => mapping.CreateParameter(command, "p", new DateTime(2026, 7, 23, 1, 0, 0)));
++        Assert.NotNull(Source(context).FindMapping(typeof(DateOnly), "DATE"));
++        var invalidDate = mapping.WithPrecisionAndScale(3, null);
++        Assert.Throws<InvalidOperationException>(() => invalidDate.CreateParameter(command, "p", null));
++        Assert.Throws<InvalidOperationException>(() => invalidDate.GenerateSqlLiteral(DateTime.MinValue));
++    }
++
++    [Theory]
++    [InlineData("TIME")] [InlineData("TIME(0)")] [InlineData("TIME(3)")] [InlineData("TIME(6)")]
++    public void TimeSpanTimeRejectsBeforeFallbackAndTimeOnlyScaffoldSurvives(string storeType)
++    {
++        using var context = Context(); var source = Source(context);
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(TimeSpan), storeType));
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(TimeSpan?), storeType));
++        Assert.Equal(typeof(TimeOnly), source.FindMapping(storeType)!.ClrType);
++        Assert.NotNull(source.FindMapping(typeof(TimeOnly), storeType));
++        Assert.NotNull(source.FindMapping(typeof(TimeSpan)));
++        Assert.NotNull(source.FindMapping(typeof(TimeSpan), "INTERVAL DAY(9) TO SECOND(6)"));
++    }
++
++    [Fact]
++    public void TimeSpanTimeAlsoRejectsDuringRealModelConstruction()
++    {
++        CandidateIdentity();
++        var disposedCount = 0;
++        // The caller owns this already-created connection. The failing model must not
++        // route its cleanup through EF's disposal diagnostics after initialization fails.
++        using (var connection = new DmConnection())
++        {
++            connection.Disposed += (_, _) => disposedCount++;
++            using (var context = new DurationAsTimeContext(new DbContextOptionsBuilder<DurationAsTimeContext>()
++                .UseDameng(connection, contextOwnsConnection: false).Options))
++            {
++                Assert.Throws<NotSupportedException>(() => _ = context.Model);
++            }
++            Assert.Equal(0, disposedCount); // normal Context.Dispose did not dispose the caller's connection
++        }
++        Assert.Equal(1, disposedCount); // normal caller Dispose fires the actual W/Component event once
++    }
++
++    [Fact]
++    public void IntervalLeadingIsNotParameterPrecisionAndInvalidCloneFacetsCannotClamp()
++    {
++        using var context = Context(); using var command = new DmCommand();
++        var mapping = Source(context).FindMapping(typeof(TimeSpan), "INTERVAL DAY(2) TO SECOND(3)")!;
++        Assert.Equal(2, mapping.Precision); Assert.Equal(3, mapping.Scale);
++        var parameter = mapping.CreateParameter(command, "p", TimeSpan.FromDays(99));
++        Assert.Equal((byte)0, parameter.Precision); Assert.Equal((byte)3, parameter.Scale);
++        Assert.Throws<OverflowException>(() => mapping.CreateParameter(command, "p", TimeSpan.FromDays(100)));
++        Assert.Throws<InvalidOperationException>(() => mapping.WithPrecisionAndScale(0, 3).CreateParameter(command, "p", null));
++        Assert.Throws<InvalidOperationException>(() => mapping.WithPrecisionAndScale(2, 7).CreateParameter(command, "p", null));
++        Assert.Throws<InvalidOperationException>(() => mapping.WithPrecisionAndScale(2, -1).CreateParameter(command, "p", null));
++    }
++
++    private static bool Explicit(DmParameter parameter, string name)
++        => Assert.IsType<bool>(typeof(DmParameter).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(parameter));
++    private sealed class DurationAsTimeContext(DbContextOptions<DurationAsTimeContext> options) : DbContext(options)
++    {
++        protected override void OnModelCreating(ModelBuilder builder)
++            => builder.Entity("Duration").HasNoKey().Property<TimeSpan?>("Value").HasColumnType("TIME(6)");
++    }
++}
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMaterializerTests.cs
+@@ -0,0 +1,96 @@
++#pragma warning disable EF1001
++using System.Data.Common;
++using System.Linq.Expressions;
++using Microsoft.EntityFrameworkCore.Storage;
++using W.Dm;
++using Xunit;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++public sealed class TP07TemporalMaterializerTests
++{
++    private static (Func<DbDataReader, DateTimeOffset> Required, Func<DbDataReader, DateTimeOffset?> Nullable) Compile(RelationalTypeMapping mapping)
++    {
++        var method = mapping.GetDataReaderMethod();
++        Assert.Equal(typeof(DmDataReader), method.DeclaringType); Assert.False(method.IsStatic);
++        Assert.Equal(nameof(DmDataReader.GetDateTimeOffset), method.Name); Assert.Equal(typeof(DateTimeOffset), method.ReturnType);
++        Assert.Equal(typeof(int), Assert.Single(method.GetParameters()).ParameterType);
++        var reader = Expression.Parameter(typeof(DbDataReader), "reader");
++        var call = Expression.Call(Expression.Convert(reader, method.DeclaringType!), method, Expression.Constant(0));
++        var converted = mapping.CustomizeDataReaderExpression(call);
++        Assert.Same(call, converted); // no GetString, Parse or secondary text route
++        var required = Expression.Lambda<Func<DbDataReader, DateTimeOffset>>(converted, reader).Compile();
++        var nullable = Expression.Condition(Expression.Call(reader, nameof(DbDataReader.IsDBNull), null, Expression.Constant(0)),
++            Expression.Constant(null, typeof(DateTimeOffset?)), Expression.Convert(converted, typeof(DateTimeOffset?)));
++        return (required, Expression.Lambda<Func<DbDataReader, DateTimeOffset?>>(nullable, reader).Compile());
++    }
++
++    [Theory]
++    [InlineData(23, 6, "EA87BBEE8180C403D4FE", 1234560)]
++    [InlineData(27, 7, "EA87BBEE81C8000000D4FE", 1)]
++    [InlineData(27, 8, "EA87BBEE81C8000000D4FE", 1)]
++    [InlineData(27, 9, "EA87BBEE81C8000000D4FE", 1)]
++    [InlineData(27, 9, "EA87BBEE817899B70ED4FE", 1234567)]
++    public void ActualMappingCompiledGetterPreservesTicksAndOriginalOffset(int type, int scale, string literal, int fraction)
++    {
++        using var context = TP07TemporalMappingTests.Context();
++        var mapping = TP07TemporalMappingTests.Source(context).FindMapping(typeof(DateTimeOffset))!;
++        var getter = Compile(mapping);
++        using var fixture = new TP07WReaderFixture(type, scale, Convert.FromHexString(literal));
++        Assert.True(fixture.Reader.Read());
++        var actual = getter.Required(fixture.Reader);
++        var expected = new DateTimeOffset(2026, 7, 23, 14, 15, 16, TimeSpan.FromMinutes(-300)).AddTicks(fraction);
++        Assert.Equal(expected.Ticks, actual.Ticks); Assert.Equal(expected.Offset, actual.Offset);
++        Assert.Equal(actual, getter.Nullable(fixture.Reader));
++        Assert.False(fixture.Reader.Read());
++    }
++
++    [Theory]
++    [InlineData("EA87BBEE8102000000D4FE", "000000001")]
++    [InlineData("EA87BBEE8114000000D4FE", "000000010")]
++    [InlineData("EA87BBEE81C6000000D4FE", "000000099")]
++    [InlineData("EA87BBEE812A9AB70ED4FE", "123456789")]
++    public void NonTickNanosecondsRejectWhileExactTextAndForwardReadingSurvive(string literal, string fraction)
++    {
++        using var context = TP07TemporalMappingTests.Context();
++        var getter = Compile(TP07TemporalMappingTests.Source(context).FindMapping(typeof(DateTimeOffset))!);
++        using var fixture = new TP07WReaderFixture(27, 9, Convert.FromHexString(literal));
++        Assert.True(fixture.Reader.Read());
++        Assert.Throws<OverflowException>(() => getter.Required(fixture.Reader));
++        Assert.Equal("2026-07-23 14:15:16." + fraction + " -05:00", fixture.Reader.GetString(0));
++        Assert.False(fixture.Reader.Read());
++    }
++
++    [Fact]
++    public void NullableCompiledMappingGuardsNullAndDirectGetterKeeps6081()
++    {
++        using var context = TP07TemporalMappingTests.Context();
++        var getter = Compile(TP07TemporalMappingTests.Source(context).FindMapping(typeof(DateTimeOffset))!);
++        using var fixture = new TP07WReaderFixture(27, 7, null);
++        Assert.True(fixture.Reader.Read()); Assert.Null(getter.Nullable(fixture.Reader));
++        Assert.Equal(6081, Assert.Throws<DmException>(() => getter.Required(fixture.Reader)).Number);
++        Assert.False(fixture.Reader.Read());
++    }
++
++    [Fact]
++    public async Task CachedReaderAsyncPositioningUsesTheSameCompiledProjection()
++    {
++        using var context = TP07TemporalMappingTests.Context();
++        var getter = Compile(TP07TemporalMappingTests.Source(context).FindMapping(typeof(DateTimeOffset))!);
++        using var fixture = new TP07WReaderFixture(27, 7, Convert.FromHexString("EA87BBEE81C8000000D4FE"));
++        Assert.True(await fixture.Reader.ReadAsync());
++        Assert.Equal(new DateTime(2026, 7, 23, 14, 15, 16).Ticks + 1, getter.Required(fixture.Reader).Ticks);
++        Assert.False(await fixture.Reader.ReadAsync());
++    }
++
++    [Fact]
++    public void UnknownFormatAndLocalTimezoneCannotBecomeOrdinaryOffsetMaterialization()
++    {
++        using var context = TP07TemporalMappingTests.Context();
++        var getter = Compile(TP07TemporalMappingTests.Source(context).FindMapping(typeof(DateTimeOffset))!);
++        using var unknown = new TP07WReaderFixture(27, 7, Convert.FromHexString("EA87BBEE81C8000000D4FE"), "Unknown");
++        Assert.True(unknown.Reader.Read()); Assert.Throws<NotSupportedException>(() => getter.Required(unknown.Reader));
++        using var local = new TP07WReaderFixture(26, 0x1007, Convert.FromHexString("EA87BBEE81C8000000"));
++        Assert.True(local.Reader.Read()); Assert.Throws<InvalidCastException>(() => getter.Required(local.Reader));
++    }
++}
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalSqlTests.cs
+@@ -0,0 +1,279 @@
++#pragma warning disable EF1001
++using System.Globalization;
++using Microsoft.EntityFrameworkCore.Storage;
++using W.EntityFrameworkCore.Dameng.Storage.Internal;
++using Xunit;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++public sealed class TP07TemporalSqlTests
++{
++    [Theory]
++    [InlineData(0, "9999999")] [InlineData(-1, "9999998")] [InlineData(-9, "9999990")]
++    public void TimestampAndOffsetMaximumLiteralsRetainAllSevenDigits(int delta, string fraction)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var value = DateTime.MaxValue.AddTicks(delta);
++        foreach (var mapping in SevenMappings(source, typeof(DateTime)))
++            Assert.Equal("TO_TIMESTAMP('9999-12-31 23:59:59." + fraction + "', 'YYYY-MM-DD HH24:MI:SS.FF7')", mapping.GenerateSqlLiteral(value));
++        foreach (var mapping in SevenMappings(source, typeof(DateTimeOffset)))
++            Assert.Equal("TO_TIMESTAMP_TZ('9999-12-31 23:59:59." + fraction + " +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')",
++                mapping.GenerateSqlLiteral(new DateTimeOffset(value, TimeSpan.Zero)));
++    }
++
++    [Theory]
++    [InlineData(0L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000000', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000000 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(1L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000001 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(2L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000002', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000002 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(3L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000003', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000003 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(4L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000004', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000004 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(5L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000005', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000005 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(6L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000006', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000006 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(7L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000007', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000007 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(8L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000008', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000008 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(9L, "TO_TIMESTAMP('2026-07-23 14:15:16.0000009', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.0000009 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(1234560L, "TO_TIMESTAMP('2026-07-23 14:15:16.1234560', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234560 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    public void SevenDigitConstructorUsesDeclaredFractionForEveryTailAndClone(long ticks, string dateExpected, string zoneExpected)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var local = new DateTime(2026, 7, 23, 14, 15, 16).AddTicks(ticks);
++        foreach (var type in new[] { typeof(DateTime), typeof(DateTimeOffset) })
++        {
++            object value; string expected;
++            if (type == typeof(DateTime)) { value = local; expected = dateExpected; }
++            else { value = new DateTimeOffset(local, TimeSpan.Zero); expected = zoneExpected; }
++            foreach (var mapping in SevenMappings(source, type))
++            {
++                Assert.Equal(7, mapping.Precision);
++                Assert.Equal(expected, mapping.GenerateSqlLiteral(value));
++                Assert.Equal("NULL", mapping.GenerateSqlLiteral(null));
++            }
++        }
++    }
++
++    [Theory]
++    [InlineData(true, 0L, "TO_TIMESTAMP('0001-01-01 00:00:00.0000000', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('0001-01-01 00:00:00.0000000 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(true, 1L, "TO_TIMESTAMP('0001-01-01 00:00:00.0000001', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('0001-01-01 00:00:00.0000001 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(false, 10000000L, "TO_TIMESTAMP('2026-07-23 14:15:17.0000000', 'YYYY-MM-DD HH24:MI:SS.FF7')", "TO_TIMESTAMP_TZ('2026-07-23 14:15:17.0000000 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    public void SevenDigitConstructorPreservesMinimumAndSecondCarry(bool minimum, long ticks, string dateExpected, string zoneExpected)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        DateTime local;
++        if (minimum) local = DateTime.MinValue.AddTicks(ticks);
++        else local = new DateTime(2026, 7, 23, 14, 15, 16).AddTicks(ticks);
++        foreach (var mapping in SevenMappings(source, typeof(DateTime))) Assert.Equal(dateExpected, mapping.GenerateSqlLiteral(local));
++        foreach (var mapping in SevenMappings(source, typeof(DateTimeOffset)))
++            Assert.Equal(zoneExpected, mapping.GenerateSqlLiteral(new DateTimeOffset(local, TimeSpan.Zero)));
++    }
++
++    [Theory]
++    [InlineData(0, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(330, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 +05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(-330, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 -05:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(-30, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 -00:30', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(-779, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 -12:59', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    [InlineData(840, "TO_TIMESTAMP_TZ('2026-07-23 14:15:16.1234567 +14:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')")]
++    public void SevenDigitConstructorKeepsLocalClockOffsetAndInvariantCulture(int minutes, string expected)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var previous = CultureInfo.CurrentCulture;
++        try
++        {
++            foreach (var culture in new[] { CultureInfo.InvariantCulture, CultureInfo.GetCultureInfo("ar-SA") })
++            {
++                CultureInfo.CurrentCulture = culture;
++                var local = new DateTime(2026, 7, 23, 14, 15, 16).AddTicks(1234567);
++                foreach (var mapping in SevenMappings(source, typeof(DateTime)))
++                    Assert.Equal("TO_TIMESTAMP('2026-07-23 14:15:16.1234567', 'YYYY-MM-DD HH24:MI:SS.FF7')", mapping.GenerateSqlLiteral(local));
++                var value = new DateTimeOffset(local, TimeSpan.FromMinutes(minutes));
++                foreach (var mapping in SevenMappings(source, typeof(DateTimeOffset))) Assert.Equal(expected, mapping.GenerateSqlLiteral(value));
++            }
++        }
++        finally { CultureInfo.CurrentCulture = previous; }
++    }
++
++    [Theory]
++    [InlineData(0, 0L, "TIMESTAMP '2026-07-23 14:15:16'", "TIMESTAMP '2026-07-23 14:15:16+05:30'")]
++    [InlineData(1, 1000000L, "TIMESTAMP '2026-07-23 14:15:16.1'", "TIMESTAMP '2026-07-23 14:15:16.1+05:30'")]
++    [InlineData(2, 1200000L, "TIMESTAMP '2026-07-23 14:15:16.12'", "TIMESTAMP '2026-07-23 14:15:16.12+05:30'")]
++    [InlineData(3, 1230000L, "TIMESTAMP '2026-07-23 14:15:16.123'", "TIMESTAMP '2026-07-23 14:15:16.123+05:30'")]
++    [InlineData(4, 1234000L, "TIMESTAMP '2026-07-23 14:15:16.1234'", "TIMESTAMP '2026-07-23 14:15:16.1234+05:30'")]
++    [InlineData(5, 1234500L, "TIMESTAMP '2026-07-23 14:15:16.12345'", "TIMESTAMP '2026-07-23 14:15:16.12345+05:30'")]
++    [InlineData(6, 1234560L, "TIMESTAMP '2026-07-23 14:15:16.123456'", "TIMESTAMP '2026-07-23 14:15:16.123456+05:30'")]
++    public void ZeroThroughSixDigitLiteralsAndClonesKeepLegacyTextAndQuantum(int fraction, long ticks, string dateExpected, string zoneExpected)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var local = new DateTime(2026, 7, 23, 14, 15, 16).AddTicks(ticks);
++        foreach (var type in new[] { typeof(DateTime), typeof(DateTimeOffset) })
++        {
++            object value, unaligned; string expected;
++            if (type == typeof(DateTime)) { value = local; unaligned = local.AddTicks(1); expected = dateExpected; }
++            else { value = new DateTimeOffset(local, TimeSpan.FromMinutes(330)); unaligned = new DateTimeOffset(local.AddTicks(1), TimeSpan.FromMinutes(330)); expected = zoneExpected; }
++            foreach (var mapping in new[] { source.FindMapping(type, null, precision: fraction)!, source.FindMapping(type)!.WithPrecisionAndScale(fraction, null) })
++            {
++                Assert.Equal(expected, mapping.GenerateSqlLiteral(value));
++                Assert.Throws<OverflowException>(() => mapping.GenerateSqlLiteral(unaligned));
++                Assert.Equal("NULL", mapping.GenerateSqlLiteral(null));
++            }
++        }
++    }
++
++    [Theory]
++    [InlineData("TIMESTAMP", false)] [InlineData("DATETIME", false)]
++    [InlineData("TIMESTAMP WITH TIME ZONE", true)] [InlineData("DATETIME WITH TIME ZONE", true)]
++    public void BareTimestampAndTimezoneDeclarationsKeepSixDigits(string storeType, bool timezone)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        object value, unaligned; Type type; string expected;
++        var local = new DateTime(2026, 7, 23, 14, 15, 16).AddTicks(1234560);
++        if (timezone)
++        {
++            type = typeof(DateTimeOffset); value = new DateTimeOffset(local, TimeSpan.FromMinutes(330));
++            unaligned = new DateTimeOffset(local.AddTicks(1), TimeSpan.FromMinutes(330)); expected = "TIMESTAMP '2026-07-23 14:15:16.123456+05:30'";
++        }
++        else { type = typeof(DateTime); value = local; unaligned = local.AddTicks(1); expected = "TIMESTAMP '2026-07-23 14:15:16.123456'"; }
++        var mapping = source.FindMapping(type, storeType)!;
++        Assert.Null(mapping.Precision);
++        Assert.Equal(expected, mapping.GenerateSqlLiteral(value));
++        Assert.Throws<OverflowException>(() => mapping.GenerateSqlLiteral(unaligned));
++        Assert.Equal("NULL", mapping.GenerateSqlLiteral(null));
++    }
++
++    private static RelationalTypeMapping[] SevenMappings(IRelationalTypeMappingSource source, Type type)
++        => [source.FindMapping(type)!, source.FindMapping(type, null, precision: 7)!,
++            source.FindMapping(type)!.WithPrecisionAndScale(7, null), source.FindMapping(type, null, precision: 6)!.WithPrecisionAndScale(7, null)];
++
++    [Fact]
++    public void SixDigitLiteralsRejectLossAndPreserveNumericalZeros()
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var dt = source.FindMapping(typeof(DateTime), "TIMESTAMP(6)")!;
++        var dto = source.FindMapping(typeof(DateTimeOffset), "TIMESTAMP(6) WITH TIME ZONE")!;
++        Assert.Equal("TIMESTAMP '9999-12-31 23:59:59.999999'", dt.GenerateSqlLiteral(DateTime.MaxValue.AddTicks(-9)));
++        foreach (var delta in new[] { 0, -1 })
++        {
++            Assert.Throws<OverflowException>(() => dt.GenerateSqlLiteral(DateTime.MaxValue.AddTicks(delta)));
++            Assert.Throws<OverflowException>(() => dto.GenerateSqlLiteral(new DateTimeOffset(DateTime.MaxValue.AddTicks(delta), TimeSpan.Zero)));
++        }
++        var previous = CultureInfo.CurrentCulture;
++        try
++        {
++            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
++            var value = new DateTimeOffset(2026, 7, 23, 14, 15, 16, TimeSpan.FromMinutes(-30)).AddTicks(1230000);
++            Assert.Equal("TIMESTAMP '2026-07-23 14:15:16.123000-00:30'", dto.GenerateSqlLiteral(value));
++        }
++        finally { CultureInfo.CurrentCulture = previous; }
++    }
++
++    [Fact]
++    public void DateLiteralsValidateBeforeRenderingAndBareTimestampKeepsSix()
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var date = source.FindMapping(typeof(DateTime), "DATE")!;
++        Assert.Equal("DATE '2026-07-23'", date.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++        Assert.Throws<OverflowException>(() => date.GenerateSqlLiteral(new DateTime(2026, 7, 23).AddTicks(1)));
++        var bare = source.FindMapping(typeof(DateTime), "TIMESTAMP")!;
++        Assert.Equal("TIMESTAMP '2026-07-23 00:00:00.000000'", bare.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++        Assert.Throws<OverflowException>(() => bare.GenerateSqlLiteral(new DateTime(2026, 7, 23).AddTicks(1)));
++        Assert.Equal("TIMESTAMP '2026-07-23 00:00:00'", source.FindMapping(typeof(DateTime), "TIMESTAMP(0)")!.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++    }
++
++    [Theory]
++    [InlineData(8)] [InlineData(9)]
++    public void MetadataPrecisionDoesNotOpenAnInlineLiteralWriteBypass(int scale)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        Assert.Equal(scale, source.FindMapping(typeof(DateTime), null, precision: scale)!.Precision);
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(DateTime), null, precision: scale)!.GenerateSqlLiteral(DateTime.MinValue));
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(DateTimeOffset), null, precision: scale)!.GenerateSqlLiteral(DateTimeOffset.MinValue));
++        Assert.Equal("NULL", source.FindMapping(typeof(DateTime), null, precision: scale)!.GenerateSqlLiteral(null));
++        Assert.Equal("NULL", source.FindMapping(typeof(DateTimeOffset), null, precision: scale)!.GenerateSqlLiteral(null));
++    }
++
++    [Theory]
++    [InlineData(5)] [InlineData(10)] [InlineData(14)]
++    public void TimestampOffsetAndDateLiteralsDoNotBypassTheAcceptedCalendarGap(int day)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var value = new DateTime(1582, 10, day);
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(DateTime))!.GenerateSqlLiteral(value));
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(DateTimeOffset))!.GenerateSqlLiteral(new DateTimeOffset(value, TimeSpan.Zero)));
++        Assert.Throws<NotSupportedException>(() => source.FindMapping(typeof(DateTime), "DATE")!.GenerateSqlLiteral(value));
++    }
++
++    [Fact]
++    public void DateOnlyLiteralCloneKeepsParameterContractAndCalendarBoundaries()
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var original = source.FindMapping(typeof(DateOnly))!;
++        var clone = original.WithPrecisionAndScale(null, null);
++        Assert.Equal(original.GetType(), clone.GetType());
++        using var command = new W.Dm.DmCommand();
++        var parameter = clone.CreateParameter(command, "p", new DateOnly(1582, 10, 4));
++        Assert.Equal(System.Data.DbType.Date, parameter.DbType);
++        Assert.Equal((byte)0, parameter.Precision); Assert.Equal((byte)0, parameter.Scale);
++        Assert.Equal("DATE '1582-10-04'", clone.GenerateSqlLiteral(new DateOnly(1582, 10, 4)));
++        Assert.Equal("DATE '1582-10-15'", clone.GenerateSqlLiteral(new DateOnly(1582, 10, 15)));
++        for (var day = 5; day <= 14; day++)
++            Assert.Throws<NotSupportedException>(() => clone.GenerateSqlLiteral(new DateOnly(1582, 10, day)));
++    }
++
++    [Theory]
++    [InlineData(6)] [InlineData(7)]
++    public void ActualLocalTimezoneMappingRetainsMetadataAndNullButRejectsNonNullLiteral(int fraction)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var storeType = $"TIMESTAMP({fraction}) WITH LOCAL TIME ZONE";
++        var mapping = source.FindMapping(typeof(DateTime), storeType)!;
++        Assert.NotNull(mapping); Assert.Equal(storeType, mapping.StoreType); Assert.Equal(fraction, mapping.Precision);
++        Assert.Equal(System.Data.DbType.DateTime2, mapping.DbType);
++        Assert.Equal("NULL", mapping.GenerateSqlLiteral(null));
++        Assert.Throws<NotSupportedException>(() => mapping.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++        var clone = mapping.WithPrecisionAndScale(fraction, null);
++        Assert.Equal(mapping.GetType(), clone.GetType()); Assert.Equal("NULL", clone.GenerateSqlLiteral(null));
++        Assert.Throws<NotSupportedException>(() => clone.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++        var ordinary = source.FindMapping(typeof(DateTime), $"TIMESTAMP({fraction})")!;
++        var ordinaryExpected = fraction == 7
++            ? "TO_TIMESTAMP('2026-07-23 00:00:00.0000000', 'YYYY-MM-DD HH24:MI:SS.FF7')"
++            : "TIMESTAMP '2026-07-23 00:00:00.000000'";
++        Assert.Equal(ordinaryExpected, ordinary.GenerateSqlLiteral(new DateTime(2026, 7, 23)));
++        var zone = source.FindMapping(typeof(DateTimeOffset), $"TIMESTAMP({fraction}) WITH TIME ZONE")!;
++        var zoneExpected = fraction == 7
++            ? "TO_TIMESTAMP_TZ('2026-07-23 00:00:00.0000000 +00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')"
++            : "TIMESTAMP '2026-07-23 00:00:00.000000+00:00'";
++        Assert.Equal(zoneExpected, zone.GenerateSqlLiteral(new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero)));
++    }
++
++    [Theory]
++    [InlineData("timestamp(6) with local time zone")]
++    [InlineData(" TIMESTAMP (7)  WITH  LOCAL  TIME  ZONE ")]
++    [InlineData("DATETIME(7) WITH LOCAL TIME ZONE")]
++    public void PublicStoreTypeClonesCannotBypassLocalTimezoneLiteralClosure(string storeType)
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        foreach (var type in new[] { typeof(DateTime), typeof(DateTimeOffset) })
++        {
++            var original = source.FindMapping(type)!;
++            var clone = original.WithStoreTypeAndSize(storeType, size: null);
++            Assert.Equal(original.GetType(), clone.GetType()); Assert.Equal(storeType, clone.StoreType);
++            Assert.Equal("NULL", clone.GenerateSqlLiteral(null));
++            object value;
++            if (type == typeof(DateTime)) value = new DateTime(2026, 7, 23);
++            else value = new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero);
++            Assert.Throws<NotSupportedException>(() => clone.GenerateSqlLiteral(value));
++        }
++    }
++
++    [Fact]
++    public void OffsetLiteralDomainAndIntervalQuantumLeadingAreIndependent()
++    {
++        using var context = TP07TemporalMappingTests.Context(); var source = TP07TemporalMappingTests.Source(context);
++        var mapping = source.FindMapping(typeof(DateTimeOffset))!;
++        Assert.Throws<OverflowException>(() => mapping.GenerateSqlLiteral(new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.FromHours(-13))));
++        Assert.Contains("-12:59", mapping.GenerateSqlLiteral(new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.FromMinutes(-779))), StringComparison.Ordinal);
++        var interval = source.FindMapping(typeof(TimeSpan), "INTERVAL DAY(2) TO SECOND(3)")!;
++        Assert.Throws<OverflowException>(() => interval.GenerateSqlLiteral(TimeSpan.FromDays(100)));
++        Assert.Throws<ArgumentException>(() => interval.GenerateSqlLiteral(TimeSpan.FromTicks(10)));
++        Assert.Equal("INTERVAL '-1 00:00:00.123' DAY(2) TO SECOND(3)", interval.GenerateSqlLiteral(-TimeSpan.FromDays(1).Add(TimeSpan.FromTicks(1230000))));
++    }
++}
+--- /dev/null
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/TP07WReaderFixture.cs
+@@ -0,0 +1,110 @@
++using System.Collections;
++using System.Data;
++using System.Reflection;
++using System.Runtime.CompilerServices;
++using System.Runtime.ExceptionServices;
++using W.Dm;
++
++namespace W.EntityFrameworkCore.Dameng.Tests;
++
++// Synthetic already-fetched cache on the exact public package reader. No Open,
++// Execute, socket or encoder. The statement is retired before normal lease disposal.
++internal sealed class TP07WReaderFixture : IDisposable
++{
++    private static readonly Assembly Driver = typeof(DmDataReader).Assembly;
++    private static readonly BindingFlags All = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
++    private readonly object statement;
++    private readonly DmConnection connection;
++    private readonly IDisposable lease;
++    internal DmDataReader Reader { get; }
++
++    internal TP07WReaderFixture(int ctype, int scale, byte[]? bytes, string format = "OrdinaryPacked")
++    {
++        connection = new DmConnection();
++        var physical = Blank("W.Dm.DmConnInstance");
++        var property = New("W.Dm.DmConnProperty");
++        Put(property, "ServerEncoding", "utf-8"); Put(property, "NewLobFlag", true);
++        foreach (var name in new[] { "oracleDateFormat", "oracleTimeFormat", "oracleTimeTZFormat", "oracleTimestampFormat", "oracleTimestampTZFormat" })
++            Put(property, name, "");
++        Put(physical, "m_ConnPro", property); Put(physical, "Conn", connection); Put(connection, "m_ConnInst", physical);
++        statement = Blank("W.Dm.Internal.Legacy.A.A"); Put(statement, "__t02_field_04000923", physical);
++        var session = New("W.Dm.Internal.Sessions.DmSession", new object?[] { null });
++        Call(session, "CompleteHandshakeForTests");
++        lease = (IDisposable)Call(session, "BeginExecution", Enum.Parse(Type("W.Dm.Internal.Sessions.DmOperationPurpose"), "Reader"),
++            Activator.CreateInstance(Type("W.Dm.Internal.Transport.DmDeadline")), 0)!;
++        Put(physical, "<Session>k__BackingField", session);
++        var column = New("W.Dm.DmColumn", physical);
++        var width = ctype == 23 ? 10 : ctype == 26 ? 9 : 11;
++        var mask = (scale & 0x1000) != 0 ? 4 : 0;
++        var semantic = scale & ~0x3000;
++        Call(column, "SetCType", ctype); Call(column, "SetScale", semantic); Call(column, "SetPrecision", width);
++        var raw = New("W.Dm.Internal.Types.DmTemporalRawMetadata",
++            Enum.Parse(Type("W.Dm.Internal.Types.DmTemporalMetadataSource"), "Synthetic"), ctype, width, scale, 0, 0, mask,
++            Enum.Parse(Type("W.Dm.Internal.Types.DmTemporalResultFormat"), "Unknown"));
++        Call(column, "CaptureTemporalServerMetadata", raw); Put(column, "mask", mask);
++        Put(column, "name", "TP07_SYNTHETIC");
++        var columns = Array.CreateInstance(Type("W.Dm.DmColumn"), 1); columns.SetValue(column, 0);
++        var info = New("W.Dm.DmInfo"); Call(info, "SetColumnsInfo", columns); Put(info, "rsBdta", false);
++        var cache = Blank("W.Dm.DmResultSetCache");
++        Put(cache, "colNum", 1); Put(cache, "currentPos", -1L); Put(cache, "datasOffset", -1);
++        Put(cache, "totalRowCount", 1L); Put(cache, "datas", new byte[][][] { new byte[][] { [], bytes! } });
++        Reader = (DmDataReader)RuntimeHelpers.GetUninitializedObject(typeof(DmDataReader));
++        Put(Reader, "m_Statement", statement); Put(Reader, "m_RowCount", 1L); Put(Reader, "m_CurrentRow", -1L);
++        Put(Reader, "executionLease", lease); Put(Reader, "ownsExecutionLease", true); Put(Reader, "asyncCloseGate", new object());
++        Put(Reader, "m_Conn", physical); Put(Reader, "m_Clobs", new ArrayList { null });
++        Put(Reader, "m_DbInfo", info); Put(Reader, "m_ColInfo", columns); Put(Reader, "m_RsCache", cache); Put(Reader, "bdta", false);
++        var getter = New("W.Dm.DmGetValue", "utf-8", statement, false, columns,
++            Enum.Parse(Type("W.Dm.Internal.Types.DmTemporalResultFormat"), format));
++        Put(Reader, "m_GetVal", getter); Put(Reader, "m_Behavior", CommandBehavior.Default);
++        Put(Reader, "activeLobOrdinal", -1); Put(Reader, "sequentialLobUnitOrdinal", -1); Put(Reader, "m_SequentialSeq", -1);
++    }
++
++    private static System.Type Type(string name) => Driver.GetType(name, throwOnError: true)!;
++    private static object Blank(string name) => RuntimeHelpers.GetUninitializedObject(Type(name));
++    private static bool Fits(System.Type expected, object? value)
++        => value is null ? !expected.IsValueType || Nullable.GetUnderlyingType(expected) is not null
++            : expected.IsInstanceOfType(value) || Nullable.GetUnderlyingType(expected)?.IsInstanceOfType(value) == true;
++    private static bool Fits(ParameterInfo[] parameters, object?[] values)
++        => parameters.Length == values.Length && parameters.Zip(values).All(pair => Fits(pair.First.ParameterType, pair.Second));
++    private static object New(string name, params object?[] values)
++    {
++        var constructor = Type(name).GetConstructors(All).Single(item => Fits(item.GetParameters(), values));
++        return constructor.Invoke(values);
++    }
++    private static object? Call(object target, string name, params object?[] values)
++    {
++        var candidates = new List<MethodInfo>();
++        for (var type = target.GetType(); type is not null; type = type.BaseType)
++            candidates.AddRange(type.GetMethods(All | BindingFlags.DeclaredOnly));
++        var method = candidates.Single(item => item.Name == name && !item.IsStatic && Fits(item.GetParameters(), values));
++        try { return method.Invoke(target, values); }
++        catch (TargetInvocationException error) when (error.InnerException is not null)
++        { ExceptionDispatchInfo.Capture(error.InnerException).Throw(); throw; }
++    }
++    private static void Put(object target, string name, object? value)
++    {
++        for (var type = target.GetType(); type is not null; type = type.BaseType)
++        {
++            var field = type.GetField(name, All | BindingFlags.DeclaredOnly);
++            if (field is not null)
++            {
++                if (field.IsStatic || !Fits(field.FieldType, value)) throw new InvalidOperationException("Fixture field contract changed: " + name);
++                field.SetValue(target, value); return;
++            }
++            var property = type.GetProperty(name, All | BindingFlags.DeclaredOnly);
++            if (property is not null)
++            {
++                if (property.GetSetMethod(nonPublic: true) is null || !Fits(property.PropertyType, value))
++                    throw new InvalidOperationException("Fixture property contract changed: " + name);
++                property.SetValue(target, value); return;
++            }
++        }
++        throw new MissingMemberException(target.GetType().FullName, name);
++    }
++    public void Dispose()
++    {
++        Put(statement, "__t02_field_04000930", true);
++        try { Reader.Dispose(); }
++        finally { lease.Dispose(); Put(connection, "m_ConnInst", null); connection.Dispose(); }
++    }
++}
