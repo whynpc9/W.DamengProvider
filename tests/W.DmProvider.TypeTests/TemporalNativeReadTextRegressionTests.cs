@@ -86,6 +86,11 @@ public sealed class TemporalNativeReadTextRegressionTests
             // The generic getter retains its typed value contract; character-to-date conversion uses GetDateTime.
             Assert.Throws<InvalidCastException>(() => fixture.Reader.GetFieldValue<DateTime>(0));
             Assert.Equal(actual, DmDateTime.GetTimestampByString(text));
+            DateTime dateHelper = DmDateTime.GetDateByString(text);
+            Assert.Equal(expected.Ticks, dateHelper.Ticks); Assert.Equal(expected.Kind, dateHelper.Kind);
+            var getter = new DmGetValue("UTF-8", fixture.Reader.m_Statement, false, fixture.Columns);
+            DateTime dateGetter = getter.GetDate(0, Encoding.UTF8.GetBytes(text), 1, fixture.Columns[0].GetPrecision(), 0);
+            Assert.Equal(expected.Ticks, dateGetter.Ticks); Assert.Equal(expected.Kind, dateGetter.Kind);
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }
@@ -108,6 +113,9 @@ public sealed class TemporalNativeReadTextRegressionTests
             Assert.Throws<OverflowException>(() => fixture.Reader.GetDateTime(0));
             Assert.Throws<InvalidCastException>(() => fixture.Reader.GetFieldValue<DateTime>(0));
             Assert.Throws<OverflowException>(() => DmDateTime.GetTimestampByString(text));
+            Assert.Throws<OverflowException>(() => DmDateTime.GetDateByString(text));
+            var getter = new DmGetValue("UTF-8", fixture.Reader.m_Statement, false, fixture.Columns);
+            Assert.Throws<OverflowException>(() => getter.GetDate(0, Encoding.UTF8.GetBytes(text), 1, fixture.Columns[0].GetPrecision(), 0));
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }
@@ -140,5 +148,6 @@ public sealed class TemporalNativeReadTextRegressionTests
     {
         using var fixture = new ReaderFixture(1, 0, Encoding.UTF8.GetBytes(text));
         Assert.Throws<FormatException>(() => fixture.Reader.GetDateTime(0));
+        Assert.Throws<FormatException>(() => DmDateTime.GetDateByString(text));
     }
 }

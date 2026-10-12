@@ -539,7 +539,7 @@ public class DmDateTime
 
 	public static DateTime GetDateByString(string s)
 	{
-		return DmTemporalInteger.ProjectDateOnly(DmTemporalLegacyAdapter.Parse(s).Fields).ToDateTime(TimeOnly.MinValue);
+		return GetTimestampByString(s);
 	}
 
 	public static bool DmdtIsLeapYear(int year)
