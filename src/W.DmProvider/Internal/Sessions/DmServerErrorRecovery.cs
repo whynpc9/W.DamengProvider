@@ -21,7 +21,6 @@ internal static class DmServerErrorRecovery
         -2124 => true,  // duplicate object name
         -2207 => true,  // missing sequence (DEFAULT NEXTVAL)
         -2713 => true,  // unsupported IDENTITY type
-        -3510 => true,  // RAISE_APPLICATION_ERROR code out of range
         -5512 => true,  // missing CREATE SCHEMA privilege
         -5622 => true,  // missing CREATE MATERIALIZED VIEW privilege
         -6169 => true,  // value too long
@@ -30,6 +29,8 @@ internal static class DmServerErrorRecovery
         -6609 => true,  // NOT NULL violated
         -6628 => true,  // parent row still referenced (UPDATE ... NO ACTION)
         -7069 => true,  // NOCYCLE sequence exhausted
+        // -3510 is also EC_BAK_INFO_WRITE; the measured out-of-range RAISE case
+        // does not prove that every use of that number leaves a usable session.
         // RAISE_APPLICATION_ERROR user range, measured at -20000/-20071/-20999/-29999/-30000.
         <= -20000 and >= -30000 => true,
         _ => false

@@ -44,7 +44,6 @@ output["session_id_available"] = sidSql != null;
 
 string T(string tag) { var name = $"ERP_{tag}_{nonce}"; created.Add(name); return name; }
 string mark = T("MARK");
-ExecFresh($"CREATE TABLE \"{mark}\" (ID INT PRIMARY KEY, NOTE VARCHAR(40))");
 int markId = 0;
 
 var definitions = new List<Case>
@@ -105,52 +104,60 @@ var definitions = new List<Case>
         t => $"INSRT INTO \"{t}\" VALUES (1)", t => $"SELECT COUNT(*) FROM \"{t}\"", 0, Dml: true),
 };
 
-if (args.Length == 1 && args[0] == "markers")
-{
-    string trig = T("MKR");
-    ExecFresh($"CREATE TABLE \"{trig}\" (ID INT PRIMARY KEY, VERSION INT)");
-    var markers = new Dictionary<string, object?>();
-    foreach (var (name, sql) in new[] {
-        ("trigger_new_old_no_parameters", $"CREATE TRIGGER \"{trig}_TR\" BEFORE UPDATE ON \"{trig}\" FOR EACH ROW BEGIN :NEW.VERSION := :OLD.VERSION + 1; END;"),
-        ("select_named_marker_no_parameters", "SELECT :X FROM DUAL"),
-        ("select_positional_marker_no_parameters", "SELECT ? FROM DUAL") })
-    {
-        using var connection = Open();
-        try
-        {
-            using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.ExecuteNonQuery();
-            markers[name] = new { threw = false };
-        }
-        catch (Exception e) { markers[name] = new { threw = true, type = e.GetType().Name, number = (e as DmException)?.Number }; }
-    }
-    using (var connection = Open())
-    {
-        Exec(connection, $"INSERT INTO \"{trig}\" VALUES (1, 1)");
-        Exec(connection, $"UPDATE \"{trig}\" SET ID = 1");
-        markers["trigger_effect_version"] = Scalar(connection, $"SELECT VERSION FROM \"{trig}\"");
-    }
-    output["markers"] = markers;
-    output["cleanup"] = Cleanup();
-    Console.WriteLine(JsonSerializer.Serialize(output, new JsonSerializerOptions { WriteIndented = true }));
-    return 0;
-}
-
+bool markersOnly = args.Length == 1 && args[0] == "markers";
+int exit = 0;
 try
 {
-    foreach (var definition in definitions)
-    foreach (bool asynchronous in new[] { false, true })
-    foreach (bool inTransaction in definition.Dml ? new[] { false, true } : new[] { false })
-        cases.Add(await RunCase(definition, asynchronous, inTransaction));
+    if (markersOnly)
+    {
+        string trig = T("MKR");
+        var markers = new Dictionary<string, object?>();
+        output["markers"] = markers;
+        ExecFresh($"CREATE TABLE \"{trig}\" (ID INT PRIMARY KEY, VERSION INT)");
+        foreach (var (name, sql) in new[] {
+            ("trigger_new_old_no_parameters", $"CREATE TRIGGER \"{trig}_TR\" BEFORE UPDATE ON \"{trig}\" FOR EACH ROW BEGIN :NEW.VERSION := :OLD.VERSION + 1; END;"),
+            ("select_named_marker_no_parameters", "SELECT :X FROM DUAL"),
+            ("select_positional_marker_no_parameters", "SELECT ? FROM DUAL") })
+        {
+            using var connection = Open();
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                command.ExecuteNonQuery();
+                markers[name] = new { threw = false };
+            }
+            catch (Exception e) { markers[name] = new { threw = true, type = e.GetType().Name, number = (e as DmException)?.Number }; }
+        }
+        using (var connection = Open())
+        {
+            Exec(connection, $"INSERT INTO \"{trig}\" VALUES (1, 1)");
+            Exec(connection, $"UPDATE \"{trig}\" SET ID = 1");
+            markers["trigger_effect_version"] = Scalar(connection, $"SELECT VERSION FROM \"{trig}\"");
+        }
+    }
+    else
+    {
+        ExecFresh($"CREATE TABLE \"{mark}\" (ID INT PRIMARY KEY, NOTE VARCHAR(40))");
+        foreach (var definition in definitions)
+        foreach (bool asynchronous in new[] { false, true })
+        foreach (bool inTransaction in definition.Dml ? new[] { false, true } : new[] { false })
+            cases.Add(await RunCase(definition, asynchronous, inTransaction));
+    }
+}
+catch (Exception error)
+{
+    output["failed"] = error.GetType().Name;
+    exit = 1;
 }
 finally
 {
-    output["cases"] = cases;
-    output["cleanup"] = Cleanup();
+    if (!markersOnly) output["cases"] = cases;
+    try { output["cleanup"] = Cleanup(); }
+    catch (Exception error) { output["cleanup"] = new { failed = error.GetType().Name }; exit = 1; }
     Console.WriteLine(JsonSerializer.Serialize(output, new JsonSerializerOptions { WriteIndented = true }));
 }
-return 0;
+return exit;
 
 async Task<object> RunCase(Case definition, bool asynchronous, bool inTransaction)
 {

@@ -56,8 +56,12 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 | -2124 | 对象名重复 | -6607 | 外键（子插入/父删除） |
 | -2207 | 序列不存在（DEFAULT NEXTVAL） | -6609 | NOT NULL |
 | -2713 | 不支持的 IDENTITY 类型 | -6628 | 父行仍被引用（UPDATE … NO ACTION） |
-| -3510 | RAISE 代码越界 | -7069 | NOCYCLE 序列耗尽 |
-| -5512 | 无 CREATE SCHEMA 权限 | -20000…-30000 | `RAISE_APPLICATION_ERROR`（实测 -20000/-20001/-20002/-20003/-20071/-20999/-29999/-30000；-19999/-30001 服务器转为 -3510） |
+| -7069 | NOCYCLE 序列耗尽 | | |
+| -5512 | 无 CREATE SCHEMA 权限 | -20000…-30000 | `RAISE_APPLICATION_ERROR`（实测 -20000/-20001/-20002/-20003/-20071/-20999/-29999/-30000） |
+
+**PR #4 审阅修订（2026-10-13）。** 移除 `-3510`：该号在 [遗留错误定义](../../src/W.DmProvider/Internal/Legacy/Dm/DmErrorDefinition.cs) 中同时是 `EC_BAK_INFO_WRITE`。既有探针只验证了 `RAISE_APPLICATION_ERROR(-19999/-30001)` 转为 `-3510` 的场景，不能据此认定该错误号的所有来源都只影响当前语句；不按 SQL 文本或错误消息猜测来源，也不运行 BACKUP。现在这两种越界 RAISE（各 sync/async，共 4 项）均应保守 Broken；其他白名单及恢复门槛不变。新增四项离线负例覆盖 `-3510` 的 sync/async × autocommit/Active 本地事务，检查严格服务器回执仍保留、连接不可复用、物理通道关闭、事务为 OutcomeUnknown。
+
+上表原 W 候选的 **82/82**、§1 的 **D 包 219/234** 及 §6 的变基后探针结果都是移除 `-3510` 前的历史记录，原证据保持不变；它们不证明本轮更保守的行为已验证。本轮四项离线负例已通过，完整 Pool 为 259/259；此收窄不要求重跑整套 EF，越界 RAISE 不在 D 的 EF 通过项内。
 
 **不变的门槛。** 仍要求完整四段错误体严格解析且无尾随数据、当前 wire/invocation/线程身份在同一 session gate 内匹配、Query/Reader purpose、execute 而非 prepare、server version `8.1.5.60`，以及之后完整验证的 STMT_CLOSE；关闭失败仍关闭连接。取消/期限先胜时不提升。
 
@@ -127,5 +131,18 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 
 - 白名单只对 8.1.5.60 profile 成立。TLS 实例（8.1.4.6）未做同样探针，仍保守 Broken。
 - 未覆盖的错误号（如死锁、超时、会话级错误）仍 Broken，需要时另行按本探针实测。
+- `-3510` 语义有歧义，连同越界 RAISE 场景一律 Broken；保留会话的实际错误集合不再包含此号。
 - `-5622` 对应测试需 CREATE MATERIALIZED VIEW；`DamengMigrationScriptFunctionalTests` 仍需 SA 通道。两者未授权、未运行。
 - EF 侧交付仍是 patch，需在 EF 仓库独立应用。
+
+## 8. PR #4 工具修订
+
+- [TestSchemaPrivilege](../../tools/TestSchemaPrivilege/Program.cs) 的 grant/revoke 通道只查询一次 `USER`，先验证 SA/SYSDBA；不匹配时输出 `identity_sa=false`、`code=identity_rejected`，非零退出，任何权限读取和 GRANT/REVOKE 均不会执行。本次修复不加载管理凭据或执行授权；编译/静态复核由独立验证执行。
+- [ErrorRecoveryProbe](../../tools/ErrorRecoveryProbe/Program.cs) 的 markers 与矩阵建表、写入、读取都在同一个 try/finally 清理保护内；markers 不再创建矩阵的 MARK 表。失败仍输出已收集结果和清理结果，仅记录异常类型，非零退出；清理过程中抛出的异常也安全序列化并非零退出。原有逐项 DROP 失败与新连接遗留数继续记录在 cleanup 结果中，供验证者检查。DROP 继续只针对本次登记的精确对象名，前缀查询仅用于只读复查，不用于批量删除。独立验证已检查正常 markers 与受控异常后的精确对象清理。
+
+本轮由 Sol Low 独立验证、Astra High 静态审查接受；受测源码为 `80e6c28` 加本次审阅修复 diff，执行期间产品/测试源码未变。脱敏结果与命令见 [审阅修复验证](evidence/EFCompat/pr4-review-fix-verification.json)：
+
+- 全部 12 个离线套件 **2045/2045**，无失败或跳过：Type 952、Pool 259、Transaction 88、Diagnostics 83、Isolation 78、Command 16、Session 12、Async 134、Transport 115、Configuration 11、Lob 258、Security 39；全部退出码 0，使用规定 DOTNET 环境与单节点/禁用构建服务参数。
+- W/Official 探针和权限工具构建均退出 0，零警告/错误；权限身份拒绝只做编译和独立控制流复核，没有执行 grant/revoke 或加载管理凭据。
+- W 与 Official 正常 markers 均在 TEST / 8.1.5.60 上退出 0，触发器 VERSION=2，无参 `:X`/`?` 均服务器 -6804；两次清理无失败，新连接剩余 0。
+- ignored W 临时副本在 UPDATE 与 VERSION 读回后注入异常，安全记录 `InvalidOperationException`，预期退出 1；finally 清理成功，新连接按本次精确登记名称（含触发器）复查 0。三次实库命令均使用指定绝对 TEST wrapper，先验证 TEST 身份；W 显式 PlaintextAllowed。无新授权，未运行 BACKUP、82 场完整矩阵或 EF 套件。

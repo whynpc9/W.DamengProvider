@@ -30,6 +30,11 @@ public sealed class ServerErrorClassificationTests
     [InlineData(false, "8.1.5.60", -19999, false)]
     [InlineData(true, "8.1.5.60", -30001, true)]
     [InlineData(false, "8.1.5.60", -1, false)]
+    // -3510 is also EC_BAK_INFO_WRITE, not only an out-of-range RAISE error.
+    [InlineData(false, "8.1.5.60", -3510, false)]
+    [InlineData(true, "8.1.5.60", -3510, false)]
+    [InlineData(false, "8.1.5.60", -3510, true)]
+    [InlineData(true, "8.1.5.60", -3510, true)]
     public async Task CompleteStatementErrorHasServerReceiptButGenericSessionIsDiscarded(bool asynchronous, string version, int number, bool transaction)
     {
         using var fixture = new ErrorFixture(version, transaction);

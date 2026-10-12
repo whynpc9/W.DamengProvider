@@ -27,7 +27,9 @@ try
         return Finish(0);
     }
     using var admin = Open("DAMENG_ADMIN_CONNECTION_STRING");
-    result["identity_sa"] = Scalar(admin, "SELECT USER FROM DUAL") == "SYSDBA" || Scalar(admin, "SELECT USER FROM DUAL") == "SA";
+    string? adminUser = Scalar(admin, "SELECT USER FROM DUAL");
+    result["identity_sa"] = adminUser is "SYSDBA" or "SA";
+    if (!(bool)result["identity_sa"]!) { result["code"] = "identity_rejected"; return Finish(2); }
     result["before"] = Count(admin, $"SELECT COUNT(*) FROM DBA_SYS_PRIVS WHERE GRANTEE='{TestUser}' AND PRIVILEGE='CREATE SCHEMA'");
     using (var command = admin.CreateCommand())
     {
