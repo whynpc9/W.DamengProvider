@@ -104,6 +104,22 @@ var definitions = new List<Case>
         t => $"INSRT INTO \"{t}\" VALUES (1)", t => $"SELECT COUNT(*) FROM \"{t}\"", 0, Dml: true),
 };
 
+if (args.Length == 1 && args[0] == "unbound-markers")
+{
+    output["mode"] = "unbound-markers";
+    definitions = new List<Case>
+    {
+        new("unbound_named_select", t => new[] { $"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, V INT)", $"INSERT INTO \"{t}\" VALUES (1,10)" },
+            t => $"SELECT ID + :X FROM \"{t}\" WHERE ID=1", t => $"SELECT COUNT(*) FROM \"{t}\" WHERE ID=1 AND V=10", 1, Dml: true),
+        new("unbound_positional_select", t => new[] { $"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, V INT)", $"INSERT INTO \"{t}\" VALUES (1,10)" },
+            t => $"SELECT ID + ? FROM \"{t}\" WHERE ID=1", t => $"SELECT COUNT(*) FROM \"{t}\" WHERE ID=1 AND V=10", 1, Dml: true),
+        new("unbound_named_insert", t => new[] { $"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, V INT)", $"INSERT INTO \"{t}\" VALUES (1,10)" },
+            t => $"INSERT INTO \"{t}\" VALUES (2,:X)", t => $"SELECT COUNT(*) FROM \"{t}\"", 1, Dml: true),
+        new("unbound_positional_insert", t => new[] { $"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, V INT)", $"INSERT INTO \"{t}\" VALUES (1,10)" },
+            t => $"INSERT INTO \"{t}\" VALUES (2,?)", t => $"SELECT COUNT(*) FROM \"{t}\"", 1, Dml: true),
+    };
+}
+
 bool markersOnly = args.Length == 1 && args[0] == "markers";
 int exit = 0;
 try

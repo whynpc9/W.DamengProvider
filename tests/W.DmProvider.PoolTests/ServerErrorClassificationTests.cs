@@ -98,6 +98,10 @@ public sealed class ServerErrorClassificationTests
     [InlineData(true, -6628, false)]
     [InlineData(false, -5622, false)]
     [InlineData(true, -7069, true)]
+    [InlineData(false, -6804, false)]
+    [InlineData(true, -6804, false)]
+    [InlineData(false, -6804, true)]
+    [InlineData(true, -6804, true)]
     public async Task MeasuredStatementScopedErrorKeepsSessionInAutocommitAndTransaction(bool asynchronous, int number, bool transaction)
     {
         using var fixture = new ErrorFixture("8.1.5.60", transaction);
@@ -182,15 +186,17 @@ public sealed class ServerErrorClassificationTests
         Assert.Equal(DmTransactionOutcome.OutcomeUnknown, error.FailureInfo.TransactionOutcome);
     }
 
-    [Fact]
-    public void PrepareErrorIsStrictlyClassifiedWithoutAddingSessionPreservation()
+    [Theory]
+    [InlineData(-2106)]
+    [InlineData(-6804)]
+    public void PrepareErrorIsStrictlyClassifiedWithoutAddingSessionPreservation(int number)
     {
         using var fixture = new ErrorFixture("8.1.5.60", true);
         using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
         using var invocation = lease.BeginInvocation();
         invocation.SendAttempted = lease.SendAttempted = true;
         var wire = fixture.Session.BeginWireExchange();
-        var error = Assert.Throws<DmException>(() => c.A(Response(-2106, Body("", "", "", "duplicate")), fixture.Statement));
+        var error = Assert.Throws<DmException>(() => c.A(Response(number, Body("", "", "", "statement")), fixture.Statement));
         wire.Dispose();
         invocation.TranslateFailure(error);
         Assert.True(error.HasVerifiedServerResponse);

@@ -46,7 +46,7 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 
 两端不论在哪个驱动下，服务器侧结果相同：语句原子失败、不影响会话或外层事务。W HEAD 的 Broken 是纯客户端保守，EF 测试的假设与 ADO.NET 常规用法一致；改测试为换新连接会掩盖这一差异，故修 W。
 
-**白名单**（[DmServerErrorRecovery.cs](../../src/W.DmProvider/Internal/Sessions/DmServerErrorRecovery.cs)，全部已在上表实测）：
+**白名单**（[DmServerErrorRecovery.cs](../../src/W.DmProvider/Internal/Sessions/DmServerErrorRecovery.cs)，由上表原矩阵与 §2.3 的定向测量支持）：
 
 | 号 | 含义 | 号 | 含义 |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 | -2124 | 对象名重复 | -6607 | 外键（子插入/父删除） |
 | -2207 | 序列不存在（DEFAULT NEXTVAL） | -6609 | NOT NULL |
 | -2713 | 不支持的 IDENTITY 类型 | -6628 | 父行仍被引用（UPDATE … NO ACTION） |
-| -7069 | NOCYCLE 序列耗尽 | | |
+| -7069 | NOCYCLE 序列耗尽 | -6804 | 参数标记未绑定值（§2.3） |
 | -5512 | 无 CREATE SCHEMA 权限 | -20000…-30000 | `RAISE_APPLICATION_ERROR`（实测 -20000/-20001/-20002/-20003/-20071/-20999/-29999/-30000） |
 
 **PR #4 审阅修订（2026-10-13）。** 移除 `-3510`：该号在 [遗留错误定义](../../src/W.DmProvider/Internal/Legacy/Dm/DmErrorDefinition.cs) 中同时是 `EC_BAK_INFO_WRITE`。既有探针只验证了 `RAISE_APPLICATION_ERROR(-19999/-30001)` 转为 `-3510` 的场景，不能据此认定该错误号的所有来源都只影响当前语句；不按 SQL 文本或错误消息猜测来源，也不运行 BACKUP。现在这两种越界 RAISE（各 sync/async，共 4 项）均应保守 Broken；其他白名单及恢复门槛不变。新增四项离线负例覆盖 `-3510` 的 sync/async × autocommit/Active 本地事务，检查严格服务器回执仍保留、连接不可复用、物理通道关闭、事务为 OutcomeUnknown。
@@ -74,6 +74,24 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 `DmParameterBinding.Create` 在参数集合为空时返回零标记绑定：该命令走直接执行，SQL 原文不经绑定，`:NEW`/`:OLD`/`:X`/`?` 由服务器判定。词法扫描仍先执行（未终止引号/注释仍拒绝）；事务语句头守卫使用独立的 `ScanTopLevelStatements`，不受影响；服务器若仍描述出参数，`ValidateServerCount` 仍 fail closed。有参数时严格匹配、混用拒绝、未用参数拒绝不变。
 
 实库（[O](evidence/EFCompat/markers-Official.json) / [W HEAD](evidence/EFCompat/markers-W-head.json) / [W 候选](evidence/EFCompat/markers-W-candidate.json)）：触发器 DDL O 与候选成功且 UPDATE 后 VERSION 1→2，HEAD 客户端 `InvalidOperationException`；无参 `SELECT :X`/`SELECT ?` O 与候选均为服务器 -6804。离线 `ParameterlessMarkerTests` 6 项。
+
+### 2.3 PR #4：未绑定标记的服务器错误恢复
+
+Cursor 审阅发现 §2.2 的后续缺口：空参数命令现在由服务器拒绝未绑定的 `:X`/`?`（`-6804`），但原白名单未包含该号；W 因此将本可继续使用的连接置为 Broken，在已有本地事务中丢失继续执行能力。保留触发器 `:NEW`/`:OLD` 直接执行的行为，只补充已实测的服务器错误恢复，不恢复早期客户端对所有零参数标记的拒绝。
+
+先用 `unbound-markers` 模式独立测量：named/positional SELECT（表达式引用本次自有表）与 INSERT 四种语句，每种 sync/async × autocommit/Active 本地事务，共 16 场。全部复用原 `RunCase` 的会话身份、失败语句无效果、无遗留锁、autocommit 后写立即可见及本地事务错误前写仍不可见/提交后前后两行均保留的检查。此模式不执行 schema/mview 授权场景，原 82 场模式保持不变。
+
+| 本轮来源 | 结果 | 证据 |
+| --- | --- | --- |
+| Official `8.3.1.47463` | 16/16 均为 -6804，全部恢复与状态检查成立 | [Official](evidence/EFCompat/pr4-unbound-markers-Official.json) |
+| W 基线 `74a8cda` + 定向探针 | 16/16 为 -6804 后 Broken；事务为 OutcomeUnknown | [W 基线](evidence/EFCompat/pr4-unbound-markers-W-baseline-74a8cda.json) |
+| ignored W 实验副本 | 16/16 均为 -6804，全部恢复与状态检查成立；reusable=true，事务 Active | [W 实验](evidence/EFCompat/pr4-unbound-markers-W-experimental.json) |
+
+独立 Low 在 TEST / 8.1.5.60 上串行测量三者，W 显式 PlaintextAllowed；各轮 cleanup 无失败且新连接剩余 0，另用新 TEST 连接复查三轮精确登记的 51 张自有表，剩余 0（[精确复查](evidence/EFCompat/pr4-unbound-markers-fresh-exact.json)）。未加载管理凭据、执行授权或运行 BACKUP。
+
+实验驱动是基线源码的 ignored 副本，排除 bin/obj 后仅恢复 helper 新增一行 `-6804`，不修改正式产品。上述双驱动测量通过后，正式 helper 加入相同恢复行（注释改为参数未绑定），并新增四项 sync/async × autocommit/Active 恢复正例；prepare 负例参数化覆盖原 -2106 与 -6804。四项 -3510 负例、完整错误体、profile、owner、事务状态与 execute/prepare 门槛全部保留；零参数绑定逻辑不变。
+
+这些 16 场结果属于 Official/基线/实验测量，不能替代正式新增行后的候选验收，也不改写原 **82/82** 或 EF **D** 包历史证据。正式候选由 Astra High 静态验收、Sol Low 独立运行通过；受测源码为 `74a8cda` 加本次产品/测试/探针 diff，运行期间源码未改动。最终结果与命令见 [正式候选验证](evidence/EFCompat/pr4-unbound-markers-final-verification.json)：12 套件 **2050/2050**，Pool **264/264**，其余计数与 §8 一致，无跳过；实际正式 W 定向 **16/16** 全部安全检查通过，reusable=true、事务 Active。W/Fresh 构建零警告/错误；正常 markers 回归触发器 VERSION=2，未绑定标记为 -6804。两个实库运行及最终复查均退出 0，stderr 空，新 TEST 连接确认本轮精确 19 个对象名剩余 0。使用规定 DOTNET 环境及单节点/禁用构建服务参数，实库只通过指定绝对 TEST wrapper。
 
 ## 3. EF 测试补丁
 

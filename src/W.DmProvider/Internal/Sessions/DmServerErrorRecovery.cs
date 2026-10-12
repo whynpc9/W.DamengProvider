@@ -28,6 +28,7 @@ internal static class DmServerErrorRecovery
         -6607 => true,  // foreign key violated
         -6609 => true,  // NOT NULL violated
         -6628 => true,  // parent row still referenced (UPDATE ... NO ACTION)
+        -6804 => true,  // parameter marker has no bound value
         -7069 => true,  // NOCYCLE sequence exhausted
         // -3510 is also EC_BAK_INFO_WRITE; the measured out-of-range RAISE case
         // does not prove that every use of that number leaves a usable session.
