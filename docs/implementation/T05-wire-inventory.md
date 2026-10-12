@@ -44,4 +44,4 @@
 - 本文是入口与守卫清单，不能替代离线 SES-01～08、真实库或故障注入记录；测试 agent 在独立报告记录命令、退出码、服务器侧状态。无测试连接时标 `integration_pending`。
 - 旧 TCP 建连代码仍含多地址回退、二次同步 `Connect` 和进程共享事件；T05 在每次新建 socket 后检查当前 handshake 身份，并允许 Close 立即关闭已登记的 pending `D`，不声明完整 T06 建连超时/异步行为。
 - 旧 `Socket.Send` 可能短写，旧 `B` 收包长度限制及边界尚待 T06。`SentBytes` 仅为测试观测计数。
-- 被禁用的 heartbeat、pool、FLDR 或 Reconnect 不能因为 T05 主路径通过而视为已验收。真实服务器错误在当前保守策略下可能断开连接，复用优化需单独证明状态同步。
+- 被禁用的 heartbeat、pool、FLDR 或 Reconnect 不能因为 T05 主路径通过而视为已验收。真实服务器错误在当前保守策略下可能断开连接，复用优化需单独证明状态同步。2026-10-13 的证明与当前白名单见 [EF 功能兼容缺口报告](ef-functional-compat-gaps.md) §2.1。

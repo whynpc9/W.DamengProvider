@@ -1148,11 +1148,16 @@ internal partial class c
         diagnostic.Message += A(statement);
         if (settings.RWStandby) diagnostic.Message = "[S]" + diagnostic.Message;
         var error = new DmException(diagnostic);
-        bool preserve = allowPreservation && diagnostic.State == -2106 &&
-            string.Equals(settings.ServerVersion, "8.1.5.60", StringComparison.Ordinal) &&
+        // Inside a local transaction it must be the statement's own active transaction;
+        // otherwise only autocommit with no local transaction state in flight.
+        bool preserve = allowPreservation && DmServerErrorRecovery.IsStatementScoped(diagnostic.State) &&
+            DmServerErrorRecovery.IsMeasuredProfile(settings.ServerVersion) &&
             invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader &&
-            ReferenceEquals(owner.ActiveTransaction, statement.G().Transaction) &&
-            owner.ActiveTransaction?.Outcome == DmTransactionOutcome.Active;
+            (owner.ActiveTransaction != null
+                ? ReferenceEquals(owner.ActiveTransaction, statement.G().Transaction) &&
+                    owner.ActiveTransaction.Outcome == DmTransactionOutcome.Active
+                : statement.G().Transaction == null && settings.AutoCommit &&
+                    DmServerErrorRecovery.IsIdleTransactionState(owner.TransactionState));
         if (preserve) DmTransactionProtocolTrace.RecordDiagnosticBody(requestOpcode, response);
         owner.AcceptServerError(invocation, exchange, error, preserve);
         throw error;

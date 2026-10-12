@@ -160,6 +160,10 @@ internal sealed class DmParameterBinding
         ArgumentNullException.ThrowIfNull(sql);
         ArgumentNullException.ThrowIfNull(parameters);
         ScanResult scan = Scan(sql);
+        // A command without parameters executes directly and is never bound, so its
+        // marker-shaped text (e.g. :NEW/:OLD in a trigger body) is the server's to judge.
+        if (parameters.do_Count == 0)
+            return new DmParameterBinding(parameters, Array.Empty<int>(), Array.Empty<int>(), named: false);
         if (scan.Named.Count != 0 && scan.PositionalCount != 0)
             throw new NotSupportedException("Named and positional parameter markers cannot be mixed.");
 

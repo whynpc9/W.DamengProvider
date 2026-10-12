@@ -22,12 +22,14 @@ public sealed class ServerErrorClassificationTests
     [InlineData(true, "8.1.4.6", -6602, false)]
     [InlineData(false, "8.1.4.6", -6602, true)]
     [InlineData(true, "8.1.4.6", -6602, true)]
-    [InlineData(false, "8.1.5.60", -6602, true)]
-    [InlineData(true, "8.1.5.60", -6602, true)]
     [InlineData(false, "8.1.4.6", -2106, true)]
     [InlineData(true, "8.1.4.6", -2106, true)]
-    [InlineData(false, "8.1.5.60", -2106, false)]
-    [InlineData(true, "8.1.5.60", -2106, false)]
+    // Unmeasured numbers and the edges outside the RAISE_APPLICATION_ERROR range.
+    [InlineData(false, "8.1.5.60", -6001, true)]
+    [InlineData(true, "8.1.5.60", -6001, false)]
+    [InlineData(false, "8.1.5.60", -19999, false)]
+    [InlineData(true, "8.1.5.60", -30001, true)]
+    [InlineData(false, "8.1.5.60", -1, false)]
     public async Task CompleteStatementErrorHasServerReceiptButGenericSessionIsDiscarded(bool asynchronous, string version, int number, bool transaction)
     {
         using var fixture = new ErrorFixture(version, transaction);
@@ -76,6 +78,83 @@ public sealed class ServerErrorClassificationTests
         Assert.Equal(DmTransactionOutcome.Active, error.FailureInfo.TransactionOutcome);
         Assert.Equal(DmPhysicalSessionState.Busy, fixture.Session.State);
         Assert.False(fixture.Handshake.Channels.Single().IsClosed);
+    }
+
+    [Theory]
+    [InlineData(false, -6602, true)]
+    [InlineData(true, -6602, false)]
+    [InlineData(false, -6607, false)]
+    [InlineData(true, -6609, true)]
+    [InlineData(false, -2106, false)]
+    [InlineData(true, -564, false)]
+    [InlineData(false, -2713, false)]
+    [InlineData(true, -20000, false)]
+    [InlineData(false, -30000, true)]
+    [InlineData(true, -6628, false)]
+    [InlineData(false, -5622, false)]
+    [InlineData(true, -7069, true)]
+    public async Task MeasuredStatementScopedErrorKeepsSessionInAutocommitAndTransaction(bool asynchronous, int number, bool transaction)
+    {
+        using var fixture = new ErrorFixture("8.1.5.60", transaction);
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        var response = Response(number, Body("", "", "", "statement"));
+        var error = await CaptureAsync(asynchronous, response, fixture);
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.True(error.CanPreserveSessionAfterServerError);
+        Assert.False(invocation.ShouldAbortAfterFailure(error));
+        Assert.True(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(number, error.FailureInfo.ServerErrorNumber);
+        Assert.Equal(DmOperationOutcome.ServerReported, error.FailureInfo.OperationOutcome);
+        if (transaction) Assert.Equal(DmTransactionOutcome.Active, error.FailureInfo.TransactionOutcome);
+        else Assert.Null(error.FailureInfo.TransactionOutcome);
+        Assert.Equal(DmPhysicalSessionState.Busy, fixture.Session.State);
+        Assert.False(fixture.Handshake.Channels.Single().IsClosed);
+        Assert.Equal(0, response.a(false));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ManualCommitWithoutLocalTransactionCannotEnterPreservationWhitelist(bool asynchronous)
+    {
+        // Autocommit off with no DmTransaction means the server may hold an implicit
+        // transaction this client does not track; keep the conservative discard.
+        using var fixture = new ErrorFixture("8.1.5.60", false);
+        fixture.Instance.ConnProperty.AutoCommit = false;
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        var error = await CaptureAsync(asynchronous, Response(-6602, Body("", "", "", "duplicate")), fixture);
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.False(error.CanPreserveSessionAfterServerError);
+        Assert.False(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InFlightTransactionStateCannotEnterAutocommitPreservation(bool asynchronous)
+    {
+        using var fixture = new ErrorFixture("8.1.5.60", false);
+        fixture.Session.SetTransactionState(DmLocalTransactionState.OutcomeUnknown);
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        var error = await CaptureAsync(asynchronous, Response(-6602, Body("", "", "", "duplicate")), fixture);
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        Assert.False(error.CanPreserveSessionAfterServerError);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
     }
 
     [Theory]

@@ -439,12 +439,15 @@ internal sealed class DmSession
                 !exchange.Owns(this, invocation) || !ReferenceEquals(DmWireExchange.Current, exchange) ||
                 !ReferenceEquals(DmInvocation.Current, invocation))
                 throw new InvalidOperationException("Server error receipt has no current wire owner.");
-            bool canPreserve = preserveSession && error.Number == -2106 &&
-                string.Equals(transport?.ConnProperty.ServerVersion, "8.1.5.60", StringComparison.Ordinal) &&
+            bool canPreserve = preserveSession && DmServerErrorRecovery.IsStatementScoped(error.Number) &&
+                transport != null && DmServerErrorRecovery.IsMeasuredProfile(transport.ConnProperty.ServerVersion) &&
                 invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader &&
-                transactionState == DmLocalTransactionState.Active &&
-                ReferenceEquals(activeTransaction, transport?.Transaction) &&
-                activeTransaction?.Outcome == DmTransactionOutcome.Active;
+                (activeTransaction != null
+                    ? transactionState == DmLocalTransactionState.Active &&
+                        ReferenceEquals(activeTransaction, transport.Transaction) &&
+                        activeTransaction.Outcome == DmTransactionOutcome.Active
+                    : transport.Transaction == null && transport.ConnProperty.AutoCommit &&
+                        DmServerErrorRecovery.IsIdleTransactionState(transactionState));
             error.MarkVerifiedServerResponse(invocation.Identity, canPreserve);
             invocation.ServerErrorAccepted = true;
             if (canPreserve) exchange.MarkPreservedServerErrorComplete();

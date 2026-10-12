@@ -1,0 +1,145 @@
+diff --git a/Directory.Packages.props b/Directory.Packages.props
+index f2f3fad..9ca452e 100644
+--- a/Directory.Packages.props
++++ b/Directory.Packages.props
+@@ -4,7 +4,7 @@
+     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+   </PropertyGroup>
+   <ItemGroup>
+-    <PackageVersion Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" />
++    <PackageVersion Include="W.DmProvider" Version="[0.1.0-efcompat.20261012165201]" />
+     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12,11.0.0)" />
+     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12,11.0.0)" />
+     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12,11.0.0)" />
+diff --git a/src/W.EntityFrameworkCore.Dameng/packages.lock.json b/src/W.EntityFrameworkCore.Dameng/packages.lock.json
+index b0dfb7c..fc4752e 100644
+--- a/src/W.EntityFrameworkCore.Dameng/packages.lock.json
++++ b/src/W.EntityFrameworkCore.Dameng/packages.lock.json
+@@ -16,9 +16,9 @@
+       },
+       "W.DmProvider": {
+         "type": "Direct",
+-        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
+-        "resolved": "0.1.0-temporal.20261008144915",
+-        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
++        "requested": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]",
++        "resolved": "0.1.0-efcompat.20261012165201",
++        "contentHash": "7b6NnqMRR7GdVueOBkkJ9WYFPqBdFFxHo5gQEYyDTCn8jgfn5yHpwlGXSNSNfiXtXvVf8fe/aX4+o6XMbxvwYA=="
+       },
+       "Microsoft.EntityFrameworkCore": {
+         "type": "Transitive",
+diff --git a/test/TP07MappingObservation/Program.cs b/test/TP07MappingObservation/Program.cs
+index 9ad756e..203e0ce 100644
+--- a/test/TP07MappingObservation/Program.cs
++++ b/test/TP07MappingObservation/Program.cs
+@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Microsoft.EntityFrameworkCore.Storage;
+ using W.Dm;
+ 
+-const string expectedVersion = "0.1.0-temporal.20261008144915";
+-const string expectedHash = "843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980";
+-const string expectedMvid = "aa23e673-957c-4b1e-bf0f-291ff60077e6";
++const string expectedVersion = "0.1.0-efcompat.20261012165201";
++const string expectedHash = "1b576a31475ac4bc04d22dca64bc3ed1de61b01bb30aecf722d750b662df3f7c";
++const string expectedMvid = "1b36a175-023b-4e7b-bc8a-253e47c90892";
+ var driver = typeof(DmConnection).Assembly;
+ string loadedHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant();
+ string loadedMvid = driver.ManifestModule.ModuleVersionId.ToString();
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
+index ce65989..0e99c90 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.json
+@@ -185,7 +185,7 @@
+         "type": "Project",
+         "dependencies": {
+           "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
+-          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+         }
+       },
+       "Microsoft.EntityFrameworkCore.Relational": {
+@@ -202,9 +202,9 @@
+       },
+       "W.DmProvider": {
+         "type": "CentralTransitive",
+-        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
+-        "resolved": "0.1.0-temporal.20261008144915",
+-        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
++        "requested": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]",
++        "resolved": "0.1.0-efcompat.20261012165201",
++        "contentHash": "7b6NnqMRR7GdVueOBkkJ9WYFPqBdFFxHo5gQEYyDTCn8jgfn5yHpwlGXSNSNfiXtXvVf8fe/aX4+o6XMbxvwYA=="
+       }
+     }
+   }
+diff --git a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json b/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
+index 4b58eab..e1ba482 100644
+--- a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
++++ b/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock.json
+@@ -457,7 +457,7 @@
+         "type": "Project",
+         "dependencies": {
+           "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
+-          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+         }
+       },
+       "Microsoft.EntityFrameworkCore.Relational": {
+@@ -474,9 +474,9 @@
+       },
+       "W.DmProvider": {
+         "type": "CentralTransitive",
+-        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
+-        "resolved": "0.1.0-temporal.20261008144915",
+-        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
++        "requested": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]",
++        "resolved": "0.1.0-efcompat.20261012165201",
++        "contentHash": "7b6NnqMRR7GdVueOBkkJ9WYFPqBdFFxHo5gQEYyDTCn8jgfn5yHpwlGXSNSNfiXtXvVf8fe/aX4+o6XMbxvwYA=="
+       }
+     }
+   }
+diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMappingTests.cs b/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMappingTests.cs
+index 9688a0a..c8584d6 100644
+--- a/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMappingTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/TP07TemporalMappingTests.cs
+@@ -22,12 +22,12 @@ public sealed class TP07TemporalMappingTests
+     private static void CandidateIdentity()
+     {
+         var driver = typeof(DmConnection).Assembly;
+-        Assert.Equal("aa23e673-957c-4b1e-bf0f-291ff60077e6", driver.ManifestModule.ModuleVersionId.ToString());
+-        Assert.Equal("843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980",
++        Assert.Equal("1b36a175-023b-4e7b-bc8a-253e47c90892", driver.ManifestModule.ModuleVersionId.ToString());
++        Assert.Equal("1b576a31475ac4bc04d22dca64bc3ed1de61b01bb30aecf722d750b662df3f7c",
+             Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant());
+         using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(typeof(TP07TemporalMappingTests).Assembly.Location, ".deps.json")));
+         var libraries = deps.RootElement.GetProperty("libraries");
+-        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
++        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-efcompat.20261012165201").GetProperty("type").GetString());
+         Assert.True(libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _));
+         Assert.DoesNotContain(libraries.EnumerateObject(), item => item.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase));
+     }
+diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json b/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json
+index de551bc..fc47901 100644
+--- a/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json
++++ b/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json
+@@ -376,7 +376,7 @@
+         "type": "Project",
+         "dependencies": {
+           "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
+-          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+         }
+       },
+       "Microsoft.EntityFrameworkCore.Relational": {
+@@ -393,9 +393,9 @@
+       },
+       "W.DmProvider": {
+         "type": "CentralTransitive",
+-        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
+-        "resolved": "0.1.0-temporal.20261008144915",
+-        "contentHash": "F26Ppwl00RSj1pBGGkhNIyAMJYB+rBrOgOFhWlk82W3wP1UwBMmfAhAPC0Iv3cjC7bOZk6W4fnx2RSs+aaDLbg=="
++        "requested": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]",
++        "resolved": "0.1.0-efcompat.20261012165201",
++        "contentHash": "7b6NnqMRR7GdVueOBkkJ9WYFPqBdFFxHo5gQEYyDTCn8jgfn5yHpwlGXSNSNfiXtXvVf8fe/aX4+o6XMbxvwYA=="
+       }
+     }
+   }

@@ -1946,9 +1946,11 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			error.VerifiedResponseIdentity.LeaseGeneration != lease.Identity.LeaseGeneration ||
 			error.VerifiedResponseIdentity.ExecutionId != lease.Identity.ExecutionId)
 			return false;
+		DmLocalTransactionState transactionState = lease.Session.TransactionState;
 		return ReferenceEquals(lease.Session, m_Conn?.Session) &&
 			lease.Session.State == DmPhysicalSessionState.Busy &&
-			lease.Session.TransactionState == DmLocalTransactionState.Active;
+			(transactionState == DmLocalTransactionState.Active ||
+				lease.Session.ActiveTransaction == null && DmServerErrorRecovery.IsIdleTransactionState(transactionState));
 	}
 
 	private void CleanupAfterVerifiedServerError(DmExecutionLease lease, DmCommandPlan plan)

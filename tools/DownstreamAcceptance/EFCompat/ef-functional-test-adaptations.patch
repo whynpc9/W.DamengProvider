@@ -1,0 +1,420 @@
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/ApplicationCompatibilityFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/ApplicationCompatibilityFunctionalTests.cs
+index 4f73bc9..bf80cdf 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/ApplicationCompatibilityFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/ApplicationCompatibilityFunctionalTests.cs
+@@ -1,6 +1,7 @@
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Microsoft.EntityFrameworkCore.Metadata.Builders;
+ using Microsoft.Extensions.DependencyInjection;
+@@ -258,6 +259,7 @@ public sealed class ApplicationCompatibilityFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<ApplicationCompatibilityContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<
+                 IModelCacheKeyFactory,
+                 ApplicationCompatibilityModelCacheKeyFactory>()
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengBasicStringTranslationFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengBasicStringTranslationFunctionalTests.cs
+index ef9ea8a..8f7ea07 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengBasicStringTranslationFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengBasicStringTranslationFunctionalTests.cs
+@@ -291,6 +291,7 @@ public sealed class DamengBasicStringTranslationFunctionalTests
+                     damengOptions.UseRelationalNulls();
+                 }
+             })
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, StringModelCacheKeyFactory>()
+             .AddInterceptors(commands)
+             .EnableDetailedErrors()
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateBucketFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateBucketFunctionalTests.cs
+index b67472a..30f8a16 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateBucketFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateBucketFunctionalTests.cs
+@@ -153,6 +153,8 @@ public sealed class DamengDateBucketFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<BucketContext>()
+             .UseDameng(store.ConnectionString)
++            // The full suite intentionally uses many fixture-specific model-cache factories.
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, BucketModelCacheKeyFactory>()
+             .AddInterceptors(commands)
+             .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateTimeOffsetMemberFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateTimeOffsetMemberFunctionalTests.cs
+index 84c8636..f79f41b 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateTimeOffsetMemberFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDateTimeOffsetMemberFunctionalTests.cs
+@@ -168,6 +168,7 @@ public sealed class DamengDateTimeOffsetMemberFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<OffsetContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, OffsetModelCacheKeyFactory>()
+             .AddInterceptors(capture)
+             .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDropIdentityFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDropIdentityFunctionalTests.cs
+index 07c5a1e..965172a 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDropIdentityFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDropIdentityFunctionalTests.cs
+@@ -2,6 +2,7 @@ using System.Data.Common;
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Microsoft.EntityFrameworkCore.Metadata;
+ using Microsoft.EntityFrameworkCore.Migrations;
+@@ -94,6 +95,7 @@ public sealed class DamengDropIdentityFunctionalTests
+     private static DropIdentityContext CreateContext(string connectionString, string table, bool identity)
+         => new(new DbContextOptionsBuilder<DropIdentityContext>()
+             .UseDameng(connectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, DropIdentityModelCacheKeyFactory>()
+             .Options, table, identity);
+ 
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengExtendedTypeMappingFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengExtendedTypeMappingFunctionalTests.cs
+index d1d9b95..51b29c6 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengExtendedTypeMappingFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengExtendedTypeMappingFunctionalTests.cs
+@@ -2,6 +2,7 @@ using System.Globalization;
+ using System.Text.Json;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Microsoft.EntityFrameworkCore.Metadata.Builders;
+ using Xunit;
+@@ -52,6 +53,7 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+                 var options = new DbContextOptionsBuilder<
+                         ExtendedTypeContext<DateTimeOffset>>()
+                     .UseDameng(store.ConnectionString)
++                    .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+                     .ReplaceService<
+                         IModelCacheKeyFactory,
+                         ExtendedTypeModelCacheKeyFactory>()
+@@ -98,7 +100,10 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+                 Assert.True(await reader.ReadAsync());
+ 
+                 var raw = reader.GetValue(0);
+-                var rawDateTime = Assert.IsType<DateTime>(raw);
++                // W returns the TZ column as DateTimeOffset from GetValue (the official driver
++                // returns DateTime). Its local wall clock must still equal the server evidence.
++                var rawOffset = Assert.IsType<DateTimeOffset>(raw);
++                var rawDateTime = rawOffset.DateTime;
+                 var providerSpecificValue = reader.GetProviderSpecificValue(0);
+                 var directText = reader.GetString(0);
+                 var text = reader.GetString(1);
+@@ -118,6 +123,8 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+ 
+                 Assert.Equal(expected.DateTime, rawDateTime);
+                 Assert.Equal(DateTimeKind.Unspecified, rawDateTime.Kind);
++                Assert.Equal(expected.Offset, rawOffset.Offset);
++                Assert.Equal(expected.UtcTicks, rawOffset.UtcTicks);
+                 Assert.EndsWith("+08:00", directText, StringComparison.Ordinal);
+                 Assert.EndsWith("+08:00", text, StringComparison.Ordinal);
+             });
+@@ -187,6 +194,7 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+             {
+                 var options = new DbContextOptionsBuilder<ExtendedTypeContext<TimeSpan>>()
+                     .UseDameng(store.ConnectionString)
++                    .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+                     .ReplaceService<
+                         IModelCacheKeyFactory,
+                         ExtendedTypeModelCacheKeyFactory>()
+@@ -425,6 +433,7 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+         ExtendedTypeStore store)
+         => new DbContextOptionsBuilder<ExtendedTypeContext<T>>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, ExtendedTypeModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+@@ -446,6 +455,7 @@ public sealed class DamengExtendedTypeMappingFunctionalTests(
+             {
+                 var options = new DbContextOptionsBuilder<ExtendedTypeContext<T>>()
+                     .UseDameng(store.ConnectionString)
++                    .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+                     .ReplaceService<IModelCacheKeyFactory, ExtendedTypeModelCacheKeyFactory>()
+                     .EnableDetailedErrors()
+                     .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengGeneratedValueReadbackFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengGeneratedValueReadbackFunctionalTests.cs
+index d972f0f..5c10adb 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengGeneratedValueReadbackFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengGeneratedValueReadbackFunctionalTests.cs
+@@ -2,6 +2,7 @@ using System.Data.Common;
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Xunit;
+ 
+@@ -241,6 +242,7 @@ public sealed class DamengGeneratedValueReadbackFunctionalTests
+         {
+             builder.UseDameng(connection);
+         }
++        builder.ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning));
+         builder.ReplaceService<IModelCacheKeyFactory, GeneratedModelCacheKeyFactory>().EnableDetailedErrors();
+         return new GeneratedContext(builder.Options, store);
+     }
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengIsolationLevelFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengIsolationLevelFunctionalTests.cs
+index 7ce7a6a..037c46e 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengIsolationLevelFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengIsolationLevelFunctionalTests.cs
+@@ -1,5 +1,6 @@
+ using System.Data;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Xunit;
+ 
+@@ -76,10 +77,13 @@ public sealed class DamengIsolationLevelFunctionalTests
+                         StringComparison.OrdinalIgnoreCase));
+             });
+ 
++    // The official driver lent the isolation-control statement to the next user command,
++    // so tracked SaveChanges failed with "CommandText has no value" (W T11 characterization).
++    // W gives that statement its own owner; SaveChanges must now update, insert and commit.
+     [DamengTheory]
+     [InlineData(IsolationLevel.ReadUncommitted)]
+     [InlineData(IsolationLevel.Serializable)]
+-    public Task SaveChangesFailsAfterBeginningReadUncommittedOrSerializable(IsolationLevel isolationLevel)
++    public Task SaveChangesCommitsAfterBeginningReadUncommittedOrSerializable(IsolationLevel isolationLevel)
+         => DamengTestStore.WithEntityTableAsync(
+             async store =>
+             {
+@@ -104,24 +108,45 @@ public sealed class DamengIsolationLevelFunctionalTests
+ 
+                     loaded.Name = $"隔离级别更新-{isolationLevel}";
+                     loaded.Version = 2;
+-                    var updateException = await Assert.ThrowsAsync<DbUpdateException>(
+-                        () => context.SaveChangesAsync());
+-                    AssertCommandTextHasNoValue(updateException);
+-                    context.ChangeTracker.Clear();
+-                }
+-
+-                await using (var context = CreateContext(store))
+-                {
+-                    await using var transaction = await context.Database.BeginTransactionAsync(isolationLevel);
++                    Assert.Equal(1, await context.SaveChangesAsync());
+                     context.Entities.Add(
+                         new IsolationEntity
+                         {
+                             Name = $"隔离级别插入-{isolationLevel}",
+                             Version = 1
+                         });
+-                    var insertException = await Assert.ThrowsAsync<DbUpdateException>(
+-                        () => context.SaveChangesAsync());
+-                    AssertCommandTextHasNoValue(insertException);
++                    Assert.Equal(1, await context.SaveChangesAsync());
++                    await transaction.CommitAsync();
++                }
++
++                await using (var context = CreateContext(store))
++                {
++                    var rows = await context.Entities
++                        .OrderBy(item => item.Id)
++                        .Select(item => new { item.Id, item.Name, item.Version })
++                        .ToListAsync();
++                    Assert.Equal(2, rows.Count);
++                    Assert.Equal(id, rows[0].Id);
++                    Assert.Equal($"隔离级别更新-{isolationLevel}", rows[0].Name);
++                    Assert.Equal(2, rows[0].Version);
++                    Assert.Equal($"隔离级别插入-{isolationLevel}", rows[1].Name);
++                }
++
++                await using (var context = CreateContext(store))
++                {
++                    await using var transaction = await context.Database.BeginTransactionAsync(isolationLevel);
++                    var loaded = await context.Entities.SingleAsync(item => item.Id == id);
++                    loaded.Version = 3;
++                    Assert.Equal(1, await context.SaveChangesAsync());
++                    await transaction.RollbackAsync();
++                }
++
++                await using (var context = CreateContext(store))
++                {
++                    Assert.Equal(2, await context.Entities
++                        .Where(item => item.Id == id)
++                        .Select(item => item.Version)
++                        .SingleAsync());
+                 }
+             });
+ 
+@@ -199,16 +224,11 @@ public sealed class DamengIsolationLevelFunctionalTests
+                 }
+             });
+ 
+-    private static void AssertCommandTextHasNoValue(DbUpdateException exception)
+-    {
+-        var inner = Assert.IsType<InvalidOperationException>(exception.InnerException);
+-        Assert.Contains("CommandText has no value", inner.Message, StringComparison.Ordinal);
+-    }
+-
+     private static IsolationContext CreateContext(DamengTestStore store)
+     {
+         var options = new DbContextOptionsBuilder<IsolationContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, IsolationModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengLobQueryFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengLobQueryFunctionalTests.cs
+index eb69f52..1af1192 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengLobQueryFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengLobQueryFunctionalTests.cs
+@@ -1,6 +1,7 @@
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Xunit;
+ 
+@@ -71,6 +72,7 @@ public sealed class DamengLobQueryFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<LobQueryContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, LobQueryModelCacheKeyFactory>()
+             .LogTo(commandLog.Add)
+             .EnableDetailedErrors()
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationsFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationsFunctionalTests.cs
+index 2b14179..0592511 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationsFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengMigrationsFunctionalTests.cs
+@@ -180,6 +180,7 @@ public sealed class DamengMigrationsFunctionalTests
+             .UseDameng(
+                 connectionString,
+                 damengOptions => damengOptions.MigrationsHistoryTable(historyTableName))
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, MigrationModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+@@ -287,6 +288,7 @@ public sealed class DamengMigrationsFunctionalTests
+             .UseDameng(
+                 connectionString,
+                 damengOptions => damengOptions.MigrationsHistoryTable(historyTableName))
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, MigrationModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+@@ -363,6 +365,7 @@ public sealed class DamengMigrationsFunctionalTests
+ 
+         var options = new DbContextOptionsBuilder<CommentContext>()
+             .UseDameng(connectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, CommentModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+@@ -441,6 +444,7 @@ public sealed class DamengMigrationsFunctionalTests
+             .UseDameng(
+                 connectionString,
+                 damengOptions => damengOptions.MigrationsHistoryTable(historyTableName))
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, CommentModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengProviderFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengProviderFunctionalTests.cs
+index 1b03d6c..a0f19e3 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengProviderFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengProviderFunctionalTests.cs
+@@ -1,6 +1,7 @@
+ using System.Data;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Xunit;
+ 
+@@ -226,6 +227,7 @@ public sealed class DamengProviderFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<FunctionalContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, FunctionalModelCacheKeyFactory>()
+             .EnableDetailedErrors()
+             .Options;
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengReverseEngineeringFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengReverseEngineeringFunctionalTests.cs
+index 2bb20b5..e8da541 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengReverseEngineeringFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengReverseEngineeringFunctionalTests.cs
+@@ -2,6 +2,7 @@ using System.Data.Common;
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Microsoft.EntityFrameworkCore.Metadata;
+ using Microsoft.EntityFrameworkCore.Migrations;
+@@ -2180,6 +2181,7 @@ public sealed class DamengReverseEngineeringFunctionalTests
+ 
+         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+             => optionsBuilder.UseDameng(DamengTestEnvironment.GetRequiredConnectionString())
++                .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+                 .ReplaceService<IModelCacheKeyFactory, ClusteringModelCacheKeyFactory>();
+ 
+         protected override void OnModelCreating(ModelBuilder modelBuilder)
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengSequenceAndTranslationFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengSequenceAndTranslationFunctionalTests.cs
+index 0afb2dd..7c1db69 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengSequenceAndTranslationFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengSequenceAndTranslationFunctionalTests.cs
+@@ -1,6 +1,7 @@
+ using System.Globalization;
+ using W.Dm;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Diagnostics;
+ using Microsoft.EntityFrameworkCore.Infrastructure;
+ using Xunit;
+ 
+@@ -138,6 +139,7 @@ public sealed class DamengSequenceAndTranslationFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<SequenceTranslationContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, SequenceTranslationModelCacheKeyFactory>()
+             .LogTo(commandLog.Add)
+             .EnableDetailedErrors()
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateFunctionalTests.cs
+index 6893fb1..6de79e7 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengStringAggregateFunctionalTests.cs
+@@ -263,6 +263,7 @@ public sealed class DamengStringAggregateFunctionalTests
+         => new(
+             new DbContextOptionsBuilder<AggregateContext>()
+                 .UseDameng(store.ConnectionString)
++                .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+                 .ReplaceService<IModelCacheKeyFactory, AggregateModelCacheKeyFactory>()
+                 .AddInterceptors(commands)
+                 .Options,
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs
+index 7dc6c72..8801f53 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTemporalPrecisionMigrationFunctionalTests.cs
+@@ -261,7 +261,10 @@ public sealed class DamengTemporalPrecisionMigrationFunctionalTests(ITestOutputH
+         => new(new DbContextOptionsBuilder<TemporalPrecisionContext>()
+             .UseDameng(connectionString, options => options.MigrationsHistoryTable(history))
+             .ReplaceService<IModelCacheKeyFactory, TemporalPrecisionModelCacheKeyFactory>()
+-            .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
++            // The full suite intentionally uses many fixture-specific model-cache factories.
++            .ConfigureWarnings(warnings => warnings
++                .Ignore(RelationalEventId.PendingModelChangesWarning)
++                .Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .EnableDetailedErrors()
+             .Options, precision);
+ 
+diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTrimCharacterFunctionalTests.cs b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTrimCharacterFunctionalTests.cs
+index 0ac4e87..a404f95 100644
+--- a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTrimCharacterFunctionalTests.cs
++++ b/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengTrimCharacterFunctionalTests.cs
+@@ -266,6 +266,7 @@ public sealed class DamengTrimCharacterFunctionalTests
+     {
+         var options = new DbContextOptionsBuilder<TrimContext>()
+             .UseDameng(store.ConnectionString)
++            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning))
+             .ReplaceService<IModelCacheKeyFactory, TrimModelCacheKeyFactory>()
+             .AddInterceptors(commands)
+             .EnableDetailedErrors()
