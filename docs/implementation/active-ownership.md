@@ -14,4 +14,4 @@
 
 历史材料按原内容保存在 ignored `.local/release-prep-20261013/archive/`；Git 历史不重写。本次验证不继承历史候选的通过结论，不重新认证无关历史 evidence。
 
-本轮收口：High 全部停写，Low 构建/实库窗口已释放。十二套离线2150项通过；最终 v2 包消费者、七项首次初始化及 shared/TLS TEST smoke 通过，精确清理闭合。root 已回读最终包/DLL哈希与实库结果。仅完成本地发布准备，用户已授权提交推送当前分支，未tag/上传；详见 [发布前检查](../release-preflight.md)。
+本轮收口：High 全部停写，Low 构建/实库窗口已释放。十二套离线2050项通过；最终 v2 包消费者、七项首次初始化及 shared/TLS TEST smoke 通过，精确清理闭合。root 已回读最终包/DLL哈希与实库结果。仅完成本地发布准备，用户已授权提交推送当前分支，未tag/上传；详见 [发布前检查](../release-preflight.md)。

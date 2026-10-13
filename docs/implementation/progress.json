@@ -7,7 +7,7 @@
   "published": false,
   "notes": [
     "项目、包、程序集及GitHub仓库已改为 W.DamengProvider；发布准备由codex/dameng-nuget-preparation分支交付。",
-    "本轮十二套离线2150项通过，最终包独立消费、七项首次初始化及shared/TLS TEST smoke通过。",
+    "本轮十二套离线2050项通过，最终包独立消费、七项首次初始化及shared/TLS TEST smoke通过。",
     "未创建tag、未上传NuGet、未运行云端Actions；release_accepted=false不代表本地准备检查失败。",
     "当前检查结论与覆盖边界见 docs/release-preflight.md；历史生成材料保存在本机ignored归档。"
   ],
