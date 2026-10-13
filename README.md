@@ -6,7 +6,7 @@
 
 ## 安装
 
-首个计划版本为 `0.1.0-preview.1`；实际可安装版本以 [NuGet](https://www.nuget.org/packages/W.DamengProvider) 为准。
+当前已发布预览版本为 [`0.1.0-preview.1`](https://www.nuget.org/packages/W.DamengProvider/0.1.0-preview.1)（2026-10-13）。发布身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.1.0-preview.1.md)。
 
 ```sh
 dotnet add package W.DamengProvider --version 0.1.0-preview.1
@@ -52,6 +52,8 @@ var value = await command.ExecuteScalarAsync();
 ## 开发与发布
 
 发布准备、测试和 tag 规则见[发布指南](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release.md)。本地实库测试仅使用专用 TEST 账号，配置见[本地达梦环境](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/implementation/local-dameng.md)。
+
+后续功能与版本兼容工作见[路线图](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/roadmap.md)。路线图中的能力尚未随当前包提供。
 
 ## 许可
 

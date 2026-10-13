@@ -1,6 +1,6 @@
 # W.DamengProvider 实现与测试说明
 
-当前工作树处于 NuGet 发布准备阶段，产品身份与发布材料正在统一；这不表示当前候选已通过发布验收或已经发布。当前状态见 [progress.json](progress.json)，发布操作以仓库发布说明及实际检查结果为准。
+当前发布为 `W.DamengProvider 0.1.0-preview.1`（2026-10-13，.NET 10）。tag 发布、公开包安装与实际上传包的 shared/TLS TEST smoke 已验证，范围见[发布记录](../release-0.1.0-preview.1.md)；机器可读状态见 [progress.json](progress.json)，待办见[路线图](../roadmap.md)。
 
 `W.DamengProvider` 负责 ADO.NET API、参数与结果类型、物理会话、事务、协议、传输、连接池、取消、超时和驱动诊断。`W.EntityFrameworkCore.Dameng` 作为独立项目负责 EF 模型、SQL 翻译、更新与迁移，驱动生产项目不引用 EF。
 
@@ -17,4 +17,4 @@
 
 离线构建或单元测试通过不代表真实达梦集成通过；缺少显式测试连接时记录 `integration_pending`。发布前需对实际候选执行适用检查，并记录命令、退出码、加载程序集和数据库最终状态。
 
-历史任务报告、旧规范包与生成验证制品已移至本机 ignored 归档。保留的历史设计和兼容记录描述各自时点的范围，不能作为当前版本发布通过的证明。
+历史任务报告、旧规范包与生成验证制品已移至本机 ignored 归档。保留的阶段设计、`temporal-native/` 验收记录和专项 `status.json` 描述各自时点，不是当前任务队列；其中的旧分支、待办、冻结与授权状态不自动生效。当前需求以路线图及 GitHub issue 为入口，产品行为以兼容说明和源码为准。

@@ -1,5 +1,7 @@
 # T10 — 本地事务和保存点
 
+> 历史阶段设计：下文的实施状态、任务窗口和审批记录仅属于编写时点。当前产品行为见[兼容说明](../compatibility/T10-transactions.md)，当前发布与待办见 [progress.json](progress.json) 和[路线图](../roadmap.md)。
+
 状态：实施中；T08 已独立验收并保存快照。S07 的隔离级别差分与完整 EF SaveChanges 另由 T11 收口。
 
 ## 状态和确认

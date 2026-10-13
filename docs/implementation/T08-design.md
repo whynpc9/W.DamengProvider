@@ -1,5 +1,7 @@
 # T08 — 命令、Reader 和 EF 保存契约
 
+> 历史阶段设计：下文的实施状态、任务窗口和审批记录仅属于编写时点。当前产品行为见[兼容说明](../compatibility/T08-command-reader.md)，当前发布与待办见 [progress.json](progress.json) 和[路线图](../roadmap.md)。
+
 状态：实施中。T07 已独立验收并按其 evidence 保存到 `.local/t07/accepted-source/`；后续源码变更不覆盖该历史证据。
 
 ## 范围与顺序

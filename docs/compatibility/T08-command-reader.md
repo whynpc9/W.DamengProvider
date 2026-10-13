@@ -1,6 +1,8 @@
 # T08 Command 与 Reader 契约变化
 
-命令只开放已验证的 CommandType.Text 路径。当前发布准备状态见 [progress.json](../implementation/progress.json)；历史协议表征见 [T08-protocol-results.md](../implementation/T08-protocol-results.md)。
+当前已发布 `0.1.0-preview.1`；本页描述产品行为及历史阶段证据，正式发布范围见[发布记录](../release-0.1.0-preview.1.md)。
+
+命令只开放已验证的 CommandType.Text 路径。当前发布状态见 [progress.json](../implementation/progress.json)；历史协议表征见 [T08-protocol-results.md](../implementation/T08-protocol-results.md)。
 
 - 执行期间冻结 SQL、参数 metadata/值和超时；返回的 Reader 持有计划直到关闭。修改 Command、Parameter 或参数集合会立即失败。byte[]/char[] 输入复制；未明确支持的可变参数对象在执行前拒绝。Clone 不共享参数父关系。
 - 空 rowset 保留。ExecuteReader 定位首个可读结果；NextResult 更新整套列信息、类型读取器和缓存。纯 DML Reader 没有伪造数据行。

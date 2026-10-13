@@ -1,5 +1,7 @@
 # T11 — 隔离级别与 SaveChanges 失败调查
 
+> 历史阶段设计：下文的实施状态、任务窗口和审批记录仅属于编写时点。当前产品行为见[兼容说明](../compatibility/T11-isolation.md)，当前发布与待办见 [progress.json](progress.json) 和[路线图](../roadmap.md)。
+
 状态：实施中。T09/T10 已独立验收并保存各自历史快照。以 S07/TX-06 和 CMD-07 为主；不能将 Begin 成功或旧缺陷断言通过当作隔离语义/正确性通过。
 
 ## 输入与边界
