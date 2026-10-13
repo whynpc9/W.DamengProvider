@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TP03 shared writer/reader wiring only. Reviewed TP01 v11 policy is reused unchanged."""
+"""TP03 shared writer/reader wiring only. TP01 helpers are byte-pinned before reuse."""
 import argparse
 import hashlib
 import importlib.util
@@ -10,8 +10,8 @@ import sys
 
 SCOPE = "TP03_writer_reader_wiring"
 PINS = {
-    "frozen-input/temporal-precision.validate.py": "7b4f23ee1281bfe4e8bc1a5004f39bcab8b5dce27072df1ce4e00d79ef23e72f",
-    "build/contracts.py": "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb",
+    "frozen-input/temporal-precision.validate.py": "96faba6fe24e488921eeb702bc2c69cccea74316681d34596f6752dab1b3eb14",
+    "build/contracts.py": "408f12017593a05f24e1f642baecc5d3613fe78303ce520cf4485cf70e89d016",
     "build/packed_oracle.py": "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9",
 }
 

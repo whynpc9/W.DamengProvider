@@ -45,7 +45,7 @@ class RunnerContracts(unittest.TestCase):
             with self.subTest(index=index):
                 with self.assertRaises(ValueError):runner.validate_offline_report(value)
     def test_feed_filename_canonical_from_uppercase_id(self):
-        self.assertEqual(runner.package_filename(runner.policy.W_PIN),"w.dmprovider.0.1.0-temporal.20261008144915.nupkg")
+        self.assertEqual(runner.package_filename(runner.policy.W_PIN),"w.damengprovider.0.1.0-temporal.20261008144915.nupkg")
         self.assertEqual(runner.package_filename(dict(id="DM.DmProvider",version="8.3.1.47463")),"dm.dmprovider.8.3.1.47463.nupkg")
     def test_exact_owner(self):
         runner.validate_ownership(self.value,self.identity,"shared",runner.digest(self.identity_path))
