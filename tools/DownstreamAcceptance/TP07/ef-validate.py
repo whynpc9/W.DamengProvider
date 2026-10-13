@@ -315,7 +315,7 @@ def project_dependencies(replay, asset_name, source_hashes):
     """Recognize the three frozen XML shapes and their actual resolved references."""
     p = policy(); replay = Path(replay).resolve()
     assets = load(replay / asset_name); libs = assets['libraries']
-    need(libs['W.DmProvider/' + p['W']['version']]['type'] == 'package'
+    need(libs['W.DamengProvider/' + p['W']['version']]['type'] == 'package'
          and not any(x.lower().startswith('dm.dmprovider/') for x in libs), 'assets_exact_W_no_official')
     for package in ('Microsoft.EntityFrameworkCore', 'Microsoft.EntityFrameworkCore.Relational', 'Microsoft.EntityFrameworkCore.Abstractions'):
         need(libs[package + '/' + p['ef_version']]['type'] == 'package', 'EF_assets_10_0_12')
@@ -352,7 +352,7 @@ def project_dependencies(replay, asset_name, source_hashes):
     w = packages[0]
     if project_name == provider_name:
         # There is no MSBuild evaluation/fallback here: accept only this approved central shape.
-        need(w.attrib == {'Include': 'W.DmProvider'} and not list(w), 'frozen_provider_central_reference')
+        need(w.attrib == {'Include': 'W.DamengProvider'} and not list(w), 'frozen_provider_central_reference')
         need(not list(tree.iter('ManagePackageVersionsCentrally')), 'no_provider_central_management_override')
         central = replay / 'Directory.Packages.props'
         need('Directory.Packages.props' in source_hashes and central.is_file()
@@ -367,11 +367,11 @@ def project_dependencies(replay, asset_name, source_hashes):
         need(len(enabled) == 1 and (enabled[0].text or '').strip() == 'true' and not enabled[0].attrib,
              'central_W_management_enabled')
         versions = [node for node in props.iter('PackageVersion') if node.attrib.get('Include', '').casefold() == 'w.dmprovider']
-        need(len(versions) == 1 and versions[0].attrib == {'Include': 'W.DmProvider', 'Version': '[' + p['W']['version'] + ']'}
+        need(len(versions) == 1 and versions[0].attrib == {'Include': 'W.DamengProvider', 'Version': '[' + p['W']['version'] + ']'}
              and not list(versions[0]), 'central_exact_W_version')
     else:
         version = '[' + p['W']['version'] + ']' if project_name == literal_name else p['W']['version']
-        need(w.attrib == {'Include': 'W.DmProvider', 'Version': version} and not list(w), 'exact_host_W_PackageReference')
+        need(w.attrib == {'Include': 'W.DamengProvider', 'Version': version} and not list(w), 'exact_host_W_PackageReference')
 
 
 def inputs(path, digest, pack, check_l0=True):
@@ -428,8 +428,8 @@ def inputs(path, digest, pack, check_l0=True):
         dll = binary / (row['name'] + '.dll')
         need(sha(dll) == row['dll_sha256'] and managed.mvid(dll.read_bytes()) == row['mvid']
              and sha(dll.with_suffix('.deps.json')) == row['deps_sha256'], 'startup_managed_byte_identity')
-        need(sha(binary / 'W.DmProvider.dll') == p['W']['dll_sha256']
-             and managed.mvid((binary / 'W.DmProvider.dll').read_bytes()) == p['W']['mvid'], 'actual_W_binary')
+        need(sha(binary / 'W.DamengProvider.dll') == p['W']['dll_sha256']
+             and managed.mvid((binary / 'W.DamengProvider.dll').read_bytes()) == p['W']['mvid'], 'actual_W_binary')
         need(sha(binary / 'W.EntityFrameworkCore.Dameng.dll') == startup['ef_provider']['dll_sha256']
              and managed.mvid((binary / 'W.EntityFrameworkCore.Dameng.dll').read_bytes()) == startup['ef_provider']['mvid'], 'actual_EF_binary')
         actual = {str(f.relative_to(replay)): sha(f) for f in binary.rglob('*') if f.is_file()}

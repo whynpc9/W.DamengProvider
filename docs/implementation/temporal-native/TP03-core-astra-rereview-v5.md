@@ -10,7 +10,7 @@ DmDateTime、DmTime、DmSetValue、DmGetValue、N2DB、DmTemporalCodec、DmTempo
 
 | 本次实读文件 | SHA256 |
 | --- | --- |
-| src/W.DmProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs | 2e7417b30bad4ae41df21bc31bf77ee980fe51338360d60185ac0627a9987f04 |
+| src/W.DamengProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs | 2e7417b30bad4ae41df21bc31bf77ee980fe51338360d60185ac0627a9987f04 |
 | tests/W.DmProvider.TypeTests/TemporalNativeHelperAdapterTests.cs | d6cf03f13aab6c9b7ff81b7e874aab2ea450f642ac15c765c65b44731cb9b08b |
 | tests/W.DmProvider.TypeTests/TemporalNativeWriterAdapterTests.cs | ec595222fa110d946b3cb58f9b5cb39d90718868b07a7efccc2dedf1fe5f1627 |
 

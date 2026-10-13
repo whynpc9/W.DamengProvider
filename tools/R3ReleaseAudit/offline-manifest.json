@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "task": "T18",
-  "exact_sdk": "10.0.203",
+  "exact_sdk": "10.0.401",
   "phase": "implementation_offline_TLS_scoped",
   "upstream_pending": [
     "T17_shared_large_value",

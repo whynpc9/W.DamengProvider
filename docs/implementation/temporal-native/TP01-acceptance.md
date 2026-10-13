@@ -41,7 +41,7 @@ TSTZ 的直接 EXTRACT 存在小数秒量化/秒末错误，旧 CAST 诊断的�
 
 ## 可审阅材料与下一步
 
-[公开证据清单](../evidence/TemporalNative/TP01-v10/public-evidence-manifest.json)保存每个源报告和公开制品 SHA256。六份完整场景 JSON 使用确定性 gzip 保存，解压字节与原报告相同；summary、validator、runner、布局事实及工具源清单直接保存为 JSON。
+公开证据清单（历史记录已归档）保存每个源报告和公开制品 SHA256。六份完整场景 JSON 使用确定性 gzip 保存，解压字节与原报告相同；summary、validator、runner、布局事实及工具源清单直接保存为 JSON。
 
 旧 v4/v6 离线失败、v5/v7/v9 实库失败和只读 CAST 诊断保留在各自原目录，相关 triage 与审阅报告保留；本接受不追溯改写它们。
 

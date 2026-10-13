@@ -21,7 +21,7 @@ PIN = '5863d3755dbd2d333ac359bf1c0a789762adbaed'
 TREE = 'b8f99168225a3742675ae594e8735f481a591fd5'
 ARCHIVE = '668b5a077db8a0730a251cd639288130526fc51e619dac8574102267b4f13cc8'
 CANDIDATE = {
-    'id': 'W.DmProvider', 'version': '0.1.0-temporal.20261008144915',
+    'id': 'W.DamengProvider', 'version': '0.1.0-temporal.20261008144915',
     'package_sha256': 'da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d',
     'dll_sha256': '843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980',
     'mvid': 'aa23e673-957c-4b1e-bf0f-291ff60077e6',
@@ -80,10 +80,10 @@ def bridge(folder, allowlist):
                     text = replace(text, old, 'using W.Dm;' if old == 'using Dm;' else 'cref="W.Dm.', count, 'namespace')
             elif action == 'exact_candidate_central_dependency':
                 text = replace(text, '<PackageVersion Include="DM.DmProvider" Version="[8.3.1.47463,8.4.0)" />',
-                    '<PackageVersion Include="W.DmProvider" Version="[' + CANDIDATE['version'] + ']" />', 1, 'central_driver')
+                    '<PackageVersion Include="W.DamengProvider" Version="[' + CANDIDATE['version'] + ']" />', 1, 'central_driver')
                 # Retain the pinned EF ranges verbatim. Low must prove lock 10.0.12 unchanged.
             elif action == 'driver_package_reference':
-                text = replace(text, 'PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DmProvider"', 1, 'driver_reference')
+                text = replace(text, 'PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DamengProvider"', 1, 'driver_reference')
             elif action == 'safe_retry_detector':
                 text = '''using W.Dm;
 
@@ -127,7 +127,7 @@ internal static class DamengTransientExceptionDetector
 }
 '''
             elif action == 'cli_candidate_dependency_route':
-                text = replace(text, 'DM.DmProvider', 'W.DmProvider', 2, 'cli_package')
+                text = replace(text, 'DM.DmProvider', 'W.DamengProvider', 2, 'cli_package')
                 text = replace(text, 'DM\\\\.DmProvider', 'W\\\\.DmProvider', 1, 'cli_version_regex')
             else:
                 raise ValueError('unknown_bridge_action')
@@ -191,7 +191,7 @@ def verify_candidate(path):
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         spec = ET.fromstring(archive.read(next(name for name in archive.namelist() if name.endswith('.nuspec'))))
         fields = {node.tag.split('}')[-1]: node.text for node in spec.iter() if node.tag.split('}')[-1] in ('id', 'version')}
-        dll = archive.read('lib/net10.0/W.DmProvider.dll')
+        dll = archive.read('lib/net10.0/W.DamengProvider.dll')
         if fields != {key: CANDIDATE[key] for key in ('id', 'version')} or sha(dll) != CANDIDATE['dll_sha256'] or mvid(dll) != CANDIDATE['mvid']:
             raise ValueError('candidate_dll_identity_mismatch')
     return raw
@@ -201,7 +201,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', required=True)
     parser.add_argument('--ef-repo', default='/Users/wanghongyi/Projects/dameng-entityframework-core')
-    parser.add_argument('--candidate', default=str(ROOT / '.local/temporal-native/verification/TP06-v1-package/feed' / ('W.DmProvider.' + CANDIDATE['version'] + '.nupkg')))
+    parser.add_argument('--candidate', default=str(ROOT / '.local/temporal-native/verification/TP06-v1-package/feed' / ('W.DamengProvider.' + CANDIDATE['version'] + '.nupkg')))
     args = parser.parse_args()
     output = Path(args.output).resolve()
     if output == BASE.resolve() or not output.is_relative_to(BASE.resolve()) or output.exists(): raise ValueError('fresh_tp07_output_required')
@@ -223,12 +223,12 @@ def main():
     (output / 'driver-bridge.patch').write_bytes(patch)
     write_json(output / 'bridge-manifest.json', result)
     feed = output / 'candidate-feed'; feed.mkdir()
-    (feed / ('W.DmProvider.' + CANDIDATE['version'] + '.nupkg')).write_bytes(package)
+    (feed / ('W.DamengProvider.' + CANDIDATE['version'] + '.nupkg')).write_bytes(package)
     config = ET.Element('configuration'); sources = ET.SubElement(config, 'packageSources'); ET.SubElement(sources, 'clear')
     ET.SubElement(sources, 'add', key='candidate', value=str(feed))
     ET.SubElement(sources, 'add', key='nuget.org', value='https://api.nuget.org/v3/index.json')
     mapping = ET.SubElement(config, 'packageSourceMapping')
-    ET.SubElement(ET.SubElement(mapping, 'packageSource', key='candidate'), 'package', pattern='W.DmProvider')
+    ET.SubElement(ET.SubElement(mapping, 'packageSource', key='candidate'), 'package', pattern='W.DamengProvider')
     ET.SubElement(ET.SubElement(mapping, 'packageSource', key='nuget.org'), 'package', pattern='*')
     ET.ElementTree(config).write(output / 'restore.config', encoding='utf-8', xml_declaration=True)
     write_json(output / 'prepare-receipt.json', {'schema': 1, 'task': 'TP07-P1', 'replay_source_equal': True,

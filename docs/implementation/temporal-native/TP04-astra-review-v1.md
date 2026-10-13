@@ -8,7 +8,7 @@
 
 ### TP04-R1：advisory extended 文本正例与既有能力守卫矛盾
 
-位置：`tests/W.DmProvider.TypeTests/TemporalNativeBindingContractTests.cs:81`、`:91–93`；对应产品守卫 `src/W.DmProvider/Internal/Legacy/Dm/DmSetValue.cs:1547–1549`。
+位置：`tests/W.DmProvider.TypeTests/TemporalNativeBindingContractTests.cs:81`、`:91–93`；对应产品守卫 `src/W.DamengProvider/Internal/Legacy/Dm/DmSetValue.cs:1547–1549`。
 
 该 theory 的四个 offset case 均先通过完整合成 Prepare 帧获得 raw `CType2 / flag2 / scale0`。首个 CLR DateTimeOffset 绑定合法选出 27/7，但不会改变 raw 的 advisory 来源。第二次绑定仍使用该 describe，把 string 显式声明为 DateTimeOffset、Scale7；resolver 生成 `CType27 / ReliableFixed=false`。实际 writer 在解析文本前必抛 `NotSupportedException("Extended temporal text requires reliable fixed metadata.")`，因此四个 case 均无法到达其后 golden 断言。这是可由完整控制流确定的测试矛盾，不是此次实测结果。
 
@@ -46,17 +46,17 @@
 
 | 文件 | SHA256 |
 | --- | --- |
-| src/W.DmProvider/PublicApi/DmParameter.cs | 5ef3f35f031410697cd573b7837da3c2762f3fcd206b08aee0b057c79a9894df |
-| src/W.DmProvider/PublicApi/DmCommand.cs | 34b9983ff8bfc941a2401678f7ed05e845ef2997f004e1dc29aa57b74f90070b |
-| src/W.DmProvider/Internal/Types/DmParameterBinding.cs | 14080eb660f705e0487ad7d535a09949a44154e6b630bc804712b9f61a59996e |
-| src/W.DmProvider/Internal/Execution/DmCommandPlan.cs | 35f2bd61c91713176b9e6a6fe1ec566882778462a5797f2e4059359f623f4d78 |
-| src/W.DmProvider/Internal/Legacy/Dm/DmField.cs | e2dd0766eb6f533da2b3fd755f383223a1223b01484b01c864706ddc77d804b8 |
-| src/W.DmProvider/Internal/Legacy/A/T02_02000094.cs | 3a57ffc343bc455561ef0fdc4d19b44f98a3425e7408e681f80f586e51950df3 |
+| src/W.DamengProvider/PublicApi/DmParameter.cs | 5ef3f35f031410697cd573b7837da3c2762f3fcd206b08aee0b057c79a9894df |
+| src/W.DamengProvider/PublicApi/DmCommand.cs | 34b9983ff8bfc941a2401678f7ed05e845ef2997f004e1dc29aa57b74f90070b |
+| src/W.DamengProvider/Internal/Types/DmParameterBinding.cs | 14080eb660f705e0487ad7d535a09949a44154e6b630bc804712b9f61a59996e |
+| src/W.DamengProvider/Internal/Execution/DmCommandPlan.cs | 35f2bd61c91713176b9e6a6fe1ec566882778462a5797f2e4059359f623f4d78 |
+| src/W.DamengProvider/Internal/Legacy/Dm/DmField.cs | e2dd0766eb6f533da2b3fd755f383223a1223b01484b01c864706ddc77d804b8 |
+| src/W.DamengProvider/Internal/Legacy/A/T02_02000094.cs | 3a57ffc343bc455561ef0fdc4d19b44f98a3425e7408e681f80f586e51950df3 |
 | tests/W.DmProvider.TypeTests/TemporalNativeBindingContractTests.cs | f6d4d1562791435af9cedb305831ca276366f5dde23b510244c2ad55f3e8f32f |
 | tests/W.DmProvider.TypeTests/TemporalNativeMetadataContractTests.cs | c6f1db0a8111bbdead50234af3fdf2cb8e1f2dac6f53e544b45cbdac23992bd5 |
-| src/W.DmProvider/Internal/Legacy/Dm/DmSetValue.cs | 965e958e813a4c9198842a0096f65d3aee952aee564c51ef38b75afa9cdba5af |
-| src/W.DmProvider/Internal/Legacy/Dm/DmDateTime.cs | 25b597f36dda18ab74c37f4186e71b093f44662c0eea7caf2827126a994b13fd |
-| src/W.DmProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 79a7a08988029e900411e07d3ae8515b8e22fc4909f36293cf033f3b1d27a0d1 |
+| src/W.DamengProvider/Internal/Legacy/Dm/DmSetValue.cs | 965e958e813a4c9198842a0096f65d3aee952aee564c51ef38b75afa9cdba5af |
+| src/W.DamengProvider/Internal/Legacy/Dm/DmDateTime.cs | 25b597f36dda18ab74c37f4186e71b093f44662c0eea7caf2827126a994b13fd |
+| src/W.DamengProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 79a7a08988029e900411e07d3ae8515b8e22fc4909f36293cf033f3b1d27a0d1 |
 | tests/W.DmProvider.TypeTests/TemporalNativeFrozenCodecTests.cs | 31c565ad44d1904ae0870df1d58b5555141f614d2e05c9cf7ac700da2639917e |
 
 修复交回各测试归属 High；保留本次冻结与报告，修复后更新文件 SHA，再定点复审并由 Low 独立验证。本报告不授权改写旧 TP03/physical-v11 evidence，也不扩大产品能力。

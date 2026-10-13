@@ -48,11 +48,11 @@ internal static partial class Program
         var manifest = JsonDocument.Parse(File.ReadAllText(manifestPath)).RootElement;
         string version = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>().Single(x => x.Key == "R2PackageVersion").Value!;
         string hash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
-        Need(assembly.GetName().Name == "W.DmProvider" && assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] == version &&
-            manifest.GetProperty("version").GetString() == version && manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString() == hash,
+        Need(assembly.GetName().Name == "W.DamengProvider" && assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] == version &&
+            manifest.GetProperty("version").GetString() == version && manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString() == hash,
             "package_identity_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".deps.json")));
-        Need(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + version).GetProperty("type").GetString() == "package", "package_reference_required");
+        Need(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + version).GetProperty("type").GetString() == "package", "package_reference_required");
         Report["package_version"] = version; Report["package_sha256"] = manifest.GetProperty("package_sha256").GetString();
         Report["loaded_assembly_sha256"] = hash; Report["loaded_assembly_mvid"] = assembly.ManifestModule.ModuleVersionId.ToString();
         Report["reference_kind"] = "exact_PackageReference";

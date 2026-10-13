@@ -102,9 +102,9 @@ def bind(output, package, package_hash, version, dll_hash):
         spec = ET.fromstring(z.read(nuspecs[0]))
         values = {node.tag.split('}')[-1]: node.text for node in spec.iter()
                   if node.tag.split('}')[-1] in ('id', 'version')}
-        if values != {'id': 'W.DmProvider', 'version': version}:
+        if values != {'id': 'W.DamengProvider', 'version': version}:
             raise ValueError('candidate_nuspec_identity_mismatch')
-        candidate_dll = z.read('lib/net10.0/W.DmProvider.dll')
+        candidate_dll = z.read('lib/net10.0/W.DamengProvider.dll')
         if digest(candidate_dll) != dll_hash.lower():
             raise ValueError('candidate_dll_hash_mismatch')
     folder = output / 'W'
@@ -116,7 +116,7 @@ def bind(output, package, package_hash, version, dll_hash):
             continue
         old = p.read_text()
         new = old.replace('using Dm;', 'using W.Dm;').replace('cref="Dm.', 'cref="W.Dm.')
-        new = new.replace('PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DmProvider"')
+        new = new.replace('PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DamengProvider"')
         if old != new:
             p.write_text(new)
             changes.extend(difflib.unified_diff(old.splitlines(True), new.splitlines(True),
@@ -124,7 +124,7 @@ def bind(output, package, package_hash, version, dll_hash):
     props = folder / 'Directory.Packages.props'
     old = props.read_text()
     new = old.replace('<PackageVersion Include="DM.DmProvider" Version="[8.3.1.47463,8.4.0)" />',
-                      '<PackageVersion Include="W.DmProvider" Version="[' + version + ']" />')
+                      '<PackageVersion Include="W.DamengProvider" Version="[' + version + ']" />')
     if old == new:
         raise ValueError('central_driver_reference_not_found')
     props.write_text(new)
@@ -132,12 +132,12 @@ def bind(output, package, package_hash, version, dll_hash):
                    fromfile='a/Directory.Packages.props', tofile='b/Directory.Packages.props'))
     feed = output / 'candidate-feed'
     feed.mkdir()
-    target = feed / ('W.DmProvider.' + version + '.nupkg')
+    target = feed / ('W.DamengProvider.' + version + '.nupkg')
     target.write_bytes(data)
     (folder / 'NuGet.Config').write_text('<configuration><packageSources><clear/><add key="candidate" value="' +
         str(feed) + '"/><add key="nuget.org" value="https://api.nuget.org/v3/index.json"/></packageSources></configuration>\n')
     (output / 'W-driver.patch').write_text(''.join(changes))
-    manifest['candidate'] = {'id': 'W.DmProvider', 'version': version, 'package_sha256': package_hash.lower(),
+    manifest['candidate'] = {'id': 'W.DamengProvider', 'version': version, 'package_sha256': package_hash.lower(),
                              'driver_dll_sha256': dll_hash.lower(), 'package_path': str(target),
                              'tfm': 'net10.0', 'patch_sha256': digest((output / 'W-driver.patch').read_bytes())}
     manifest['source_hashes']['W'] = hashes(folder)

@@ -4,7 +4,7 @@
 
 | 冻结输入 | 实读 SHA256 |
 | --- | --- |
-| `src/W.DmProvider/Internal/Legacy/Dm/DmIntervalDT.cs` | `bcecbd58ab61d740cec7da68cfe6dc9563dcb983c7e89ca1638711fd4cdeb1be` |
+| `src/W.DamengProvider/Internal/Legacy/Dm/DmIntervalDT.cs` | `bcecbd58ab61d740cec7da68cfe6dc9563dcb983c7e89ca1638711fd4cdeb1be` |
 | `tests/W.DmProvider.TypeTests/TemporalNativeIntervalAdapterTests.cs` | `9456e9ddbb218cdd83a863110a3e28c5ac663dae77e3ff2a83dd5dfdc8730c26` |
 
 与 `.local/temporal-native/verification/TP03-interval-v1/source/` 的两文件快照逐行比较，产品差异仅为 `Parse` 的完整 literal 捕获及六种复合 subtype 正则；原测试内容未删除或改写，新增 52 个声明用例（尚未执行）。旧 v1 的 changes_requested 报告与快照保留。

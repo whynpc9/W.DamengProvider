@@ -72,22 +72,7 @@ PY
     cat "$run/real-result.json"
     ;;
   api)
-    run_logged product_build dotnet build src/W.DmProvider/W.DmProvider.csproj "${flags[@]}"
-    run_logged extractor_build dotnet build tools/RestoreBaseline/RestoreBaseline.csproj "${flags[@]}"
-    run_logged api_extract dotnet tools/RestoreBaseline/bin/Debug/net10.0/RestoreBaseline.dll api \
-      src/W.DmProvider/bin/Debug/net10.0/W.DmProvider.dll "$run/public-api-w.txt"
-    python3 - "$run/public-api-w.txt" docs/compatibility/t03-api-map.json docs/compatibility/t04-api-diff.json <<'PY'
-import hashlib,json,pathlib,sys
-current_path,base_path,target=map(pathlib.Path,sys.argv[1:])
-current={line for line in current_path.read_text().splitlines() if line}
-base_json=json.loads(base_path.read_text())
-baseline={entry['new_api'] for entry in base_json['entries']}
-result={'schema_version':1,'task':'T04','baseline':'T03 accepted public API map','baseline_entries':len(baseline),
-        'current_entries':len(current),'added':sorted(current-baseline),'removed':sorted(baseline-current),
-        'current_api_sha256':hashlib.sha256(current_path.read_bytes()).hexdigest()}
-target.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
-print(json.dumps({'schema_version':1,'task':'T04','mode':'api','status':'api_recorded','added':len(result['added']),
-                  'removed':len(result['removed']),'path':str(target)},separators=(',',':')))
-PY
+    printf 'This historical API-map mode is retired; use bash eng/release.sh prepare.\n' >&2
+    exit 64
     ;;
 esac

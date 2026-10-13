@@ -22,7 +22,7 @@ failed() {
   printf '{"task":"T14","mode":"%s","status":"rejected","stage":"%s","exit_code":%s,"run_dir":"%s"}\n' "$mode" "$1" "$2" "$run"
   exit "$2"
 }
-package="$source_dir/W.DmProvider.$version.nupkg"
+package="$source_dir/W.DamengProvider.$version.nupkg"
 [[ -f "$package" ]] || failed package_missing 66
 python3 tools/R2CancellationProbe/package_manifest.py "$package" "$version" "$run/package-manifest.json" \
   >"$run/package-inspection.json" 2>/dev/null || failed package_inspection 1
@@ -37,7 +37,7 @@ if [[ "$mode" == tls ]]; then wrapper=scripts/with-dameng-tls-test.sh; else wrap
   "$mode" "$repo" "$run/package-manifest.json" "$run/probe.json" >"$run/probe-stdout.json" 2>/dev/null || probe_code=$?
 [[ -s "$run/probe.json" ]] || failed probe_result_missing "$(( probe_code == 0 ? 1 : probe_code ))"
 (( probe_code == 0 )) || failed probe "$probe_code"
-python3 tools/R2CancellationProbe/validate.py "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DmProvider.dll" "$mode" \
+python3 tools/R2CancellationProbe/validate.py "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DamengProvider.dll" "$mode" \
   >"$run/validation.json" 2>/dev/null || failed result_validation 1
 python3 tools/R2CancellationProbe/package_manifest.py "$package" "$version" "$run/package-manifest-final.json" \
   >"$run/package-inspection-final.json" 2>/dev/null || failed final_package_inspection 1

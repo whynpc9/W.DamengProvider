@@ -21,7 +21,7 @@ flags=(-m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-serve
 check_run_source() {
   [[ -n "${before:-}" ]] || return 0
   local final_source
-  final_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+  final_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
   printf '%s\n' "$final_source" >"$run/source-after-run-sha.txt"
   [[ "$final_source" == "$before" ]]
 }
@@ -50,7 +50,7 @@ probe() {
   [[ -s "$run/$stage.json" ]] || failed "${stage}_result_missing" 1
   (( code == 0 )) || failed "$stage" "$code"
 }
-frozen=".local/t08/accepted-binaries/net10.0/W.DmProvider.dll"
+frozen=".local/t08/accepted-binaries/net10.0/W.DamengProvider.dll"
 frozen_sha="51e340397f64538e41d999fcf01e154bfabbf94f08704e749bf03ac7128440f0"
 if [[ "$mode" == baseline ]]; then
   [[ -f "$frozen" ]] || failed frozen_missing 1
@@ -71,12 +71,12 @@ if [[ "$mode" == baseline ]]; then
   [[ "$(shasum -a 256 "$frozen" | cut -d' ' -f1)" == "$frozen_sha" ]] || failed frozen_changed 1
   cat "$run/baseline_validate.log"
 elif [[ "$mode" == offline ]]; then
-  before="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+  before="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
   printf '%s\n' "$before" >"$run/source-before-sha.txt"
   run_logged type_tests dotnet test tests/W.DmProvider.TypeTests/W.DmProvider.TypeTests.csproj \
     --logger "trx;LogFileName=t09.trx" --results-directory "$run" "${flags[@]}"
   run_logged candidate_build dotnet build tools/TypeProbe/Candidate.csproj "${flags[@]}"
-  after="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+  after="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
   printf '%s\n' "$after" >"$run/source-after-sha.txt"
   [[ "$before" == "$after" ]] || failed product_source_changed 1
   printf '%s\n' "$before" >"$run/source-sha.txt"
@@ -99,14 +99,14 @@ print(json.dumps({'schema_version':1,'task':'T09','mode':'offline','status':'off
                   'integration':'integration_pending','tests':counts,'run_dir':sys.argv[2]},separators=(',',':')))
 PY
 else
-  before="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+  before="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
   printf '%s\n' "$before" >"$run/source-before-sha.txt"
   run_logged candidate_build dotnet build tools/TypeProbe/Candidate.csproj "${flags[@]}"
-  after="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+  after="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
   printf '%s\n' "$after" >"$run/source-after-sha.txt"
   [[ "$before" == "$after" ]] || failed product_source_changed 1
   printf '%s\n' "$before" >"$run/source-sha.txt"
-  candidate="tools/TypeProbe/bin/Candidate/net10.0/W.DmProvider.dll"
+  candidate="tools/TypeProbe/bin/Candidate/net10.0/W.DamengProvider.dll"
   candidate_sha="$(shasum -a 256 "$candidate" | cut -d' ' -f1)"
   probe candidate_profile tools/TypeProbe/bin/Candidate/net10.0/TypeProbe.Candidate.dll profile
   code=0

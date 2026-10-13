@@ -1,6 +1,6 @@
 # T09 parameter and type scenarios
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`, following [S06](../../../docs/implementation/v1/specs/06-parameters-and-types.md). Every synthetic case has `case_id`, `contract`, `execution_status: not_run`, `input`, and `expected`. Each real probe is `planned_not_run`; it is a procedure only, not an observed result. The fixture contains no wire bytes or assumed server responses.
+`scenarios.json` separates synthetic `cases` from `real_database_probes`, following [type compatibility contract](../../../docs/compatibility/T09-types.md). Every synthetic case has `case_id`, `contract`, `execution_status: not_run`, `input`, and `expected`. Each real probe is `planned_not_run`; it is a procedure only, not an observed result. The fixture contains no wire bytes or assumed server responses.
 
 ## Lossless values
 

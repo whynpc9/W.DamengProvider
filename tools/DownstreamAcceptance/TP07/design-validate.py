@@ -294,11 +294,11 @@ def startup(ref, identity, cleanup=False):
         need(sha(binary) == row['dll_sha256'] and sha(binary.with_suffix('.deps.json')) == row['deps_sha256']
             and managed_mvid(binary, identity) == row['mvid'], 'actual_startup_binary_identity')
         deps = load(binary.with_suffix('.deps.json'))['libraries']
-        need(deps['W.DmProvider/' + policy()['W']['version']]['type'] == 'package'
+        need(deps['W.DamengProvider/' + policy()['W']['version']]['type'] == 'package'
             and not any(name.lower().startswith('dm.dmprovider/') for name in deps), 'no_official_or_source_W_fallback')
         for name in ('Microsoft.EntityFrameworkCore', 'Microsoft.EntityFrameworkCore.Relational', 'Microsoft.EntityFrameworkCore.Abstractions'):
             need(deps[name + '/10.0.12']['type'] == 'package', 'exact_EF_package_version')
-        need(sha(binary.parent / 'W.DmProvider.dll') == policy()['W']['dll_sha256'], 'loaded_W_copy_pin')
+        need(sha(binary.parent / 'W.DamengProvider.dll') == policy()['W']['dll_sha256'], 'loaded_W_copy_pin')
         need(sha(binary.parent / 'W.EntityFrameworkCore.Dameng.dll') == value['ef_provider']['dll_sha256'], 'loaded_EF_copy_pin')
     return value
 

@@ -39,8 +39,8 @@ run_probe() {
 
 case "$mode" in
   baseline)
-    [[ -f .local/t08/baseline-w/net10.0/W.DmProvider.dll ]] || failed baseline_missing 1
-    [[ "$(shasum -a 256 .local/t08/baseline-w/net10.0/W.DmProvider.dll | cut -d' ' -f1)" == \
+    [[ -f .local/t08/baseline-w/net10.0/W.DamengProvider.dll ]] || failed baseline_missing 1
+    [[ "$(shasum -a 256 .local/t08/baseline-w/net10.0/W.DamengProvider.dll | cut -d' ' -f1)" == \
        ae42d4aa9df4af8bf0874dd28056b6b2704f34677a28d34f44d0df200a66a4e5 ]] || failed baseline_hash_invalid 1
     run_logged oldw_build dotnet build tools/CommandProbe/OldW.csproj "${flags[@]}"
     for culture in en zh-CN zh-TW zh-HK; do
@@ -128,7 +128,7 @@ PY
 import hashlib,json,sys,pathlib
 r=json.load(open(sys.argv[1])); folder=pathlib.Path(sys.argv[2]); cases=r.get('scenarios',{})
 tls=json.load(open(folder/'tls_smoke.json'))
-assembly=pathlib.Path('tools/CommandProbe/bin/Candidate/net10.0/W.DmProvider.dll')
+assembly=pathlib.Path('tools/CommandProbe/bin/Candidate/net10.0/W.DamengProvider.dll')
 actual=hashlib.sha256(assembly.read_bytes()).hexdigest()
 if (r.get('task')!='T08' or r.get('implementation')!='W-T08-candidate' or
     r.get('status')!='candidate_verified' or r.get('opcode_observation')!='metadata_only_internal_hooks' or
@@ -151,16 +151,16 @@ PY
   package)
     version=0.1.0-t08
     mkdir -p "$run/packages" "$run/nuget-cache"
-    before_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
-    run_logged pack dotnet pack src/W.DmProvider/W.DmProvider.csproj --configuration Release \
+    before_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
+    run_logged pack dotnet pack src/W.DamengProvider/W.DamengProvider.csproj --configuration Release \
       --output "$run/packages" /p:Version="$version" "${flags[@]}"
-    after_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DmProvider)"
+    after_source="$(python3 tools/ProductPackageProbe/inspect.py source src/W.DamengProvider)"
     [[ "$before_source" == "$after_source" ]] || failed source_changed_during_pack 1
     printf '%s\n' "$before_source" >"$run/source-sha.txt"
-    package_file="$run/packages/W.DmProvider.$version.nupkg"
+    package_file="$run/packages/W.DamengProvider.$version.nupkg"
     [[ -s "$package_file" ]] || failed package_missing 1
     run_logged inspect python3 tools/ProductPackageProbe/inspect.py package "$package_file" \
-      "$run/package-manifest.json" "$version" src/W.DmProvider
+      "$run/package-manifest.json" "$version" src/W.DamengProvider
     export NUGET_PACKAGES="$run/nuget-cache"
     run_logged package_consumer_build dotnet build tools/CommandProbe/Package.csproj \
       /p:T08PackageVersion="$version" /p:T08PackageSource="$run/packages" "${flags[@]}"
@@ -169,12 +169,12 @@ PY
 import hashlib,json,pathlib,sys
 manifest=json.load(open(sys.argv[1])); result=json.load(open(sys.argv[2])); folder=pathlib.Path(sys.argv[3])
 app=pathlib.Path('tools/CommandProbe/bin/Package/net10.0')
-loaded=hashlib.sha256((app/'W.DmProvider.dll').read_bytes()).hexdigest()
+loaded=hashlib.sha256((app/'W.DamengProvider.dll').read_bytes()).hexdigest()
 deps=json.load(open(app/'CommandProbe.Package.deps.json'))
-key='W.DmProvider/0.1.0-t08'
+key='W.DamengProvider/0.1.0-t08'
 if (manifest.get('status')!='package_verified' or manifest.get('source_sha256')!=
         pathlib.Path(folder/'source-sha.txt').read_text().strip() or
-    loaded!=manifest.get('assets',{}).get('lib/net10.0/W.DmProvider.dll') or
+    loaded!=manifest.get('assets',{}).get('lib/net10.0/W.DamengProvider.dll') or
     deps.get('libraries',{}).get(key,{}).get('type')!='package' or
     result.get('status')!='package_verified' or result.get('implementation')!='W-T08-package' or
     result.get('assembly_sha256')!=loaded or not result.get('assembly_mvid') or

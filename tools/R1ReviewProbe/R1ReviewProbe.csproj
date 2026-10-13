@@ -7,7 +7,7 @@
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="[$(R1ReviewPackageVersion)]" />
+    <PackageReference Include="W.DamengProvider" Version="[$(R1ReviewPackageVersion)]" />
     <AssemblyMetadata Include="R1ReviewPackageVersion" Value="$(R1ReviewPackageVersion)" />
   </ItemGroup>
   <Target Name="RequireExactPackageVersion" BeforeTargets="CollectPackageReferences;CoreCompile">

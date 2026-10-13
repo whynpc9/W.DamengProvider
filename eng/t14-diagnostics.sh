@@ -25,7 +25,7 @@ failed() {
   printf '{"task":"T14-diagnostics","mode":"%s","lane":"%s","status":"rejected","stage":"%s","exit_code":%s,"run_dir":"%s"}\n' "$mode" "$lane" "$1" "$2" "$run"
   exit "$2"
 }
-package="$source_dir/W.DmProvider.$version.nupkg"
+package="$source_dir/W.DamengProvider.$version.nupkg"
 [[ -f "$package" ]] || failed package_missing 66
 python3 tools/R2CancellationDiagnostics/package_manifest.py "$package" "$version" "$run/package-manifest.json" >"$run/package-inspection.json" 2>/dev/null || failed package_inspection 1
 "$dotnet_command" build tools/R2CancellationDiagnostics/Diagnostics.csproj --configuration Release --output "$run/app" \
@@ -37,7 +37,7 @@ scripts/with-dameng-test.sh python3 tools/R2CancellationDiagnostics/run_probe.py
   "$mode" "$lane" "$repo" "$run/package-manifest.json" "$run/probe.json" "$gate" >"$run/probe-stdout.json" 2>/dev/null || probe_code=$?
 [[ -s "$run/probe.json" ]] || failed probe_result_missing "$(( probe_code == 0 ? 1 : probe_code ))"
 (( probe_code == 0 )) || failed probe "$probe_code"
-python3 tools/R2CancellationDiagnostics/validate.py "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DmProvider.dll" \
+python3 tools/R2CancellationDiagnostics/validate.py "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DamengProvider.dll" \
   >"$run/validation.json" 2>/dev/null || failed validation 1
 python3 tools/R2CancellationDiagnostics/package_manifest.py "$package" "$version" "$run/package-manifest-final.json" >"$run/package-inspection-final.json" 2>/dev/null || failed final_package_inspection 1
 cmp -s "$run/package-manifest.json" "$run/package-manifest-final.json" || failed package_changed 1

@@ -190,10 +190,10 @@ def build(run, manifest, lane):
             break
     if not code:
         lock = json.loads((folder / 'src/W.EntityFrameworkCore.Dameng/packages.lock.json').read_text())['dependencies']['net10.0']
-        if 'DM.DmProvider' in lock or lock['W.DmProvider']['resolved'] != manifest['candidate']['version'] or lock['Microsoft.EntityFrameworkCore.Relational']['resolved'] != '10.0.12':
+        if 'DM.DmProvider' in lock or lock['W.DamengProvider']['resolved'] != manifest['candidate']['version'] or lock['Microsoft.EntityFrameworkCore.Relational']['resolved'] != '10.0.12':
             raise ValueError('candidate_dependency_mismatch')
         output = folder / Path(project).parent / 'bin/Debug/net10.0'
-        if sha((output / 'W.DmProvider.dll').read_bytes()) != manifest['candidate']['driver_dll_sha256']:
+        if sha((output / 'W.DamengProvider.dll').read_bytes()) != manifest['candidate']['driver_dll_sha256']:
             raise ValueError('loaded_driver_hash_mismatch')
         result['driver_dll_sha256'] = manifest['candidate']['driver_dll_sha256']
         result['binaries'] = {str(p.relative_to(folder)): sha(p.read_bytes()) for p in output.iterdir() if p.is_file()}

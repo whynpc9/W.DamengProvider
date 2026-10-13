@@ -23,11 +23,11 @@ try
     stage = "package_asset";
     var assembly = typeof(DmConnection).Assembly;
     var assetPath = Path.GetFullPath(assembly.Location);
-    var expectedHash = manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString();
+    var expectedHash = manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString();
     var actualHash = Sha(File.ReadAllBytes(assetPath));
-    var expectedLoadedPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[2]))!, "app", "W.DmProvider.dll");
-    if (actualHash != expectedHash || assembly.GetName().Name != "W.DmProvider" ||
-        contract.GetProperty("assembly_name").GetString() != "W.DmProvider" ||
+    var expectedLoadedPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[2]))!, "app", "W.DamengProvider.dll");
+    if (actualHash != expectedHash || assembly.GetName().Name != "W.DamengProvider" ||
+        contract.GetProperty("assembly_name").GetString() != "W.DamengProvider" ||
         !string.Equals(assetPath, expectedLoadedPath, StringComparison.Ordinal))
         throw new ProbeFailure("loaded_asset_mismatch");
     var expectedVersion = manifest.GetProperty("version").GetString();
@@ -62,8 +62,8 @@ try
         ?? factoryType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
     if (instance is not DbProviderFactory factory || factory.CanCreateBatch)
         throw new ProbeFailure("factory_or_batch_invalid");
-    DbProviderFactories.RegisterFactory("W.DmProvider", factory);
-    if (!ReferenceEquals(DbProviderFactories.GetFactory("W.DmProvider"), factory))
+    DbProviderFactories.RegisterFactory("W.DamengProvider", factory);
+    if (!ReferenceEquals(DbProviderFactories.GetFactory("W.DamengProvider"), factory))
         throw new ProbeFailure("factory_registration_invalid");
     var factoryChecks = new List<object>();
     foreach (var item in contract.GetProperty("factory_cases").EnumerateArray())
@@ -76,7 +76,7 @@ try
         factoryChecks.Add(new { method, type = expected });
         (returned as IDisposable)?.Dispose();
     }
-    result["factory_registration"] = "W.DmProvider";
+    result["factory_registration"] = "W.DamengProvider";
     result["factory_cases"] = factoryChecks;
     result["can_create_batch"] = factory.CanCreateBatch;
     stage = "resources";
@@ -88,14 +88,14 @@ try
     foreach (var tag in contract.GetProperty("cultures").EnumerateArray().Select(x => x.GetString()!))
     {
         var directAssembly = tag == "neutral" ? assembly :
-            Assembly.LoadFrom(Path.Combine(AppContext.BaseDirectory, tag, "W.DmProvider.resources.dll"));
+            Assembly.LoadFrom(Path.Combine(AppContext.BaseDirectory, tag, "W.DamengProvider.resources.dll"));
         if (tag != "neutral" &&
-            (directAssembly.GetName().Name != "W.DmProvider.resources" ||
+            (directAssembly.GetName().Name != "W.DamengProvider.resources" ||
              directAssembly.GetName().CultureName != tag))
             throw new ProbeFailure("satellite_identity_invalid");
         var path = directAssembly.Location;
-        var assetKey = tag == "neutral" ? "lib/net10.0/W.DmProvider.dll" :
-            $"lib/net10.0/{tag}/W.DmProvider.resources.dll";
+        var assetKey = tag == "neutral" ? "lib/net10.0/W.DamengProvider.dll" :
+            $"lib/net10.0/{tag}/W.DamengProvider.resources.dll";
         if (Sha(File.ReadAllBytes(path)) != manifest.GetProperty("assets").GetProperty(assetKey).GetString())
             throw new ProbeFailure("satellite_hash_mismatch");
         var directName = tag == "neutral" ? resourceName : resourceBase + "." + tag + ".resources";

@@ -67,7 +67,7 @@ bare mapping Precision仍为null，沿已冻结 fallback6政策；micro literal�
 | `TP07-L0-v3-runtime-validation/validation.json` | `9767f668d3ff214de78abd10c6c326c2ab233d02eabad769d7b0f19d6e949801` |
 | `TP07-L0-v3-build/build-receipt.json` | `b2e0881cbdba2d7a838dc0fc5e3f116fc65aaa2ab381188bae8dda1936f3e29f` |
 
-仓库内另有 [14项原始JSON归档](../evidence/TemporalNative/TP07-L0-v3/manifest.json)，manifest SHA `33e65cc01f81b51de8b9bca409a0598aec7e8a44c3619e8086806501e2fc9789`；本轮逐项核压缩文件SHA及解压字节与原始来源完全一致，原始收据仍为权威。
+仓库内另有 14项原始JSON归档（历史记录已归档），manifest SHA `33e65cc01f81b51de8b9bca409a0598aec7e8a44c3619e8086806501e2fc9789`；本轮逐项核压缩文件SHA及解压字节与原始来源完全一致，原始收据仍为权威。
 
 旧L0 v2首shared失败报告仍为 `ed5310c8feccfb0705b85a4bda12333a3ffd60a5ae9ea353820e37486757290d`，真实OracleMismatch/exit1不变。SCREEN25、EXPANSION53是各自固定候选/命令的历史证据；EXPANSION53五份主要runtime artifact SHA仍与其接受报告相同，没有用v3 L0改写其状态。原run/summary的待root或fullC=false旗保留，本文作为新的限定验收记录。
 

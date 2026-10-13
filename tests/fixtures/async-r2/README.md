@@ -1,6 +1,6 @@
 # S08 R2 asynchronous logical schedules
 
-`scenarios.json` contains synthetic offline schedules for the client-side asynchronous, cancellation, deadline, and outcome contracts in [S08](../../../docs/implementation/v1/specs/08-async-cancellation-and-timeouts.md). Every scenario is marked `evidence_level: offline_logical_fixture` and `execution_status: not_run`.
+`scenarios.json` contains synthetic offline schedules for the client-side asynchronous, cancellation, deadline, and outcome contracts in [R2 async and cancellation contract](../../../docs/compatibility/R2.md). Every scenario is marked `evidence_level: offline_logical_fixture` and `execution_status: not_run`.
 
 Each ordered scenario supplies `id`, `contract`, `setup`, `steps`, and `expected_outcomes`. The Cancel/Close race supplies two explicit `schedule_variants` so a consumer can drive both event orderings with barriers. Step values are harness inputs such as pending gates, logical transfer counts, synthetic clock ticks, and identity tuples. They are not recorded provider behavior.
 

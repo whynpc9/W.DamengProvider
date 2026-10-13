@@ -1,6 +1,6 @@
 # T09 类型契约变化
 
-验收范围和哈希见 [T09 报告](../implementation/reports/T09.md)。
+验收范围和哈希见 T09 报告（历史记录已归档）。
 
 - CLR enum 按真实底层值编码；unsigned 使用足够宽的 wire 类型，同时检查显式声明的逻辑范围，禁止 wrap 或按枚举名称序号编码。
 - `W.Dm.DmDecimal` 提供精确 coefficient/scale。超 CLR decimal 范围的 DECIMAL 应用 provider-specific getter 读取；普通 getter 明确溢出。

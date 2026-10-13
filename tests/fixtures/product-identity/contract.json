@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "assembly_name": "W.DmProvider",
+  "assembly_name": "W.DamengProvider",
   "namespace": "W.Dm",
   "core_types": [
     "W.Dm.DmConnection",

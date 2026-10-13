@@ -13,7 +13,7 @@ Inputs use two distinct fields:
 
 The owned DM 8.1.4.6 mirror matrix observed configuration-to-wire mappings 1→1, 2→2, 4→4, and 5→4. The configuration-5 TLS smoke completed through the **wire-4** branch. See [the T07 protocol record](../../../docs/implementation/T07-protocol-security.md#L11) and local run `.local/t07/runs/20260929T153725Z-11169-23464/matrix-result.json`. This is an observation from that controlled environment, not a generic protocol guarantee. It is stored under `observed_local_configuration_to_wire_mapping`, outside `cases`; it does not change any case from `not_run`.
 
-Server configuration mode 5 is represented in the TLS positive and negative vectors as `server_enable_encrypt: 5, negotiated_wire_encrypt: 4`. No accepted vector sets `negotiated_wire_encrypt: 5`. A separate `tls_wire5_unsupported` vector exercises the current guard's explicit rejection of wire 5 before TLS or LOGIN. Modes 3, 6, and unknown modes also remain unsupported. The implementation dispatches on `negotiated_wire_encrypt`, as shown in [DmHandshakeSecurityGuard](../../../src/W.DmProvider/Internal/Legacy/A/DmHandshakeSecurityGuard.cs#L20).
+Server configuration mode 5 is represented in the TLS positive and negative vectors as `server_enable_encrypt: 5, negotiated_wire_encrypt: 4`. No accepted vector sets `negotiated_wire_encrypt: 5`. A separate `tls_wire5_unsupported` vector exercises the current guard's explicit rejection of wire 5 before TLS or LOGIN. Modes 3, 6, and unknown modes also remain unsupported. The implementation dispatches on `negotiated_wire_encrypt`, as shown in [DmHandshakeSecurityGuard](../../../src/W.DamengProvider/Internal/Legacy/A/DmHandshakeSecurityGuard.cs#L20).
 
 ## Certificate scenarios
 

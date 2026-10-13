@@ -1,6 +1,6 @@
 # .NET 原生时间精度兼容说明
 
-设计见 [v2 计划](../implementation/temporal-dotnet-precision-plan.v2.md)，驱动验收见 [TP06 最终接受](../implementation/temporal-native/TP06-acceptance.md)，EF 收口见 [TP07/TP08 收口报告](../implementation/temporal-native/TP07-TP08-closure.md)。
+本页记录时间精度行为和已表征 profile；历史验证结果不代表当前重命名发布候选已验收。设计见 [v2 计划](../implementation/temporal-dotnet-precision-plan.v2.md)，驱动验收见 [TP06 最终接受](../implementation/temporal-native/TP06-acceptance.md)，EF 收口见 [TP07/TP08 收口报告](../implementation/temporal-native/TP07-TP08-closure.md)。
 
 ## 行为变化
 
@@ -20,7 +20,7 @@
 - 公开旧 helper（`DmDateTime`、`DmTime`、`DmIntervalDT` 等）先前舍入的超精度输入现在拒绝；签名不变。
 - 保守关闭：TIME/INTERVAL 七位写、八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
 
-## 已验证 profile
+## 历史验证与产品 profile 限制
 
 | profile | 七位写 | 证据 |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ BEGIN
 END;
 ```
 
-- W 在任何服务器错误后保守将连接置为 Broken（见 [R3](R3.md)）；被 guard 拒绝的迁移需要新连接重试，不能在原连接上继续执行清理。
+- 服务器错误后的会话保留受 profile、严格回执、错误号白名单和执行上下文限制（见 [错误恢复说明](../implementation/ef-functional-compat-gaps.md) §2.1）。无法确认会话可用时需新连接；迁移 guard 拒绝后先检查事务和连接状态，不自动重试或继续清理。
 
 ## 回退
 

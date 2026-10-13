@@ -8,7 +8,7 @@ eng/t17-profile.sh tls 0.1.0-r3.t16.20261002143244 <absolute-accepted-feed>
 eng/t17-profile.sh shared 0.1.0-r3.t16.20261002143244 <absolute-accepted-feed>
 ```
 
-当前接受 feed 为 `.local/verification/r3/t16/validation-v3/feed`。runner 使用独立 CLI home、NuGet cache、单节点/noReuse/noSharedCompilation/disable-build-servers；可通过 DOTNET_COMMAND 选择仓库 pinned 10.0.203，不更改 SDK 或清空全局 cache。
+当前接受 feed 为 `.local/verification/r3/t16/validation-v3/feed`。runner 使用独立 CLI home、NuGet cache、单节点/noReuse/noSharedCompilation/disable-build-servers；可通过 DOTNET_COMMAND 选择仓库 pinned 10.0.401，不更改 SDK 或清空全局 cache。
 
 每轮 `.local/verification/r3/t17/profile/runs/` 保存安全命令/退出码、包前后 manifest、consumer/fixture 输入 hash、consumer build、checkpoint 和独立 validator。消费者仅精确 PackageReference；硬锁包/DLL hash/MVID，source mapping 指向 T16 accepted-v3 source manifest。TEST/TLS wrapper 仅向 runtime 注入凭据，无 SA，无权限或实例修改。
 

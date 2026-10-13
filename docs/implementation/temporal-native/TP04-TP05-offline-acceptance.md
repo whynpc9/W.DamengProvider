@@ -16,7 +16,7 @@ Sol High 分别完成 binding/metadata、冻结 writer 消费桥、reader/schema
 | 相关 R3 diagnostics | 83 / 83 |
 | 完整 Transport | 115 / 115 |
 
-全部正式 TRX 自然退出0，无 skip/error/timeout/abort。目标与完整套件有重叠，不将表中数量相加称为独立用例数。99 个 reader 契约 ID 及其 NULL 对照已逐项关联实际 Passed testId；原未运行 coverage 设计输入不回写，运行结论另存 [执行映射](../evidence/TemporalNative/TP04-TP05-v7/TP05-reader-execution-mapping.json)。
+全部正式 TRX 自然退出0，无 skip/error/timeout/abort。目标与完整套件有重叠，不将表中数量相加称为独立用例数。99 个 reader 契约 ID 及其 NULL 对照已逐项关联实际 Passed testId；原未运行 coverage 设计输入不回写，运行结论另存 执行映射（历史记录已归档）。
 
 - [TP04 Astra 最终接受](TP04-astra-final-acceptance.md) SHA256：2d469bf2f4251edb21ca5262d7edfaa0527eca885525fa6273ee70c4dba56bc4。
 - [TP05 Astra 最终接受](TP05-astra-final-acceptance.md) SHA256：196a37c336ce2cf789b1a5b11ae91a594fb35e5e6c112dd986f5ffe232a6e205。
@@ -24,7 +24,7 @@ Sol High 分别完成 binding/metadata、冻结 writer 消费桥、reader/schema
 - 99 格执行映射 SHA256：fe0d7d96d1ac1704f61406991695a7694cb4a82790d383ca5da5cc55765ff7a0。
 - 源 manifest SHA256：a5bef77bb9af40c78bf9feaff1e490c717049d4084677a1646fbf03c4227b5a2。
 
-[公开证据清单](../evidence/TemporalNative/TP04-TP05-v7/public-evidence-manifest.json)保存源清单、命令计划与运行摘要。完整本地 TRX 的哈希在摘要中可追溯，实际程序集哈希已核对。
+公开证据清单（历史记录已归档）保存源清单、命令计划与运行摘要。完整本地 TRX 的哈希在摘要中可追溯，实际程序集哈希已核对。
 
 接受范围包含真实共享 decoder 的 raw capture 合同、冻结请求和 profile/target 的 writer 消费、稳定选型和独立精度约束、不可变读 descriptor、精确文本/CLR 拒绝、schema 与恢复的离线合同。缓存行/内部 ApplyResult fixture 不等于真实网络分页或完整 public NextResult 证据；既有相关回归保持通过。
 

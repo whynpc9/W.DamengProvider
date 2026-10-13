@@ -6,5 +6,5 @@
     <OutputPath>bin/Candidate/</OutputPath><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RestoreSources>$(MSBuildThisFileDirectory)../../.local/t12/packages/20260930T051717Z</RestoreSources>
   </PropertyGroup>
-  <ItemGroup><Compile Include="Program.cs" /><PackageReference Include="W.DmProvider" Version="[0.1.0-r1.20260930051717]" /></ItemGroup>
+  <ItemGroup><Compile Include="Program.cs" /><PackageReference Include="W.DamengProvider" Version="[0.1.0-r1.20260930051717]" /></ItemGroup>
 </Project>

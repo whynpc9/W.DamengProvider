@@ -5,7 +5,7 @@
 - EF commit：`5863d3755dbd2d333ac359bf1c0a789762adbaed`；tree：`b8f99168225a3742675ae594e8735f481a591fd5`。
 - archive SHA256：`668b5a077db8a0730a251cd639288130526fc51e619dac8574102267b4f13cc8`。
 - SDK 保留原 `10.0.401 / latestPatch`；原 EF 中央范围及五份锁保留，实际 EF 锁版本 `10.0.12`。
-- 唯一驱动候选：`W.DmProvider 0.1.0-temporal.20261008144915`，package SHA256 `da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d`，DLL SHA256 `843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980`，MVID `aa23e673-957c-4b1e-bf0f-291ff60077e6`。
+- 唯一驱动候选：`W.DamengProvider 0.1.0-temporal.20261008144915`，package SHA256 `da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d`，DLL SHA256 `843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980`，MVID `aa23e673-957c-4b1e-bf0f-291ff60077e6`。
 
 `bridge-allowlist.json` 逐文件锁住来源哈希、命名空间 anchor 数及桥接 action。`patches/driver-bridge.patch` 从实际 pin 重新生成，没有套用旧 T12/T19 patch。`bridge-manifest.json` 包含完整 before/after 源清单、变更类型、锁/SDK/policy/tool 哈希及未关闭合同；任何额外文件或 anchor 漂移均拒绝。新副本由工具生成同一 overlay 并与冻结 patch、完整 manifest 精确比较。
 

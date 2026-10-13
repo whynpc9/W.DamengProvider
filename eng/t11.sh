@@ -17,7 +17,7 @@ input_hash() {
   python3 - "$mode" <<'PY'
 import hashlib,pathlib,sys
 roots=[pathlib.Path('tools/IsolationProbe')]
-if sys.argv[1]!='baseline':roots += [pathlib.Path('src/W.DmProvider'),pathlib.Path('tests/W.DmProvider.IsolationTests'),pathlib.Path('global.json'),pathlib.Path('eng/t11.sh'),pathlib.Path('eng/T11.md')]
+if sys.argv[1]!='baseline':roots += [pathlib.Path('src/W.DamengProvider'),pathlib.Path('tests/W.DmProvider.IsolationTests'),pathlib.Path('global.json'),pathlib.Path('eng/t11.sh'),pathlib.Path('eng/T11.md')]
 h=hashlib.sha256()
 for root in roots:
  for p in sorted(root.rglob('*') if root.is_dir() else [root]):
@@ -33,7 +33,7 @@ probe() { local stage="$1" assembly="$2" argument="$3" code=0; scripts/with-dame
 before="$(input_hash)"; printf '%s\n' "$before" >"$run/source-before.txt"
 if [[ "$mode" == baseline ]]; then
   r=.local/t02/restored/bin/Debug/net9.0/DM.DmProvider.dll
-  w=.local/t10/accepted-binaries/net10.0/W.DmProvider.dll
+  w=.local/t10/accepted-binaries/net10.0/W.DamengProvider.dll
   [[ "$(shasum -a 256 "$r" | cut -d' ' -f1)" == 1bbedef16e8720227fd416421e744b7894df79082f3ddd7d5a9537c1d424fba3 ]] || failed restored_pin 1
   [[ "$(shasum -a 256 "$w" | cut -d' ' -f1)" == 51043edb57710cb5c4aa7e13a514e1672e4783150babb9af3ddd0ed1b329323b ]] || failed frozen_pin 1
   for name in Official Restored Frozen; do
@@ -66,7 +66,7 @@ print(json.dumps({'task':'T11','mode':'offline','status':'offline_verified','int
 PY
 else
   logged candidate_build dotnet build tools/IsolationProbe/Candidate.csproj "${flags[@]}"
-  dll=tools/IsolationProbe/bin/Candidate/net10.0/W.DmProvider.dll
+  dll=tools/IsolationProbe/bin/Candidate/net10.0/W.DamengProvider.dll
   sha="$(shasum -a 256 "$dll" | cut -d' ' -f1)"
   entry=internal_profile; matrix_mode=candidate-matrix; litmus_mode=candidate-litmus
   if [[ "$mode" == real-public ]]; then entry=public; matrix_mode=public-matrix; litmus_mode=public-litmus; fi

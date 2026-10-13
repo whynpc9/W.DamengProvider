@@ -1,6 +1,6 @@
 # T19 精确 R3 候选 EF 下游隔离验收
 
-固定EF commit113014cc74dd1f751ef97226a78d2ec855b32c8c，archive SHA9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d，EFCore10.0.12，downstream SDK10.0.401。Provider自己的SDK10.0.203是另一门。最终driver为`0.1.0-r3.<UTC14timestamp>`的精确PackageReference，包/DLL SHA/MVID/root source-manifest.json实际SHA必须一致，无driver ProjectReference、official fallback或SourceLink虚构。
+固定EF commit113014cc74dd1f751ef97226a78d2ec855b32c8c，archive SHA9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d，EFCore10.0.12，downstream SDK10.0.401。Provider自己的SDK10.0.401是另一门。最终driver为`0.1.0-r3.<UTC14timestamp>`的精确PackageReference，包/DLL SHA/MVID/root source-manifest.json实际SHA必须一致，无driver ProjectReference、official fallback或SourceLink虚构。
 
 ```sh
 python3 tools/DownstreamAcceptance/T19/prepare.py \

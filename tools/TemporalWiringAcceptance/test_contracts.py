@@ -206,7 +206,7 @@ class HandmadeArtifact:
         self.put("frozen-input/product-source-manifest.json", source)
         archive = self.directory / "frozen-input/product-source.tar"
         archive.write_bytes(b"SYNTHETIC-SOURCE-ARCHIVE-NOT-REBUILD-EVIDENCE")
-        w = dict(id="W.DmProvider", version=MANUAL["candidate_version"], asset="lib/net10.0/W.DmProvider.dll",
+        w = dict(id="W.DamengProvider", version=MANUAL["candidate_version"], asset="lib/net10.0/W.DamengProvider.dll",
                  package_sha256=MANUAL["package_sha256"], dll_sha256=MANUAL["dll_sha256"], mvid=MANUAL["mvid"])
         self.identity = dict(schema_version=1, phase="candidate", comparison_head="e" * 40, O=copy.deepcopy(O), W=w,
             producer=dict(source_head=MANUAL["source_head"], source_manifest_sha256=self.hash("frozen-input/product-source-manifest.json"),

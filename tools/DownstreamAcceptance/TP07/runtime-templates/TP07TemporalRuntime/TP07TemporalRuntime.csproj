@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj" />
-    <PackageReference Include="W.DmProvider" Version="0.1.0-temporal.20261008144915" />
+    <PackageReference Include="W.DamengProvider" Version="0.1.0-temporal.20261008144915" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <Compile Include="../common/CandidateGuard.cs" Link="Common/CandidateGuard.cs" />
     <Compile Include="../common/SafeEvidence.cs" Link="Common/SafeEvidence.cs" />

@@ -84,39 +84,7 @@ PY
     cat "$run/real-result.json"
     ;;
   blob)
-    for implementation in W Official Restored; do
-      run_logged "blob_${implementation}_build" dotnet build "tools/SessionProbe/Blob${implementation}.csproj" "${flags[@]}"
-    done
-    for entry in 'W W' 'O Official' 'R Restored'; do
-      read -r label project <<< "$entry"
-      code=0
-      scripts/with-dameng-test.sh dotnet "tools/SessionProbe/bin/Blob${project}/net10.0/Blob${project}.dll" "$label" \
-        >"$run/blob-${label}.json" 2>/dev/null || code=$?
-      [[ -s "$run/blob-${label}.json" ]] || failed "blob_${label}_result_missing" 1
-      (( code == 0 )) || failed "blob_${label}_probe" "$code"
-    done
-    python3 - "$run" <<'PY' || failed blob_comparison 1
-import json,pathlib,sys
-folder=pathlib.Path(sys.argv[1])
-rows={key:json.loads((folder/f'blob-{key}.json').read_text()) for key in ('W','O','R')}
-for key,row in rows.items():
-    if row.get('implementation')!=key or row.get('probe')!='three_parameter_blob_insert' or row.get('status')!='observed' or not row.get('server_account_verified') or not row.get('cleanup_verified') or row.get('final_database_state')!='random_object_absent' or not row.get('assembly_sha256') or not row.get('assembly_mvid'):
-        raise SystemExit(f'{key} blob probe envelope invalid')
-passed=all(row.get('insert_succeeded') is True and row.get('independent_readback_verified') is True for row in rows.values())
-out={'schema_version':1,'task':'T05','mode':'blob','status':'blob_verified' if passed else 'rejected',
-     'insert_succeeded':{key:row.get('insert_succeeded') for key,row in rows.items()},
-     'independent_readback_verified':{key:row.get('independent_readback_verified') for key,row in rows.items()},
-     'reader_schema_succeeded':{key:row.get('reader_schema_succeeded') for key,row in rows.items()},
-     'reader_schema_is_key':{key:row.get('reader_schema_is_key') for key,row in rows.items()},
-     'reader_schema_error_number':{key:row.get('reader_schema_error_number') for key,row in rows.items()},
-     'assembly_sha256':{key:row.get('assembly_sha256') for key,row in rows.items()},
-     'assembly_mvid':{key:row.get('assembly_mvid') for key,row in rows.items()},
-     'work_error_kind':{key:row.get('work_error_kind') for key,row in rows.items()},
-     'comparative_regression': rows['O'].get('insert_succeeded') is True and rows['R'].get('insert_succeeded') is True and rows['W'].get('insert_succeeded') is not True,
-     'all_cleanup_verified':True,'run_dir':str(folder)}
-print(json.dumps(out,separators=(',',':')))
-if not passed:
-    raise SystemExit('blob insert/readback gate failed')
-PY
+    printf 'This historical comparison mode is retired; use bash eng/release.sh prepare.\n' >&2
+    exit 64
     ;;
 esac

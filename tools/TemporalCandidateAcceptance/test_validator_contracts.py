@@ -1146,7 +1146,7 @@ class IdentityAndCleanupContracts(unittest.TestCase):
         for offset in range(1,5):
             changed=copy.deepcopy(args);changed[offset]="0"*64
             with self.subTest(offset=offset),self.assertRaises(C.ContractError):C.validate_candidate_pins(*changed)
-        for key,value in (("version","different"),("asset","lib/net9.0/W.DmProvider.dll"),("package_sha256","0"*64),("dll_sha256","0"*64),("mvid","00000000-0000-0000-0000-000000000000")):
+        for key,value in (("version","different"),("asset","lib/net9.0/W.DamengProvider.dll"),("package_sha256","0"*64),("dll_sha256","0"*64),("mvid","00000000-0000-0000-0000-000000000000")):
             changed=copy.deepcopy(args);changed[0]["W"][key]=value
             with self.subTest(key=key),self.assertRaises(C.ContractError):C.validate_candidate_pins(*changed)
         changed=copy.deepcopy(args);changed[0]["producer"]["source_head"]="0"*40
@@ -1208,8 +1208,8 @@ class IdentityAndCleanupContracts(unittest.TestCase):
         for mutation in ("project","version","asset"):
             changed=copy.deepcopy(value);key=C.W_PIN["id"]+"/"+C.W_PIN["version"]
             if mutation=="project":changed["libraries"][key]["type"]="project"
-            if mutation=="version":changed["libraries"]["W.DmProvider/other"]={"type":"package"}
-            if mutation=="asset":changed["targets"]["net10.0"][key]["runtime"]={"lib/other/W.DmProvider.dll":{}}
+            if mutation=="version":changed["libraries"]["W.DamengProvider/other"]={"type":"package"}
+            if mutation=="asset":changed["targets"]["net10.0"][key]["runtime"]={"lib/other/W.DamengProvider.dll":{}}
             with self.subTest(mutation=mutation),self.assertRaises(V.C.ContractError):V.package_assets(changed,identity,"test")
 
     def test_cleanup_receipt_mutations(self):

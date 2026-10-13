@@ -26,9 +26,9 @@ TimeSpan 回归 `TemporalNativeWriterAdapterTests.cs:39–67` 使用真实 DmPar
 
 | 文件 | SHA256 |
 | --- | --- |
-| src/W.DmProvider/Internal/Types/DmTemporalCodec.cs | 0cbf4250bcdc15cc1556a39c56c2946ad3d9c4006cc4330d0017557e018cc29a |
-| src/W.DmProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 9c324a83e7a6ec2f4d411e93870f6fe61c4c1cbc82c3d2c73af00bdc2e8d16b5 |
-| src/W.DmProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs | 2172ab88c41fd643fca4f47e40a8521cd7defa621aaf0d1e28cd2ad897b95883 |
+| src/W.DamengProvider/Internal/Types/DmTemporalCodec.cs | 0cbf4250bcdc15cc1556a39c56c2946ad3d9c4006cc4330d0017557e018cc29a |
+| src/W.DamengProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 9c324a83e7a6ec2f4d411e93870f6fe61c4c1cbc82c3d2c73af00bdc2e8d16b5 |
+| src/W.DamengProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs | 2172ab88c41fd643fca4f47e40a8521cd7defa621aaf0d1e28cd2ad897b95883 |
 | tests/W.DmProvider.TypeTests/TemporalNativeHelperAdapterTests.cs | 392b0fa72a6d6322e880404d39e3b639ee0ca3731ee4a2bbfc077ec10bc3aba7 |
 | tests/W.DmProvider.TypeTests/TemporalNativeWriterAdapterTests.cs | 4011be9bcfbad93a89e5a44aa5309c627e9da4615df6764ab9e6906c5f4d0e43 |
 

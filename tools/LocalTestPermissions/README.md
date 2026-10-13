@@ -16,7 +16,7 @@ GRANT SOI TO "WDM_PROVIDER_TEST"
 python3 tools/LocalTestPermissions/run.py build
 ```
 
-项目使用仓库 W.DmProvider 的 ProjectReference。构建输入必须处于 Low 控制的冻结窗口；构建 .NET 10 使用临时可写 DOTNET_CLI_HOME、关闭首次体验/遥测、单节点及禁用 build servers。输出在 ignored `.local/maintenance/LocalTestPermissions/`；manifest 保存四个工具源文件与工具/驱动 DLL、deps/runtimeconfig 的 SHA256。没有构建即不能执行，输入/制品变化后必须重新构建。
+项目使用仓库 W.DamengProvider 的 ProjectReference。构建输入必须处于 Low 控制的冻结窗口；构建 .NET 10 使用临时可写 DOTNET_CLI_HOME、关闭首次体验/遥测、单节点及禁用 build servers。输出在 ignored `.local/maintenance/LocalTestPermissions/`；manifest 保存四个工具源文件与工具/驱动 DLL、deps/runtimeconfig 的 SHA256。没有构建即不能执行，输入/制品变化后必须重新构建。
 
 build 不读取或检查 `.local/secrets/dameng-admin.env`，不将任何 DAMENG 环境变量传给 build 子进程。工具尚未由本轮编码 agent 构建或执行。
 

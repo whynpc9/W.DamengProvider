@@ -93,7 +93,7 @@ internal static partial class Program
                 && !path.Contains('\\') && sourcePaths.Add(path) && fileHash is not null && Regex.IsMatch(fileHash, "^[a-f0-9]{64}$"), "producer_file_entry");
             foreach (string size in new[] { "size", "bytes" }) if (file.TryGetProperty(size, out var n)) Need(n.GetInt64() >= 0, "producer_file_size");
         }
-        Need(sourcePaths.Any(p => p.StartsWith("src/W.DmProvider/", StringComparison.Ordinal)), "producer_product_source_files");
+        Need(sourcePaths.Any(p => p.StartsWith("src/W.DamengProvider/", StringComparison.Ordinal)), "producer_product_source_files");
         foreach (string key in new[] { "version", "package_sha256", "dll_sha256", "mvid" }) Need(producer.GetProperty(key).GetString() == Identity.GetProperty("W").GetProperty(key).GetString(), "producer_package_binding");
         if (Identity.GetProperty("phase").GetString() == "candidate")
         {

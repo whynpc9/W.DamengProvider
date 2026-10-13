@@ -156,7 +156,7 @@ System.Diagnostics listener 也可能执行用户代码；每个 Start/Stop/Add/
 
 敏感标记由纯合成 SQL/参数/用户名/密码/证书密码和服务器报错构成，监听 Activity/Meter/formatter/probe stdout/stderr 与失败制品；确保输出不存在标记。原始 credential env、auth frame 不进入扫描制品或日志；不能为了证明脱敏先把真实秘密写入文件。T18 还提供无 DB offline runner、缺 DB release 模式失败及精确测试 manifest。
 
-## 6. T25：独立逆向验证
+## 6. T25：独立边界验证
 
 root 从公共 API 和外部调用者视角提出独立测试输入，Sol Low 执行冻结产品；修复仍交 Sol High，重新冻结后完整重跑受影响门。至少覆盖：DataSource Dispose 与 Open 的交错、Clear 中活跃租约容量不翻倍、同路径证书轮换、不同秘密不串 owner、callback 抛错/重入、重复 Close、旧 transaction/reader/stream 不能伤新 session、取消与分配同时发生、输入流抛错前后发送边界、CLOB emoji 切分、未知提交不可复用、原始 SQL 改会话后必 discard。
 
@@ -218,7 +218,7 @@ T19每lane源/包/实际DLL/MVID及退出码/TRX/case身份、fresh服务器状�
 
 ## 2026-10-03 CLI 验收工具来源分层定案
 
-Astra High/root批准保留已通过实测的同v6不可变包，仅冻结`t19-cli-retention-v1`工具执行overlay，严格八文件allowlist，产品、原测试与构建输入不变。新CLI原合同重跑并留存该次实际加载DLL；其它门按原工具与原证据逐份复核。producer来源、execution来源与最终aggregation分别记录，不把最终验证源码tree说成v6包的重建来源，不补造历史加载资产。CLI原清理、SQL、case及预算保持；旧失败保留。最终窗口1675输入及历史903证据不变后，root才归档报告和加入CI纯Python35项合同；这些是验证后的文档/CI改动。来源与独立验收见[T19](reports/T19.md)。
+Astra High/root批准保留已通过实测的同v6不可变包，仅冻结`t19-cli-retention-v1`工具执行overlay，严格八文件allowlist，产品、原测试与构建输入不变。新CLI原合同重跑并留存该次实际加载DLL；其它门按原工具与原证据逐份复核。producer来源、execution来源与最终aggregation分别记录，不把最终验证源码tree说成v6包的重建来源，不补造历史加载资产。CLI原清理、SQL、case及预算保持；旧失败保留。最终窗口1675输入及历史903证据不变后，root才归档报告和加入CI纯Python35项合同；这些是验证后的文档/CI改动。来源与独立验收见T19（历史记录已归档）。
 
 ## PR #2 产品审阅定点修复设计
 

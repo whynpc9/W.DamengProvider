@@ -7,6 +7,6 @@
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="$(T03PackageVersion)" />
+    <PackageReference Include="W.DamengProvider" Version="$(T03PackageVersion)" />
   </ItemGroup>
 </Project>

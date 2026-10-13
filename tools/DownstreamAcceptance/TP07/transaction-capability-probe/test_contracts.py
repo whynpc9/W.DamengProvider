@@ -67,7 +67,7 @@ def fixture(ordinal):
     profile='shared' if ordinal<2 else 'tls'; async_api=ordinal%2==1; scale=7 if ordinal<2 else 6; quantum=1 if ordinal<2 else 10
     host=dict(type='host',name='TP07TransactionCapabilityProbe',path='/synthetic/TP07TransactionCapabilityProbe.dll',sha256=H,mvid=G,deps=reference('/synthetic/TP07TransactionCapabilityProbe.deps.json'))
     provider=dict(type='provider',name='W.EntityFrameworkCore.Dameng',path='/synthetic/W.EntityFrameworkCore.Dameng.dll',sha256=H,mvid=G)
-    w=dict(version='0.1.0-temporal.20261008144915',package_sha256=H,dll_sha256=H,mvid=G,identity_sha256=H,source_manifest_sha256=H,archive_sha256=H,path='/synthetic/W.DmProvider.dll')
+    w=dict(version='0.1.0-temporal.20261008144915',package_sha256=H,dll_sha256=H,mvid=G,identity_sha256=H,source_manifest_sha256=H,archive_sha256=H,path='/synthetic/W.DamengProvider.dll')
     startup=dict(W=w,host=host,ef_provider=provider,source=reference(),native=reference())
     runtime=dict(version=w['version'],package_sha256=H,dll_sha256=H,mvid=G,deps_sha256=H,runtime='10.0.1',ef_package_version='10.0.12',ef_provider=dict(dll_sha256=H,mvid=G,source='isolated_provider_ProjectReference_build_manifest_verified'),source_manifest_sha256=H,archive_sha256=H,archive_check='byte_hash_only_no_archive_introspection',build_manifest_sha256=H,source_manifest_sha256_binding=H,lock_manifest_sha256=H,startup_assembly='TP07TransactionCapabilityProbe',startup_sha256=H,startup_mvid=G,entry_host_type='TP07TransactionCapabilityProbe',entry_host_sha256=H)
     nonce=('%08X'%(ordinal+1))+'0'*24
@@ -77,7 +77,7 @@ def fixture(ordinal):
     def fresh(after):
         return dict(row=row(),row_count=1,context_object_id=41 if after else 21,connection_object_id=42 if after else 22,different_connection=True if after else None,identity=physical(profile),schema=copy.deepcopy(schema),d_oracle=oracle(profile,scale,False,w),z_oracle=oracle(profile,scale,True,w),auxiliary_io='catalog_raw_oracle_cleanup_synchronous')
     values=dict(before=fresh(False),inside=row(TICKS+quantum,'rollback'),after=fresh(True))
-    tx=dict(read_stage='after_begin',read_sequence=530,capture_state='observed',ef=identity('W.EntityFrameworkCore.Dameng.Storage.Internal.DamengRelationalTransaction','W.EntityFrameworkCore.Dameng',provider),underlying=identity('W.Dm.DmTransaction','W.DmProvider',dict(path=w['path'],sha256=H,mvid=G)),ef_object_id=29,underlying_object_id=30,connection_object_id=32,context_object_id=31,transaction_id=G,current_same_instance=True,underlying_connection_same=True,ef_supports_savepoints=ordinal<2,underlying_supports_savepoints=ordinal<2,isolation_level='ReadCommitted')
+    tx=dict(read_stage='after_begin',read_sequence=530,capture_state='observed',ef=identity('W.EntityFrameworkCore.Dameng.Storage.Internal.DamengRelationalTransaction','W.EntityFrameworkCore.Dameng',provider),underlying=identity('W.Dm.DmTransaction','W.DamengProvider',dict(path=w['path'],sha256=H,mvid=G)),ef_object_id=29,underlying_object_id=30,connection_object_id=32,context_object_id=31,transaction_id=G,current_same_instance=True,underlying_connection_same=True,ef_supports_savepoints=ordinal<2,underlying_supports_savepoints=ordinal<2,isolation_level='ReadCommitted')
     tx2=copy.deepcopy(tx);tx2.update(read_stage='before_write',read_sequence=715)
     observer=dict(collector=identity('TP07.Runtime.TransactionEvidence','TP07TransactionCapabilityProbe',host),command_collector=identity('TP07.Runtime.CommandEvidence','TP07TransactionCapabilityProbe',host),collector_object_id=1,command_collector_object_id=2,constructed_sequence=1,installed_sequence=2,observation_started_sequence=3,observation_completed_sequence=1200,registration=dict(transaction_count=1,command_count=1,same_transaction_instance=True,same_command_instance=True,source='IDbContextOptions_CoreOptionsExtension_Interceptors',context_object_id=31,inspected_sequence=400),capture_state='observed')
     factory=identity('W.EntityFrameworkCore.Dameng.Storage.Internal.DamengRelationalTransactionFactory','W.EntityFrameworkCore.Dameng',provider)
@@ -379,11 +379,11 @@ class ProbeSourceManifestContracts(unittest.TestCase):
 
 class ActualGraphAndOfflineBoundaryContracts(unittest.TestCase):
     def test_native_Core13_and_runtime_Core12_excludes_build_only_Analyzer(self):
-        runtime_names=['Microsoft.EntityFrameworkCore','Microsoft.EntityFrameworkCore.Abstractions','Microsoft.EntityFrameworkCore.Relational','Microsoft.Extensions.Caching.Abstractions','Microsoft.Extensions.Caching.Memory','Microsoft.Extensions.Configuration.Abstractions','Microsoft.Extensions.DependencyInjection','Microsoft.Extensions.DependencyInjection.Abstractions','Microsoft.Extensions.Logging','Microsoft.Extensions.Logging.Abstractions','Microsoft.Extensions.Options','Microsoft.Extensions.Primitives','W.DmProvider']
+        runtime_names=['Microsoft.EntityFrameworkCore','Microsoft.EntityFrameworkCore.Abstractions','Microsoft.EntityFrameworkCore.Relational','Microsoft.Extensions.Caching.Abstractions','Microsoft.Extensions.Caching.Memory','Microsoft.Extensions.Configuration.Abstractions','Microsoft.Extensions.DependencyInjection','Microsoft.Extensions.DependencyInjection.Abstractions','Microsoft.Extensions.Logging','Microsoft.Extensions.Logging.Abstractions','Microsoft.Extensions.Options','Microsoft.Extensions.Primitives','W.DamengProvider']
         libraries={name+'/10.0.12':dict(type='package') for name in runtime_names}
         libraries['W.EntityFrameworkCore.Dameng/0.1.0']=dict(type='project')
         V.runtime_package_contract(libraries)
-        self.assertEqual(set(V.CORE_PACKAGES),set(runtime_names)-{'W.DmProvider'}|{'Microsoft.EntityFrameworkCore.Analyzers'})
+        self.assertEqual(set(V.CORE_PACKAGES),set(runtime_names)-{'W.DamengProvider'}|{'Microsoft.EntityFrameworkCore.Analyzers'})
         for missing in runtime_names:
             bad=copy.deepcopy(libraries);del bad[missing+'/10.0.12']
             with self.assertRaises(V.ContractError):V.runtime_package_contract(bad)
@@ -1338,7 +1338,7 @@ class ActualCompleteNativeLockContracts(unittest.TestCase):
             changed=copy.deepcopy(original);changed['extra_header']=True;cases.append(('extra-header',changed,r'^actual_lock_shape$'))
             for key,replacement in [('resolved','0.0.0'),('contentHash','changed-content-hash')]:
                 changed=copy.deepcopy(original);rows=next(iter(changed['dependencies'].values()));package=next(row for row in rows.values() if row['type']!='Project');package[key]=replacement;cases.append(('dependency-'+key,changed,r'^actual_lock_graph'))
-            changed=copy.deepcopy(original);next(iter(changed['dependencies'].values())).pop('W.DmProvider');cases.append(('missing-W-dependency',changed,r'^actual_lock_graph'))
+            changed=copy.deepcopy(original);next(iter(changed['dependencies'].values())).pop('W.DamengProvider');cases.append(('missing-W-dependency',changed,r'^actual_lock_graph'))
             changed=copy.deepcopy(original);next(iter(changed['dependencies'].values()))['Unapproved.Package']=dict(type='Transitive',resolved='1.0.0',contentHash='extra');cases.append(('extra-dependency',changed,r'^actual_lock_graph'))
             if graph['project']==V.PROJECTS[1]:
                 changed=copy.deepcopy(original);row=next(row for row in next(iter(changed['dependencies'].values())).values() if row['type']=='Project');row['dependencies']={};cases.append(('provider-Project-dependencies',changed,r'^actual_lock_graph'))

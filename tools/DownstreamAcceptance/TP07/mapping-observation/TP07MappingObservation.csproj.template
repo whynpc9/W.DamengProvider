@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj" />
-    <PackageReference Include="W.DmProvider" />
+    <PackageReference Include="W.DamengProvider" />
   </ItemGroup>
 </Project>

@@ -10,6 +10,6 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="CandidateCases.cs" />
-    <ProjectReference Include="../../src/W.DmProvider/W.DmProvider.csproj" />
+    <ProjectReference Include="../../src/W.DamengProvider/W.DamengProvider.csproj" />
   </ItemGroup>
 </Project>

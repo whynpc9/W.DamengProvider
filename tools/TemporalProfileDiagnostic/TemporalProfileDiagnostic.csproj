@@ -9,6 +9,6 @@
     <UseSharedCompilation>false</UseSharedCompilation>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="[0.1.0-tp03.20261008053249]" />
+    <PackageReference Include="W.DamengProvider" Version="[0.1.0-tp03.20261008053249]" />
   </ItemGroup>
 </Project>

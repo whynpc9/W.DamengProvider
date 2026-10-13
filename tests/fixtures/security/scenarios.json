@@ -103,7 +103,7 @@
     },
     "current_client_guard": {
       "dispatch_field": "negotiated_wire_encrypt",
-      "source_ref": "src/W.DmProvider/Internal/Legacy/A/DmHandshakeSecurityGuard.cs:20-28",
+      "source_ref": "src/W.DamengProvider/Internal/Legacy/A/DmHandshakeSecurityGuard.cs:20-28",
       "full_tls_wire_modes": [
         1,
         4

@@ -47,7 +47,7 @@ def bridge(folder):
     for p in folder.rglob('*.cs'):
         p.write_text(p.read_text().replace('using Dm;', 'using W.Dm;').replace('cref="Dm.', 'cref="W.Dm.'))
     for p in folder.rglob('*.csproj'):
-        p.write_text(p.read_text().replace('PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DmProvider"'))
+        p.write_text(p.read_text().replace('PackageReference Include="DM.DmProvider"', 'PackageReference Include="W.DamengProvider"'))
     guard = folder / 'test/Shared/T12CandidateGuard.cs'
     guard.write_bytes((HERE / 't12_test_guard.cs').read_bytes())
     for name in ('Tests', 'FunctionalTests', 'Specification.Tests'):
@@ -208,9 +208,9 @@ def main():
     with zipfile.ZipFile(io.BytesIO(package)) as z:
         spec = ET.fromstring(z.read(next(n for n in z.namelist() if n.endswith('.nuspec'))))
         fields = {n.tag.split('}')[-1]: n.text for n in spec.iter() if n.tag.split('}')[-1] in ('id', 'version')}
-        if fields != {'id': 'W.DmProvider', 'version': args.version}:
+        if fields != {'id': 'W.DamengProvider', 'version': args.version}:
             raise ValueError('candidate_identity_mismatch')
-        if sha(z.read('lib/net10.0/W.DmProvider.dll')) != args.driver_dll_sha256:
+        if sha(z.read('lib/net10.0/W.DamengProvider.dll')) != args.driver_dll_sha256:
             raise ValueError('candidate_dll_hash_mismatch')
     ef_repo = str(Path(args.ef_repo).resolve())
     archive = subprocess.check_output(['git', '-C', ef_repo, 'archive', '--format=tar', EF_COMMIT])
@@ -250,13 +250,13 @@ def main():
     old_props = props.read_text()
     props.write_text(old_props.replace('[10.0.12,11.0.0)', '[10.0.12]').replace(
         '<PackageVersion Include="DM.DmProvider" Version="[8.3.1.47463,8.4.0)" />',
-        '<PackageVersion Include="W.DmProvider" Version="[' + args.version + ']" />'))
+        '<PackageVersion Include="W.DamengProvider" Version="[' + args.version + ']" />'))
     with (output / 'bridge.patch').open('a') as stream:
         stream.writelines(difflib.unified_diff(old_props.splitlines(True), props.read_text().splitlines(True),
                           fromfile='a/Directory.Packages.props', tofile='b/Directory.Packages.props'))
     feed = output / 'candidate-feed'
     feed.mkdir()
-    candidate_path = feed / ('W.DmProvider.' + args.version + '.nupkg')
+    candidate_path = feed / ('W.DamengProvider.' + args.version + '.nupkg')
     candidate_path.write_bytes(package)
     config = ET.Element('configuration'); ps = ET.SubElement(config, 'packageSources'); ET.SubElement(ps, 'clear')
     ET.SubElement(ps, 'add', key='candidate', value=str(feed)); ET.SubElement(ps, 'add', key='nuget.org', value='https://api.nuget.org/v3/index.json')
@@ -265,7 +265,7 @@ def main():
     (audit / 'Program.cs').write_bytes((HERE / 't12_audit.cs').read_bytes())
     (audit / 'T12Audit.csproj').write_text('''<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><ProjectReference Include="../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj" /></ItemGroup></Project>\n''')
     manifest = {'schema': 1, 'task': 'T12', 'ef_commit': EF_COMMIT, 'ef_archive_sha256': ARCHIVE_SHA, 'ef_source_repo': ef_repo,
-                'candidate': {'id': 'W.DmProvider', 'version': args.version, 'package_sha256': args.candidate_sha256,
+                'candidate': {'id': 'W.DamengProvider', 'version': args.version, 'package_sha256': args.candidate_sha256,
                               'driver_dll_sha256': args.driver_dll_sha256, 'package_path': str(candidate_path)},
                 'bridge_patch_sha256': sha((output / 'bridge.patch').read_bytes()), 'owner_patches': patches,
                 'source_hashes': sources(folder), 'ef_version': '10.0.12',

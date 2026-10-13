@@ -93,14 +93,14 @@ internal static partial class Program
             .Single(x => x.Key == "R2PackageVersion").Value;
         string? version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0];
         string sha = Sha(File.ReadAllBytes(assembly.Location));
-        Require(assembly.GetName().Name == "W.DmProvider" && expected != null && version == expected &&
+        Require(assembly.GetName().Name == "W.DamengProvider" && expected != null && version == expected &&
             manifest.GetProperty("version").GetString() == expected, "package_version_mismatch");
-        Require(manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString() == sha,
+        Require(manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString() == sha,
             "loaded_package_asset_mismatch");
-        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DmProvider.dll")),
+        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DamengProvider.dll")),
             "loaded_asset_location_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "R2AsyncProbe.deps.json")));
-        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + expected).GetProperty("type").GetString() == "package",
+        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + expected).GetProperty("type").GetString() == "package",
             "package_consumer_required");
         Require(!assembly.GetReferencedAssemblies().Any(a => string.Equals(a.Name, "DM.DmProvider", StringComparison.OrdinalIgnoreCase)) &&
             !deps.RootElement.GetProperty("libraries").EnumerateObject().Any(p => p.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)),

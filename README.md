@@ -1,31 +1,58 @@
-# W.DmProvider
+# W.DamengProvider
 
-面向达梦数据库的自有 ADO.NET Provider 调查与开发仓库。已基于 **DM.DmProvider 8.3.1.47463** 完成 **R1（T01–T12）** 的限定开发验收：来源、独立包、配置、会话、传输、TLS、命令/Reader、参数类型、本地事务与隔离级别，以及固定 EF Core 10.0.12 下游的实际候选包验证。R2（T13–T14）已独立验收：异步调用链、执行范围取消、期限及未知结果闭环均通过，详见 [T13](docs/implementation/reports/T13.md)、[T14](docs/implementation/reports/T14.md)。当前仍是开发候选；支持范围与门禁见 [R2 兼容矩阵](docs/compatibility/R2.md)、[任务进度](docs/implementation/progress.json)；R1 历史范围见 [R1 矩阵](docs/compatibility/R1.md)。R3（T15/T16/T17/T18/T25/T19）的容量与DataSource、流式LOB、诊断和最终包下游矩阵已独立验收；详见[R3范围](docs/compatibility/R3.md)、[T19最终报告](docs/implementation/reports/T19.md)。本轮仍是开发候选，PR review与merge待完成，未公开发行。
+面向达梦（Dameng）数据库的 .NET 10 ADO.NET 数据提供程序，提供异步数据库操作、参数绑定、本地事务、`DmDataSource`、流式 BLOB/CLOB 和标准 .NET 诊断接口。
 
-## 从哪里开始
+这是社区维护的预览项目。包名和程序集名为 **W.DamengProvider**，公开命名空间为 **W.Dm**。它与 `DM.DmProvider` 有不同的程序集身份，现有应用和 EF 适配层需要显式更新依赖并重新编译。
 
-- [逆向报告](docs/reverse/README.md)：官方样本的结构、协议、类型、批量装载和已发现限制。
-- [net9.0 对照](docs/reverse/net9-verification.md)：与 net8.0 反编译结果的静态差异。
-- [EF 适配待做清单](docs/ef-adapter-backlog.md)：与下游 EF Core 10 适配直接相关的驱动限制。
-- [实现规范 v1](docs/implementation/v1/README.md)：13 份特性 spec、25 项任务、98 条验收要求及 agent 交接入口。
-- [开发准备](docs/implementation/README.md)：规范包迁入记录和当前本地基线。
-- [本地达梦环境](docs/implementation/local-dameng.md)：专用测试账号、secret 加载和使用边界。
-- [T01 实施报告](docs/implementation/reports/T01.md)：来源固化与官方 O 探测已验收；重跑入口见 [工具命令](eng/T01.md)。
-- [T02 实施报告](docs/implementation/reports/T02.md)：内部恢复版 R 已从源码构建并完成九类 O/R 对照；[恢复命令](tools/RestoreBaseline/README.md)、[对照命令](eng/T02.md)。
-- [T04 配置和能力变更](docs/compatibility/T04-breaking-changes.md)：安全默认值、脱敏与暂不支持入口。
-- [T03 实施报告](docs/implementation/reports/T03.md)：独立 W 源码与候选包、API 清单及实际 nupkg 消费已验收；[包验证命令](eng/T03.md)。
-- [T04 实施报告](docs/implementation/reports/T04.md)：不可变配置、默认值和能力守卫；[测试命令](eng/T04.md)、[配置边界](docs/compatibility/T04-options.md)。
-- [T05 实施报告](docs/implementation/reports/T05.md)：会话、Reader/LOB 所有权与并发隔离；[测试命令](eng/T05.md)、[wire 入口清单](docs/implementation/T05-wire-inventory.md)、[兼容性边界](docs/compatibility/T05-session-ownership.md)。
-- [T06 实施报告](docs/implementation/reports/T06.md)：受控传输、精确帧边界和统一期限；[测试命令](eng/T06.md)、[字段证据](docs/implementation/T06-frame-layout.md)。
-- [T07 实施报告](docs/implementation/reports/T07.md)：严格 TLS、原生资源守卫与真实模式矩阵；[配置边界](docs/compatibility/T07-security.md)、[独立本机 TLS 环境](docs/implementation/local-dameng-tls.md)。
-- [T08 实施报告](docs/implementation/reports/T08.md)：执行计划、多结果和有限清理；[兼容性变化](docs/compatibility/T08-command-reader.md)、[测试及实际包消费](eng/T08.md)。
-- [T09 实施报告](docs/implementation/reports/T09.md)：精确 decimal/unsigned、参数类型来源与无损时间；[兼容性变化](docs/compatibility/T09-types.md)。
-- [T10 实施报告](docs/implementation/reports/T10.md)：本地事务、提交结果、保存点和 DDL 边界；[兼容性变化](docs/compatibility/T10-transactions.md)。
+## 安装
 
-- [T11 实施报告](docs/implementation/reports/T11.md)：隔离级别 SaveChanges 根因修复与实际包公开入口验收；[兼容性变化](docs/compatibility/T11-isolation.md)。
+首个计划版本为 `0.1.0-preview.1`；实际可安装版本以 [NuGet](https://www.nuget.org/packages/W.DamengProvider) 为准。
 
-- [R1 review 修复](docs/implementation/reports/R1-review.md)：PR #1 已合并批次的独立回归；[main review 跟进](docs/implementation/reports/R1-review-followup.md)：LOB 上限、保存点隔离、NULL/TLS 诊断和当前门禁状态。
-- [T13 异步调用链](docs/implementation/reports/T13.md)：480 项离线、实际包双 profile 业务链及 TLS 安全拒绝；[T14 取消/期限/未知结果](docs/implementation/reports/T14.md)：独立验收通过。
-- [T12 / R1 实施报告](docs/implementation/reports/T12.md)：298 项驱动离线、307 项 EF 单元、76 项功能、4 项脚本、4 项规范切片和 1 项 CLI 均通过；[离线 CI 与包审计](eng/T12.md)、[下游接入工具](tools/DownstreamAcceptance/README.md)。
+```sh
+dotnet add package W.DamengProvider --version 0.1.0-preview.1
+```
 
-`packages/` 和 `decompiled/` 是来源样本及反编译参考，不是产品源码。新驱动应有独立的程序集身份和命名空间。规范是待实施设计，不表示相关能力已经完成。
+运行环境为 .NET 10；构建使用仓库 `global.json` 指定的 SDK。
+
+## 使用
+
+连接串由应用配置或 secret store 提供。默认要求完整会话 TLS，并验证证书；根据服务器配置指定 CA、客户端证书和私钥路径。
+
+```csharp
+using W.Dm;
+
+var settings = new DmConnectionStringBuilder(
+    Environment.GetEnvironmentVariable("DAMENG_CONNECTION_STRING")
+    ?? throw new InvalidOperationException("Missing database configuration"))
+{
+    TransportSecurity = DmTransportSecurity.RequireTls
+};
+
+await using var source = DmDataSource.Create(settings.ConnectionString);
+await using var connection = await source.OpenConnectionAsync();
+await using var command = connection.CreateCommand();
+command.CommandText = "SELECT 1 FROM DUAL";
+var value = await command.ExecuteScalarAsync();
+```
+
+需要 `DbProviderFactories` 时，可由应用调用 `DbProviderFactories.RegisterFactory("W.DamengProvider", DmClientFactory.Instance)` 注册。
+
+## 支持与限制
+
+- 支持同步及异步 Open、Prepare、Execute、Read、NextResult 和本地事务。取消或超时发生于发送之后时，可能关闭物理连接；未确认的提交通过 `OutcomeUnknown` 报告，不自动重试或重放。
+- 默认 `ReadCommitted`。保存点及额外隔离级别依赖服务器 profile；详细边界见[事务兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/T10-transactions.md)。
+- `DmDataSource` 提供独立容量调度；当前每次租用建立新物理会话、归还即丢弃，尚不提供物理连接复用的性能收益。
+- BLOB/CLOB 支持与当前 Reader 行、执行和事务绑定的流式读取。完整物化 API 限制为 64 MiB 返回载荷。流式输入需显式声明 BLOB/CLOB 类型，由调用者管理输入生命周期。
+- CLR 时间值保持 100ns tick 精度；服务器或目标列不能精确表示的值会被拒绝。七位小数写入仅在已验证 profile 开放，详见[时间兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/TP-temporal-precision.md)。
+- 已验证环境包括 DM 8.1.5.60 / UTF-8 和 DM 8.1.4.6 / GB18030 / TLS；其他服务器版本需单独验证。原生加密、批量装载、自动重连、分布式事务及部分旧功能不在支持范围。
+- `ActivitySource` 和 `Meter` 的名称继续使用 `W.DmProvider`，便于现有监控配置延续。
+
+完整边界见[R3 兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/R3.md)。本项目不附带数据库服务端或第三方原生库。
+
+## 开发与发布
+
+发布准备、测试和 tag 规则见[发布指南](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release.md)。本地实库测试仅使用专用 TEST 账号，配置见[本地达梦环境](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/implementation/local-dameng.md)。
+
+## 许可
+
+Apache-2.0。包含上游 DM 的 C# 代码贡献和本项目的修改，版权及第三方说明见 [THIRD-PARTY-NOTICES.md](https://github.com/whynpc9/W.DamengProvider/blob/main/THIRD-PARTY-NOTICES.md) 与 [LICENSE](https://github.com/whynpc9/W.DamengProvider/blob/main/LICENSE)。

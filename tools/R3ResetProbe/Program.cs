@@ -120,10 +120,10 @@ internal static class Program
         string actual = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
         string sha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
         Require(expected == actual && expected == manifest.GetProperty("version").GetString(), "exact_package_version_mismatch");
-        Require(sha == manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString(), "loaded_asset_hash_mismatch");
-        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DmProvider.dll")), "loaded_asset_location_mismatch");
+        Require(sha == manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString(), "loaded_asset_hash_mismatch");
+        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DamengProvider.dll")), "loaded_asset_location_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "R3ResetProbe.deps.json")));
-        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + expected).GetProperty("type").GetString() == "package", "package_reference_required");
+        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + expected).GetProperty("type").GetString() == "package", "package_reference_required");
         Require(!deps.RootElement.GetProperty("libraries").EnumerateObject().Any(p => p.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)), "official_dependency_rejected");
         Report["package_version"] = expected;
         Report["package_sha256"] = manifest.GetProperty("package_sha256").GetString();

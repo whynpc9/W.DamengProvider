@@ -42,13 +42,13 @@ def package(path, out, version, source_root):
         if bad:
             fail("unsafe_zip_entry")
         binaries = [n for n in names if n.lower().endswith((".dll", ".so", ".dylib", ".a", ".pdb"))]
-        expected = {"lib/net10.0/W.DmProvider.dll"} | {
-            f"lib/net10.0/{culture}/W.DmProvider.resources.dll"
+        expected = {"lib/net10.0/W.DamengProvider.dll"} | {
+            f"lib/net10.0/{culture}/W.DamengProvider.resources.dll"
             for culture in ("en", "zh-CN", "zh-HK", "zh-TW")
         }
         if set(binaries) != expected:
             fail("package_binary_set_invalid")
-        allowed = expected | {"README.md", "THIRD-PARTY-NOTICES.md", "W.DmProvider.nuspec",
+        allowed = expected | {"README.md", "THIRD-PARTY-NOTICES.md", "W.DamengProvider.nuspec",
                               "[Content_Types].xml", "_rels/.rels"}
         unexpected = [n for n in names if n not in allowed and
                       not (n.startswith("package/services/metadata/core-properties/") and n.endswith(".psmdcp"))]
@@ -66,8 +66,8 @@ def package(path, out, version, source_root):
         if metadata is None:
             fail("nuspec_metadata_missing")
         field = lambda name: metadata.findtext(f"n:{name}", namespaces=ns)
-        if (field("id") != "W.DmProvider" or field("version") != version or
-                path.name != f"W.DmProvider.{version}.nupkg"):
+        if (field("id") != "W.DamengProvider" or field("version") != version or
+                path.name != f"W.DamengProvider.{version}.nupkg"):
             fail("nuspec_identity_or_version_invalid")
         license_element = metadata.find("n:license", ns)
         if license_element is None or license_element.get("type") != "expression" or license_element.text != "Apache-2.0":
@@ -100,7 +100,7 @@ def verify(path, manifest_path):
     path = pathlib.Path(path)
     saved = json.loads(pathlib.Path(manifest_path).read_text())
     if (digest(path.read_bytes()) != saved.get("package_sha256") or
-            path.name != f"W.DmProvider.{saved.get('version')}.nupkg"):
+            path.name != f"W.DamengProvider.{saved.get('version')}.nupkg"):
         fail("package_changed")
     with zipfile.ZipFile(path) as archive:
         for name, expected in saved.get("assets", {}).items():
@@ -113,7 +113,7 @@ def consumer(run_dir, version):
     run_dir = pathlib.Path(run_dir).resolve()
     assets = json.loads((run_dir / "obj/project.assets.json").read_text())
     deps = json.loads((run_dir / "app/ProductPackageProbe.deps.json").read_text())
-    key = f"W.DmProvider/{version}"
+    key = f"W.DamengProvider/{version}"
     if (set(assets.get("libraries", {})) != {key} or
             set(assets.get("packageFolders", {})) != {str(run_dir / "nuget-cache")} or
             set(assets.get("project", {}).get("restore", {}).get("sources", {})) != {str(run_dir)}):
@@ -123,7 +123,7 @@ def consumer(run_dir, version):
         fail("runtime_graph_invalid")
     targets = list(deps.get("targets", {}).values())
     if (len(targets) != 1 or set(targets[0]) != {key, "ProductPackageProbe/1.0.0"} or
-            targets[0]["ProductPackageProbe/1.0.0"].get("dependencies") != {"W.DmProvider": version} or
+            targets[0]["ProductPackageProbe/1.0.0"].get("dependencies") != {"W.DamengProvider": version} or
             targets[0][key].get("dependencies")):
         fail("runtime_dependency_invalid")
     print(json.dumps({"schema_version": 1, "status": "consumer_graph_verified", "version": version}))

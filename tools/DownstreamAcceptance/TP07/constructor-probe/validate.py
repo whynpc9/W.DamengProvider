@@ -510,17 +510,17 @@ def validate_chain(startup, startup_sha, receipt, identity):
             ('approved_ef_source_manifest', 'approved_ef_source_manifest_sha256'), ('runtime_template_source', 'runtime_template_source_sha256')]:
         need(startup['lineage_artifacts'][name]['sha256'] == startup['lineage'][field], 'bound_lineage_artifact_fields')
     provider = load(replay / PROVIDER_LOCK)['dependencies']['net10.0']; lock = load(replay / LOCK)['dependencies']['net10.0']
-    originals = {name: row for name, row in provider.items() if name != 'W.DmProvider'}
+    originals = {name: row for name, row in provider.items() if name != 'W.DamengProvider'}
     projects = [name for name in lock if name.casefold() == 'w.entityframeworkcore.dameng']
     need(len(originals) == 13 and len(projects) == 1 and len(lock) == len({name.casefold() for name in lock})
-        and set(lock) == set(originals) | {'W.DmProvider', projects[0]}, 'approved_baseline_thirteen_dependency_graph')
+        and set(lock) == set(originals) | {'W.DamengProvider', projects[0]}, 'approved_baseline_thirteen_dependency_graph')
     for name, old in originals.items():
         need(lock[name]['resolved'] == old['resolved'] and lock[name]['contentHash'] == old['contentHash']
             and lock[name].get('dependencies', {}) == old.get('dependencies', {}), 'unchanged_non_driver_dependency')
-    need(lock['W.DmProvider']['type'] == 'Direct' and lock['W.DmProvider']['resolved'] == p['W']['version']
-        and lock['W.DmProvider']['contentHash'] == provider['W.DmProvider']['contentHash']
+    need(lock['W.DamengProvider']['type'] == 'Direct' and lock['W.DamengProvider']['resolved'] == p['W']['version']
+        and lock['W.DamengProvider']['contentHash'] == provider['W.DamengProvider']['contentHash']
         and lock[projects[0]]['type'] == 'Project'
-        and lock[projects[0]]['dependencies'] == {'Microsoft.EntityFrameworkCore.Relational': '[10.0.12, 11.0.0)', 'W.DmProvider': '[' + p['W']['version'] + ', ' + p['W']['version'] + ']'}, 'exact_W_and_provider_project')
+        and lock[projects[0]]['dependencies'] == {'Microsoft.EntityFrameworkCore.Relational': '[10.0.12, 11.0.0)', 'W.DamengProvider': '[' + p['W']['version'] + ', ' + p['W']['version'] + ']'}, 'exact_W_and_provider_project')
     need(len(locked['non_driver_records']) == 13 and {row['id'] for row in locked['non_driver_records']} == set(originals), 'thirteen_independent_package_records')
     for row in locked['non_driver_records']:
         need(row['version'] == originals[row['id']]['resolved'] and HASH.fullmatch(row['archive_sha256'])
@@ -541,10 +541,10 @@ def validate_chain(startup, startup_sha, receipt, identity):
     assemblies = startup['startup_assemblies']; need(len(assemblies) == 1 and assemblies[0]['name'] == 'TP07LiteralProbe', 'isolated_constructor_startup_identity')
     target = assemblies[0]; binary = replay / DLL
     binaries = {binary: target['dll_sha256'], binary.with_suffix('.deps.json'): target['deps_sha256'],
-        binary.parent / 'W.DmProvider.dll': p['W']['dll_sha256'], binary.parent / 'W.EntityFrameworkCore.Dameng.dll': startup['ef_provider']['dll_sha256']}
+        binary.parent / 'W.DamengProvider.dll': p['W']['dll_sha256'], binary.parent / 'W.EntityFrameworkCore.Dameng.dll': startup['ef_provider']['dll_sha256']}
     for path, expected_hash in binaries.items(): need(sha(path) == expected_hash, 'actual_constructor_binary_artifacts')
     deps = load(binary.with_suffix('.deps.json'))['libraries']
-    need(deps['W.DmProvider/' + p['W']['version']]['type'] == 'package'
+    need(deps['W.DamengProvider/' + p['W']['version']]['type'] == 'package'
         and not any(name.casefold().startswith('dm.dmprovider/') for name in deps), 'no_official_driver_fallback')
     mandatory = [Path(identity['manifest_path']), Path(source_ref['path']), Path(lock_ref['path']), Path(historical['path'])]
     mandatory += history_paths

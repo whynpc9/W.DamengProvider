@@ -9,7 +9,7 @@ diff --git a/Directory.Packages.props b/Directory.Packages.props
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12,11.0.0)" />
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12,11.0.0)" />
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12,11.0.0)" />
-+    <PackageVersion Include="W.DmProvider" Version="[0.1.0-r1.20260930064454]" />
++    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-r1.20260930064454]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12]" />
@@ -24,7 +24,7 @@ diff --git a/scripts/local-test/LocalTest.csproj b/scripts/local-test/LocalTest.
    </PropertyGroup>
    <ItemGroup>
 -    <PackageReference Include="DM.DmProvider" />
-+    <PackageReference Include="W.DmProvider" />
++    <PackageReference Include="W.DamengProvider" />
    </ItemGroup>
  </Project>
 diff --git a/scripts/local-test/Program.cs b/scripts/local-test/Program.cs
@@ -260,7 +260,7 @@ diff --git a/src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.cspro
  
    <ItemGroup>
 -    <PackageReference Include="DM.DmProvider" />
-+    <PackageReference Include="W.DmProvider" />
++    <PackageReference Include="W.DamengProvider" />
      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
    </ItemGroup>
  
@@ -289,7 +289,7 @@ diff --git a/src/W.EntityFrameworkCore.Dameng/packages.lock.json b/src/W.EntityF
            "Microsoft.Extensions.Logging": "10.0.12"
          }
 +      },
-+      "W.DmProvider": {
++      "W.DamengProvider": {
 +        "type": "Direct",
 +        "requested": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]",
 +        "resolved": "0.1.0-r1.20260930064454",
@@ -1792,7 +1792,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDotNetEfCli
 -                <PackageReference Include="DM.DmProvider" Version="{dmProviderVersion}" />
 +                <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="[{efCoreVersion}]" />
 +                <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[{efCoreVersion}]" />
-+                <PackageReference Include="W.DmProvider" Version="[{dmProviderVersion}]" />
++                <PackageReference Include="W.DamengProvider" Version="[{dmProviderVersion}]" />
 +                <FrameworkReference Include="Microsoft.AspNetCore.App" />
                </ItemGroup>
              </Project>
@@ -1906,7 +1906,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/DamengDotNetEfCli
 +        string assetsPath = Path.Combine(projectDirectory, "obj", "project.assets.json");
 +        using var assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
 +        var libraries = assets.RootElement.GetProperty("libraries").EnumerateObject().Select(item => item.Name).ToArray();
-+        Assert.True(libraries.Contains("W.DmProvider/" + candidateVersion, StringComparer.Ordinal),
++        Assert.True(libraries.Contains("W.DamengProvider/" + candidateVersion, StringComparer.Ordinal),
 +            "Nested CLI assets must contain the exact candidate package.");
 +        Assert.True(!libraries.Any(name => name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)),
 +            "Nested CLI assets must not fall back to the official driver.");
@@ -2730,7 +2730,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.jso
 -        "resolved": "8.3.1.47463",
 -        "contentHash": "51FUZEWXMLp95+vFgoXiZ0Bt69DpZTmk4pDG+971x3igTs57n9EmyONW8vD/bEf43PlOn/BuQk4PGyTfZ/zBKw=="
 +          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 10.0.12]",
-+          "W.DmProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
++          "W.DamengProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
 +        }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
@@ -2745,7 +2745,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.FunctionalTests/packages.lock.jso
            "Microsoft.Extensions.Logging": "10.0.12"
          }
 +      },
-+      "W.DmProvider": {
++      "W.DamengProvider": {
 +        "type": "CentralTransitive",
 +        "requested": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]",
 +        "resolved": "0.1.0-r1.20260930064454",
@@ -2828,7 +2828,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock
 -        "resolved": "8.3.1.47463",
 -        "contentHash": "51FUZEWXMLp95+vFgoXiZ0Bt69DpZTmk4pDG+971x3igTs57n9EmyONW8vD/bEf43PlOn/BuQk4PGyTfZ/zBKw=="
 +          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 10.0.12]",
-+          "W.DmProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
++          "W.DamengProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
 +        }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
@@ -2843,7 +2843,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.Specification.Tests/packages.lock
            "Microsoft.Extensions.Logging": "10.0.12"
          }
 +      },
-+      "W.DmProvider": {
++      "W.DamengProvider": {
 +        "type": "CentralTransitive",
 +        "requested": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]",
 +        "resolved": "0.1.0-r1.20260930064454",
@@ -3145,7 +3145,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json b/test/W
 -        "resolved": "8.3.1.47463",
 -        "contentHash": "51FUZEWXMLp95+vFgoXiZ0Bt69DpZTmk4pDG+971x3igTs57n9EmyONW8vD/bEf43PlOn/BuQk4PGyTfZ/zBKw=="
 +          "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 10.0.12]",
-+          "W.DmProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
++          "W.DamengProvider": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]"
 +        }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
@@ -3160,7 +3160,7 @@ diff --git a/test/W.EntityFrameworkCore.Dameng.Tests/packages.lock.json b/test/W
            "Microsoft.Extensions.Logging": "10.0.12"
          }
 +      },
-+      "W.DmProvider": {
++      "W.DamengProvider": {
 +        "type": "CentralTransitive",
 +        "requested": "[0.1.0-r1.20260930064454, 0.1.0-r1.20260930064454]",
 +        "resolved": "0.1.0-r1.20260930064454",

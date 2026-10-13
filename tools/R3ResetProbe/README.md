@@ -1,6 +1,6 @@
 # T15 exact-package reset/discard probe
 
-此 consumer 只引用独立的、唯一精确版本 `W.DmProvider` NuGet 包，禁止 ProjectReference/官方驱动依赖。它不修改产品源码，也不凭一次健康检查声称完整会话复位。
+此 consumer 只引用独立的、唯一精确版本 `W.DamengProvider` NuGet 包，禁止 ProjectReference/官方驱动依赖。它不修改产品源码，也不凭一次健康检查声称完整会话复位。
 
 独立 Low 验证负责人通过 `eng/t15.sh offline|shared|tls <exact-version> <frozen-local-feed>` 编译并执行。每轮使用隔离的 bin/obj/NuGet cache/CLI home，不改历史证据、不清全局缓存。所有实库连接先检查配置用户，再验证服务端 USER、当前 Schema、STARTUP mode 和新 socket；共享 profile 显式 PlaintextAllowed，独立本机 TLS profile 使用 RequireTls 和实际证书验证。NoCheck 仅针对本机无 CRL 的临时 CA，产品默认不变。
 

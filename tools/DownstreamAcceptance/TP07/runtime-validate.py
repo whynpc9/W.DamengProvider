@@ -757,7 +757,7 @@ def validate_artifact(folder, expected_startup_sha, toolpack_manifest, expected_
     binaries = {binary_dir / 'TP07LiteralProbe.dll': target['dll_sha256'],
         binary_dir / 'TP07LiteralProbe.deps.json': target['deps_sha256'],
         binary_dir / 'W.EntityFrameworkCore.Dameng.dll': startup['ef_provider']['dll_sha256'],
-        binary_dir / 'W.DmProvider.dll': policy()['W']['dll_sha256']}
+        binary_dir / 'W.DamengProvider.dll': policy()['W']['dll_sha256']}
     for path, expected in binaries.items(): require(sha(path) == expected, 'executed_binary_artifact_drift')
     mandatory = [startup_path, source_path, lock_path, Path(toolpack['manifest_path'])]
     mandatory += grammar_paths + origin_value['protected_paths']

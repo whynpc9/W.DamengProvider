@@ -1,7 +1,7 @@
 # R3 EF 适配 handoff（准备模板，未发行）
 
 - EF source pin：113014cc74dd1f751ef97226a78d2ec855b32c8c；archive SHA：9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d。
-- EFCore10.0.12 / downstream SDK10.0.401；driver SDK10.0.203 单独核验。
+- EFCore10.0.12 / downstream SDK10.0.401；driver SDK10.0.401 单独核验。
 - 最终候选：`<exact 0.1.0-r3.UTCtimestamp>` / package SHA `<sha>` / driver DLL SHA `<sha>` / MVID `<guid>` / canonical source-manifest JSON SHA `<sha>`。
 - 输入：accepted T12 bridge/CLI/current-schema components + T19 complete add/change/delete overlay；重建目录源哈希=`<manifest>`，driver exactPackageReference，无official fallback。
 - Overlay无末尾LF字节用标准marker保留；临时重建overlay dry-run/apply须`patch -p1 -E`跨平台删除明确删空文件，accepted combined原调用与逐源hash门不变。

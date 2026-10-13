@@ -22,7 +22,7 @@ O_PIN = dict(id="DM.DmProvider", version="8.3.1.47463", asset="lib/net9.0/DM.DmP
     package_sha256="62ec22acef319847ee59610359f02f1d3e08dc76af39b92ba50b23cc25e22e75",
     dll_sha256="8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b",
     mvid="d909b5af-965f-4cf9-a80a-a6181124e361")
-W_PIN = dict(id="W.DmProvider", version="0.1.0-r3.20261007143838", asset="lib/net10.0/W.DmProvider.dll",
+W_PIN = dict(id="W.DamengProvider", version="0.1.0-r3.20261007143838", asset="lib/net10.0/W.DamengProvider.dll",
     package_sha256="6696a26d89e4caa1b9e7c40a73f024c4df9d8a695da1446bdbecc17757d3bcf9",
     dll_sha256="c70f7d4b7bd37187f55483d186d658206232a2e1f60a662530b3a0282e3231e5",
     mvid="69e5632e-75c4-4672-b924-57b8ffb58a52")
@@ -147,7 +147,7 @@ def validate_source_manifest(value):
             true_int(entry["bytes"], "source.file.bytes", 0)
         if "executable" in entry:
             boolean(entry["executable"], "source.file.executable")
-    require(any(p.startswith("src/W.DmProvider/") for p in paths), "source.product_files_required")
+    require(any(p.startswith("src/W.DamengProvider/") for p in paths), "source.product_files_required")
     return value
 
 
@@ -157,7 +157,7 @@ def validate_identity(identity):
     phase = enum(member(identity, "phase", "identity"), PHASES, "identity.phase")
     require(member(identity, "O", "identity") == O_PIN, "official_pin_changed")
     w = object_value(member(identity, "W", "identity"), "identity.W")
-    require(w.get("id") == "W.DmProvider" and w.get("asset") == "lib/net10.0/W.DmProvider.dll", "W_asset")
+    require(w.get("id") == "W.DamengProvider" and w.get("asset") == "lib/net10.0/W.DamengProvider.dll", "W_asset")
     require(type(w.get("version")) is str and re.fullmatch(r"[0-9A-Za-z][0-9A-Za-z.+-]{0,100}", w["version"]), "W_version")
     hash_value(member(w, "package_sha256", "W"), "W.package")
     hash_value(member(w, "dll_sha256", "W"), "W.dll")

@@ -117,14 +117,14 @@ def build(run, manifest, key):
                 write(root / 'build.json', {'accepted': False, 'commands': commands, 'locks': {}, 'binary_hashes': {}}); return row['exit_code']
     binaries = {}; libraries = []
     for project in projects:
-        project_path = folder / project; output = project_path.parent / 'bin/Debug/net10.0'; driver = output / 'W.DmProvider.dll'
+        project_path = folder / project; output = project_path.parent / 'bin/Debug/net10.0'; driver = output / 'W.DamengProvider.dll'
         if sha(driver) != manifest['candidate']['driver_dll_sha256'] or mvid(driver.read_bytes()) != manifest['candidate']['driver_mvid']: raise ValueError('built_driver_tuple_mismatch')
         for path in output.iterdir():
             if path.is_file(): binaries[str(path.relative_to(folder))] = sha(path)
         assets = json.loads((project_path.parent / 'obj/project.assets.json').read_text())
         for name, data in assets['libraries'].items():
             if name.startswith('DM.DmProvider/'): raise ValueError('official_dependency_rejected')
-            if name.startswith('W.DmProvider/') and (name != 'W.DmProvider/' + manifest['candidate']['version'] or data['type'] != 'package'): raise ValueError('driver_package_reference_mismatch')
+            if name.startswith('W.DamengProvider/') and (name != 'W.DamengProvider/' + manifest['candidate']['version'] or data['type'] != 'package'): raise ValueError('driver_package_reference_mismatch')
             if name.startswith('Microsoft.EntityFrameworkCore.') and name.rsplit('/', 1)[1] != EFCORE: raise ValueError('EFCore_exact_version_mismatch')
             libraries.append({'project': project, 'identity': name, 'type': data['type'], 'sha512': data.get('sha512')})
     locks = {name: digest for name, digest in sources(folder).items() if name.endswith('packages.lock.json')}
@@ -145,7 +145,7 @@ def strict_trx(path):
 
 
 def check_identity(proof, candidate):
-    return proof.get('driver_id') == 'W.DmProvider' and proof.get('driver_version') == candidate['version'] and \
+    return proof.get('driver_id') == 'W.DamengProvider' and proof.get('driver_version') == candidate['version'] and \
         proof.get('driver_dll_sha256') == candidate['driver_dll_sha256'] and proof.get('driver_dll_mvid') == candidate['driver_mvid'] and \
         proof.get('package_library_type') == 'package' and proof.get('loaded_in_host_directory') is True
 

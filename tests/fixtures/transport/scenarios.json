@@ -13,7 +13,7 @@
     "allocation_note": "Oversized vectors contain only a 64-byte header declaration and expect rejection before body allocation."
   },
   "crc32_vector_provenance": {
-    "source_path": "src/W.DmProvider/Internal/Legacy/Dm/T02_0200008D.cs",
+    "source_path": "src/W.DamengProvider/Internal/Legacy/Dm/T02_0200008D.cs",
     "algorithm_method_lines": "348-367",
     "table_lines": "385-622",
     "input_frame_prefix": "64-byte zero-initialized header, opcode 6, body length 8, then body A1B2C3D4",

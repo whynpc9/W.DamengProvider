@@ -12,4 +12,4 @@ v8 runtime summary SHA `a70b2aa209e937168de1b899a6bc75fbd194bb6e66e78550c6a4282b
 
 TP07按 [已准备设计](TP07-astra-design.md) 使用固定EF commit `5863d3755dbd2d333ac359bf1c0a789762adbaed` 的隔离archive/overlay。原EF工作树未提交内容保持，SDK以其10.0.401 pin执行；同一W候选必须贯穿EF runtime及CLI。不得用ProjectReference替换W包、重打另一个包拼接接受，或把本次ADO通过说成EF已通过。
 
-[公开证据清单](../evidence/TemporalNative/TP06-accepted/public-evidence-manifest.json)保存67项原始字节导出及各自hash（大报告以确定性gzip压缩），manifest SHA256 `6e97f69aa50254a6d7307571dc5e911a14f6dc13d19d836f4833826dd2f2f561`。包含旧失败、新lineage与两profile完整已接受报告；不包含凭据或候选包二进制。结构化凭据字段/赋值扫描无命中。
+公开证据清单（历史记录已归档）保存67项原始字节导出及各自hash（大报告以确定性gzip压缩），manifest SHA256 `6e97f69aa50254a6d7307571dc5e911a14f6dc13d19d836f4833826dd2f2f561`。包含旧失败、新lineage与两profile完整已接受报告；不包含凭据或候选包二进制。结构化凭据字段/赋值扫描无命中。

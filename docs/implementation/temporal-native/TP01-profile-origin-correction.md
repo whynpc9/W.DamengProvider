@@ -24,4 +24,4 @@ v11 只修探针来源及对应合同：版本、message version、有效编码�
 
 ## 后续状态：v11 重新取证已接受
 
-新 shared 700 场景、TLS 374 场景及全部清理/validator 均通过。逐案例能力审阅见 [物理 profile 最终交接](TP01-profile-handoff.physical-v11.md)，公开原报告见 [v11 证据清单](../evidence/TemporalNative/TP01-v11/public-evidence-manifest.json)。上述初始 pending 状态保留为问题发现时点；当前以新交接及专项 status 为准。产品仍须按修正范围生成新候选并重新通过 TP-03 实库门。
+新 shared 700 场景、TLS 374 场景及全部清理/validator 均通过。逐案例能力审阅见 [物理 profile 最终交接](TP01-profile-handoff.physical-v11.md)，公开原报告见 v11 证据清单（历史记录已归档）。上述初始 pending 状态保留为问题发现时点；当前以新交接及专项 status 为准。产品仍须按修正范围生成新候选并重新通过 TP-03 实库门。

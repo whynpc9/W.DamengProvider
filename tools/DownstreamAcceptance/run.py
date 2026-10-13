@@ -93,16 +93,16 @@ def main():
             evidence['locks_sha256'] = locks
             product_lock = json.loads((lane / 'src/W.EntityFrameworkCore.Dameng/packages.lock.json').read_text())
             deps = product_lock['dependencies']['net10.0']
-            driver_id = 'W.DmProvider' if args.lane == 'W' else 'DM.DmProvider'
+            driver_id = 'W.DamengProvider' if args.lane == 'W' else 'DM.DmProvider'
             driver_version = candidate['version'] if args.lane == 'W' else '8.3.1.47463'
             if deps[driver_id]['resolved'] != driver_version or deps['Microsoft.EntityFrameworkCore.Relational']['resolved'] != '10.0.12':
                 raise ValueError('resolved_dependency_mismatch')
-            dll_name = 'W.DmProvider.dll' if args.lane == 'W' else 'DM.DmProvider.dll'
+            dll_name = 'W.DamengProvider.dll' if args.lane == 'W' else 'DM.DmProvider.dll'
             driver = lane / 'T11Consumer/bin/Debug/net10.0' / dll_name
             evidence['driver_dll_sha256'] = digest(driver.read_bytes())
             if args.lane == 'W' and evidence['driver_dll_sha256'] != candidate['driver_dll_sha256']:
                 raise ValueError('consumer_driver_hash_mismatch')
-            other_id = 'DM.DmProvider' if args.lane == 'W' else 'W.DmProvider'
+            other_id = 'DM.DmProvider' if args.lane == 'W' else 'W.DamengProvider'
             if other_id in deps:
                 raise ValueError('mixed_driver_dependencies')
             evidence['consumer_dll_sha256'] = digest((lane / 'T11Consumer/bin/Debug/net10.0' / ('T11Consumer.' + args.lane + '.dll')).read_bytes())

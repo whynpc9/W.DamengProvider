@@ -1,14 +1,14 @@
 # R1 下游交接（已独立验收，限定范围）
 
-候选 `W.DmProvider/0.1.0-r1.20260930064454`，包 SHA256 `a5528d682283c343511a5343275c1420e6ff1b2867afe9e5384fbb8f0f8136c8`，加载 DLL SHA256 `d3eda7c4c0156f89495b9c6540c39188d44ca4e2c4cae572345da7a1398692ed`。驱动 SourceHash `a2f637dd96d37ad89bf480b0ec742b40c0c0fe01929aa90de75d00c3fa587f8b`，准确278个输入文件，precommit `8e42481e12fd7fd23ce25074fc6b1ca01686167e`。**SourceLink=false**：包在未提交源上构建；随后交付commit只能外部关联，不能声称包内含该新commit。src开发默认README/csproj历史值保留，实际本候选以此交接和R1报告为准；未来发行须新版本/新包。
+候选 `W.DamengProvider/0.1.0-r1.20260930064454`，包 SHA256 `a5528d682283c343511a5343275c1420e6ff1b2867afe9e5384fbb8f0f8136c8`，加载 DLL SHA256 `d3eda7c4c0156f89495b9c6540c39188d44ca4e2c4cae572345da7a1398692ed`。驱动 SourceHash `a2f637dd96d37ad89bf480b0ec742b40c0c0fe01929aa90de75d00c3fa587f8b`，准确278个输入文件，precommit `8e42481e12fd7fd23ce25074fc6b1ca01686167e`。**SourceLink=false**：包在未提交源上构建；随后交付commit只能外部关联，不能声称包内含该新commit。src开发默认README/csproj历史值保留，实际本候选以此交接和R1报告为准；未来发行须新版本/新包。
 
-EF基线 `113014cc74dd1f751ef97226a78d2ec855b32c8c`，archive SHA256 `9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d`，EF10.0.12/SDK10.0.401；driver SDK10.0.203。原EF仓库只读，未checkout/reset或写入；结束观察原HEAD已经5b5bb25且有8项用户修改，本补丁仍从固定113014导出，不覆盖它们。
+EF基线 `113014cc74dd1f751ef97226a78d2ec855b32c8c`，archive SHA256 `9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d`，EF10.0.12/SDK10.0.401；driver SDK10.0.401。原EF仓库只读，未checkout/reset或写入；结束观察原HEAD已经5b5bb25且有8项用户修改，本补丁仍从固定113014导出，不覆盖它们。
 
 | 已接受门 | 结果 | 独立输入 |
 | --- | --- | --- |
 | driver Release离线8suite与包/公开surface审计 | 298/298、package audit通过 | producer064454实际包 |
 | unit | 307/307 | full-v5 |
-| 普通functional（含query/CRUD/types、事务/保存点、迁移和reverse engineering） | 76/76 | full-v5 |
+| 普通functional（含query/CRUD/types、事务/保存点、迁移和schema scaffolding） | 76/76 | full-v5 |
 | specification既有切片 | 4/4 | full-v5，非全上游conformance |
 | 当前TEST Schema脚本create/up/down/幂等 | 4/4 | full-v5 |
 | dotnet-ef migrations/scaffold/生成模型与DLL身份 | 1/1 | cli-final-v6 |

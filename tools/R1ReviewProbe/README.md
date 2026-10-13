@@ -1,6 +1,6 @@
 # R1 PR review package consumer
 
-该工具只通过 exact `PackageReference` 消费 `W.DmProvider` nupkg，禁止 ProjectReference。Low 使用新的隔离包源与输出目录，传入 `-p:R1ReviewPackageVersion=<exact-version>`；报告核对实际 DLL informational version，并保存 SHA256/MVID。旧包与修复候选使用相同冻结工具源码，输出分别保存。
+该工具只通过 exact `PackageReference` 消费 `W.DamengProvider` nupkg，禁止 ProjectReference。Low 使用新的隔离包源与输出目录，传入 `-p:R1ReviewPackageVersion=<exact-version>`；报告核对实际 DLL informational version，并保存 SHA256/MVID。旧包与修复候选使用相同冻结工具源码，输出分别保存。
 
 所有 dotnet 操作由 Low 统一执行。先设置可写 `DOTNET_CLI_HOME`、`DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1`、`DOTNET_CLI_TELEMETRY_OPTOUT=1`；build/restore 使用单节点 `-m:1 /nodeReuse:false /p:UseSharedCompilation=false`，支持时添加 `--disable-build-servers`。
 

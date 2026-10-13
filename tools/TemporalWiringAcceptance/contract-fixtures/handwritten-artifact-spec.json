@@ -7,7 +7,7 @@
   "stability_second_fraction_ticks": 1234567,
   "source_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "source_file": {
-    "path": "src/W.DmProvider/OfflineContract.cs",
+    "path": "src/W.DamengProvider/OfflineContract.cs",
     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
     "size": 17
   },

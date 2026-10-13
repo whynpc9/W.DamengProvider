@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>W.DamengProvider</AssemblyName>
+    <PackageId>W.DamengProvider</PackageId>
+    <RootNamespace>W.Dm</RootNamespace>
+    <Version Condition="'$(Version)' == ''">0.1.0-preview.1</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Authors>W.DamengProvider contributors</Authors>
+    <Company>W.DamengProvider contributors</Company>
+    <Description>Dameng ADO.NET provider for .NET 10, with asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
+    <PackageTags>Dameng;ADO.NET;database</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Portions Copyright (C) DM; modifications Copyright (C) W.DamengProvider contributors</Copyright>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <LangVersion>13.0</LangVersion>
+    <NuGetAudit>false</NuGetAudit>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <EnableSourceLink>false</EnableSourceLink>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryUrl>https://github.com/whynpc9/W.DamengProvider</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/whynpc9/W.DamengProvider</PackageProjectUrl>
+    <GenerateRepositoryUrlAttribute>false</GenerateRepositoryUrlAttribute>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="W.DmProvider.ConfigurationTests" />
+    <InternalsVisibleTo Include="W.DmProvider.SessionTests" />
+    <InternalsVisibleTo Include="W.DmProvider.TransportTests" />
+    <InternalsVisibleTo Include="W.DmProvider.SecurityTests" />
+    <InternalsVisibleTo Include="W.DmProvider.CommandTests" />
+    <InternalsVisibleTo Include="W.DmProvider.AsyncTests" />
+    <InternalsVisibleTo Include="W.DmProvider.PoolTests" />
+    <InternalsVisibleTo Include="W.DmProvider.LobTests" />
+    <InternalsVisibleTo Include="W.DmProvider.DiagnosticsTests" />
+    <InternalsVisibleTo Include="R3ResourceProbe" />
+    <InternalsVisibleTo Include="W.DmProvider.TypeTests" />
+    <InternalsVisibleTo Include="W.DmProvider.TransactionTests" />
+    <InternalsVisibleTo Include="W.DmProvider.IsolationTests" />
+    <InternalsVisibleTo Include="SessionProbe" />
+    <InternalsVisibleTo Include="TransportProbe" />
+    <InternalsVisibleTo Include="SecurityProbe" />
+    <InternalsVisibleTo Include="CommandProbe.Candidate" />
+    <InternalsVisibleTo Include="TypeProbe.Candidate" />
+    <InternalsVisibleTo Include="TransactionProbe.Candidate" />
+    <InternalsVisibleTo Include="IsolationProbe.Candidate" />
+    <EmbeddedResource Include="Resources/Dm.DmErrorDefinition.resx" LogicalName="Dm.DmErrorDefinition.resources" />
+    <EmbeddedResource Include="Resources/Dm.ReservedWords.txt" LogicalName="Dm.ReservedWords.txt" />
+    <EmbeddedResource Include="Resources/en/Dm.DmErrorDefinition.resx" LogicalName="Dm.DmErrorDefinition.en.resources" Culture="en" WithCulture="true" />
+    <EmbeddedResource Include="Resources/zh-CN/Dm.DmErrorDefinition.resx" LogicalName="Dm.DmErrorDefinition.zh-CN.resources" Culture="zh-CN" WithCulture="true" />
+    <EmbeddedResource Include="Resources/zh-HK/Dm.DmErrorDefinition.resx" LogicalName="Dm.DmErrorDefinition.zh-HK.resources" Culture="zh-HK" WithCulture="true" />
+    <EmbeddedResource Include="Resources/zh-TW/Dm.DmErrorDefinition.resx" LogicalName="Dm.DmErrorDefinition.zh-TW.resources" Culture="zh-TW" WithCulture="true" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

@@ -86,8 +86,8 @@ def sdk_version(cwd, env):
     except subprocess.TimeoutExpired:
         os.killpg(process.pid,signal.SIGKILL);process.wait(timeout=5)
         require(False,"SDK_probe_deadline")
-    require(process.returncode==0 and output.decode("ascii",errors="replace").strip()=="10.0.203","exact_SDK_required")
-    return "10.0.203"
+    require(process.returncode==0 and output.decode("ascii",errors="replace").strip()=="10.0.401","exact_SDK_required")
+    return "10.0.401"
 
 
 def validate_inputs(a):

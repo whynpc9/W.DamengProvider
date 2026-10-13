@@ -23,7 +23,7 @@
 | C | 最终包，警告补丁前 | 无（已撤销） | 216 / 234 |
 | **D（最终）** | `0.1.0-efcompat.20261012165201` | 无（已撤销） | **219 / 234** |
 
-D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CREATE MATERIALIZED VIEW（`-5622`）。其中 12 项已在 B（临时授权）通过；另 2 项 `ExhaustedSequence…` 在 B 因 `-7069` 尚未入白名单而失败，该号已由探针实测加入；用户只批准一次授权运行，未再授权重跑这 2 项，它们在最终包上的 EF 级正向结果**未验证**。组 1/3/4/5/6 的 44 项在 D 全部通过，`DamengTemporalPrecisionMigrationFunctionalTests` 通过。脱敏逐项结果：[A](evidence/EFCompat/ef-functional-runA-no-schema-grant.json)、[B](evidence/EFCompat/ef-functional-runB-temporary-schema-grant.json)、[D](evidence/EFCompat/ef-functional-runD-final-no-grant.json)。
+D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CREATE MATERIALIZED VIEW（`-5622`）。其中 12 项已在 B（临时授权）通过；另 2 项 `ExhaustedSequence…` 在 B 因 `-7069` 尚未入白名单而失败，该号已由探针实测加入；用户只批准一次授权运行，未再授权重跑这 2 项，它们在最终包上的 EF 级正向结果**未验证**。组 1/3/4/5/6 的 44 项在 D 全部通过，`DamengTemporalPrecisionMigrationFunctionalTests` 通过。脱敏逐项结果：A（历史记录已归档）、B（历史记录已归档）、D（历史记录已归档）。
 
 233→234：新增 `DamengTemporalPrecisionMigrationFunctionalTests` 1 项；组 5 两项改名（断言改变，见 §3）。
 
@@ -40,13 +40,13 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 
 | 证据 | 场景数 | 全部 4 项成立 |
 | --- | ---: | ---: |
-| [O，最终矩阵](evidence/EFCompat/probe7-Official.json) | 82 | 82 |
-| [W HEAD `5dcc3c8`](evidence/EFCompat/probe4-W-head.json)（72 场早期矩阵） | 72 | 2（仅事务内 -2106）；其余 70 场连接 Broken |
-| [W 最终候选](evidence/EFCompat/probe7-W-candidate.json) | 82 | 82 |
+| O，最终矩阵（历史记录已归档） | 82 | 82 |
+| W HEAD `5dcc3c8`（历史记录已归档）（72 场早期矩阵） | 72 | 2（仅事务内 -2106）；其余 70 场连接 Broken |
+| W 最终候选（历史记录已归档） | 82 | 82 |
 
 两端不论在哪个驱动下，服务器侧结果相同：语句原子失败、不影响会话或外层事务。W HEAD 的 Broken 是纯客户端保守，EF 测试的假设与 ADO.NET 常规用法一致；改测试为换新连接会掩盖这一差异，故修 W。
 
-**白名单**（[DmServerErrorRecovery.cs](../../src/W.DmProvider/Internal/Sessions/DmServerErrorRecovery.cs)，由上表原矩阵与 §2.3 的定向测量支持）：
+**白名单**（[DmServerErrorRecovery.cs](../../src/W.DamengProvider/Internal/Sessions/DmServerErrorRecovery.cs)，由上表原矩阵与 §2.3 的定向测量支持）：
 
 | 号 | 含义 | 号 | 含义 |
 | --- | --- | --- | --- |
@@ -59,7 +59,7 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 | -7069 | NOCYCLE 序列耗尽 | -6804 | 参数标记未绑定值（§2.3） |
 | -5512 | 无 CREATE SCHEMA 权限 | -20000…-30000 | `RAISE_APPLICATION_ERROR`（实测 -20000/-20001/-20002/-20003/-20071/-20999/-29999/-30000） |
 
-**PR #4 审阅修订（2026-10-13）。** 移除 `-3510`：该号在 [遗留错误定义](../../src/W.DmProvider/Internal/Legacy/Dm/DmErrorDefinition.cs) 中同时是 `EC_BAK_INFO_WRITE`。既有探针只验证了 `RAISE_APPLICATION_ERROR(-19999/-30001)` 转为 `-3510` 的场景，不能据此认定该错误号的所有来源都只影响当前语句；不按 SQL 文本或错误消息猜测来源，也不运行 BACKUP。现在这两种越界 RAISE（各 sync/async，共 4 项）均应保守 Broken；其他白名单及恢复门槛不变。新增四项离线负例覆盖 `-3510` 的 sync/async × autocommit/Active 本地事务，检查严格服务器回执仍保留、连接不可复用、物理通道关闭、事务为 OutcomeUnknown。
+**PR #4 审阅修订（2026-10-13）。** 移除 `-3510`：该号在 [遗留错误定义](../../src/W.DamengProvider/Internal/Legacy/Dm/DmErrorDefinition.cs) 中同时是 `EC_BAK_INFO_WRITE`。既有探针只验证了 `RAISE_APPLICATION_ERROR(-19999/-30001)` 转为 `-3510` 的场景，不能据此认定该错误号的所有来源都只影响当前语句；不按 SQL 文本或错误消息猜测来源，也不运行 BACKUP。现在这两种越界 RAISE（各 sync/async，共 4 项）均应保守 Broken；其他白名单及恢复门槛不变。新增四项离线负例覆盖 `-3510` 的 sync/async × autocommit/Active 本地事务，检查严格服务器回执仍保留、连接不可复用、物理通道关闭、事务为 OutcomeUnknown。
 
 上表原 W 候选的 **82/82**、§1 的 **D 包 219/234** 及 §6 的变基后探针结果都是移除 `-3510` 前的历史记录，原证据保持不变；它们不证明本轮更保守的行为已验证。本轮四项离线负例已通过，完整 Pool 为 259/259；此收窄不要求重跑整套 EF，越界 RAISE 不在 D 的 EF 通过项内。
 
@@ -73,7 +73,7 @@ D 的 15 项全部是环境权限：14 项 CREATE SCHEMA（`-5512`），1 项 CR
 
 `DmParameterBinding.Create` 在参数集合为空时返回零标记绑定：该命令走直接执行，SQL 原文不经绑定，`:NEW`/`:OLD`/`:X`/`?` 由服务器判定。词法扫描仍先执行（未终止引号/注释仍拒绝）；事务语句头守卫使用独立的 `ScanTopLevelStatements`，不受影响；服务器若仍描述出参数，`ValidateServerCount` 仍 fail closed。有参数时严格匹配、混用拒绝、未用参数拒绝不变。
 
-实库（[O](evidence/EFCompat/markers-Official.json) / [W HEAD](evidence/EFCompat/markers-W-head.json) / [W 候选](evidence/EFCompat/markers-W-candidate.json)）：触发器 DDL O 与候选成功且 UPDATE 后 VERSION 1→2，HEAD 客户端 `InvalidOperationException`；无参 `SELECT :X`/`SELECT ?` O 与候选均为服务器 -6804。离线 `ParameterlessMarkerTests` 6 项。
+实库（O（历史记录已归档） / W HEAD（历史记录已归档） / W 候选（历史记录已归档））：触发器 DDL O 与候选成功且 UPDATE 后 VERSION 1→2，HEAD 客户端 `InvalidOperationException`；无参 `SELECT :X`/`SELECT ?` O 与候选均为服务器 -6804。离线 `ParameterlessMarkerTests` 6 项。
 
 ### 2.3 PR #4：未绑定标记的服务器错误恢复
 
@@ -83,22 +83,22 @@ Cursor 审阅发现 §2.2 的后续缺口：空参数命令现在由服务器拒
 
 | 本轮来源 | 结果 | 证据 |
 | --- | --- | --- |
-| Official `8.3.1.47463` | 16/16 均为 -6804，全部恢复与状态检查成立 | [Official](evidence/EFCompat/pr4-unbound-markers-Official.json) |
-| W 基线 `74a8cda` + 定向探针 | 16/16 为 -6804 后 Broken；事务为 OutcomeUnknown | [W 基线](evidence/EFCompat/pr4-unbound-markers-W-baseline-74a8cda.json) |
-| ignored W 实验副本 | 16/16 均为 -6804，全部恢复与状态检查成立；reusable=true，事务 Active | [W 实验](evidence/EFCompat/pr4-unbound-markers-W-experimental.json) |
+| Official `8.3.1.47463` | 16/16 均为 -6804，全部恢复与状态检查成立 | Official（历史记录已归档） |
+| W 基线 `74a8cda` + 定向探针 | 16/16 为 -6804 后 Broken；事务为 OutcomeUnknown | W 基线（历史记录已归档） |
+| ignored W 实验副本 | 16/16 均为 -6804，全部恢复与状态检查成立；reusable=true，事务 Active | W 实验（历史记录已归档） |
 
-独立 Low 在 TEST / 8.1.5.60 上串行测量三者，W 显式 PlaintextAllowed；各轮 cleanup 无失败且新连接剩余 0，另用新 TEST 连接复查三轮精确登记的 51 张自有表，剩余 0（[精确复查](evidence/EFCompat/pr4-unbound-markers-fresh-exact.json)）。未加载管理凭据、执行授权或运行 BACKUP。
+独立 Low 在 TEST / 8.1.5.60 上串行测量三者，W 显式 PlaintextAllowed；各轮 cleanup 无失败且新连接剩余 0，另用新 TEST 连接复查三轮精确登记的 51 张自有表，剩余 0（精确复查（历史记录已归档））。未加载管理凭据、执行授权或运行 BACKUP。
 
 实验驱动是基线源码的 ignored 副本，排除 bin/obj 后仅恢复 helper 新增一行 `-6804`，不修改正式产品。上述双驱动测量通过后，正式 helper 加入相同恢复行（注释改为参数未绑定），并新增四项 sync/async × autocommit/Active 恢复正例；prepare 负例参数化覆盖原 -2106 与 -6804。四项 -3510 负例、完整错误体、profile、owner、事务状态与 execute/prepare 门槛全部保留；零参数绑定逻辑不变。
 
-这些 16 场结果属于 Official/基线/实验测量，不能替代正式新增行后的候选验收，也不改写原 **82/82** 或 EF **D** 包历史证据。正式候选由 Astra High 静态验收、Sol Low 独立运行通过；受测源码为 `74a8cda` 加本次产品/测试/探针 diff，运行期间源码未改动。最终结果与命令见 [正式候选验证](evidence/EFCompat/pr4-unbound-markers-final-verification.json)：12 套件 **2050/2050**，Pool **264/264**，其余计数与 §8 一致，无跳过；实际正式 W 定向 **16/16** 全部安全检查通过，reusable=true、事务 Active。W/Fresh 构建零警告/错误；正常 markers 回归触发器 VERSION=2，未绑定标记为 -6804。两个实库运行及最终复查均退出 0，stderr 空，新 TEST 连接确认本轮精确 19 个对象名剩余 0。使用规定 DOTNET 环境及单节点/禁用构建服务参数，实库只通过指定绝对 TEST wrapper。
+这些 16 场结果属于 Official/基线/实验测量，不能替代正式新增行后的候选验收，也不改写原 **82/82** 或 EF **D** 包历史证据。正式候选由 Astra High 静态验收、Sol Low 独立运行通过；受测源码为 `74a8cda` 加本次产品/测试/探针 diff，运行期间源码未改动。最终结果与命令见 正式候选验证（历史记录已归档）：12 套件 **2050/2050**，Pool **264/264**，其余计数与 §8 一致，无跳过；实际正式 W 定向 **16/16** 全部安全检查通过，reusable=true、事务 Active。W/Fresh 构建零警告/错误；正常 markers 回归触发器 VERSION=2，未绑定标记为 -6804。两个实库运行及最终复查均退出 0，stderr 空，新 TEST 连接确认本轮精确 19 个对象名剩余 0。使用规定 DOTNET 环境及单节点/禁用构建服务参数，实库只通过指定绝对 TEST wrapper。
 
 ## 3. EF 测试补丁
 
 交付为 patch，不改 EF 仓库。EF 源为 TP07 已接受的 178 文件 product + 时间测试（取自父 worktree）。
 
 - [ef-functional-test-adaptations.patch](../../tools/DownstreamAcceptance/EFCompat/ef-functional-test-adaptations.patch)
-  - 组 5：`SaveChangesFailsAfterBeginningReadUncommittedOrSerializable` 断言 `CommandText has no value`。T11 已证明这是官方驱动把隔离控制 statement 借给用户命令的缺陷（[T11](reports/T11.md)），W 有意修复。改为 `SaveChangesCommitsAfterBeginningReadUncommittedOrSerializable`：两级别下跟踪式 update 与 insert 各影响 1 行、提交后新 context 读回精确值，再一次更新回滚后值不变。断言强于原测试（原测试不读回数据）。
+  - 组 5：`SaveChangesFailsAfterBeginningReadUncommittedOrSerializable` 断言 `CommandText has no value`。T11 已证明这是官方驱动把隔离控制 statement 借给用户命令的缺陷（T11（历史记录已归档）），W 有意修复。改为 `SaveChangesCommitsAfterBeginningReadUncommittedOrSerializable`：两级别下跟踪式 update 与 insert 各影响 1 行、提交后新 context 读回精确值，再一次更新回滚后值不变。断言强于原测试（原测试不读回数据）。
   - 组 6：`DateTimeOffsetRawAdoReadbackPreservesServerEvidence` 的 `GetValue` 类型改为 `DateTimeOffset`，其 wall clock、Kind 与服务器文本断言保持，并新增 offset 与 UtcTicks 断言。不改 W。
   - 所有自建 model-cache 服务的 fixture（14 个文件）对 `ManyServiceProvidersCreatedWarning` 改为 Log，沿用套件既有 Math/Migrations fixture 的写法。组 1 修复后更多测试跑到创建 context，全套件单进程内 service provider 超过 20，EF 默认把该警告作为异常；触发的是哪个测试取决于顺序（A 为时间测试、B 为 DateBucket、C 为 3 个字符串测试），单跑不触发。属套件组织问题，不改任何业务断言。
 - [w-efcompat-candidate-pins.patch](../../tools/DownstreamAcceptance/EFCompat/w-efcompat-candidate-pins.patch)：中央包版本、五个 lock 的 W 条目（其他包 resolved 不变）、TP07 mapping 测试与 observation 的 DLL SHA-256/MVID 钉定（`1b576a31…f3f7c` / `1b36a175-023b-4e7b-bc8a-253e47c90892`）。
@@ -158,7 +158,7 @@ Cursor 审阅发现 §2.2 的后续缺口：空参数命令现在由服务器拒
 - [TestSchemaPrivilege](../../tools/TestSchemaPrivilege/Program.cs) 的 grant/revoke 通道只查询一次 `USER`，先验证 SA/SYSDBA；不匹配时输出 `identity_sa=false`、`code=identity_rejected`，非零退出，任何权限读取和 GRANT/REVOKE 均不会执行。本次修复不加载管理凭据或执行授权；编译/静态复核由独立验证执行。
 - [ErrorRecoveryProbe](../../tools/ErrorRecoveryProbe/Program.cs) 的 markers 与矩阵建表、写入、读取都在同一个 try/finally 清理保护内；markers 不再创建矩阵的 MARK 表。失败仍输出已收集结果和清理结果，仅记录异常类型，非零退出；清理过程中抛出的异常也安全序列化并非零退出。原有逐项 DROP 失败与新连接遗留数继续记录在 cleanup 结果中，供验证者检查。DROP 继续只针对本次登记的精确对象名，前缀查询仅用于只读复查，不用于批量删除。独立验证已检查正常 markers 与受控异常后的精确对象清理。
 
-本轮由 Sol Low 独立验证、Astra High 静态审查接受；受测源码为 `80e6c28` 加本次审阅修复 diff，执行期间产品/测试源码未变。脱敏结果与命令见 [审阅修复验证](evidence/EFCompat/pr4-review-fix-verification.json)：
+本轮由 Sol Low 独立验证、Astra High 静态审查接受；受测源码为 `80e6c28` 加本次审阅修复 diff，执行期间产品/测试源码未变。脱敏结果与命令见 审阅修复验证（历史记录已归档）：
 
 - 全部 12 个离线套件 **2045/2045**，无失败或跳过：Type 952、Pool 259、Transaction 88、Diagnostics 83、Isolation 78、Command 16、Session 12、Async 134、Transport 115、Configuration 11、Lob 258、Security 39；全部退出码 0，使用规定 DOTNET 环境与单节点/禁用构建服务参数。
 - W/Official 探针和权限工具构建均退出 0，零警告/错误；权限身份拒绝只做编译和独立控制流复核，没有执行 grant/revoke 或加载管理凭据。
@@ -172,4 +172,4 @@ Cursor 审阅发现 §2.2 的后续缺口：空参数命令现在由服务器拒
 - 默认矩阵的 CREATE SCHEMA 负例执行前，从已确认身份的 TEST 连接查询 `USER_SYS_PRIVS` 的直接 CREATE SCHEMA 权限。只在精确计数为 0 时继续；否则在任何 CREATE 前输出 `create_schema_privilege_rejected` 并退出 2。markers 与 unbound-markers 不运行 schema 负例，不受此检查影响。没有新增授权，也不通过 DROP SCHEMA 扩大清理范围。
 - `Cleanup` 的收集结果参与退出判定：DROP failures 非空或新连接 remaining 不为 0 时退出 1；原 dropped/failures/fresh_remaining 结果及精确清理范围保持。抛出异常的安全记录方式不变。
 
-root 独立静态审查、Sol Low 独立验证通过；受测源码为 `ad28d7c` 加本次仅工具 diff，执行期间未改动。脱敏输出与命令见 [探针安全验证](evidence/EFCompat/pr4-probe-safety-verification.json)：W/Official 与三个 ignored 临时副本构建均零警告/错误；真实 W markers（VERSION=2）与 unbound-markers（16/16，全部安全与事务断言）退出 0。临时副本模拟权限计数 1 时退出 2，cases 空、CREATE 尝试 0；在真实清理成功并确认 remaining=0 后，分别模拟 failures 非空和返回 remaining=1，均退出 1。**这些是模拟分支验证，不是实际授权、DROP 失败或遗留对象。** 最终新 TEST 连接按 23 个实际创建对象的精确名称确认剩余 0，三次真实 markers/模拟清理运行和定向探针均只使用指定 TEST wrapper，stderr 空。未重跑与工具改动无关的产品离线套件，已有 2050/2050 对应的产品/测试源码保持不变。
+root 独立静态审查、Sol Low 独立验证通过；受测源码为 `ad28d7c` 加本次仅工具 diff，执行期间未改动。脱敏输出与命令见 探针安全验证（历史记录已归档）：W/Official 与三个 ignored 临时副本构建均零警告/错误；真实 W markers（VERSION=2）与 unbound-markers（16/16，全部安全与事务断言）退出 0。临时副本模拟权限计数 1 时退出 2，cases 空、CREATE 尝试 0；在真实清理成功并确认 remaining=0 后，分别模拟 failures 非空和返回 remaining=1，均退出 1。**这些是模拟分支验证，不是实际授权、DROP 失败或遗留对象。** 最终新 TEST 连接按 23 个实际创建对象的精确名称确认剩余 0，三次真实 markers/模拟清理运行和定向探针均只使用指定 TEST wrapper，stderr 空。未重跑与工具改动无关的产品离线套件，已有 2050/2050 对应的产品/测试源码保持不变。

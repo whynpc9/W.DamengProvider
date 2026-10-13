@@ -59,7 +59,7 @@ internal static string FormatExact(DmTemporalFields fields, int scale, DmTempora
 | `Internal/Legacy/Dm/DmField.cs` | `bf15fb6e0d542ed0a8178598cfc2759f0251251df8249d21ee394acf88903d31` |
 | `Internal/Legacy/A/T02_02000094.cs` | `4637e5cd01a521ef72de98bef5c511b651a1b57fac68e7af907af1b112ef42ab` |
 
-文件路径相对 `src/W.DmProvider/`；其余 pure core 保持 v6 manifest 身份。
+文件路径相对 `src/W.DamengProvider/`；其余 pure core 保持 v6 manifest 身份。
 
 ## 3. TP04 writer 窄窗必须覆盖数值及文本
 

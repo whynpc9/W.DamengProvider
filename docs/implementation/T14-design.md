@@ -1,6 +1,6 @@
 # T14 — 取消、期限与未知结果设计
 
-状态：integration_verified；R2（T13–T14）原候选已独立验收，接受快照位于 `.local/verification/r2/t14/final-validation-v1/`。本轮定点 review 修复与新候选验收见 [R2-review.md](reports/R2-review.md)；原输入/证据保持只读。
+状态：integration_verified；R2（T13–T14）原候选已独立验收，接受快照位于 `.local/verification/r2/t14/final-validation-v1/`。本轮定点 review 修复与新候选验收见 R2-review.md（历史记录已归档）；原输入/证据保持只读。
 
 ## 原子终止与请求身份
 

@@ -5,7 +5,7 @@
     <RestoreAdditionalProjectSources>$(DiagnosticPackageSource)</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="[$(DiagnosticPackageVersion)]" />
+    <PackageReference Include="W.DamengProvider" Version="[$(DiagnosticPackageVersion)]" />
     <AssemblyMetadata Include="DiagnosticPackageVersion" Value="$(DiagnosticPackageVersion)" />
   </ItemGroup>
   <Target Name="RequireExactPackage" BeforeTargets="CollectPackageReferences;CoreCompile">

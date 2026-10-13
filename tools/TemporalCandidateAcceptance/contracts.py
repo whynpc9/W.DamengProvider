@@ -25,7 +25,7 @@ READ_ROOT_DECISION = "root-20261009-supplement-g2-read-contract-v1"
 BIND_SQL_SOURCE_SHA = "0360d2c3887daf50b6cc08437701ce3fe30aa605c65cde88ae4576497c0fa507"
 BASE_CONTRACT_SHA = "f8ad9abddd86e415374b9594954f2264fc5d701e3f603c7a96ed77e14dbca6cb"
 PACKED_SHA = "bc9ed2f5e72960d88065086d26f3c670edeb14a1ed5e1ca1f48b45140db7aae9"
-W_PIN = dict(id="W.DmProvider", version="0.1.0-temporal.20261008144915", asset="lib/net10.0/W.DmProvider.dll",
+W_PIN = dict(id="W.DamengProvider", version="0.1.0-temporal.20261008144915", asset="lib/net10.0/W.DamengProvider.dll",
     package_sha256="da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d",
     dll_sha256="843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980", mvid="aa23e673-957c-4b1e-bf0f-291ff60077e6")
 SOURCE_SHA = "8e7d1dda7f9b8dcf47f31e0918507fea449e1395b7487b9b756b15ec0267030f"

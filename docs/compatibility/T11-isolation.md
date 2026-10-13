@@ -1,6 +1,6 @@
 # T11 隔离级别与保存点 SQL
 
-本页描述当前候选实现；验收状态、包标识与证据以 [T11 报告](../implementation/reports/T11.md) 为准。
+本页描述隔离级别与保存点行为。当前发布准备状态见 [progress.json](../implementation/progress.json)；历史 T11 结果不能作为当前候选通过的证明。
 
 | 级别 | 公开行为 |
 | --- | --- |

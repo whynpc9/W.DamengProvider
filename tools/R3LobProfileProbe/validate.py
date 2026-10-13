@@ -34,7 +34,7 @@ def main():
             result.get('streaming_api_acceptance_claimed') is False and result.get('other_profile_charset_support_claimed') is False and
             result.get('execution_mode') == 'async_raw_single_frame_protocol' and
             result.get('package_version') == manifest['version'] == VERSION and result.get('package_sha256') == manifest['package_sha256'] == PACKAGE and
-            result.get('loaded_assembly_sha256') == sha(Path(sys.argv[3])) == manifest['assets']['lib/net10.0/W.DmProvider.dll'] == DLL and
+            result.get('loaded_assembly_sha256') == sha(Path(sys.argv[3])) == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] == DLL and
             result.get('loaded_assembly_mvid') == MVID and result.get('reference_kind') == 'exact_PackageReference' and
             result.get('fixture_sha256') == sha(fixture_path) and
             result.get('accepted_source_manifest_sha256') == sha(repo / 'docs/implementation/evidence/T16/accepted-v3/accepted-source-manifest.json') and

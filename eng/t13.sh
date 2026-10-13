@@ -30,7 +30,7 @@ failed() {
   exit "$failed_code"
 }
 
-package_file="$source_dir/W.DmProvider.$version.nupkg"
+package_file="$source_dir/W.DamengProvider.$version.nupkg"
 [[ -f "$package_file" ]] || failed package_missing 66
 python3 "$repo/tools/R2AsyncProbe/package_manifest.py" "$package_file" "$version" "$run/package-manifest.json" \
   >"$run/package-inspection.json" 2>/dev/null || failed package_inspection 1
@@ -61,7 +61,7 @@ case "$mode" in
 esac
 [[ -s "$run/probe.json" ]] || failed probe_result_missing "$(( probe_code == 0 ? 1 : probe_code ))"
 (( probe_code == 0 )) || failed probe "$probe_code"
-python3 "$repo/tools/R2AsyncProbe/validate.py" "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DmProvider.dll" "$mode" \
+python3 "$repo/tools/R2AsyncProbe/validate.py" "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DamengProvider.dll" "$mode" \
   >"$run/validation.json" 2>/dev/null || failed result_validation 1
 
 # Detect a package replacement during consumer restore/run. No mutable version

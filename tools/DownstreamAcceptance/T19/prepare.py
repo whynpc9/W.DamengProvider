@@ -66,7 +66,7 @@ def extract(raw, folder):
 def adapt(folder, version):
     before = {str(path.relative_to(folder)): path.read_bytes() for path in folder.rglob('*') if path.is_file()}
     central = folder / 'Directory.Packages.props'; document = ET.parse(central)
-    candidates = [node for node in document.getroot().iter('PackageVersion') if node.get('Include') == 'W.DmProvider']
+    candidates = [node for node in document.getroot().iter('PackageVersion') if node.get('Include') == 'W.DamengProvider']
     if len(candidates) != 1: raise ValueError('central_driver_missing')
     candidates[0].set('Version', '[' + version + ']')
     for node in document.getroot().iter('PackageVersion'):
@@ -156,8 +156,8 @@ def main():
     with zipfile.ZipFile(io.BytesIO(package)) as archive:
         nuspec = ET.fromstring(archive.read(next(name for name in archive.namelist() if name.endswith('.nuspec'))))
         fields = {node.tag.split('}')[-1]: node.text for node in nuspec.iter() if node.tag.split('}')[-1] in ('id', 'version')}
-        raw_dll = archive.read('lib/net10.0/W.DmProvider.dll')
-        if fields != {'id': 'W.DmProvider', 'version': args.version} or sha(raw_dll) != args.driver_dll_sha256 or mvid(raw_dll) != args.driver_mvid:
+        raw_dll = archive.read('lib/net10.0/W.DamengProvider.dll')
+        if fields != {'id': 'W.DamengProvider', 'version': args.version} or sha(raw_dll) != args.driver_dll_sha256 or mvid(raw_dll) != args.driver_mvid:
             raise ValueError('exact_package_DLL_identity_mismatch')
     overlay_descriptor = None
     if any((args.execution_overlay, args.producer_source, args.execution_source, args.base_output)):
@@ -203,7 +203,7 @@ def main():
                 subprocess.run(['patch', '-p1', '--dry-run', '-i', str(PATCH_ROOT / name)], cwd=folder, capture_output=True, check=True)
                 subprocess.run(['patch', '-p1', '-i', str(PATCH_ROOT / name)], cwd=folder, capture_output=True, check=True)
             before_overlay = adapt(folder, args.version)
-            feed = root / 'feed'; feed.mkdir(); package_path = feed / ('W.DmProvider.' + args.version + '.nupkg'); package_path.write_bytes(package)
+            feed = root / 'feed'; feed.mkdir(); package_path = feed / ('W.DamengProvider.' + args.version + '.nupkg'); package_path.write_bytes(package)
             config = ET.Element('configuration'); sources_xml = ET.SubElement(config, 'packageSources'); ET.SubElement(sources_xml, 'clear')
             ET.SubElement(sources_xml, 'add', key='candidate', value=str(feed)); ET.SubElement(sources_xml, 'add', key='nuget.org', value='https://api.nuget.org/v3/index.json')
             ET.ElementTree(config).write(folder / 'NuGet.Config', encoding='utf-8')

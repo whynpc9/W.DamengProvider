@@ -52,6 +52,6 @@ Low 需运行 main 合并后的新 snapshot，用 `Category=CurrentSchemaScripts
 
 静态 analyzer 修复：固定摘要 Redact 与无实例依赖的 ExecuteScriptAsync 使用 static，方法 group 引用类型，不抑制 CA1822 或放宽断言。旧 integrated-v3 snapshot 未改，下一 fresh snapshot 待 Low 构建验收。
 
-本脚本 lane 不替代 Database.Migrate/DBMS_LOCK、CLI migration/scaffold、reverse engineering 或所有上游 migration conformance；这些由 T12 各自 gate 验证。原 descending catalog 辅助断言只有在服务器目录提供 DESCEND 列时才核该目录字段，脚本 DESC 形态和实际 index 存在性始终断言；任何目录权限错误仍真实失败。
+本脚本 lane 不替代 Database.Migrate/DBMS_LOCK、CLI migration/scaffold、schema scaffolding 或所有上游 migration conformance；这些由 T12 各自 gate 验证。原 descending catalog 辅助断言只有在服务器目录提供 DESCEND 列时才核该目录字段，脚本 DESC 形态和实际 index 存在性始终断言；任何目录权限错误仍真实失败。
 
 依据 archive 的 `skills/dameng-sql/SKILL.md`、`references/dmsql.md` 和 `skills/dameng-ef-migrations/SKILL.md`。其中管理员初始化示例未执行。本补丁不提交或发布包；应用和验收由 main/Low 统一安排。
