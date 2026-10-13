@@ -347,7 +347,7 @@ def project_dependencies(replay, asset_name, source_hashes):
     target = str(replay / provider_name)
     expected_references = {} if project_name == provider_name else {target: {'projectPath': target}}
     need(actual_references == expected_references, 'actual_same_replay_provider_reference_no_override')
-    packages = [node for node in tree.iter('PackageReference') if node.attrib.get('Include', '').casefold() == 'w.dmprovider']
+    packages = [node for node in tree.iter('PackageReference') if node.attrib.get('Include', '').casefold() == 'w.damengprovider']
     need(len(packages) == 1, 'unique_W_PackageReference')
     w = packages[0]
     if project_name == provider_name:
@@ -366,7 +366,7 @@ def project_dependencies(replay, asset_name, source_hashes):
         enabled = list(props.iter('ManagePackageVersionsCentrally'))
         need(len(enabled) == 1 and (enabled[0].text or '').strip() == 'true' and not enabled[0].attrib,
              'central_W_management_enabled')
-        versions = [node for node in props.iter('PackageVersion') if node.attrib.get('Include', '').casefold() == 'w.dmprovider']
+        versions = [node for node in props.iter('PackageVersion') if node.attrib.get('Include', '').casefold() == 'w.damengprovider']
         need(len(versions) == 1 and versions[0].attrib == {'Include': 'W.DamengProvider', 'Version': '[' + p['W']['version'] + ']'}
              and not list(versions[0]), 'central_exact_W_version')
     else:
