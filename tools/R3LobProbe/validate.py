@@ -45,7 +45,7 @@ def main():
     require(mode in ('offline', 'shared', 'tls') and result.get('schema_version') == 1 and result.get('task') == 'T17' and
             result.get('mode') == mode and result.get('implementation') == 'W-package' and result.get('accepted') is True and result.get('exit_code') == 0 and
             result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
-            result.get('loaded_assembly_sha256') == hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest() == manifest['assets']['lib/net10.0/W.DmProvider.dll'] and
+            result.get('loaded_assembly_sha256') == hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest() == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] and
             result.get('reference_kind') == 'exact_PackageReference' and result.get('fixture_sha256') == hashlib.sha256(fixture_raw).hexdigest() and
             result.get('measured_reused_sessions') == 0 and result.get('session_reset_verified') is False and result.get('reuse_policy') == 'discard')
     uuid.UUID(result['loaded_assembly_mvid'])

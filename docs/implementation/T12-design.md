@@ -1,6 +1,6 @@
 # T12 — R1 下游正确性与交接
 
-状态：已执行并完成限定 R1 验收，实际结果见 [T12 报告](reports/T12.md)。用户最新指令：R1 完成后停止后续 DAG，随后由 root 提交、推送并将现有 PR #1 改为 R1 范围；不启动 T13。依赖 T07/T09/T10/T11 已验收；T11 最终 443 输入与包 DLL 已保存不可变快照。原始 v1 S12/QA-01–04/REL-01 是门槛，本文确定本轮实施范围。
+状态：已执行并完成限定 R1 验收，实际结果见 T12 报告（历史记录已归档）。用户最新指令：R1 完成后停止后续 DAG，随后由 root 提交、推送并将现有 PR #1 改为 R1 范围；不启动 T13。依赖 T07/T09/T10/T11 已验收；T11 最终 443 输入与包 DLL 已保存不可变快照。原始 v1 S12/QA-01–04/REL-01 是门槛，本文确定本轮实施范围。
 
 ## 输入与交付
 
@@ -12,7 +12,7 @@
 
 先应用分别审阅的有限 patch，再统一官方到 W 的 namespace/package/测试连接工厂切换。生产 SQL generator、单命令修改批次、影响行数和生成键读取、时间类型文本契约保持原行为；不能关闭自动保存点绕过失败。旧官方缺陷断言独立标 OfficialCharacterization；W 使用正确契约/Improvement。
 
-覆盖 unit、普通 functional、现有四项 specification 切片、迁移和 reverse engineering、dotnet-ef CLI、当前 schema 的脚本/幂等执行。四项 specification 不代表全上游 conformance。设计时 capability probes 单独记观察，不因正常退出就算能力通过。
+覆盖 unit、普通 functional、现有四项 specification 切片、迁移和 schema scaffolding、dotnet-ef CLI、当前 schema 的脚本/幂等执行。四项 specification 不代表全上游 conformance。设计时 capability probes 单独记观察，不因正常退出就算能力通过。
 
 未知提交不得被 EF 重试策略或 additionalErrorNumbers 覆盖为可重试。未完成真异步、取消、池化、流式 LOB 等仍明确声明；R1 的 Async 调用兼容不证明 R2 异步 I/O。
 

@@ -26,11 +26,11 @@ scripts/with-dameng-test.sh <测试命令及参数>
 
 本机 `.local/` 已加入 `.gitignore`。secret 目录权限为 `0700`，三个 env 文件为 `0600`。切换主机或用户时，由环境所有者以安全渠道重新提供凭据，不从 Git 恢复。CI 应使用自己的受保护 secret 和专用测试实例。
 
-从 T04 起，新 W 的默认 `RequireTls` 会在已验证 TLS 传输完成前拒绝连接。已授权的本地真实库检查使用 `eng/t04.sh real`，由探针读取原 secret 后通过 typed W Builder 显式选择 `PlaintextAllowed` 并设置测试 Schema；不改共用 secret，不影响官方 O / 恢复 R 的解析。该选择不允许跳过证书校验；服务器要求未实现的 TLS 或原生加密模式时仍拒绝。此测试不证明 TLS 模式可用。
+从 T04 起，新 W 的默认 `RequireTls` 会在已验证 TLS 传输完成前拒绝连接。已授权的本地真实库检查使用 `eng/t04.sh real`，由探针读取原 secret 后通过 typed W Builder 显式选择 `PlaintextAllowed` 并设置测试 Schema；不改共用 secret。该选择不允许跳过证书校验；服务器要求未实现的 TLS 或原生加密模式时仍拒绝。此测试不证明 TLS 模式可用。
 
 ## 已完成的实例验证
 
-- 使用仓库内固定的官方 `DM.DmProvider 8.3.1.47463` net9.0 资产，在 .NET 10 临时探测程序中连接 SA，确认可创建用户，且创建前没有 `WDM%` 项目用户。
+- 使用当时独立配置的官方 `DM.DmProvider 8.3.1.47463` net9.0 资产，在 .NET 10 临时探测程序中连接 SA，确认可创建用户，且创建前没有 `WDM%` 项目用户。
 - 创建 `WDM_PROVIDER_TEST` 和 `WDM_PROVIDER_DEV`，授予上述权限。
 - 分别用两个新账号登录，在各自默认 Schema 中执行建表、插入、查询和删表，结果均成功；探测表已清理。
 - 二次核对两个账号的直接系统权限恰为上述 7 项，两个账号的探测表均不存在；从测试账号读取开发账号的探测表被服务器拒绝，该表随后已清理。

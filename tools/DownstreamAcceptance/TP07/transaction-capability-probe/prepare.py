@@ -196,7 +196,7 @@ PRODUCT_V3_FIXED = {'EF_relational_API': {'dll_sha256': 'a1e4f36208650b15b75a4b0
                        'version': '10.0.12'},
  'SDK_executed': False,
  'W': {'dll_sha256': '843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980',
-       'id': 'W.DmProvider',
+       'id': 'W.DamengProvider',
        'mvid': 'aa23e673-957c-4b1e-bf0f-291ff60077e6',
        'package_sha256': 'da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d',
        'version': '0.1.0-temporal.20261008144915'},
@@ -786,7 +786,7 @@ def native(a, inputs, output):
         actual={name:{k:v for k,v in row.items()} for target in lock['dependencies'].values() for name,row in target.items()}
         need(actual==expected['lock_dependencies'], 'exact_native_lock_graph')
         packages={name.split('/')[0] for name,row in assets['libraries'].items() if row['type']=='package'}
-        need(packages==set(policy()['core_packages']+['W.DmProvider']), 'exact_Core13_W_packages')
+        need(packages==set(policy()['core_packages']+['W.DamengProvider']), 'exact_Core13_W_packages')
         need(set(dgspec['projects'])=={str(replay/PROVIDER/'W.EntityFrameworkCore.Dameng.csproj')}|({str(replay/HOST/'TP07TransactionCapabilityProbe.csproj')} if project.startswith(HOST) else set()), 'native_project_graph_paths')
         need(assets['project']['frameworks']==expected['assets_frameworks'], 'exact_framework_pruning_references')
         graphs.append(dict(project=project,lock=ref(directory/'packages.lock.json'),assets=ref(directory/'obj/project.assets.json'),dgspec=ref(directory/'obj'/(Path(project).name+'.nuget.dgspec.json')),lock_dependencies=actual,frameworks=assets['project']['frameworks']))
@@ -838,7 +838,7 @@ def build(a, inputs, output):
             verify_ref(dict(path=str(replay/raw_project_paths(original['project'])[kind]),sha256=locked[kind]['sha256']),replay)
             locked_raw_delta_contract(read(verify_ref(original[kind])),read(verify_ref(locked[kind])),original['project'],kind,replay)
     out=replay/HOST/'bin/Debug/net10.0';host=binary(out/'TP07TransactionCapabilityProbe.dll','TP07TransactionCapabilityProbe',True);provider=binary(out/'W.EntityFrameworkCore.Dameng.dll','W.EntityFrameworkCore.Dameng');deps=[binary(out/(n+'.dll'),n) for n in ['Microsoft.EntityFrameworkCore','Microsoft.EntityFrameworkCore.Relational','Microsoft.EntityFrameworkCore.Abstractions']]
-    w=read(verify_ref(inputs['W_identity']));identity_path=verify_ref(inputs['W_identity']);W=dict(version=w['W']['version'],package_sha256=w['W']['package_sha256'],dll_sha256=w['W']['dll_sha256'],mvid=w['W']['mvid'],identity_sha256=inputs['W_identity']['sha256'],source_manifest_sha256=w['producer']['source_manifest_sha256'],archive_sha256=w['producer']['source_archive_sha256'],path=str(out/'W.DmProvider.dll'))
+    w=read(verify_ref(inputs['W_identity']));identity_path=verify_ref(inputs['W_identity']);W=dict(version=w['W']['version'],package_sha256=w['W']['package_sha256'],dll_sha256=w['W']['dll_sha256'],mvid=w['W']['mvid'],identity_sha256=inputs['W_identity']['sha256'],source_manifest_sha256=w['producer']['source_manifest_sha256'],archive_sha256=w['producer']['source_archive_sha256'],path=str(out/'W.DamengProvider.dll'))
     need(sha(W['path'])==W['dll_sha256'] and managed_identity.mvid(Path(W['path']).read_bytes())==W['mvid'],'original_W_binary_identity')
     startup=dict(schema_version=1,task='TP07-T1-startup',source=sr,native=nr,replay_root=str(replay),lineage=source['lineage'],W=W,locks={str(verify_ref(g['lock']).relative_to(replay)):g['lock']['sha256'] for g in native_doc['project_graphs']},assets={raw_project_paths(g['project'])['assets']:g['assets']['sha256'] for g in locked_graphs},host=host,ef_provider=provider,ef_dependencies=deps,source_hashes=source['source_hashes']);write(output/'startup.json',startup)
     binaries={str(p.relative_to(replay)):sha(p) for p in sorted(replay.rglob('*')) if p.is_file() and 'bin' in p.relative_to(replay).parts and p.suffix in ('.dll','.json','.pdb')}

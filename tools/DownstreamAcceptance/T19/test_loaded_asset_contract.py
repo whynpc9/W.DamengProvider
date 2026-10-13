@@ -48,7 +48,7 @@ class LoadedAssetContractTests(unittest.TestCase):
         self.proof = {'schema_version': 2, 'driver_dll_sha256': digest, 'driver_dll_mvid': self.identifier,
                       'retained_driver_asset': self.name, 'retained_driver_sha256': digest,
                       'retained_driver_mvid': self.identifier, 'retained_driver_source': 'loaded_driver_location',
-                      'driver_id': 'W.DmProvider', 'driver_version': self.candidate['version'], 'package_library_type': 'package',
+                      'driver_id': 'W.DamengProvider', 'driver_version': self.candidate['version'], 'package_library_type': 'package',
                       'loaded_in_host_directory': True}
 
     def tearDown(self):
@@ -59,7 +59,7 @@ class LoadedAssetContractTests(unittest.TestCase):
 
     def test_cli_temporary_tree_can_be_deleted_while_specific_loaded_asset_remains(self):
         cli = self.root / 'artifacts/t19-cli/generated/bin'
-        cli.mkdir(parents=True); (cli / 'W.DmProvider.dll').write_bytes(self.raw)
+        cli.mkdir(parents=True); (cli / 'W.DamengProvider.dll').write_bytes(self.raw)
         shutil.rmtree(self.root / 'artifacts')
         result = run.verify_retained_asset(self.proof, self.candidate, self.asset_root)
         self.assertEqual(result['retained_driver_mvid'], self.identifier)

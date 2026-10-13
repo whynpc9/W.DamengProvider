@@ -79,10 +79,10 @@ internal static partial class Program
         string expected = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>().Single(a => a.Key == "R3PackageVersion").Value ?? "";
         string actual = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
         string hash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
-        Require(expected == actual && expected == manifest.GetProperty("version").GetString() && hash == manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString(), "exact_package_identity_mismatch");
-        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DmProvider.dll")), "loaded_package_location_mismatch");
+        Require(expected == actual && expected == manifest.GetProperty("version").GetString() && hash == manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString(), "exact_package_identity_mismatch");
+        Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DamengProvider.dll")), "loaded_package_location_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "R3ResourceProbe.deps.json")));
-        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + expected).GetProperty("type").GetString() == "package", "exact_package_reference_required");
+        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + expected).GetProperty("type").GetString() == "package", "exact_package_reference_required");
         Report["package_version"] = expected; Report["package_sha256"] = manifest.GetProperty("package_sha256").GetString();
         Report["loaded_assembly_sha256"] = hash; Report["loaded_assembly_mvid"] = assembly.ManifestModule.ModuleVersionId.ToString("D");
         Report["reference_kind"] = "exact_PackageReference";

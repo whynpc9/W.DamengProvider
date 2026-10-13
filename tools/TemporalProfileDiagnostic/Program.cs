@@ -17,8 +17,8 @@ internal static class Program
 {
     const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     const string User = "WDM_PROVIDER_TEST";
-    const string PackageId = "W.DmProvider", Version = "0.1.0-tp03.20261008053249";
-    const string Asset = "lib/net10.0/W.DmProvider.dll";
+    const string PackageId = "W.DamengProvider", Version = "0.1.0-tp03.20261008053249";
+    const string Asset = "lib/net10.0/W.DamengProvider.dll";
     const string PackageSha = "502f16248df703dc01060e50e3791fb28cda6f66935ad42e944045bb16b3070a";
     const string DllSha = "dcc88da8e7a9ccb2fb926682d2d7aefb991acba2cbfbbb02866a0d8f2a388e33";
     const string Mvid = "2fa28391-1964-489b-ae51-de9759aa6662";

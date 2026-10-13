@@ -9,7 +9,7 @@
 ### TP02-R01：公开 theory 方法暴露 internal enum，测试项目无法编译
 
 - 位置：`tests/W.DmProvider.TypeTests/TemporalNativeWireTests.cs:14`，`public void IndependentLegacyBitVectorsUseMicroseconds(DmTemporalWireLayout layout, string hex)`。
-- 类型声明：`src/W.DmProvider/Internal/Types/DmTemporalFields.cs:9` 的 `DmTemporalWireLayout` 是 `internal`。公开类的公开方法参数不能比方法可访问性更低，预期编译器报 CS0051。`InternalsVisibleTo` 允许测试使用该类型，但不改变公开签名的可访问性规则。
+- 类型声明：`src/W.DamengProvider/Internal/Types/DmTemporalFields.cs:9` 的 `DmTemporalWireLayout` 是 `internal`。公开类的公开方法参数不能比方法可访问性更低，预期编译器报 CS0051。`InternalsVisibleTo` 允许测试使用该类型，但不改变公开签名的可访问性规则。
 - 唯一修复文件：`TemporalNativeWireTests.cs`。建议 InlineData 存 CType/int，公开方法接 int，在方法体内调用 `ForCType` 转布局。不可为修测试把产品 enum 改为 public，也不要削减五条独立 legacy golden。
 - 复审标准：公开测试签名不再引用 internal 类型；CType14/15/22/16/23 与五个既有 hex/scale/fields 断言原样对应。Low 随后实际编译并执行，才能确定编译和运行成功。
 

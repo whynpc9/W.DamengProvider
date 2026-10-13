@@ -18,9 +18,9 @@ def main() -> None:
         root = ET.fromstring(archive.read(nuspecs[0]))
         namespace = root.tag.split('}')[0] + '}' if '}' in root.tag else ''
         metadata = root.find(namespace + 'metadata')
-        if metadata is None or metadata.findtext(namespace + 'id') != 'W.DmProvider' or metadata.findtext(namespace + 'version') != expected:
+        if metadata is None or metadata.findtext(namespace + 'id') != 'W.DamengProvider' or metadata.findtext(namespace + 'version') != expected:
             raise ValueError('package_identity')
-        asset = 'lib/net10.0/W.DmProvider.dll'
+        asset = 'lib/net10.0/W.DamengProvider.dll'
         if archive.namelist().count(asset) != 1:
             raise ValueError('asset_count')
         manifest = {'schema_version': 1, 'version': expected, 'package_sha256': hashlib.sha256(raw).hexdigest(),

@@ -162,7 +162,7 @@ SDK 采用实施时仓库锁定版本（当前 driver 为 10.0.203）；每次�
 
 ## 12. 参考与审阅状态
 
-本仓库依据：[T09 设计](T09-design.md)、[T09 报告](reports/T09.md)、[T12 报告](reports/T12.md)、[七位精度探测说明](../../tools/TemporalPrecisionProbe/README.md)、[当前进度](progress.json)、[文件与窗口规则](active-ownership.md)。
+本仓库依据：[T09 设计](T09-design.md)、T09 报告（历史记录已归档）、T12 报告（历史记录已归档）、[七位精度探测说明](../../tools/TemporalPrecisionProbe/README.md)、[当前进度](progress.json)、[文件与窗口规则](active-ownership.md)。
 
 官方 SQL 文档在 2026-10-07 查询时将 TIMESTAMP 列精度列为 0–9、默认 6；这里只用作产品能力研究入口，不替代本地服务器和协议 profile 证据：[日期时间类型](https://eco.dameng.com/document/dm/zh-cn/pm/dm_sql-introduction.html)。
 

@@ -8,7 +8,7 @@
     <RestoreAdditionalProjectSources>$(R3PackageSource)</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="[$(R3PackageVersion)]" />
+    <PackageReference Include="W.DamengProvider" Version="[$(R3PackageVersion)]" />
   </ItemGroup>
   <Target Name="RequireCandidate" BeforeTargets="CollectPackageReferences;CoreCompile">
     <Error Condition="'$(R3PackageVersion)' == '' or '$(R3PackageSource)' == ''" Text="An exact candidate version and frozen feed are required." />

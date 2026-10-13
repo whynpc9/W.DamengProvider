@@ -68,7 +68,7 @@ def main():
     manifest = json.loads(Path(sys.argv[2]).read_text())
     loaded = hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest()
     require(result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
-            result.get('loaded_assembly_sha256') == loaded == manifest['assets']['lib/net10.0/W.DmProvider.dll'] and
+            result.get('loaded_assembly_sha256') == loaded == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] and
             len(result.get('loaded_assembly_mvid', '')) == 36 and result.get('reference_kind') == 'exact_PackageReference')
     validate(result)
     print(json.dumps({'task': 'T14-diagnostics', 'mode': result['mode'], 'lane': result['lane'], 'status': result['status'],

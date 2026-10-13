@@ -72,7 +72,7 @@ A 的 46 项失败全部同时在 B 失败；仅 A 失败的为 0。B 额外失�
 | 2 | ReadUncommitted/Serializable 预期 SaveChanges 失败但未失败 | 既有事务行为差异 |
 | 1 | TZ 列 `GetValue` 返回 `DateTimeOffset`，官方测试期望 `DateTime` | 已知契约差异（计划 §4.5），HEAD 相同 |
 
-两轮各遗留 32 个测试自建 `EF10_*` 对象（测试自身 cleanup 在 Broken 连接上失败）。均按运行开始后 `USER_OBJECTS.CREATED` 精确列出后逐名 DROP，新连接复查该时间窗内剩余 0。脱敏结果：[A](../evidence/TemporalNative/TP07-TP08-closure/ef-functional-candidate.json)、[B](../evidence/TemporalNative/TP07-TP08-closure/ef-functional-head-control.json)。
+两轮各遗留 32 个测试自建 `EF10_*` 对象（测试自身 cleanup 在 Broken 连接上失败）。均按运行开始后 `USER_OBJECTS.CREATED` 精确列出后逐名 DROP，新连接复查该时间窗内剩余 0。脱敏结果：A（历史记录已归档）、B（历史记录已归档）。
 
 ## 4. 结论与限制
 

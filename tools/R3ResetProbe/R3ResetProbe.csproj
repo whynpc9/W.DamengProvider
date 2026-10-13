@@ -8,7 +8,7 @@
     <RestoreAdditionalProjectSources>$(R3PackageSource)</RestoreAdditionalProjectSources>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" Version="[$(R3PackageVersion)]" />
+    <PackageReference Include="W.DamengProvider" Version="[$(R3PackageVersion)]" />
     <AssemblyMetadata Include="R3PackageVersion" Value="$(R3PackageVersion)" />
   </ItemGroup>
   <Target Name="RequireExactPackageVersion" BeforeTargets="CollectPackageReferences;CoreCompile">

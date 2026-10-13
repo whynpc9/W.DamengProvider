@@ -6,7 +6,7 @@
 
 ## 独立验证
 
-SDK 10.0.203，host `/usr/local/share/dotnet/dotnet`。全部命令设置独立可写 CLI_HOME、禁首次体验/遥测、单节点/noReuse/noSharedCompilation/disable-build-servers；330 项只读快照派生独立 build-work。精确命令、TRX 路径、输入输出 SHA 和 scope 见 [原始安全汇总](../evidence/TemporalNative/TP02-v3/validation-summary.json)。
+SDK 10.0.203，host `/usr/local/share/dotnet/dotnet`。全部命令设置独立可写 CLI_HOME、禁首次体验/遥测、单节点/noReuse/noSharedCompilation/disable-build-servers；330 项只读快照派生独立 build-work。精确命令、TRX 路径、输入输出 SHA 和 scope 见 原始安全汇总（历史记录已归档）。
 
 | 验证 | 退出码 | 结果 |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ SDK 10.0.203，host `/usr/local/share/dotnet/dotnet`。全部命令设置独立�
 
 冻结 manifest SHA `d75017fc838a61428e35c39447b1d67046317622ada643440298fa9ba8e72d0b`；10 个变更源/测试/项目文件汇总 SHA `bf1dfe2eb4425dd886097e9c025283d4f5dc9a165943582e0344971fbc3b4035`；fixture 四份一致 SHA `4eee2002106920423c75a2126ac557b96e51bae090ee8e1af2518a179b62a609`。测试实际执行 DLL 与 provider 输出身份见安全汇总，不冒称已完成 nupkg 或数据库反射加载验收。源首尾、旧快照和 1546 项基线 evidence 哈希无漂移。
 
-可复核：[source manifest](../evidence/TemporalNative/TP02-v3/source-manifest.json)、[targeted TRX](../evidence/TemporalNative/TP02-v3/targeted.trx)、[完整 TypeTests TRX](../evidence/TemporalNative/TP02-v3/full-types.trx)。这些是复制后哈希一致的新证据，不覆盖任何历史文件。
+可复核：source manifest（历史记录已归档）、targeted TRX（历史记录已归档）、完整 TypeTests TRX（历史记录已归档）。这些是复制后哈希一致的新证据，不覆盖任何历史文件。
 
 ## 失败与修复历史
 

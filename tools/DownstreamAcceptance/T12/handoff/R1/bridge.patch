@@ -5,7 +5,7 @@
    </PropertyGroup>
    <ItemGroup>
 -    <PackageReference Include="DM.DmProvider" />
-+    <PackageReference Include="W.DmProvider" />
++    <PackageReference Include="W.DamengProvider" />
    </ItemGroup>
  </Project>
 --- a/scripts/local-test/Program.cs
@@ -231,7 +231,7 @@
  
    <ItemGroup>
 -    <PackageReference Include="DM.DmProvider" />
-+    <PackageReference Include="W.DmProvider" />
++    <PackageReference Include="W.DamengProvider" />
      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
    </ItemGroup>
  
@@ -953,7 +953,7 @@
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12,11.0.0)" />
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12,11.0.0)" />
 -    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12,11.0.0)" />
-+    <PackageVersion Include="W.DmProvider" Version="[0.1.0-r1.20260930064454]" />
++    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-r1.20260930064454]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12]" />
 +    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12]" />

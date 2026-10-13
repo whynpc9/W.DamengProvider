@@ -1,6 +1,6 @@
 # T04 configuration fixtures
 
-`cases.json` contains compact synthetic input and expected assertions for the T04 configuration contract in [T04-design](../../../docs/implementation/T04-design.md) and [S02](../../../docs/implementation/v1/specs/02-api-and-configuration.md). These are design assertions for the test suite; preparing or checking this file does not run the parser, open a socket, or validate a database.
+`cases.json` contains compact synthetic input and expected assertions for the T04 configuration contract in [T04-design](../../../docs/implementation/T04-design.md) and [configuration compatibility contract](../../../docs/compatibility/T04-options.md). These are design assertions for the test suite; preparing or checking this file does not run the parser, open a socket, or validate a database.
 
 All endpoint values are reserved documentation names (`example.invalid` and IPv6 addresses in `2001:db8::/32`). The account is `TEST_SYNTH`; `CANARY_T04` is a fixed synthetic password marker used by redaction cases. Unicode and quoted-value cases use short synthetic variants. No fixture contains local connection information.
 

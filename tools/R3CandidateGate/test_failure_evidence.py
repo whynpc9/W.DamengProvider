@@ -33,9 +33,9 @@ class AuditFailureEvidenceTests(unittest.TestCase):
             (self.audit / (name + '.trx')).write_text('<TestRun><Results><UnitTestResult outcome="Passed"/></Results></TestRun>')
             gate.write(self.audit / (name + '-dependencies.json'), {'project': 'frozen.csproj', 'libraries': []})
         for name in gate.AUDIT_JSON_LISTS: gate.write(self.audit / name, [])
-        gate.write(self.audit / 'SDK.json', {'sdk': '10.0.203', 'os': 'Linux', 'architecture': 'x64'})
+        gate.write(self.audit / 'SDK.json', {'sdk': '10.0.401', 'os': 'Linux', 'architecture': 'x64'})
         gate.write(self.audit / 'offline-manifest.json', {'schema_version': 1, 'task': 'T18', 'phase': 'offline',
-            'exact_sdk': '10.0.203', 'suites': [], 'no_skip_or_abort': True, 'classification_policy': 'fixed', 'upstream_pending': []})
+            'exact_sdk': '10.0.401', 'suites': [], 'no_skip_or_abort': True, 'classification_policy': 'fixed', 'upstream_pending': []})
         for name in ('package-manifest.json', 'package-manifest-final.json'):
             gate.write(self.audit / name, {'schema_version': 1, 'version': '0.1.0-r3.20261003000000', 'package_sha256': 'a' * 64, 'assets': []})
         gate.write(self.audit / 'consumer-source-manifest.json', {'schema_version': 1, 'task': 'T18', 'files': {}})

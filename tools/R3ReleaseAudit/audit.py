@@ -82,7 +82,7 @@ def sdk(run, env):
     dotnet = shutil.which(os.environ.get('DOTNET_COMMAND', 'dotnet'))
     if not dotnet: raise Reject('dotnet_missing')
     pin = json.loads((ROOT / 'global.json').read_text())['sdk']
-    if pin != {'version': '10.0.203', 'rollForward': 'disable'}: raise Reject('sdk_pin_changed')
+    if pin != {'version': '10.0.401', 'rollForward': 'disable'}: raise Reject('sdk_pin_changed')
     log, _ = command([dotnet, '--version'], run, 'SDK', env, 30)
     if log.read_text().strip() != pin['version']: raise Reject('sdk_version_mismatch')
     write(run / 'public/SDK.json', {'sdk': pin['version'], 'os': platform.system(), 'architecture': platform.machine()})
@@ -90,7 +90,7 @@ def sdk(run, env):
 
 
 def inputs():
-    roots = [ROOT / 'src/W.DmProvider', ROOT / 'tests/fixtures', ROOT / 'tools/R3ReleaseAudit', ROOT / 'tools/R3ResourceProbe',
+    roots = [ROOT / 'src/W.DamengProvider', ROOT / 'tests/fixtures', ROOT / 'tools/R3ReleaseAudit', ROOT / 'tools/R3ResourceProbe',
              ROOT / 'eng/t18.sh', ROOT / 'eng/T18.md', ROOT / '.github/workflows/r3-offline.yml', ROOT / 'global.json']
     roots += [ROOT / f'tests/W.DmProvider.{name}Tests' for name in EXPECTED]
     rows = []
@@ -112,7 +112,7 @@ def safe_artifacts(run):
 
 def resource(run, mode, version, feed, dotnet, env):
     if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?', version): raise Reject('version_invalid', 64)
-    feed = Path(feed).resolve(); package = feed / f'W.DmProvider.{version}.nupkg'
+    feed = Path(feed).resolve(); package = feed / f'W.DamengProvider.{version}.nupkg'
     if not package.is_file(): raise Reject('package_missing', 66)
     package_manifest = run / 'public/package-manifest.json'
     command([sys.executable, str(ROOT / 'tools/R2AsyncProbe/package_manifest.py'), str(package), version, str(package_manifest)], run, 'package_inspection', env)
@@ -126,7 +126,7 @@ def resource(run, mode, version, feed, dotnet, env):
             str(ROOT), str(package_manifest), str(probe)]
     if mode == 'tls': argv = [str(ROOT / 'scripts/with-dameng-tls-test.sh'), *argv]
     command(argv, run, 'runtime_' + mode, env, 930)
-    command([sys.executable, str(ROOT / 'tools/R3ResourceProbe/validate.py'), str(probe), str(package_manifest), str(app / 'W.DmProvider.dll'), mode], run, 'consumer_validation', env)
+    command([sys.executable, str(ROOT / 'tools/R3ResourceProbe/validate.py'), str(probe), str(package_manifest), str(app / 'W.DamengProvider.dll'), mode], run, 'consumer_validation', env)
     final = run / 'public/package-manifest-final.json'
     command([sys.executable, str(ROOT / 'tools/R2AsyncProbe/package_manifest.py'), str(package), version, str(final)], run, 'package_reinspection', env)
     if package_manifest.read_bytes() != final.read_bytes(): raise Reject('immutable_package_changed')
@@ -153,13 +153,13 @@ def offline(run):
         assets = json.loads((project.parent / 'obj/project.assets.json').read_text())
         write(run / 'public' / (name + '-dependencies.json'), {'project': item['project'], 'libraries':
               [{'identity': key, 'type': value.get('type'), 'sha512': value.get('sha512')} for key, value in sorted(assets['libraries'].items())]})
-        product = project.parent / 'bin/Release/net10.0/W.DmProvider.dll'
+        product = project.parent / 'bin/Release/net10.0/W.DamengProvider.dll'
         suites.append({'suite': name, 'counts': counts, 'product_sha256': sha(product), 'status': 'passed'})
         write(run / 'public/suites.json', suites)
-    product = ROOT / 'src/W.DmProvider/bin/Release/net10.0/W.DmProvider.dll'
+    product = ROOT / 'src/W.DamengProvider/bin/Release/net10.0/W.DamengProvider.dll'
     if len(suites) != 12 or any(row['product_sha256'] != sha(product) for row in suites): raise Reject('suite_product_identity_mismatch')
     feed = run / '.private/feed'; feed.mkdir()
-    command([dotnet, 'pack', str(ROOT / 'src/W.DmProvider/W.DmProvider.csproj'), '--no-build', '--no-restore', '-c', 'Release',
+    command([dotnet, 'pack', str(ROOT / 'src/W.DamengProvider/W.DamengProvider.csproj'), '--no-build', '--no-restore', '-c', 'Release',
              '--output', str(feed), '/p:Version=' + version, *FLAGS], run, 'exact_package_pack', env)
     resource(run, 'offline', version, feed, dotnet, env)
     after = inputs(); write(run / 'public/source-after.json', after)

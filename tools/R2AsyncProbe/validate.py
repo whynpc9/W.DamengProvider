@@ -67,7 +67,7 @@ def main() -> None:
     require(result.get('accepted') is True and result.get('exit_code') == 0 and result.get('mode') == mode and
             result.get('schema_version') == 1 and result.get('task') == 'T13' and result.get('implementation') == 'W-package' and
             result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
-            result.get('loaded_assembly_sha256') == loaded_hash == manifest['assets']['lib/net10.0/W.DmProvider.dll'] and
+            result.get('loaded_assembly_sha256') == loaded_hash == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] and
             len(result.get('loaded_assembly_mvid', '')) == 36 and result.get('reference_kind') == 'exact_PackageReference' and
             len(result.get('api_override_audit', [])) == 26 and result.get('streaming_lob_claimed') is False and
             result.get('cancellation_acceptance') == 'T14_pending')

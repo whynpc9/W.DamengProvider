@@ -361,7 +361,7 @@ def transactions_contract(rows, spec, startup):
         exact(row['capture_state'], 'observed', 'transaction_known')
         identity(row['ef'], startup['ef_provider'], 'W.EntityFrameworkCore.Dameng.Storage.Internal.DamengRelationalTransaction', 'W.EntityFrameworkCore.Dameng')
         w = startup['W']
-        identity(row['underlying'], dict(path=w['path'],sha256=w['dll_sha256'],mvid=w['mvid']), 'W.Dm.DmTransaction', 'W.DmProvider')
+        identity(row['underlying'], dict(path=w['path'],sha256=w['dll_sha256'],mvid=w['mvid']), 'W.Dm.DmTransaction', 'W.DamengProvider')
         ids = [integer(row[k]) for k in ('ef_object_id','underlying_object_id','connection_object_id','context_object_id')]
         require(all(i > 0 for i in ids) and len(set(ids)) == 4, 'transaction_object_ids')
         require(type(row['transaction_id']) is str and MVID.fullmatch(row['transaction_id']), 'transaction_id')
@@ -916,7 +916,7 @@ def native_hash_domains_contract(full_zip_sha512,sidecar,metadata_content_hash,s
 def runtime_package_contract(libraries):
     require(type(libraries) is dict,'runtime_libraries')
     packages={name.split('/')[0] for name,row in libraries.items() if row.get('type')=='package'}
-    expected=(set(CORE_PACKAGES)-{'Microsoft.EntityFrameworkCore.Analyzers'})|{'W.DmProvider'}
+    expected=(set(CORE_PACKAGES)-{'Microsoft.EntityFrameworkCore.Analyzers'})|{'W.DamengProvider'}
     require(packages==expected,'runtime_exact_Core12_W_no_build_only_Analyzer')
 
 
@@ -1106,7 +1106,7 @@ def native_contract(native,build,startup,inputs,replay,native_ref,build_ref):
         assets_doc=read_ref(g['assets'],inputs['workspace_root'])
         exact(assets_doc['project']['frameworks'],g['frameworks'],'actual_native_assets_framework')
         packages={name.split('/')[0] for name,row in assets_doc['libraries'].items() if row['type']=='package'}
-        require(packages==set(CORE_PACKAGES)|{'W.DmProvider'},'native_exact_Core13_W')
+        require(packages==set(CORE_PACKAGES)|{'W.DamengProvider'},'native_exact_Core13_W')
         require(not any('DM.DmProvider/' in n or 'Design/' in n or 'AspNet' in n for n in assets_doc['libraries']),'no_official_Design_AspNet')
         dgspec=read_ref(g['dgspec'],inputs['workspace_root'])
         expected_projects={str(replay/PROJECTS[0])}|({str(replay/PROJECTS[1])} if i==1 else set())
@@ -1156,7 +1156,7 @@ def native_contract(native,build,startup,inputs,replay,native_ref,build_ref):
     required_binary[str(Path(startup['host']['deps']['path']).relative_to(replay))]=startup['host']['deps']['sha256']
     require(all(build['binaries'].get(k)==v for k,v in required_binary.items()),'build_all_loaded_binaries')
     deps_doc=read_ref(startup['host']['deps'],replay)
-    require(deps_doc['libraries'].get('W.DmProvider/'+w['version'],{}).get('type')=='package','host_W_PackageReference')
+    require(deps_doc['libraries'].get('W.DamengProvider/'+w['version'],{}).get('type')=='package','host_W_PackageReference')
     require(deps_doc['libraries'].get('W.EntityFrameworkCore.Dameng/0.1.0',{}).get('type')=='project' or any(k.startswith('W.EntityFrameworkCore.Dameng/') and v.get('type')=='project' for k,v in deps_doc['libraries'].items()),'host_provider_ProjectReference')
     runtime_package_contract(deps_doc['libraries'])
     for name in ('Microsoft.EntityFrameworkCore','Microsoft.EntityFrameworkCore.Relational','Microsoft.EntityFrameworkCore.Abstractions'):
@@ -1323,7 +1323,7 @@ PRODUCT_V3_FIXED = {'EF_relational_API': {'dll_sha256': 'a1e4f36208650b15b75a4b0
                        'version': '10.0.12'},
  'SDK_executed': False,
  'W': {'dll_sha256': '843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980',
-       'id': 'W.DmProvider',
+       'id': 'W.DamengProvider',
        'mvid': 'aa23e673-957c-4b1e-bf0f-291ff60077e6',
        'package_sha256': 'da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d',
        'version': '0.1.0-temporal.20261008144915'},

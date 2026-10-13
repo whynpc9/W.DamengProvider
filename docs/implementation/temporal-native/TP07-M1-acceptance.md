@@ -23,4 +23,4 @@ unit 与 observer 在独立目录构建，EF provider DLL 身份分别记录并�
 
 历史记录保持原样：v1 静态审阅发现 before-first reader fixture 和 TLTZ literal 两项问题；协调器 schema 字段误读在 SDK 前停止；v2 build 因 xUnit2012 失败；v3 实际 51 项中 50 通过、1 项在无效模型测试 Dispose 阶段失败。v4 将该测试连接交给显式调用方持有，保留真正 Context.Model 拒绝断言和正常 Dispose，并验证 context 不代为释放、调用方释放一次。v3 的清理异常可能掩盖正文断言，只有 v4 的实际通过证明该完整负例成立；没有吞掉异常或改产品生命周期。
 
-参见 [Astra 最终范围验收](TP07-M1-astra-acceptance.md)、[v3 失败归因](TP07-mapping-v3-triage.md) 和 [17 项原始证据 manifest](../evidence/TemporalNative/TP07-M1/manifest.json)。下一门为最终 overlay 上的 L0 实库 literal 验证；失败必须保留并停止依赖的昂贵实库组。
+参见 [Astra 最终范围验收](TP07-M1-astra-acceptance.md)、[v3 失败归因](TP07-mapping-v3-triage.md) 和 17 项原始证据 manifest（历史记录已归档）。下一门为最终 overlay 上的 L0 实库 literal 验证；失败必须保留并停止依赖的昂贵实库组。

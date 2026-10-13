@@ -107,7 +107,7 @@ def make_snapshot(run):
     rows = source_rows(ROOT)
     manifest = {'schema_version': 1, 'task': 'T19', 'files': rows, 'tree_sha256': tree_hash(rows),
                 'source_link': False, 'validation_source_scope': 'all_current_validation_source_including_untracked',
-                'excluded_source_ancestor_roots': ['decompiled', 'upstream', 'packages'],
+                'excluded_source_ancestor_roots': [],
                 'excluded_ancestor_reason': 'not_compiled_validation_inputs; provenance_is_separately_recorded', **git_state(rows)}
     write(run / 'public/source-manifest.json', manifest)
     archive = run / 'public/candidate-source.tar.gz'
@@ -173,16 +173,16 @@ def environment(run, version):
 
 
 def inspect_package(package, version, run, frozen):
-    require(package.name == f'W.DmProvider.{version}.nupkg', 'candidate_package_name_mismatch')
+    require(package.name == f'W.DamengProvider.{version}.nupkg', 'candidate_package_name_mismatch')
     with zipfile.ZipFile(package) as archive:
         names = archive.namelist(); require(len(names) == len(set(names)), 'duplicate_package_entry')
         require(all(not PurePosixPath(name).is_absolute() and '..' not in PurePosixPath(name).parts for name in names), 'unsafe_package_entry')
         nuspecs = [name for name in names if name.endswith('.nuspec')]; require(len(nuspecs) == 1, 'nuspec_count')
         root = ET.fromstring(archive.read(nuspecs[0])); namespace = root.tag.partition('}')[0] + '}' if '}' in root.tag else ''
         metadata = root.find(namespace + 'metadata')
-        require(metadata.findtext(namespace + 'id') == 'W.DmProvider' and metadata.findtext(namespace + 'version') == version, 'nuspec_identity')
+        require(metadata.findtext(namespace + 'id') == 'W.DamengProvider' and metadata.findtext(namespace + 'version') == version, 'nuspec_identity')
         require(metadata.find(namespace + 'license') is not None and metadata.find(namespace + 'license').text == 'Apache-2.0', 'package_license_expression')
-        expected = {'lib/net10.0/W.DmProvider.dll'} | {f'lib/net10.0/{culture}/W.DmProvider.resources.dll' for culture in ('en', 'zh-CN', 'zh-HK', 'zh-TW')}
+        expected = {'lib/net10.0/W.DamengProvider.dll'} | {f'lib/net10.0/{culture}/W.DamengProvider.resources.dll' for culture in ('en', 'zh-CN', 'zh-HK', 'zh-TW')}
         binaries = {name for name in names if name.lower().endswith(('.dll', '.so', '.dylib', '.pdb', '.a'))}
         require(binaries == expected, 'package_binary_assets_mismatch')
         require(not any('sourcelink' in name.lower() for name in names), 'unexpected_sourcelink_claim')
@@ -199,7 +199,7 @@ def inspect_package(package, version, run, frozen):
 
 
 def dependency_audit(run, frozen, version, runtime_nuspec):
-    runtime_assets = json.loads((frozen / 'src/W.DmProvider/obj/project.assets.json').read_text())
+    runtime_assets = json.loads((frozen / 'src/W.DamengProvider/obj/project.assets.json').read_text())
     product_libraries = [{'identity': key, 'type': value.get('type'), 'sha512': value.get('sha512')}
                          for key, value in sorted(runtime_assets['libraries'].items())]
     validation = []
@@ -213,11 +213,10 @@ def dependency_audit(run, frozen, version, runtime_nuspec):
     write(run / 'public/dependency-scopes.json', {'runtime': {'nuget_libraries': product_libraries, 'nuspec': runtime_nuspec,
           'framework': 'Microsoft.NETCore.App/net10.0'}, 'test_only': validation, 'candidate_identity_tool_only': tool_libraries,
           'source_ancestor_is_not_runtime_dependency': True})
-    provenance = {'source_map_path': 'docs/compatibility/t03-source-map.json', 'source_map_sha256': sha(frozen / 'docs/compatibility/t03-source-map.json'),
-                  'LICENSE_sha256': sha(frozen / 'LICENSE'), 'THIRD_PARTY_NOTICES_sha256': sha(frozen / 'THIRD-PARTY-NOTICES.md'),
-                  'ancestor': 'DM.DmProvider/8.3.1.47463', 'source_ancestor_not_runtime_dependency': True}
+    provenance = {'LICENSE_sha256': sha(frozen / 'LICENSE'), 'THIRD_PARTY_NOTICES_sha256': sha(frozen / 'THIRD-PARTY-NOTICES.md'),
+                  'source_ancestor_not_runtime_dependency': True}
     write(run / 'public/source-provenance.json', provenance)
-    root_ref = f'pkg:nuget/W.DmProvider@{version}'
+    root_ref = f'pkg:nuget/W.DamengProvider@{version}'
     components = {}; runtime_refs = []
     for row in product_libraries:
         if row['type'] != 'package': continue
@@ -231,7 +230,7 @@ def dependency_audit(run, frozen, version, runtime_nuspec):
             if reference not in components: components[reference] = {'type': 'library', 'name': name, 'version': dependency_version,
                 'bom-ref': reference, 'purl': reference, 'scope': 'excluded', 'properties': [{'name': 'wdm.role', 'value': 'validation_only'}]}
     write(run / 'public/cyclonedx.json', {'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'version': 1,
-        'serialNumber': 'urn:uuid:' + str(uuid.uuid4()), 'metadata': {'component': {'type': 'library', 'name': 'W.DmProvider', 'version': version,
+        'serialNumber': 'urn:uuid:' + str(uuid.uuid4()), 'metadata': {'component': {'type': 'library', 'name': 'W.DamengProvider', 'version': version,
         'bom-ref': root_ref, 'purl': root_ref, 'licenses': [{'license': {'id': 'Apache-2.0'}}],
         'properties': [{'name': 'wdm.source_provenance_sha256', 'value': sha(run / 'public/source-provenance.json')}]}},
         'components': list(components.values()), 'dependencies': [{'ref': root_ref, 'dependsOn': sorted(runtime_refs)}]})
@@ -440,14 +439,14 @@ def offline():
     try:
         frozen, manifest = make_snapshot(run); env = environment(run, version)
         dotnet = shutil.which(os.environ.get('DOTNET_COMMAND', 'dotnet')); require(dotnet, 'dotnet_missing')
-        require(json.loads((frozen / 'global.json').read_text()) == {'sdk': {'version': '10.0.203', 'rollForward': 'disable'}}, 'SDK_pin_changed')
+        require(json.loads((frozen / 'global.json').read_text()) == {'sdk': {'version': '10.0.401', 'rollForward': 'disable'}}, 'SDK_pin_changed')
         run_audit_with_evidence([sys.executable, frozen / 'tools/R3ReleaseAudit/audit.py', 'offline'], run, env, frozen)
         summaries = list((run / 'private/audit').glob('*/public/summary.json')); require(len(summaries) == 1, 'offline_audit_summary_count')
         audit = json.loads(summaries[0].read_text())
         require(audit['status'] == 'offline_verified' and audit['candidate_version'] == version and len(audit['suites']) == 12, 'candidate_audit_not_verified')
         audit_run = summaries[0].parent.parent
         feed = run / 'private/feed'; feed.mkdir()
-        package = feed / f'W.DmProvider.{version}.nupkg'
+        package = feed / f'W.DamengProvider.{version}.nupkg'
         with package.open('xb') as output: output.write((audit_run / '.private/feed' / package.name).read_bytes())
         runtime_nuspec, assets = inspect_package(package, version, run, frozen)
         app = run / 'private/identity-app'; obj = run / 'private/identity-obj'; app.mkdir(); obj.mkdir()
@@ -457,9 +456,9 @@ def offline():
             run, 'candidate_identity_consumer_build', env, frozen)
         run_command([dotnet, app / 'IdentityConsumer.dll', version, run / 'public/identity-api-runtime.json'], run, 'identity_api_runtime', env, frozen)
         identity = json.loads((run / 'public/identity-api-runtime.json').read_text())
-        require(identity['driver_dll_sha256'] == assets['lib/net10.0/W.DmProvider.dll'], 'consumer_driver_asset_mismatch')
+        require(identity['driver_dll_sha256'] == assets['lib/net10.0/W.DamengProvider.dll'], 'consumer_driver_asset_mismatch')
         deps = json.loads((app / 'IdentityConsumer.deps.json').read_text())['libraries']
-        require(deps.get('W.DmProvider/' + version, {}).get('type') == 'package', 'identity_consumer_not_exact_package')
+        require(deps.get('W.DamengProvider/' + version, {}).get('type') == 'package', 'identity_consumer_not_exact_package')
         dependency_audit(run, frozen, version, runtime_nuspec)
         require(source_rows(frozen) == manifest['files'] and source_rows(ROOT) == manifest['files'], 'candidate_source_changed_during_validation')
         candidate = {'version': version, 'package_sha256': sha(package), 'driver_dll_sha256': identity['driver_dll_sha256'],
@@ -471,7 +470,7 @@ def offline():
             'production_release_accepted': False, 'status': 'matrix_pending'})
         scan_public(run)
         summary = {'status': 'offline_candidate_verified', 'candidate': candidate, 'run_dir': str(run),
-            'source_link': False, 'sdk': '10.0.203', 'runtime': identity['runtime'], 'os': identity['os'], 'rid': identity['rid'],
+            'source_link': False, 'sdk': '10.0.401', 'runtime': identity['runtime'], 'os': identity['os'], 'rid': identity['rid'],
             'total_passed': audit['total_passed'], 'integration': 'final_matrix_pending', 'production_release_accepted': False}
         write(run / 'public/summary.json', summary); scan_public(run)
         package.chmod(0o400); emit(summary)
@@ -484,7 +483,7 @@ def offline():
 
 def verify_existing(run):
     candidate = json.loads((run / 'public/candidate.json').read_text()); version = candidate['version']
-    package = run / 'private/feed' / f'W.DmProvider.{version}.nupkg'
+    package = run / 'private/feed' / f'W.DamengProvider.{version}.nupkg'
     require(sha(package) == candidate['package_sha256'] and sha(run / 'public/source-manifest.json') == candidate['source_manifest_sha256'], 'immutable_candidate_identity_changed')
     manifest = json.loads((run / 'public/source-manifest.json').read_text())
     require(source_rows(ROOT) == manifest['files'], 'current_tool_source_differs_from_candidate')
@@ -551,7 +550,7 @@ def external_preflight(run, index_path):
 def main():
     require(len(sys.argv) >= 2, 'usage', 64)
     mode = sys.argv[1]
-    if mode == 'offline': require(len(sys.argv) == 2, 'usage', 64); offline()
+    if mode == 'offline': raise Reject('historical_candidate_freeze_retired_use_eng_release_sh_prepare', 64)
     elif mode == 'release-environment':
         require(all(os.environ.get(key, '').strip() for key in ('DAMENG_TEST_CONNECTION_STRING', 'DAMENG_TLS_TEST_CONNECTION_STRING')),
                 'required_database_environment_missing', 66)

@@ -6,5 +6,5 @@
     <DefineConstants>$(DefineConstants);CANDIDATE</DefineConstants><OutputPath>bin/Candidate/</OutputPath>
     <RestoreSources>$(MSBuildThisFileDirectory)../../packages</RestoreSources>
   </PropertyGroup>
-  <ItemGroup><Compile Include="Program.cs" /><Compile Include="ProbeSafety.cs" /><Compile Include="Litmus.cs" /><ProjectReference Include="../../src/W.DmProvider/W.DmProvider.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="Program.cs" /><Compile Include="ProbeSafety.cs" /><Compile Include="Litmus.cs" /><ProjectReference Include="../../src/W.DamengProvider/W.DamengProvider.csproj" /></ItemGroup>
 </Project>

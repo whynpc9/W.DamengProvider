@@ -6,5 +6,5 @@
     <DefineConstants>$(DefineConstants);CANDIDATE</DefineConstants>
     <OutputPath>bin/Candidate/</OutputPath><BaseIntermediateOutputPath>obj/Candidate/</BaseIntermediateOutputPath>
   </PropertyGroup>
-  <ItemGroup><Compile Include="Program.cs" /><ProjectReference Include="../../src/W.DmProvider/W.DmProvider.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="Program.cs" /><ProjectReference Include="../../src/W.DamengProvider/W.DamengProvider.csproj" /></ItemGroup>
 </Project>

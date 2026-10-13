@@ -254,7 +254,7 @@
 -                <PackageReference Include="DM.DmProvider" Version="{dmProviderVersion}" />
 +                <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="[{efCoreVersion}]" />
 +                <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[{efCoreVersion}]" />
-+                <PackageReference Include="W.DmProvider" Version="[{dmProviderVersion}]" />
++                <PackageReference Include="W.DamengProvider" Version="[{dmProviderVersion}]" />
 +                <FrameworkReference Include="Microsoft.AspNetCore.App" />
                </ItemGroup>
              </Project>
@@ -368,7 +368,7 @@
 +        string assetsPath = Path.Combine(projectDirectory, "obj", "project.assets.json");
 +        using var assets = JsonDocument.Parse(File.ReadAllText(assetsPath));
 +        var libraries = assets.RootElement.GetProperty("libraries").EnumerateObject().Select(item => item.Name).ToArray();
-+        Assert.True(libraries.Contains("W.DmProvider/" + candidateVersion, StringComparer.Ordinal),
++        Assert.True(libraries.Contains("W.DamengProvider/" + candidateVersion, StringComparer.Ordinal),
 +            "Nested CLI assets must contain the exact candidate package.");
 +        Assert.True(!libraries.Any(name => name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)),
 +            "Nested CLI assets must not fall back to the official driver.");

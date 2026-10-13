@@ -1,6 +1,6 @@
 # T08 command and result scenarios
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`. Cases use the shared fixture shape `case_id`, `contract`, `execution_status`, `input`, and `expected`; every synthetic case is `not_run`. The logical result descriptors are supplied by a harness to test the public command/reader contract in [S05](../../../docs/implementation/v1/specs/05-command-reader-and-ef-contract.md). They are not real DB output or protocol messages.
+`scenarios.json` separates synthetic `cases` from `real_database_probes`. Cases use the shared fixture shape `case_id`, `contract`, `execution_status`, `input`, and `expected`; every synthetic case is `not_run`. The logical result descriptors are supplied by a harness to test the public command/reader contract in [command and reader compatibility contract](../../../docs/compatibility/T08-command-reader.md). They are not real DB output or protocol messages.
 
 Real probes are procedures only and are marked `planned_not_run`. When run, use `WDM_PROVIDER_TEST` through `scripts/with-dameng-test.sh`, create unique objects owned by the probe, check final state independently, and clean only those objects. This fixture contains no connection string, credentials, certificates, packet bytes, opcode assumptions, or fabricated server responses.
 

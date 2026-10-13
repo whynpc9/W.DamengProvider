@@ -28,10 +28,10 @@ def sha(data):
 
 def synthetic_chain(phase="candidate"):
     source = {"schema_version": 1, "head": "a" * 40, "files": [
-        {"path": "src/W.DmProvider/PublicApi/DmConnection.cs", "sha256": "1" * 64, "bytes": 10},
+        {"path": "src/W.DamengProvider/PublicApi/DmConnection.cs", "sha256": "1" * 64, "bytes": 10},
         {"path": "global.json", "sha256": "2" * 64, "bytes": 2}]}
     data = (json.dumps(source, indent=2) + "\n").encode()
-    w = {"id": "W.DmProvider", "version": "0.1.0-tp.contract.20261008", "asset": "lib/net10.0/W.DmProvider.dll",
+    w = {"id": "W.DamengProvider", "version": "0.1.0-tp.contract.20261008", "asset": "lib/net10.0/W.DamengProvider.dll",
          "package_sha256": "3" * 64, "dll_sha256": "4" * 64, "mvid": "11111111-2222-3333-4444-555555555555"}
     identity = {"schema_version": 1, "phase": phase, "comparison_head": "b" * 40,
                 "source_commit": source["head"], "O": copy.deepcopy(runner.O_PIN), "W": w,

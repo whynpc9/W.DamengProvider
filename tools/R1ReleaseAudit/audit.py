@@ -133,7 +133,7 @@ def config(run, sources):
 
 
 def inputs():
-    roots = [ROOT / 'src/W.DmProvider', ROOT / 'tests/fixtures', ROOT / 'tools/R1ReleaseAudit',
+    roots = [ROOT / 'src/W.DamengProvider', ROOT / 'tests/fixtures', ROOT / 'tools/R1ReleaseAudit',
              ROOT / 'tools/IsolationProbe/ProbeSafety.cs', ROOT / 'global.json', ROOT / 'THIRD-PARTY-NOTICES.md',
              ROOT / 'eng/t12-offline.sh', ROOT / 'eng/T12.md', ROOT / '.github/workflows/r1-offline.yml']
     roots += [ROOT / f'tests/W.DmProvider.{name}Tests' for name in SUITES]
@@ -208,14 +208,14 @@ def offline(run):
             safe_trx(root, run / 'public' / (name + '.trx'))
             dependencies(project, run / 'public' / (name + '-dependencies.json'))
             row.update(status='offline_verified', counts=counts,
-                       tested_driver_sha256=sha(project.parent / 'bin/Release/net10.0/W.DmProvider.dll'))
+                       tested_driver_sha256=sha(project.parent / 'bin/Release/net10.0/W.DamengProvider.dll'))
         except (Rejected, ValueError, ET.ParseError, OSError) as error:
             reason = error.reason if isinstance(error, Rejected) else 'result_shape_invalid'
             row.update(status='rejected', reason=reason); failures.append({'suite': name, 'reason': reason})
         suites.append(row)
     after = inputs(); write(run / 'public/input-after.json', after)
     if before != after: failures.append({'reason': 'implementation_inputs_changed'})
-    product = ROOT / 'src/W.DmProvider/bin/Release/net10.0/W.DmProvider.dll'
+    product = ROOT / 'src/W.DamengProvider/bin/Release/net10.0/W.DamengProvider.dll'
     product_hash = sha(product) if product.is_file() else None
     if len(suites) != len(SUITES) or any(row.get('tested_driver_sha256') != product_hash for row in suites) or product_hash is None:
         failures.append({'reason': 'tested_product_DLL_identity_mismatch'})
@@ -257,7 +257,7 @@ def existing_inspector():
 
 
 def r1_source_inventory():
-    product = ROOT / 'src/W.DmProvider'
+    product = ROOT / 'src/W.DamengProvider'
     included, excluded = [], []
     for path in sorted(product.rglob('*')):
         if not path.is_file(): continue
@@ -282,87 +282,11 @@ def filtered_source_snapshot(run):
     write(run / 'public/R1-source-selection.json', {'algorithm': 'T03 path-plus-file-SHA256; R1 explicit transient exclusions',
         'source_sha256': digest, 'included': [{'path': str(p.relative_to(ROOT)), 'sha256': sha(p)} for p in included],
         'excluded': excluded, 'always_excluded_directories': ['bin', 'obj', '.local', '__pycache__']})
-    return snapshot / 'src/W.DmProvider', digest
+    return snapshot / 'src/W.DamengProvider', digest
 
 
 def package_audit(args, run):
-    if not re.fullmatch(r'0\.1\.0-(t11|t12|r1)\.[0-9]{14}', args.version): raise Rejected('unique_candidate_version_required')
-    if any(not re.fullmatch('[0-9a-fA-F]{64}', value) for value in (args.package_sha256, args.dll_sha256, args.source_sha256)): raise Rejected('producer_hashes_required')
-    args.package_sha256, args.dll_sha256, args.source_sha256 = (value.lower() for value in (args.package_sha256, args.dll_sha256, args.source_sha256))
-    package = pathlib.Path(args.package).resolve()
-    if package.name != f'W.DmProvider.{args.version}.nupkg' or sha(package) != args.package_sha256: raise Rejected('producer_package_pin_mismatch')
-    before = inputs(); write(run / 'public/input-before.json', before)
-    env = environment(run); dotnet = prepare_sdk(run, env)
-    local_feed = run / '.private/candidate'; local_feed.mkdir()
-    target = local_feed / package.name; shutil.copyfile(package, target)
-    inspector = existing_inspector()
-    manifest = local_feed / 'manifest.json'
-    source_snapshot, expected_source = filtered_source_snapshot(run)
-    if expected_source != args.source_sha256: raise Rejected('producer_source_pin_mismatch')
-    try:
-        with contextlib.redirect_stdout(io.StringIO()):
-            inspector.package(target, manifest, args.version, source_snapshot)
-    except SystemExit: raise Rejected('T03_package_inspection_failed')
-    saved = json.loads(manifest.read_text())
-    if saved['source_sha256'] != args.source_sha256: raise Rejected('producer_source_pin_mismatch')
-    if saved['assets'].get('lib/net10.0/W.DmProvider.dll') != args.dll_sha256: raise Rejected('producer_DLL_pin_mismatch')
-    # Preserve the existing exact-package consumer's directory and feed contract.
-    env['NUGET_PACKAGES'] = str(local_feed / 'nuget-cache'); pathlib.Path(env['NUGET_PACKAGES']).mkdir()
-    cfg = config(run, [local_feed])
-    props = [f'/p:T03PackageVersion={args.version}', f'/p:BaseIntermediateOutputPath={local_feed}/obj/',
-             f'/p:OutputPath={local_feed}/app/', '/p:AppendTargetFrameworkToOutputPath=false']
-    consumer = ROOT / 'tools/ProductPackageProbe/ProductPackageProbe.csproj'
-    require_command([dotnet, 'restore', str(consumer), '--configfile', str(cfg), '--source', str(local_feed), *props, *FLAGS], run, 'package_consumer_restore', env)
-    require_command([dotnet, 'build', str(consumer), '--no-restore', *props, *FLAGS], run, 'package_consumer_build', env)
-    try:
-        with contextlib.redirect_stdout(io.StringIO()): inspector.consumer(local_feed, args.version)
-    except SystemExit: raise Rejected('T03_consumer_graph_rejected')
-    log = require_command([dotnet, str(local_feed / 'app/ProductPackageProbe.dll'), 'offline', str(ROOT), str(manifest)], run, 'package_consumer', env, 60)
-    loaded = json.loads(log.read_text())
-    if loaded.get('loaded_assembly_sha256') != args.dll_sha256: raise Rejected('actual_loaded_DLL_mismatch')
-    # Generate current surface using the existing T03 Mono.Cecil exporter.
-    env['NUGET_PACKAGES'] = str(run / '.private/tool-nuget'); pathlib.Path(env['NUGET_PACKAGES']).mkdir()
-    cfg = config(run, ['https://api.nuget.org/v3/index.json'])
-    exporter = ROOT / 'tools/RestoreBaseline/RestoreBaseline.csproj'
-    require_command([dotnet, 'restore', str(exporter), '--configfile', str(cfg), *FLAGS], run, 'surface_restore', env)
-    require_command([dotnet, 'build', str(exporter), '--no-restore', *FLAGS], run, 'surface_build', env)
-    api_path = run / 'public/public-api-current.txt'
-    require_command([dotnet, str(exporter.parent / 'bin/Debug/net10.0/RestoreBaseline.dll'), 'api',
-                     str(local_feed / 'app/W.DmProvider.dll'), str(api_path)], run, 'surface_export', env, 60)
-    current = api_path.read_text().splitlines()
-    mapping = json.loads((ROOT / 'docs/compatibility/t03-api-map.json').read_text())
-    previous = {entry.get('new_signature', entry.get('new_api')) for entry in mapping['entries']}
-    previous.discard(None)
-    for entry in mapping.get('new_api', mapping.get('added_api', [])):
-        previous.add(entry['signature'] if isinstance(entry, dict) else entry)
-    if len(current) != len(set(current)) or not current: raise Rejected('current_surface_invalid')
-    delta = {'reference': 'T03 mapped static surface; not T04 API diff', 'current_api_sha256': sha(api_path),
-             'current_count': len(current), 'added_since_T03': sorted(set(current) - previous),
-             'removed_since_T03': sorted(previous - set(current)), 'behavior_acceptance': 'separate_T12_gate'}
-    write(run / 'public/public-api-delta.json', delta)
-    write(run / 'public/package-manifest.json', saved)
-    write(run / 'public/actual-package-consumer.json', loaded)
-    source_materials = []
-    for path in ('THIRD-PARTY-NOTICES.md', 'docs/compatibility/t03-source-map.json', 'upstream/DM.DmProvider/8.3.1.47463/manifest.json'):
-        source_materials.append({'path': path, 'sha256': sha(ROOT / path)})
-    write(run / 'public/source-materials.json', {'source_sha256': saved['source_sha256'], 'materials': source_materials,
-        'ancestry_only': 'DM.DmProvider 8.3.1.47463 source provenance, not a runtime dependency'})
-    write(run / 'public/product-sbom.json', {'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'version': 1,
-        'metadata': {'component': {'type': 'library', 'name': 'W.DmProvider', 'version': args.version,
-                                  'purl': f'pkg:nuget/W.DmProvider@{args.version}', 'bom-ref': f'pkg:nuget/W.DmProvider@{args.version}',
-                                  'hashes': [{'alg': 'SHA-256', 'content': args.package_sha256}]}},
-        'components': [{'type': 'file', 'name': name, 'bom-ref': 'sha256:' + value, 'hashes': [{'alg': 'SHA-256', 'content': value}]} for name,value in saved['assets'].items()],
-        'dependencies': [{'ref': f'pkg:nuget/W.DmProvider@{args.version}', 'dependsOn': []}],
-        'properties': [{'name': 'source-materials', 'value': 'source-materials.json'},
-                       {'name': 'runtime-dependencies', 'value': 'empty nuspec/net10.0 dependency group; actual consumer references separately audited'}]})
-    after = inputs(); write(run / 'public/input-after.json', after)
-    if before != after: raise Rejected('implementation_inputs_changed')
-    if sha(package) != args.package_sha256: raise Rejected('producer_package_changed_during_audit')
-    result = {'status': 'candidate_package_audited', 'id': 'W.DmProvider', 'version': args.version,
-              'package_sha256': args.package_sha256, 'dll_sha256': args.dll_sha256, 'source_sha256': args.source_sha256,
-              'current_surface_sha256': sha(api_path), 'integration': 'not_executed', 'release_accepted': False,
-              'run_dir': str(run)}
-    write(run / 'public/package-summary.json', result); output(result); return 0
+    raise Rejected('historical_package_audit_retired_use_eng_release_sh_prepare', 64)
 
 
 def main():

@@ -22,7 +22,7 @@ def main():
             result.get('package_version') == manifest['version'] == '0.1.0-r3.t16.20261002143244' and
             result.get('package_sha256') == manifest['package_sha256'] == 'a15d5009659e1f78f00a49efe7c1caf0cd43974b69169e405dfc794ef5275a44' and
             result.get('loaded_assembly_sha256') == hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest() ==
-            manifest['assets']['lib/net10.0/W.DmProvider.dll'] == 'f70627e5d957f3de86ec33070474ab1543c162c5f6321f93312ad87c4535290f' and
+            manifest['assets']['lib/net10.0/W.DamengProvider.dll'] == 'f70627e5d957f3de86ec33070474ab1543c162c5f6321f93312ad87c4535290f' and
             result.get('loaded_assembly_mvid') == '654b6ddd-b0ff-4408-8e1b-b93bd075c1da')
     inputs = result.get('input_manifest', {})
     require(inputs.get('blob_bytes') == 131089 and inputs.get('blob_seed') == 17 and inputs.get('blob_stride') == 131 and

@@ -5,12 +5,12 @@
 ## 输入和入口
 
 - `Official.csproj`：exact `DM.DmProvider 8.3.1.47463`，运行 net10 探针但强校验加载官方 `lib/net9.0` 资产。
-- `Candidate.csproj`：exact R1 包 `W.DmProvider 0.1.0-r1.20260930051717`，没有项目引用或源码绕过。
+- `Candidate.csproj`：exact R1 包 `W.DamengProvider 0.1.0-r1.20260930051717`，没有项目引用或源码绕过。
 - `Program.cs profile <package.nupkg> <safe-report.json>`：包、资产、已加载 DLL SHA/MVID 均必须匹配 `expected-identities.json` 与源码常量，才可进入 TEST。连接仅来自 wrapper 的 `DAMENG_TEST_CONNECTION_STRING`；O 保留官方配置，W typed builder 显式 PlaintextAllowed/PersistSecurityInfo=false。同一 TEST 登录及当前 schema 均检查。
 - `Program.cs codec <package.nupkg> <safe-report.json>`：只调用已有 public static 扩展 encoder，记录9/11-byte合成时间字节和哈希；不加载连接。profile 也尝试此独立 helper 比较，但 helper 缺失单独报告，不阻止关键公开 O 写入/服务器 oracle。
 - `python3 validate.py <O-report.json> <W-report.json> --output <diagnostic.json>`：独立校验安全报告。O public typed write 与 server FF7/offset 必须正确；O 的 raw/typed/generic getter差异仅作表征。W literal typed/generic DateTime、DTO、GetString+Invariant Parse必须保持一tick、Unspecified与原偏移；W public typed write失败必须保留 characterization，不计公共七位成功。
 
-包路径、哈希、MVID、asset 路径固定在 `expected-identities.json`。候选 feed 默认本仓库 `.local/t12/packages/20260930T051717Z`，官方 feed 默认本仓库 `packages`。两个项目的 bin/obj独立，锁路径明确为 `Official.packages.lock.json` / `Candidate.packages.lock.json`；round1产生的旧共享 `packages.lock.json` 不再作为这两个项目的锁输入，保留原证据。SDK pin 为工具目录自己的 `global.json`，**10.0.203、rollForward=disable**；从该目录启动固定可用 host。`.401` 是 EF repo pin，不用于悄悄覆盖本工具 pin。
+包路径、哈希、MVID、asset 路径固定在 `expected-identities.json`。候选 feed 默认本仓库 `.local/t12/packages/20260930T051717Z`，官方 feed 默认本仓库 `packages`。两个项目的 bin/obj独立，锁路径明确为 `Official.packages.lock.json` / `Candidate.packages.lock.json`；round1产生的旧共享 `packages.lock.json` 不再作为这两个项目的锁输入，保留原证据。SDK pin 为工具目录自己的 `global.json`，**10.0.401、rollForward=disable**；从该目录启动固定可用 host。`.401` 是 EF repo pin，不用于悄悄覆盖本工具 pin。
 
 ## 样本和验收语义
 
@@ -24,7 +24,7 @@
 
 ## Low 独占执行模板
 
-以下是准备模板，不是已执行证据。Low先冻结工具源码、两包、manifest哈希，设置独立且可写 DOTNET_CLI_HOME/NUGET_PACKAGES/NUGET_HTTP_CACHE_PATH、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1。从 `tools/TemporalPrecisionProbe` 工作目录，以能解析10.0.203的固定host顺序构建两项目，并记录 `--version`、实际资产/锁/DLL身份。
+以下是准备模板，不是已执行证据。Low先冻结工具源码、两包、manifest哈希，设置独立且可写 DOTNET_CLI_HOME/NUGET_PACKAGES/NUGET_HTTP_CACHE_PATH、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1。从 `tools/TemporalPrecisionProbe` 工作目录，以能解析10.0.401的固定host顺序构建两项目，并记录 `--version`、实际资产/锁/DLL身份。
 
 ```sh
 dotnet restore Official.csproj --disable-parallel -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers
@@ -50,7 +50,7 @@ Round 1 的 W CAST 字面量读回实际存库 oracle为零小数，不能据此
 Low必须在外层 finally 串行执行cleanup，即使seed/read命令失败或超时也执行；manifest未产生则不推测对象。成功seed不是长期fixture，必须在同一窗口结束前清理。seed/read记录相同ready manifest哈希，Low保存该哈希后交W，并验证源和包冻结没有漂移；cleanup后的manifest是本次生命周期收尾记录，旧round1所有制品保持原样。
 
 ```sh
-# Low以固定10.0.203 host、同一TEST wrapper执行；路径为本次全新的safe artifact路径。
+# Low以固定10.0.401 host、同一TEST wrapper执行；路径为本次全新的safe artifact路径。
 dotnet bin/Official/net10.0/TemporalPrecisionProbe.Official.dll seed <O-package> <ownership.json> <O-seed.json>
 dotnet bin/Candidate/net10.0/TemporalPrecisionProbe.Candidate.dll read <W-package> <ownership.json> <W-read.json>
 # 上述两步均须包在Low外层try/finally，finally必跑这一步。
@@ -62,7 +62,7 @@ python3 validate-handoff.py <O-seed.json> <W-read.json> <O-cleanup.json> <owners
 
 ## Round 2 实际证据与限定候选修复
 
-Low已运行完整 O seed → W cross-read → O cleanup，目标8.1.5.60、TEST身份均通过；[安全聚合结果](../../../.local/verification/t12/temporal-round2/validation.json)为 `cross_decode_verified`、issues=[]。原始 [O typed写入与CAST表征](../../../.local/verification/t12/temporal-round2/seed.json)、[frozen W读取](../../../.local/verification/t12/temporal-round2/read.json)、[独立连接清理](../../../.local/verification/t12/temporal-round2/cleanup.json)保留原样。
+Low曾运行完整 O seed → W cross-read → O cleanup，目标8.1.5.60、TEST身份均通过；历史本机安全聚合结果 `.local/verification/t12/temporal-round2/validation.json` 为 `cross_decode_verified`、issues=[]。原始 O typed写入与CAST表征 `.local/verification/t12/temporal-round2/seed.json`、frozen W读取 `.local/verification/t12/temporal-round2/read.json`、独立连接清理 `.local/verification/t12/temporal-round2/cleanup.json` 保留原样。这些历史本机制品未随仓库分发。
 
 四个偏移的O公开参数七位写入、server FF7/offset、W typed/generic getter与EF GetString Parse均保存一tick及原偏移；O/W 9/11-byte helper输出相同且nanoseconds=100。相同CAST字面量在O也被服务器转换成零小数，此行为保留为literal characterization，不将它误归因于 W decoder，也不通过放宽原profile断言改写round1失败。
 

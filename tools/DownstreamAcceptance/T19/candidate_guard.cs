@@ -32,10 +32,10 @@ internal static class T19CandidateGuard
             Need(version == expectedVersion && string.Equals(hash, expectedHash, StringComparison.OrdinalIgnoreCase) &&
                 driver.ManifestModule.ModuleVersionId == mvid, "T19_GUARD_DRIVER_IDENTITY");
             string hostDirectory = Path.GetDirectoryName(Path.GetFullPath(host.Location))!;
-            Need(Path.GetFullPath(driver.Location) == Path.Combine(hostDirectory, "W.DmProvider.dll"), "T19_GUARD_LOADED_DIRECTORY");
+            Need(Path.GetFullPath(driver.Location) == Path.Combine(hostDirectory, "W.DamengProvider.dll"), "T19_GUARD_LOADED_DIRECTORY");
             using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(hostDirectory, host.GetName().Name + ".deps.json")));
             var libraries = deps.RootElement.GetProperty("libraries");
-            Need(libraries.GetProperty("W.DmProvider/" + expectedVersion).GetProperty("type").GetString() == "package" &&
+            Need(libraries.GetProperty("W.DamengProvider/" + expectedVersion).GetProperty("type").GetString() == "package" &&
                 !libraries.EnumerateObject().Any(item => item.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase)),
                 "T19_GUARD_PACKAGE_REFERENCE");
             var retained = T19LoadedDriverAssetRetention.Retain(loadedFile, assetRoot, "loaded-" + Guid.NewGuid().ToString("N") + ".dll",
@@ -44,7 +44,7 @@ internal static class T19CandidateGuard
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(recordPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             JsonSerializer.Serialize(evidence, new
             {
-                schema_version = 2, driver_id = "W.DmProvider", driver_version = version,
+                schema_version = 2, driver_id = "W.DamengProvider", driver_version = version,
                 driver_dll_sha256 = hash, driver_dll_mvid = driver.ManifestModule.ModuleVersionId.ToString("D"),
                 package_library_type = "package", loaded_in_host_directory = true,
                 host_assembly = host.GetName().Name, ef_assembly_version = typeof(DbContext).Assembly.GetName().Version?.ToString(),

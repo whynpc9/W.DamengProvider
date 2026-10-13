@@ -6,8 +6,8 @@
 
 | 文件 | SHA256 |
 | --- | --- |
-| src/W.DmProvider/Internal/Types/DmTemporalCapabilityProfile.cs | 55db8dc195cc443d76911ec571f263feecf414873f969caf0a60b33f241aea90 |
-| src/W.DmProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 072021841c0c02b941c0346890531a5786d42bdd156739ba5148df5b8c3a39fa |
+| src/W.DamengProvider/Internal/Types/DmTemporalCapabilityProfile.cs | 55db8dc195cc443d76911ec571f263feecf414873f969caf0a60b33f241aea90 |
+| src/W.DamengProvider/Internal/Types/DmTemporalLegacyAdapter.cs | 072021841c0c02b941c0346890531a5786d42bdd156739ba5148df5b8c3a39fa |
 | tests/W.DmProvider.TypeTests/TemporalNativeWriterAdapterTests.cs | e11367c6a9dc11c1588b35216fb3c11b04d9a999f3531bfa07fa4a528ba13be8 |
 
 核对结论：

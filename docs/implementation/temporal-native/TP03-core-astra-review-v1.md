@@ -8,7 +8,7 @@
 
 ### TP03-CORE-001 · P1 · 新 NormalizeForWrite 重新开放 TimeSpan→TIME，有静默丢日风险
 
-- 位置：`src/W.DmProvider/Internal/Types/DmTemporalCodec.cs:44–46`；下游 `Internal/Legacy/Dm/DmSetValue.cs:1740–1765`。
+- 位置：`src/W.DamengProvider/Internal/Types/DmTemporalCodec.cs:44–46`；下游 `Internal/Legacy/Dm/DmSetValue.cs:1740–1765`。
 - 场景：未显式声明类型的 `TimeSpan.FromHours(25)` 参数遇到可靠 fixed TIME(6) describe。`DmParameter.ResolveType:911–927` 选择 server 类型；`DmSysTypeConvertion:18–38` 保留 TimeSpan；`DmCommand:1713–1740` 将其交给 `SetResolvedObject`。新 NormalizeForWrite 的 temporal 分支没有 TimeSpan case，default 原样返回，随后 `new DateTime(timeSpan.Ticks)`→SetTime→TimeEncodeFast 提取日内字段，编码为 **01:00:00**，丢掉一天。CType22 也有相同入口。
 - 根因：旧 `NormalizeForWire:90–94` 明确要求 TimeSpan 只能 CType21；新入口以文本延期校验为理由对所有未列出对象返回，却没有保留这个已有限制。其下游 TimeSpan 分支也没有调用新 `ValidateWriteValue`，因此 TIME(0) 的含小数 TimeSpan 还可绕过声明 scale 校验。
 - 最小修复：在新 temporal target 分支显式拒绝 TimeSpan，保持旧 NotSupported 合同；CType21 无 temporal target 时继续走现有 interval 路径。无需新增 TIME/TimeSpan 能力，也无需改 TP04 绑定。
@@ -16,7 +16,7 @@
 
 ### TP03-CORE-002 · P2 · 日期算术先换成总纳秒，合法大增量在归一化前溢出
 
-- 位置：`src/W.DmProvider/Internal/Types/DmTemporalLegacyAdapter.cs:187–190`；公开调用 `DmDateTime.cs:132–136,905–907`。
+- 位置：`src/W.DamengProvider/Internal/Types/DmTemporalLegacyAdapter.cs:187–190`；公开调用 `DmDateTime.cs:132–136,905–907`。
 - 场景：从 `2026-07-23 00:00:00` 调用 `AddMinute(...,200000000)`，精确结果为 `2406-10-27 21:20:00`；`AddMinute(...,int.MaxValue)` 的结果为 `6109-08-15 02:07:00`。两者仍在 CLR 日期域，但 `amount * 60000000000` 先超过 Int64。公开 `DmTimeDdateAdd(...,200000)` 的合法结果 `2574-02-20` 同样在日增量乘纳秒时提前 Overflow。负 200000000 分钟结果 `1646-04-17 02:40:00` 也受影响。
 - 根因：使用 long 没有避免“完整时长乘纳秒”的中间溢出，违背 G4 先安全归一化再更新数组的要求；错误与最终日期是否可表示无关。
 - 最小修复：先对 amount 按 unitsPerDay 拆日商与余数，只把有界日内余数换成纳秒，再合并 nsOfDay/carry；或者使用足够宽的整数。保留同数组返回、ns、offset 与失败原子性，不修改 accepted pure core。
@@ -24,7 +24,7 @@
 
 ### TP03-CORE-003 · P2 · 严格模板入口先清除源字段，绕过禁止丢日期/时区的检查
 
-- 位置：`src/W.DmProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs:784–795,816–822`；调用 `DmDateTime.cs:790–799,320–333`。
+- 位置：`src/W.DamengProvider/Internal/Legacy/Dm.util/OracleDateFormat.cs:784–795,816–822`；调用 `DmDateTime.cs:790–799,320–333`。
 - 场景一：内部 numeric TIME 模板 `YYYY-MM-DD HH24:MI:SS` 解析 `2026-07-23 14:15:16`。ParseTemporal 仅要求时钟字段齐全，CompleteTemporal 随后直接把已解析日期覆盖为 1900-01-01；dtype 又被设为 TIME，EncodeWithTarget 无法再发现原输入含日期，写成 14:15:16。
 - 场景二：普通 TIMESTAMP 模板 `YYYY-MM-DD HH24:MI:SS TZH:TZM` 解析显式 `+05:30`。CompleteTemporal 先将 offset 清为缺省，新 writer 后续检查不到原时区，接受普通 timestamp；非模板路径会正确拒绝该输入。
 - 边界：NLS Builder 仍关闭，不要求开放该选项。这里是 TP03 已新增并由 WriterAdapterTests 显式配置覆盖的内部严格数值模板通路；G5 不允许用模板路径绕过源分量保全检查。
@@ -44,7 +44,7 @@
 
 下列 13 文件 SHA256 全部与派发锁定值相符。只写本报告；未修改任何 product/test 输入。
 
-| 文件（src/W.DmProvider/ 或 tests/W.DmProvider.TypeTests/） | SHA256 |
+| 文件（src/W.DamengProvider/ 或 tests/W.DmProvider.TypeTests/） | SHA256 |
 | --- | --- |
 | Internal/Legacy/Dm/DmDateTime.cs | 661f4822646ab7ccfbbbad082ed389ddc98955a09c5cd516c93f0b490fac85c9 |
 | Internal/Legacy/Dm/DmTime.cs | 986d7ffeddccb7529ccd6d15a5e754f5880d30ed1089603db23abd46ba0b97bd |

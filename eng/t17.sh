@@ -40,7 +40,7 @@ print(json.dumps({'schema_version':1,'task':'T17','mode':sys.argv[1],'status':'r
 PY
   exit "$2"
 }
-package_file="$source_dir/W.DmProvider.$version.nupkg"
+package_file="$source_dir/W.DamengProvider.$version.nupkg"
 [[ -f "$package_file" ]] || failed package_missing 66
 inspection=(python3 "$repo/tools/R2AsyncProbe/package_manifest.py" "$package_file" "$version" "$run/package-manifest.json")
 inspection_code=0
@@ -76,7 +76,7 @@ probe_code=0
 record runtime_probe "$probe_code" "${probe[@]}"
 [[ -s "$run/probe.json" ]] || failed probe_result_missing "$(( probe_code == 0 ? 1 : probe_code ))"
 (( probe_code == 0 )) || failed runtime_probe "$probe_code"
-validation=(python3 "$repo/tools/R3LobProbe/validate.py" "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DmProvider.dll" "$mode")
+validation=(python3 "$repo/tools/R3LobProbe/validate.py" "$run/probe.json" "$run/package-manifest.json" "$run/app/W.DamengProvider.dll" "$mode")
 validation_code=0
 "${validation[@]}" >"$run/validation.json" 2>/dev/null || validation_code=$?
 record envelope_validation "$validation_code" "${validation[@]}"

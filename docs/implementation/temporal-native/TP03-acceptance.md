@@ -34,7 +34,7 @@ Sol High 完成主 codec、interval 和窄验收工具，Astra High 完成关键
 - 实际 DLL SHA256：4836ab40673c76eeaae5f55191d04ac9406fa21921c2d5be4c9e56ccb4e4b1aa；MVID：2ecd26a7-48dc-4dd8-9fe9-e4cab880b252。
 - 同包验证摘要 SHA256：416cbdecaaca92bdbe2e3751119fb800ff73f8d862b44bd01275ace47f4609c2。
 
-[公开证据清单](../evidence/TemporalNative/TP03-v6/public-evidence-manifest.json)包含原报告与制品哈希；完整 core JSON 以确定性 gzip 保存，解压内容与原字节一致。旧编译、模板、profile 来源错误及旧 v5 包全部保留，不回写为通过。
+公开证据清单（历史记录已归档）包含原报告与制品哈希；完整 core JSON 以确定性 gzip 保存，解压内容与原字节一致。旧编译、模板、profile 来源错误及旧 v5 包全部保留，不回写为通过。
 
 ## 文件释放与剩余边界
 

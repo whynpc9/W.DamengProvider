@@ -7,13 +7,13 @@ Runner 必须设置四个接口：
 | 环境变量 | 内容 |
 | --- | --- |
 | `DAMENG_T12_DOTNET_HOST` | SDK 10.0.401 的绝对 dotnet host 路径 |
-| `DAMENG_T12_CANDIDATE_VERSION` | 本次唯一 W.DmProvider prerelease 版本 |
+| `DAMENG_T12_CANDIDATE_VERSION` | 本次唯一 W.DamengProvider prerelease 版本 |
 | `DAMENG_T12_NUGET_CONFIG` | 无 secret、含本地候选 feed 的绝对 NuGet.Config 路径 |
 | `DAMENG_T12_CLI_ROOT` | 已创建的隔离 CLI 工程和工具目录 |
 
 继承隔离且已创建的 `DOTNET_CLI_HOME`、`NUGET_PACKAGES`、`NUGET_HTTP_CACHE_PATH`。测试连接只来自统一 `DamengTestEnvironment.GetRequiredConnectionString()` 的 TEST wrapper。工具安装、版本检查、restore/build 不接收连接；EF 和模型验证只接收环境连接。`DOTNET_ROOT` 从固定 host 设置。generated project 用自身 `global.json` 禁止 SDK roll-forward，显式 build/restore single-node/no-reuse/no-shared-compiler/disable-build-servers，并关闭上层 Directory.Build.props/targets 导入。新子工程首次恢复产生锁，后续恢复使用 locked-mode。
 
-固定 EF 与 dotnet-ef 10.0.12，动态 csproj 仅引用准确 W.DmProvider 候选版本及已构建 EF 提供程序。核对 assets 无官方驱动、EF 版本及候选版本正确，记录 assets/lock 哈希。子工程 scaffold 完成后再编译并运行模型核对，比较父测试宿主和子进程实际加载的驱动 DLL 哈希。为标准 `CreateHostBuilder` 提供 `Microsoft.AspNetCore.App` FrameworkReference；子进程仅传既有 `DAMENG_TEST_CONNECTION_STRING`，HostBuilder 读取后通过 `AddInMemoryCollection` 映射到配置键 `ConnectionStrings:T12Cli`，支持 scaffold 的 `Name=ConnectionStrings:T12Cli`。不新增连接环境变量，配置映射只在内存中，无连接源码、配置文件或 argv。
+固定 EF 与 dotnet-ef 10.0.12，动态 csproj 仅引用准确 W.DamengProvider 候选版本及已构建 EF 提供程序。核对 assets 无官方驱动、EF 版本及候选版本正确，记录 assets/lock 哈希。子工程 scaffold 完成后再编译并运行模型核对，比较父测试宿主和子进程实际加载的驱动 DLL 哈希。为标准 `CreateHostBuilder` 提供 `Microsoft.AspNetCore.App` FrameworkReference；子进程仅传既有 `DAMENG_TEST_CONNECTION_STRING`，HostBuilder 读取后通过 `AddInMemoryCollection` 映射到配置键 `ConnectionStrings:T12Cli`，支持 scaffold 的 `Name=ConnectionStrings:T12Cli`。不新增连接环境变量，配置映射只在内存中，无连接源码、配置文件或 argv。
 
 每次生成唯一 table/sequence/history，建前验证 TEST 登录和当前 schema、一一确认对象不存在后取得本次清理权。迁移配置、历史查询和清理全用同一唯一 history，保留迁移脚本、表注释、列注释、identity、sequence、降序索引和实体断言。scaffold 加 `--no-onconfiguring`，核对 options 构造函数、无 OnConfiguring、无连接/口令文本，再通过运行时配置编译与模型核对。失败 finally 对每个本次对象独立尝试清理，新连接验证全部不存在；finally 中仅收集清理异常类型，退出后与测试主体异常类型一起报告，避免 CA2219 与掩盖任一失败。不操作固定历史表，不创建用户/schema/tablespace。
 
@@ -35,7 +35,7 @@ Runner 必须设置四个接口：
 
 ### 已证实的 nested host 修正
 
-Low 二级诊断已证：explicit 10.0.401 host 的 restore/build 通过，但 dotnet-ef 内部以 PATH 启动 bare dotnet/msbuild，命中系统 10.0.203 host，无法满足子工程禁止 roll-forward 的 10.0.401 pin。现在 RunDotNetAsync 只对子进程 PATH prepend 已验证 DAMENG_T12_DOTNET_HOST 的目录，与原 DOTNET_ROOT/HOST_PATH 同一目录；不改父进程 PATH、不安装 SDK、不放宽 pin。业务、metadata 与断言全部保留。该定点修正尚待 Low fresh snapshot 实际验证，不能将诊断成功当 CLI 功能通过。
+Low 二级诊断已证：explicit 10.0.401 host 的 restore/build 通过，但 dotnet-ef 内部以 PATH 启动 bare dotnet/msbuild，命中系统 10.0.401 host，无法满足子工程禁止 roll-forward 的 10.0.401 pin。现在 RunDotNetAsync 只对子进程 PATH prepend 已验证 DAMENG_T12_DOTNET_HOST 的目录，与原 DOTNET_ROOT/HOST_PATH 同一目录；不改父进程 PATH、不安装 SDK、不放宽 pin。业务、metadata 与断言全部保留。该定点修正尚待 Low fresh snapshot 实际验证，不能将诊断成功当 CLI 功能通过。
 
 ### generated checker 的 EF 10.0.12 metadata 契约
 

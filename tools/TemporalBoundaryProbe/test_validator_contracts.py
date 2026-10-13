@@ -160,8 +160,8 @@ class HandmadeArtifact:
         self.data = {}
         source = dict(schema_version=1, head=MANUAL["source_head"], files=[copy.deepcopy(MANUAL["source_file"])])
         self.put("frozen-input/product-source-manifest.json", source)
-        w = dict(id="W.DmProvider", version=MANUAL["candidate_version" if phase == "candidate" else "baseline_version"],
-            asset="lib/net10.0/W.DmProvider.dll", package_sha256=MANUAL["package_sha256"], dll_sha256=MANUAL["dll_sha256"], mvid=MANUAL["mvid"])
+        w = dict(id="W.DamengProvider", version=MANUAL["candidate_version" if phase == "candidate" else "baseline_version"],
+            asset="lib/net10.0/W.DamengProvider.dll", package_sha256=MANUAL["package_sha256"], dll_sha256=MANUAL["dll_sha256"], mvid=MANUAL["mvid"])
         identity = dict(schema_version=1, phase=phase, O=O, W=w, producer=dict(source_head=MANUAL["source_head"],
             source_manifest_sha256=self.hash("frozen-input/product-source-manifest.json"), source_archive_sha256=None,
             **{k: w[k] for k in ("version", "package_sha256", "dll_sha256", "mvid")}))

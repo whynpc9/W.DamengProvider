@@ -583,24 +583,24 @@ def offline(a):
     for name in ('cli-home', 'http-cache'): (output / name).mkdir()
     cache = output / 'nuget-packages'; shutil.copytree(a.cache_source, cache)
     feed = Path(a.feed_source).resolve()
-    need(sha(feed / 'candidate-feed' / ('W.DmProvider.' + W['version'] + '.nupkg')) == W['package_sha256'], 'offline_exact_candidate_feed')
+    need(sha(feed / 'candidate-feed' / ('W.DamengProvider.' + W['version'] + '.nupkg')) == W['package_sha256'], 'offline_exact_candidate_feed')
     config = ET.Element('configuration'); sources = ET.SubElement(config, 'packageSources'); ET.SubElement(sources, 'clear')
     for name in ('candidate', 'baseline'): ET.SubElement(sources, 'add', key=name, value=str(feed / (name + '-feed')))
-    mappings = ET.SubElement(config, 'packageSourceMapping'); ET.SubElement(ET.SubElement(mappings, 'packageSource', key='candidate'), 'package', pattern='W.DmProvider')
+    mappings = ET.SubElement(config, 'packageSourceMapping'); ET.SubElement(ET.SubElement(mappings, 'packageSource', key='candidate'), 'package', pattern='W.DamengProvider')
     baseline = ET.SubElement(mappings, 'packageSource', key='baseline')
     old_provider = read(work / PROVIDER_LOCK)['dependencies']['net10.0']
     need(a.cache_proof is not None and sha(a.cache_proof) == a.cache_proof_sha256, 'verified_cache_proof_required')
     proof = read(a.cache_proof)
     proof_records = proof['non_driver_records']
     for name, old in old_provider.items():
-        if name == 'W.DmProvider': continue
+        if name == 'W.DamengProvider': continue
         rows = [row for row in proof_records if row['id'] == name]
         need(len(rows) == 1, 'cache_package_proof')
         pin = rows[0]; folder = cache / name.lower() / old['resolved']
         need(pin['version'] == old['resolved'] and sha(folder / (name.lower() + '.' + old['resolved'] + '.nupkg')) == pin['archive_sha256'], 'cache_archive_pin')
         need(read(folder / '.nupkg.metadata')['contentHash'] == old['contentHash'], 'verified_cache_contentHash')
     for name in old_provider:
-        if name != 'W.DmProvider': ET.SubElement(baseline, 'package', pattern=name)
+        if name != 'W.DamengProvider': ET.SubElement(baseline, 'package', pattern=name)
     config_path = output / 'restore.config'; ET.ElementTree(config).write(config_path, encoding='utf-8', xml_declaration=True)
     if a.phase == 'build':
         lock_source = Path(a.lock_source).resolve()
@@ -630,10 +630,10 @@ def offline(a):
         run('prepare-L0-lock', [host, 'restore', L0_PROJECT, '--force-evaluate', '--use-lock-file', '--configfile', str(config_path), '--disable-parallel'] + FLAGS)
         need(sha(work / PROVIDER_LOCK) == manifest['source_hashes'][PROVIDER_LOCK], 'accepted_provider_lock_unchanged')
         lock = read(work / L0_LOCK)['dependencies']['net10.0']
-        originals = {name: value for name, value in old_provider.items() if name != 'W.DmProvider'}
+        originals = {name: value for name, value in old_provider.items() if name != 'W.DamengProvider'}
         project_ids = [name for name in lock if name.casefold() == 'w.entityframeworkcore.dameng']
         need(len(project_ids) == 1 and lock[project_ids[0]]['type'] == 'Project', 'unique_provider_project')
-        need(set(lock) == set(originals) | {'W.DmProvider', project_ids[0]}, 'L0_exact_minimal_graph')
+        need(set(lock) == set(originals) | {'W.DamengProvider', project_ids[0]}, 'L0_exact_minimal_graph')
         need(len({name.casefold() for name in lock}) == len(lock), 'duplicate_case_alias')
         verified = []
         for name, old in originals.items():
@@ -644,11 +644,11 @@ def offline(a):
             archive = folder / (name.lower() + '.' + old['resolved'] + '.nupkg')
             need(sha(archive) == pin['archive_sha256'] and sha(feed / 'baseline-feed' / archive.name) == pin['archive_sha256'], 'L0_archive_feed_cache_pin')
             verified.append(dict(id=name, version=old['resolved'], archive_sha256=pin['archive_sha256'], fresh_metadata_sha256=sha(folder / '.nupkg.metadata')))
-        need(lock['W.DmProvider']['resolved'] == W['version'] and lock['W.DmProvider']['type'] == 'Direct', 'L0_W_version')
+        need(lock['W.DamengProvider']['resolved'] == W['version'] and lock['W.DamengProvider']['type'] == 'Direct', 'L0_W_version')
         wfolder = cache / 'w.dmprovider' / W['version']
         need(sha(wfolder / ('w.dmprovider.' + W['version'] + '.nupkg')) == W['package_sha256']
-            and lock['W.DmProvider']['contentHash'] == old_provider['W.DmProvider']['contentHash'] == read(wfolder / '.nupkg.metadata')['contentHash'], 'L0_W_package_native_hash')
-        need(lock[project_ids[0]]['dependencies'] == {'Microsoft.EntityFrameworkCore.Relational': '[10.0.12, 11.0.0)', 'W.DmProvider': '[' + W['version'] + ', ' + W['version'] + ']'}, 'L0_provider_project_dependencies')
+            and lock['W.DamengProvider']['contentHash'] == old_provider['W.DamengProvider']['contentHash'] == read(wfolder / '.nupkg.metadata')['contentHash'], 'L0_W_package_native_hash')
+        need(lock[project_ids[0]]['dependencies'] == {'Microsoft.EntityFrameworkCore.Relational': '[10.0.12, 11.0.0)', 'W.DamengProvider': '[' + W['version'] + ', ' + W['version'] + ']'}, 'L0_provider_project_dependencies')
         expected = dict(manifest['source_hashes']); expected[L0_LOCK] = sha(work / L0_LOCK)
         for name, digest in expected.items(): need(sha(work / name) == digest, 'lock_source_only_delta')
         toolcheck = toolpack_exit(toolpack, before, 'lock')
@@ -672,7 +672,7 @@ def offline(a):
     mvid = helper.mvid
     dll = work / 'test/TP07LiteralProbe/bin/Debug/net10.0/TP07LiteralProbe.dll'
     provider = dll.parent / 'W.EntityFrameworkCore.Dameng.dll'
-    need(sha(dll.parent / 'W.DmProvider.dll') == W['dll_sha256'], 'build_loaded_candidate_bytes')
+    need(sha(dll.parent / 'W.DamengProvider.dll') == W['dll_sha256'], 'build_loaded_candidate_bytes')
     startup = dict(schema_version=1, task='TP07-L0', replay_root=str(work), lineage=manifest['lineage'], W=W,
         toolpack=toolpack, toolpack_check=toolpack_exit(toolpack, before, 'build'), phase_receipts=receipts,
         source_manifest_sha256=a.prepared_manifest_sha256, lock_manifest_sha256=a.lock_manifest_sha256,
@@ -763,7 +763,7 @@ def run_runtime(a):
     paths += grammar_paths
     paths += [replay / name for name in set(startup['source_hashes']) | set(startup['locks']) | set(startup['assets'])]
     binary_dir = replay / 'test/TP07LiteralProbe/bin/Debug/net10.0'
-    paths += [binary_dir / name for name in ('TP07LiteralProbe.dll', 'TP07LiteralProbe.deps.json', 'W.EntityFrameworkCore.Dameng.dll', 'W.DmProvider.dll')]
+    paths += [binary_dir / name for name in ('TP07LiteralProbe.dll', 'TP07LiteralProbe.deps.json', 'W.EntityFrameworkCore.Dameng.dll', 'W.DamengProvider.dll')]
     before = {str(path): sha(path) for path in paths}
     receipt = dict(schema_version=1, task='TP07-L0 runtime', status='running', required_profiles=['shared', 'tls'], profiles={},
         toolpack=toolpack, phase_receipts=phase_receipts,

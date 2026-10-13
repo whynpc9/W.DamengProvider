@@ -22,7 +22,7 @@ def main():
     require(result.get('schema_version') == 1 and result.get('task') == 'T16' and result.get('mode') == mode and
             result.get('accepted') is True and result.get('exit_code') == 0 and result.get('implementation') == 'W-package' and
             result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
-            result.get('loaded_assembly_sha256') == loaded == manifest['assets']['lib/net10.0/W.DmProvider.dll'] and
+            result.get('loaded_assembly_sha256') == loaded == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] and
             result.get('reference_kind') == 'exact_PackageReference' and result.get('session_reset_verified') is False and
             result.get('reuse_policy') == 'discard' and result.get('handshake_optimization_claimed') is False and
             isinstance(result.get('runtime'), str) and isinstance(result.get('runtime_identifier'), str))

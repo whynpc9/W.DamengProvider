@@ -64,9 +64,9 @@ internal static partial class Program
         string hash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
         Need(hash == (lane == "new" ? NewHash : OldHash) && manifest.GetProperty("version").GetString() == version &&
             assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] == version &&
-            manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString() == hash, "exact_lane_package_mismatch");
+            manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString() == hash, "exact_lane_package_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".deps.json")));
-        Need(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + version).GetProperty("type").GetString() == "package", "exact_package_reference_required");
+        Need(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + version).GetProperty("type").GetString() == "package", "exact_package_reference_required");
         Report["package_version"] = version; Report["package_sha256"] = manifest.GetProperty("package_sha256").GetString();
         Report["loaded_assembly_sha256"] = hash; Report["loaded_assembly_mvid"] = assembly.ManifestModule.ModuleVersionId.ToString();
         Report["reference_kind"] = "exact_PackageReference";

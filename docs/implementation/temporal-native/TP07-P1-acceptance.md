@@ -22,4 +22,4 @@ Sol High 实施，Astra High 审阅，Sol Low 在独立目录执行。SDK 10.0.4
 
 两个协调工具失败完整保留：v1 将 signed nupkg 的整体归档哈希误当 NuGet contentHash，SDK 尚未执行；v2 已恢复成功，但随后对已知 Project ID 作大小写敏感比较而停止，尚未构建。新 v3 仅规范化唯一已知 Project ID，包 ID、版本、依赖、contentHash、实际项目路径均继续精确校验。v4 从独立新副本运行，不回写任一旧失败。
 
-可审计原始 JSON 以确定性 gzip 导出，原字节与制品哈希见 [证据 manifest](../evidence/TemporalNative/TP07-P1/manifest.json)。后续采用 [映射限定决定](TP07-mapping-decisions.md)，实际 EF shaper、数据库持久化、scaffold 与迁移仍待验收。
+可审计原始 JSON 以确定性 gzip 导出，原字节与制品哈希见 证据 manifest（历史记录已归档）。后续采用 [映射限定决定](TP07-mapping-decisions.md)，实际 EF shaper、数据库持久化、scaffold 与迁移仍待验收。

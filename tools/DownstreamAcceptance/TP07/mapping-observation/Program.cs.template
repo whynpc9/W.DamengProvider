@@ -16,7 +16,7 @@ string deps = File.ReadAllText(Path.ChangeExtension(Assembly.GetExecutingAssembl
 using var dependencies = JsonDocument.Parse(deps);
 var libraries = dependencies.RootElement.GetProperty("libraries");
 if (loadedHash != expectedHash || loadedMvid != expectedMvid
-    || !libraries.TryGetProperty("W.DmProvider/" + expectedVersion, out var candidate)
+    || !libraries.TryGetProperty("W.DamengProvider/" + expectedVersion, out var candidate)
     || candidate.GetProperty("type").GetString() != "package"
     || !libraries.TryGetProperty("Microsoft.EntityFrameworkCore/10.0.12", out _)
     || !libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _)

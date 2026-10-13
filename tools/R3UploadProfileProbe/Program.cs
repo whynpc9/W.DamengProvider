@@ -75,11 +75,11 @@ internal static class Program
         string actual = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
         Require(requested == Version && actual == Version && manifest.GetProperty("version").GetString() == Version &&
             manifest.GetProperty("package_sha256").GetString() == PackageSha && Hash(File.ReadAllBytes(assembly.Location)) == DllSha &&
-            manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DmProvider.dll").GetString() == DllSha &&
+            manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString() == DllSha &&
             assembly.ManifestModule.ModuleVersionId.ToString("D") == Mvid &&
-            Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DmProvider.dll")), "accepted_package_identity_mismatch");
+            Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DamengProvider.dll")), "accepted_package_identity_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "R3UploadProfileProbe.deps.json")));
-        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DmProvider/" + Version).GetProperty("type").GetString() == "package", "package_reference_required");
+        Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + Version).GetProperty("type").GetString() == "package", "package_reference_required");
         Report["package_version"] = Version; Report["package_sha256"] = PackageSha; Report["loaded_assembly_sha256"] = DllSha;
         Report["loaded_assembly_mvid"] = Mvid; Report["reference_kind"] = "exact_PackageReference";
     }

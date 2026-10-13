@@ -23,7 +23,7 @@ class ExecutionOverlayTests(unittest.TestCase):
         for directory in (self.producer, self.execution, self.output):
             directory.mkdir(mode=0o700)
         for path, value in [('src/provider.cs', b'original-product\n'), ('tests/original.cs', b'original-test\n'),
-                            ('global.json', b'{"sdk":{"version":"10.0.203"}}\n'),
+                            ('global.json', b'{"sdk":{"version":"10.0.401"}}\n'),
                             ('docs/report.md', b'frozen-report\n'), (TOOL, b'old-runner\n')]:
             target = self.producer / path
             target.parent.mkdir(parents=True, exist_ok=True)

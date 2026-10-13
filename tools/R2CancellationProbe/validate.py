@@ -90,7 +90,7 @@ def main():
             report.get('task') == 'T14' and report.get('implementation') == 'W-package' and report.get('accepted') is True and
             report.get('exit_code') == 0 and report.get('status') == 'package_cancellation_verified' and
             report.get('package_version') == package['version'] and report.get('package_sha256') == package['package_sha256'] and
-            report.get('loaded_assembly_sha256') == loaded == package['assets']['lib/net10.0/W.DmProvider.dll'] and
+            report.get('loaded_assembly_sha256') == loaded == package['assets']['lib/net10.0/W.DamengProvider.dll'] and
             len(report.get('loaded_assembly_mvid', '')) == 36 and report.get('reference_kind') == 'exact_PackageReference' and
             report.get('server_identity') == report.get('server_schema') == 'WDM_PROVIDER_TEST' and
             report.get('final_verification_identity') == report.get('final_verification_schema') == 'WDM_PROVIDER_TEST' and

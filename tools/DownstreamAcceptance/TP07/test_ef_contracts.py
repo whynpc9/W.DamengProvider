@@ -30,8 +30,8 @@ R = module('ef-run.py')
 L0 = module('runtime-validate.py')
 FIXTURE_ROLE = 'handwritten_contract_fixture_not_runtime_or_DB_acceptance'
 
-# Exact accepted mapping-v5 XML bytes, rather than a self-invented inline provider.
-# Origin: TP07-M1-v5-graph-reuse/execution-source, read during the B01 static repair.
+# Accepted mapping-v5 XML templates with the package name migrated to W.DamengProvider.
+# Origin: TP07-M1-v5-graph-reuse/execution-source; other template bytes remain unchanged.
 PROVIDER_XML = '''<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>W.EntityFrameworkCore.Dameng</AssemblyName>
@@ -48,7 +48,7 @@ PROVIDER_XML = '''<Project Sdk="Microsoft.NET.Sdk">
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="W.DmProvider" />
+    <PackageReference Include="W.DamengProvider" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
 
@@ -64,7 +64,7 @@ CENTRAL_XML = '''<Project>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" />
+    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-temporal.20261008144915]" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12,11.0.0)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12,11.0.0)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12,11.0.0)" />
@@ -648,8 +648,8 @@ class FiniteContracts(unittest.TestCase):
             ('fakefailed', lambda x: x['steps'][0].update(status='failed')), ('nocall', lambda x: x['steps'][0].update(call_returned=False))])
 
     def test_provider_central_and_inline_templates_same_actual_input_path(self):
-        self.assertEqual('163c17cc3b8c6df3ae9b6914d079678676d9676075e910465e0810742aa7b745', hashlib.sha256(PROVIDER_XML.encode()).hexdigest())
-        self.assertEqual('b7b340c8c8b90816f5cdb612acb0a26ea00856b344b081764a51b2e290d25846', hashlib.sha256(CENTRAL_XML.encode()).hexdigest())
+        self.assertEqual('db6c5df218800654f6fbe9bf27c26e8e0d7c499de96454ba566a8972bb767d6d', hashlib.sha256(PROVIDER_XML.encode()).hexdigest())
+        self.assertEqual('f4dfceaf53bdc1963fca8a82214f42e7fa39147a8f3a76e97b5fc5f4c02a16f0', hashlib.sha256(CENTRAL_XML.encode()).hexdigest())
         with tempfile.TemporaryDirectory() as folder:
             replay=Path(folder).resolve()
             provider_name='src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj'
@@ -659,8 +659,8 @@ class FiniteContracts(unittest.TestCase):
             for name in names[1:]:
                 target=replay/name; target.parent.mkdir(parents=True)
                 target.write_bytes((HERE/'runtime-templates'/Path(name).relative_to('test')).read_bytes())
-            self.assertEqual('f0bdfdd8698fdcf17677c878a7d33947c0dfa0c976fde4d01425e51746489f68',V.sha(replay/names[2]))
-            libs={'W.DmProvider/'+V.policy()['W']['version']:{'type':'package'}}
+            self.assertEqual('7de47ee032fbe240744c3db345019b0a1bffefd6fe28b856cad3573d94cea0c7',V.sha(replay/names[2]))
+            libs={'W.DamengProvider/'+V.policy()['W']['version']:{'type':'package'}}
             libs.update({package+'/10.0.12':{'type':'package'} for package in ('Microsoft.EntityFrameworkCore','Microsoft.EntityFrameworkCore.Relational','Microsoft.EntityFrameworkCore.Abstractions')})
             assets=[]; asset_documents=[]
             provider_target=str(replay/provider_name)
@@ -672,12 +672,13 @@ class FiniteContracts(unittest.TestCase):
             def hashes(): return {name:V.sha(replay/name) for name in names+['Directory.Packages.props'] if (replay/name).exists()}
             for asset in assets: V.project_dependencies(replay,asset,hashes())
             negative_props=[
-                ('missing_version',CENTRAL_XML.replace('    <PackageVersion Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" />\n','')),
+                ('old_package_version',CENTRAL_XML.replace('Include="W.DamengProvider"','Include="W.DmProvider"')),
+                ('missing_version',CENTRAL_XML.replace('    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-temporal.20261008144915]" />\n','')),
                 ('wrong_version',CENTRAL_XML.replace('[0.1.0-temporal.20261008144915]','[0.1.0]')),
                 ('wide_range',CENTRAL_XML.replace('[0.1.0-temporal.20261008144915]','[0.1.0-temporal.20261008144915,1.0.0)')),
                 ('management_disabled',CENTRAL_XML.replace('>true<','>false<')),
                 ('conditional_parent',CENTRAL_XML.replace('<ItemGroup>','<ItemGroup Condition="false">')),
-                ('duplicate_version',CENTRAL_XML.replace('</ItemGroup>','<PackageVersion Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" /></ItemGroup>'))]
+                ('duplicate_version',CENTRAL_XML.replace('</ItemGroup>','<PackageVersion Include="W.DamengProvider" Version="[0.1.0-temporal.20261008144915]" /></ItemGroup>'))]
             for label,text in negative_props:
                 with self.subTest(mutation=label):
                     central.write_text(text)
@@ -689,14 +690,15 @@ class FiniteContracts(unittest.TestCase):
             pinned=hashes(); central.write_text(CENTRAL_XML+'\n')
             with self.assertRaises(V.ContractError): V.project_dependencies(replay,assets[0],pinned)
             central.write_text(CENTRAL_XML)
-            for label,text in [('W_ProjectReference',PROVIDER_XML.replace('</Project>','<ItemGroup><ProjectReference Include="../../W.DmProvider/W.DmProvider.csproj" /></ItemGroup></Project>')),
-                    ('VersionOverride',PROVIDER_XML.replace('Include="W.DmProvider" />','Include="W.DmProvider" VersionOverride="0.1.0" />'))]:
+            for label,text in [('W_ProjectReference',PROVIDER_XML.replace('</Project>','<ItemGroup><ProjectReference Include="../../W.DamengProvider/W.DamengProvider.csproj" /></ItemGroup></Project>')),
+                    ('old_package_reference',PROVIDER_XML.replace('Include="W.DamengProvider"','Include="W.DmProvider"')),
+                    ('VersionOverride',PROVIDER_XML.replace('Include="W.DamengProvider" />','Include="W.DamengProvider" VersionOverride="0.1.0" />'))]:
                 with self.subTest(mutation=label):
                     provider.write_text(text)
                     with self.assertRaises(V.ContractError): V.project_dependencies(replay,assets[0],hashes())
             provider.write_text(PROVIDER_XML)
             for label,badlibs in [('official',dict(libs,**{'DM.DmProvider/8.0':{'type':'package'}})),
-                    ('wrong_candidate',{('W.DmProvider/0.1.0' if key.startswith('W.DmProvider/') else key):val for key,val in libs.items()})]:
+                    ('wrong_candidate',{('W.DamengProvider/0.1.0' if key.startswith('W.DamengProvider/') else key):val for key,val in libs.items()})]:
                 with self.subTest(mutation=label):
                     document=copy.deepcopy(asset_documents[0]); document['libraries']=badlibs
                     (replay/assets[0]).write_text(json.dumps(document))
@@ -712,6 +714,7 @@ class FiniteContracts(unittest.TestCase):
             default_line='    <TP07ProviderProject '+condition+'>../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj</TP07ProviderProject>\n'
             reference_line='<ProjectReference Include="$(TP07ProviderProject)" />'
             mutations=[
+                ('old_package_reference',original_literal.replace('Include="W.DamengProvider"','Include="W.DmProvider"')),
                 ('missing_property',original_literal.replace(default_line,'')),
                 ('changed_default',original_literal.replace('>../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj<','>../../src/Other/Other.csproj<')),
                 ('changed_condition',original_literal.replace(condition,'Condition="true"')),
@@ -730,6 +733,7 @@ class FiniteContracts(unittest.TestCase):
             literal.write_text(original_literal)
             runtime=replay/names[1]; original_runtime=runtime.read_text()
             for label,text in [('E_property_reference',original_runtime.replace('Include="../../src/W.EntityFrameworkCore.Dameng/W.EntityFrameworkCore.Dameng.csproj"','Include="$(TP07ProviderProject)"')),
+                    ('old_package_reference',original_runtime.replace('Include="W.DamengProvider"','Include="W.DmProvider"')),
                     ('E_bracket_version',original_runtime.replace('Version="0.1.0-temporal.20261008144915"','Version="[0.1.0-temporal.20261008144915]"')),
                     ('E_version_range',original_runtime.replace('Version="0.1.0-temporal.20261008144915"','Version="[0.1.0-temporal.20261008144915,1.0.0)"'))]:
                 with self.subTest(mutation=label):

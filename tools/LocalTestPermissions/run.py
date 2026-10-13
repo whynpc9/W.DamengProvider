@@ -23,7 +23,7 @@ TEST_PRIVATE_VARIABLE = "WDM_PROVIDER_TEST_INSPECTION_CONNECTION_STRING"
 ROLE = "SOI"
 SOURCES = ("Program.cs", "LocalTestPermissions.csproj", "run.py", "README.md")
 ARTIFACTS = ("LocalTestPermissions.dll", "LocalTestPermissions.deps.json",
-             "LocalTestPermissions.runtimeconfig.json", "W.DmProvider.dll")
+             "LocalTestPermissions.runtimeconfig.json", "W.DamengProvider.dll")
 PROOF_KEYS = {"AdminConfiguredSa", "AdminIdentitySa", "RoleReadBefore", "RolePresentBefore",
               "GrantAttempted", "GrantAcknowledged", "RoleReadAfter", "RolePresentAfter",
               "RoleWithoutAdminOption", "AdminClosed"}

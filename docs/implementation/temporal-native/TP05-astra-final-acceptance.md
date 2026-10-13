@@ -20,7 +20,7 @@
 
 目标门与完整套件重叠，不把这些计数相加为独立测试总数。388 项 source manifest 在 workspace 与冻结 source 两处均无漂移，10 项汇总程序集 SHA 均匹配。v2–v6 历史失败 summary 实读哈希均匹配 v7 manifest 的保留 pin；旧失败未被本轮成功覆盖。
 
-TP05 的最终测试源码 SHA 为 `7eb0d1a528c700fdf9e7a4b2e6fd3d06c7fb43571741da64010b5477e9483e29`。继 v1/v2 静态报告之后，DmField 两处构造、public bdta fixture 赋值、DateTime/DTO expected 条件装箱均已经 root 定点修复、逐次逆向哈希确认及本轮独立运行验证。此前静态审阅未发现的 fixture 缺陷由历史失败记录保留；未通过改产品或削弱 actual 类型/值/offset 断言处理。
+TP05 的最终测试源码 SHA 为 `7eb0d1a528c700fdf9e7a4b2e6fd3d06c7fb43571741da64010b5477e9483e29`。继 v1/v2 静态报告之后，DmField 两处构造、public bdta fixture 赋值、DateTime/DTO expected 条件装箱均已经 root 定点修复、逐次回退修改后核对哈希及本轮独立运行验证。此前静态审阅未发现的 fixture 缺陷由历史失败记录保留；未通过改产品或削弱 actual 类型/值/offset 断言处理。
 
 99 格独立 execution mapping 与原 policy 的 case ID 集合完全一致且唯一；逐项定位 TRX 中正常/NULL 结果及已记录 async 对应项，均 Passed，normal testId 也一致。mapping 的 TRX、matrix、policy 和 source manifest pin 匹配。原 coverage 仍保留历史 not_run；本次成功记录在新 execution mapping，不回写旧 policy。手工 ResultColumn raw fixture 仅证明 Reader 输入/snapshot/Unknown-format 行为，不升级为真实 decoder provenance 或 DB 证据；实际 decoder 来源由 TP04 完整帧测试承担。
 

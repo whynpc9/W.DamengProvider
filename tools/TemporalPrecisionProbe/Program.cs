@@ -30,7 +30,7 @@ internal static class Program
     private const string PackageHash = "23b4b6a88f14bd58bfe98d6703e81181b89fd4c43390a2b22b1092d17c616df9";
     private const string DllHash = "ddd64493db5208efaabd2c7edd72350bc48b9f8ab1e5edac277a26c123621eb1";
     private const string Mvid = "ebec302b-ca05-4037-8e44-4bab084b226c";
-    private const string AssetPath = "lib/net10.0/W.DmProvider.dll";
+    private const string AssetPath = "lib/net10.0/W.DamengProvider.dll";
     private const string TemporalClass = "W.Dm.DmDateTime";
 #endif
     private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;

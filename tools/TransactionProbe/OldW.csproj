@@ -8,8 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
-    <Reference Include="W.DmProvider">
-      <HintPath>../../.local/t08/accepted-binaries/net10.0/W.DmProvider.dll</HintPath>
+    <Reference Include="W.DamengProvider">
+      <HintPath>../../.local/t08/accepted-binaries/net10.0/W.DamengProvider.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

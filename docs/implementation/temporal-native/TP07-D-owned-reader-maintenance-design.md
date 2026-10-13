@@ -127,7 +127,7 @@ High 后续任务应限定以下文件，实际最小差异由源码审查确认
 
 | 范围 | 允许改动 |
 | --- | --- |
-| tracked `runtime-templates/common/OwnedObjects.cs` | 与恢复版相同的唯一 PK using block；after SHA 一致 |
+| tracked `runtime-templates/common/OwnedObjects.cs` | 与修复前版本相同的唯一 PK using block；after SHA 一致 |
 | tracked `design-cases.json` | 只更新该 immutable source hash；case/window/timeout/SQL/marker/oracle 规则不变 |
 | tracked `design-validate.py` | 验证固定维护 origin/approval、完整物理源、唯一替换；D各阶段 maintenance 一致 |
 | tracked `test_design_contracts.py` | 有意义的维护来源正/反例，不改原 guard/cleanup/runtime acceptance 断言 |

@@ -23,7 +23,7 @@ W `DmResultSetCache.FillRows:280–344`在`!isRsBdta`路径按每cell长度直�
 
 另已将当前W DmResultSetCache.cs与绑定原v23包的producer manifest逐项核对：SHA `dbda075f901f490176915b691fc7e7009f56578f615546928a250d07cf8d33e1`、7666字节均一致。因此这里的FillRows/GetBytes源码事实可追溯到实际W基线身份，不仅是当前工作树的相似实现。
 
-固定O net9恢复源码的 `decompiled/net9.0/Dm/DmResultSetCache.cs:276–329`及DmConvertion.GetBytes同样是ordinary直接复制链。该结论限定当前已固定并在运行中核SHA/MVID的O资产，不推广其它官方版本。BDTA走另一decode链，不纳入此证明。
+官方 O 的对照结论仅适用于当时固定并在运行中核对身份的资产，不推广到其他版本。当前 W 的 ordinary 缓存复制链见本节产品源码说明；BDTA 走另一解码链，不纳入此证明。
 
 因此可在任何temporal getter之前，从当前已fetch cell复制受限bytes作独立分量输入。它是协议完成帧拆分后的实际cell，不是encoder输出，也不是由FF9/CLR值反造。复制本身不引入时间转换；不读取认证帧或任意整消息。
 

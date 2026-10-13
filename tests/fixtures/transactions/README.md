@@ -1,6 +1,6 @@
 # T10/T11 transaction boundary scenarios
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`. Synthetic entries use `case_id`, `contract`, `execution_status: not_run`, `input`, and `expected`. Probe entries are procedures only and remain `planned_not_run`. See [S07](../../../docs/implementation/v1/specs/07-transactions-and-savepoints.md) and [T10-design](../../../docs/implementation/T10-design.md).
+`scenarios.json` separates synthetic `cases` from `real_database_probes`. Synthetic entries use `case_id`, `contract`, `execution_status: not_run`, `input`, and `expected`. Probe entries are procedures only and remain `planned_not_run`. See [transaction compatibility contract](../../../docs/compatibility/T10-transactions.md) and [T10-design](../../../docs/implementation/T10-design.md).
 
 ## Evidence and model boundaries
 

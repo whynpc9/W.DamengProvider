@@ -6,8 +6,8 @@ index f2f3fad..9ca452e 100644
      <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
    </PropertyGroup>
    <ItemGroup>
--    <PackageVersion Include="W.DmProvider" Version="[0.1.0-temporal.20261008144915]" />
-+    <PackageVersion Include="W.DmProvider" Version="[0.1.0-efcompat.20261012165201]" />
+-    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-temporal.20261008144915]" />
++    <PackageVersion Include="W.DamengProvider" Version="[0.1.0-efcompat.20261012165201]" />
      <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.12,11.0.0)" />
      <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational.Specification.Tests" Version="[10.0.12,11.0.0)" />
      <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="[10.0.12,11.0.0)" />
@@ -17,7 +17,7 @@ index b0dfb7c..fc4752e 100644
 +++ b/src/W.EntityFrameworkCore.Dameng/packages.lock.json
 @@ -16,9 +16,9 @@
        },
-       "W.DmProvider": {
+       "W.DamengProvider": {
          "type": "Direct",
 -        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
 -        "resolved": "0.1.0-temporal.20261008144915",
@@ -53,14 +53,14 @@ index ce65989..0e99c90 100644
          "type": "Project",
          "dependencies": {
            "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
--          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
-+          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+-          "W.DamengProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DamengProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
          }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
 @@ -202,9 +202,9 @@
        },
-       "W.DmProvider": {
+       "W.DamengProvider": {
          "type": "CentralTransitive",
 -        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
 -        "resolved": "0.1.0-temporal.20261008144915",
@@ -79,14 +79,14 @@ index 4b58eab..e1ba482 100644
          "type": "Project",
          "dependencies": {
            "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
--          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
-+          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+-          "W.DamengProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DamengProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
          }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
 @@ -474,9 +474,9 @@
        },
-       "W.DmProvider": {
+       "W.DamengProvider": {
          "type": "CentralTransitive",
 -        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
 -        "resolved": "0.1.0-temporal.20261008144915",
@@ -112,8 +112,8 @@ index 9688a0a..c8584d6 100644
              Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant());
          using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(typeof(TP07TemporalMappingTests).Assembly.Location, ".deps.json")));
          var libraries = deps.RootElement.GetProperty("libraries");
--        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
-+        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-efcompat.20261012165201").GetProperty("type").GetString());
+-        Assert.Equal("package", libraries.GetProperty("W.DamengProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
++        Assert.Equal("package", libraries.GetProperty("W.DamengProvider/0.1.0-efcompat.20261012165201").GetProperty("type").GetString());
          Assert.True(libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _));
          Assert.DoesNotContain(libraries.EnumerateObject(), item => item.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase));
      }
@@ -125,14 +125,14 @@ index de551bc..fc47901 100644
          "type": "Project",
          "dependencies": {
            "Microsoft.EntityFrameworkCore.Relational": "[10.0.12, 11.0.0)",
--          "W.DmProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
-+          "W.DmProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
+-          "W.DamengProvider": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]"
++          "W.DamengProvider": "[0.1.0-efcompat.20261012165201, 0.1.0-efcompat.20261012165201]"
          }
        },
        "Microsoft.EntityFrameworkCore.Relational": {
 @@ -393,9 +393,9 @@
        },
-       "W.DmProvider": {
+       "W.DamengProvider": {
          "type": "CentralTransitive",
 -        "requested": "[0.1.0-temporal.20261008144915, 0.1.0-temporal.20261008144915]",
 -        "resolved": "0.1.0-temporal.20261008144915",

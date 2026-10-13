@@ -6,7 +6,7 @@ Date: 2026-09-29. This records source verified fields used by T06. It does not c
 
 | Field | Offset and size | Source evidence | Use |
 | --- | --- | --- | --- |
-| Header | 0–63, 64 bytes | `src/W.DmProvider/Internal/Legacy/Dm/T02_0200008D.cs:144`, `:199-209` | Read exactly 64 bytes before interpreting the body length. |
+| Header | 0–63, 64 bytes | `src/W.DamengProvider/Internal/Legacy/Dm/T02_0200008D.cs:144`, `:199-209` | Read exactly 64 bytes before interpreting the body length. |
 | Command | 4–5, little endian signed short | `Dm/T02_0200008D.cs:150`, `:205-209`; `A/T02_02000092.cs:610-617`, `:640-643` | Command 200 is STARTUP; 269 is heartbeat (`Dm/T02_0200008D.cs:140-142`). |
 | Body length | 6–9, little endian signed int, excludes 64 byte header | `Dm/T02_0200008D.cs:152`, `:205-209`, `:381-388`; `A/T02_02000092.cs:620-627`, `:645-648` | Reject negative, checked overflow and total over 64 MiB before growing the receive buffer. |
 | Compression marker | 18 | `Dm/T02_0200008D.cs:160`; STARTUP encoding in `A/T02_02000093.cs:40` | T06 does not implement decompression. Nonzero configured compression is rejected before handshake; received marked compressed frames fail before body allocation. |

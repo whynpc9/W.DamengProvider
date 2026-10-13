@@ -441,7 +441,7 @@
 +            Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(driver.Location))).ToLowerInvariant());
 +        using var deps = JsonDocument.Parse(File.ReadAllText(Path.ChangeExtension(typeof(TP07TemporalMappingTests).Assembly.Location, ".deps.json")));
 +        var libraries = deps.RootElement.GetProperty("libraries");
-+        Assert.Equal("package", libraries.GetProperty("W.DmProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
++        Assert.Equal("package", libraries.GetProperty("W.DamengProvider/0.1.0-temporal.20261008144915").GetProperty("type").GetString());
 +        Assert.True(libraries.TryGetProperty("Microsoft.EntityFrameworkCore.Relational/10.0.12", out _));
 +        Assert.DoesNotContain(libraries.EnumerateObject(), item => item.Name.StartsWith("DM.DmProvider/", StringComparison.OrdinalIgnoreCase));
 +    }

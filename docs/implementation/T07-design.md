@@ -1,6 +1,6 @@
 # T07 — TLS 与原生资源边界
 
-状态：T07 已实施并通过独立验收，实际范围见 [报告](reports/T07.md)。依赖 T06 已独立验收；其 308 个实现输入及附件已保存到 `.local/t06/accepted-source/`。
+状态：T07 已实施并通过独立验收，实际范围见 报告（历史记录已归档）。依赖 T06 已独立验收；其 308 个实现输入及附件已保存到 `.local/t06/accepted-source/`。
 
 ## 交付和分工
 
@@ -30,7 +30,7 @@ RequireTls 遇明文或 AUTH_ONLY 在 LOGIN 之前拒绝。PlaintextAllowed 允�
 
 ## 证据来源和模式边界
 
-恢复源码的 STARTUP response 从头偏移 20 的 4 字节小端字段取得 Encrypt；旧逻辑区分 1/4 的持续 SSL 和 2 的认证阶段 SSL。密码/消息 cipher 的协商字段独立，不能用它们证明业务流量 TLS。
+当前 STARTUP response 在头偏移 20 的 4 字节小端字段读取 Encrypt。产品按已验证的 wire 模式选择完整 TLS 或明确拒绝；密码/消息 cipher 的协商字段独立，不能用它们证明业务流量 TLS。
 
 厂商文档将 0 定义为无 TLS，1 为完整 TLS 且双方验证，2 为仅认证，4 为完整加密但不验证对方，5 为客户端验证服务器的完整 TLS，6 为 TLCP。W 对其支持的完整 TLS 模式仍强制客户端证书链和主机名验证；配置值与 wire 字段的对应另行实测。[达梦用户标识与鉴别](https://eco.dameng.com/document/dm/zh-cn/pm/identification-authentication.html)、[通信加密](https://eco.dameng.com/document/dm/zh-cn/pm/communication-encryption.html)。
 

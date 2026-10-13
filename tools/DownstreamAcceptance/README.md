@@ -11,7 +11,7 @@ python3 tools/DownstreamAcceptance/prepare.py bind --output .local/t11/ef/<run> 
   --version 0.1.0-t11.<UTCtimestamp> --driver-dll-sha256 <SHA256>
 ```
 
-PackageId 固定 `W.DmProvider`、TFM `net10.0`；bind 校验 nuspec identity、nupkg hash 与包内 DLL hash，拷贝候选到 isolated local feed，记录确定性补丁。生产 EF src 的 `using Dm` / XML cref / PackageReference 和 central package 切到 W；EF 固定 `10.0.12`。SQL generator、SingleModificationCommandBatch、类型行为保持原输入；日期时间/TimeSpan GetString 路径保留。上游 tests/launcher 未切换，不能把原 tests 当 W suite 执行。
+PackageId 固定 `W.DamengProvider`、TFM `net10.0`；bind 校验 nuspec identity、nupkg hash 与包内 DLL hash，拷贝候选到 isolated local feed，记录确定性补丁。生产 EF src 的 `using Dm` / XML cref / PackageReference 和 central package 切到 W；EF 固定 `10.0.12`。SQL generator、SingleModificationCommandBatch、类型行为保持原输入；日期时间/TimeSpan GetString 路径保留。上游 tests/launcher 未切换，不能把原 tests 当 W suite 执行。
 
 Low 的受控命令：
 

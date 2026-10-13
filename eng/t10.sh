@@ -20,7 +20,7 @@ flags=(-m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-serve
 source_hash() {
   python3 - <<'PY'
 import hashlib,pathlib
-root=pathlib.Path('src/W.DmProvider'); digest=hashlib.sha256()
+root=pathlib.Path('src/W.DamengProvider'); digest=hashlib.sha256()
 for path in sorted(root.rglob('*')):
     if not path.is_file() or any(part in ('bin','obj') for part in path.parts): continue
     digest.update(str(path.relative_to(root)).encode()); digest.update(b'\0')
@@ -59,8 +59,8 @@ run_probe() {
 
 case "$mode" in
   baseline)
-    [[ -s .local/t08/accepted-binaries/net10.0/W.DmProvider.dll ]] || failed frozen_w_missing 1
-    [[ "$(shasum -a 256 .local/t08/accepted-binaries/net10.0/W.DmProvider.dll | cut -d' ' -f1)" == \
+    [[ -s .local/t08/accepted-binaries/net10.0/W.DamengProvider.dll ]] || failed frozen_w_missing 1
+    [[ "$(shasum -a 256 .local/t08/accepted-binaries/net10.0/W.DamengProvider.dll | cut -d' ' -f1)" == \
        51e340397f64538e41d999fcf01e154bfabbf94f08704e749bf03ac7128440f0 ]] || failed frozen_w_hash_invalid 1
     run_logged official_build dotnet build tools/TransactionProbe/Official.csproj "${flags[@]}"
     run_logged oldw_build dotnet build tools/TransactionProbe/OldW.csproj "${flags[@]}"
@@ -204,7 +204,7 @@ PY
     python3 - "$run/candidate_verified.json" "$run" "$source_start" <<'PY' || failed real_result_validation 1
 import hashlib,json,pathlib,sys
 r=json.load(open(sys.argv[1])); folder=pathlib.Path(sys.argv[2]); cases=r.get('scenarios',{})
-assembly=pathlib.Path('tools/TransactionProbe/bin/Candidate/net10.0/W.DmProvider.dll')
+assembly=pathlib.Path('tools/TransactionProbe/bin/Candidate/net10.0/W.DamengProvider.dll')
 actual=hashlib.sha256(assembly.read_bytes()).hexdigest()
 if (r.get('task')!='T10' or r.get('implementation')!='W-T10-candidate' or
     r.get('status')!='candidate_verified' or r.get('server_version')!='8.1.5.60' or
