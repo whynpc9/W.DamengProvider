@@ -1,6 +1,8 @@
 # .NET 原生时间精度兼容说明
 
-本页记录时间精度行为和已表征 profile；历史验证结果不代表当前重命名发布候选已验收。设计见 [v2 计划](../implementation/temporal-dotnet-precision-plan.v2.md)，驱动验收见 [TP06 最终接受](../implementation/temporal-native/TP06-acceptance.md)，EF 收口见 [TP07/TP08 收口报告](../implementation/temporal-native/TP07-TP08-closure.md)。
+当前已发布 `0.1.0-preview.1`；本页描述产品行为及历史阶段证据，正式发布范围见[发布记录](../release-0.1.0-preview.1.md)。
+
+本页记录时间精度行为和已表征 profile；历史验证结果不代表该发布版本已验收。设计见 [v2 计划](../implementation/temporal-dotnet-precision-plan.v2.md)，驱动验收见 [TP06 最终接受](../implementation/temporal-native/TP06-acceptance.md)，EF 收口见 [TP07/TP08 收口报告](../implementation/temporal-native/TP07-TP08-closure.md)。
 
 ## 行为变化
 

@@ -2,14 +2,21 @@
   "schema_version": 1,
   "updated_at": "2026-10-13",
   "product": "W.DamengProvider",
-  "state": "nuget_preparation_verified",
-  "release_accepted": false,
-  "published": false,
+  "state": "published_and_public_install_verified",
+  "release_accepted": true,
+  "published": true,
   "notes": [
-    "项目、包、程序集及GitHub仓库已改为 W.DamengProvider；发布准备由codex/dameng-nuget-preparation分支交付。",
-    "本轮十二套离线2050项通过，最终包独立消费、七项首次初始化及shared/TLS TEST smoke通过。",
-    "未创建tag、未上传NuGet、未运行云端Actions；release_accepted=false不代表本地准备检查失败。",
-    "当前检查结论与覆盖边界见 docs/release-preflight.md；历史生成材料保存在本机ignored归档。"
+    "2026-10-13 已发布到 NuGet；普通 CI 与 tag 发布工作流成功。",
+    "release_accepted 仅指发布记录所列预览范围，不是全环境生产接受。",
+    "十二套离线2050项、七项首次初始化、实际上传包 shared/TLS TEST smoke，以及公开源独立安装和签名验证通过。",
+    "公开包与 Actions 原包的非签名 ZIP 项一致；公开安装阶段未重复实库，原实库证据归属已验证的同载荷。",
+    "完整下游 EF、长时压力、额外 OS/RID、服务器及旧 .NET 版本未扩大接受；EF 接入由下游管理。"
   ],
-  "local_release_preflight_passed": true
+  "local_release_preflight_passed": true,
+  "release_scope": "preview_offline_and_shared_tls_smoke",
+  "version": "0.1.0-preview.1",
+  "tag": "v0.1.0-preview.1",
+  "release_commit": "a67a9298daaa42b18203a9b405ec05a3357ed4b0",
+  "release_report": "../release-0.1.0-preview.1.md",
+  "roadmap": "../roadmap.md"
 }

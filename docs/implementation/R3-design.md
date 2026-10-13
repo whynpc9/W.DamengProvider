@@ -1,5 +1,7 @@
 # R3 实施设计：DataSource、保守连接池、流式 LOB 与独立验收
 
+> 历史阶段设计：下文的实施状态、任务窗口和审批记录仅属于编写时点。当前产品行为见[兼容说明](../compatibility/R3.md)，当前发布与待办见 [progress.json](progress.json) 和[路线图](../roadmap.md)。
+
 设计状态：`design_ready`，尚无 R3 实现或验收结论。设计依据为当前 `ed0c8a1` 工作树、`progress.json`、v1 S09/S10/S12 及 release-gates；旧报告的 working-tree/未提交说明是历史运行身份，不覆盖当前 Git 状态。用户本轮要求完整实现 R3，并指定 Astra High 设计、Sol High 编码、Sol Low 独立验收；root 最终审阅。本文仅为设计，不替代任务报告。
 
 ## 1. 范围、顺序与前置状态

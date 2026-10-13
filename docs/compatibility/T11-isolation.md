@@ -1,6 +1,8 @@
 # T11 隔离级别与保存点 SQL
 
-本页描述隔离级别与保存点行为。当前发布准备状态见 [progress.json](../implementation/progress.json)；历史 T11 结果不能作为当前候选通过的证明。
+当前已发布 `0.1.0-preview.1`；本页描述产品行为及历史阶段证据，正式发布范围见[发布记录](../release-0.1.0-preview.1.md)。
+
+本页描述隔离级别与保存点行为。当前发布状态见 [progress.json](../implementation/progress.json)；历史 T11 结果不能作为当前候选通过的证明。
 
 | 级别 | 公开行为 |
 | --- | --- |

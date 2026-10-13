@@ -2806,5 +2806,9 @@
     "handoff": "HANDOFF-2026-10-12.md",
     "all_unstarted_windows_invalidated": true,
     "only_handoff_documentation_authorized": true
-  }
+  },
+  "record_scope": "historical_temporal_execution_snapshot",
+  "current_project_status": "../progress.json",
+  "closure_report": "TP07-TP08-closure.md",
+  "record_note": "保留当时任务、失败和停止标志，不作为当前项目待办或未发布判断。"
 }
