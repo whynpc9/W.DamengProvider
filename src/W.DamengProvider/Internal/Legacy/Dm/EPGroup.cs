@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using W.Dm.Config;
+using W.Dm.Internal.Transport;
 using W.Dm.filter.log;
 using W.Dm.util;
 
@@ -104,6 +105,7 @@ internal class EPGroup
 	{
 		StringBuilder stringBuilder = new StringBuilder();
 		Exception ex = null;
+		Exception transportFailure = null;
 		EP[] array;
 		if (lastTime && !firstTime)
 		{
@@ -145,6 +147,9 @@ internal class EPGroup
 				{
 					ex = ex2;
 				}
+				if (DmTransportFailure.IsTransportFailure(ex2)) transportFailure = ex2;
+				else if (ex2 is DmException { InnerException: var cause } && DmTransportFailure.IsTransportFailure(cause))
+					transportFailure = cause;
 				stringBuilder.Append("[").Append(eP.ToString()).Append("]")
 					.Append(ex2.Message)
 					.Append(StringUtil.LINE_SEPARATOR);
@@ -157,6 +162,9 @@ internal class EPGroup
 		}
 		else if (stringBuilder.Length > 0)
 		{
+			// Keep the last socket failure so the public error reports a transport loss.
+			if (transportFailure != null)
+				DmError.ThrowDmException(stringBuilder.ToString(), DmErrorDefinition.ECNET_COMMUNITION_ERROR, transportFailure);
 			DmError.ThrowDmException(stringBuilder.ToString(), DmErrorDefinition.ECNET_COMMUNITION_ERROR);
 		}
 		DmError.ThrowDmException(DmErrorDefinition.ECNET_COMMUNITION_ERROR);

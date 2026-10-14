@@ -16,11 +16,13 @@
 | 显式 DbType.DateTime / DateTimeOffset | 保持兼容默认 16/6、23/6 | 同左 |
 | 显式 DbType.DateTime2 | 26/7 | NotSupportedException |
 | 显式 Scale 0…6 / 7 / 8…9 | legacy 同精度 / extended 七位 / 拒绝 | 0…6 legacy；7…9 拒绝 |
+| typed NULL，Scale 超过 profile 上限 | 声明降为 extended 7 | 声明降为 legacy 6 |
 
 - 可靠 fixed describe 始终优先：显式 DateTime2 写入六位列时仍受该列六位约束。
+- typed NULL 不携带小数位：有 fixed describe 时沿用服务器声明（含 8/9 位列），否则按上表降级声明；非 NULL 值的限制不变（[issue #16 修订](I16-ef-integration-feedback.md#3-89-位时间列的-typed-null)，未随 0.1.0-preview.1 发布）。
 - Reader：`GetString` 从原始纳秒字段返回精确文本；8/9 位列中不能整除 100ns 的值，CLR getter 抛 `OverflowException`。schema `NumericScale` 报真实小数位数。TZ 列 `GetValue` 返回 `DateTimeOffset`（官方驱动为 `DateTime`）。
 - 公开旧 helper（`DmDateTime`、`DmTime`、`DmIntervalDT` 等）先前舍入的超精度输入现在拒绝；签名不变。
-- 保守关闭：TIME/INTERVAL 七位写、八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
+- 保守关闭：TIME/INTERVAL 七位写、非 NULL 八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
 
 ## 历史验证与产品 profile 限制
 

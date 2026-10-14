@@ -284,9 +284,12 @@ internal partial class B
 			decodeOwner = this;
 			return P_0.decode();
 		}
-		catch (IOException)
+		catch (IOException ex)
 		{
 			E();
+			// Keep a driver-observed socket failure as the cause for the public Transport shape.
+			if (DmTransportFailure.IsTransportFailure(ex))
+				DmError.ThrowDmException(new DmError(DmErrorDefinition.ECNET_COMMUNITION_ERROR).Message, DmErrorDefinition.ECNET_COMMUNITION_ERROR, ex);
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_COMMUNITION_ERROR);
 			return default(A);
 		}

@@ -14,6 +14,7 @@ using W.Dm.Internal.Diagnostics;
 using W.Dm.Internal.Sessions;
 using W.Dm.Internal.Transport;
 using W.Dm.Internal.Pooling;
+using W.Dm.Internal.Types;
 using W.Dm.Config;
 using W.Dm.filter;
 using W.Dm.util;
@@ -167,6 +168,8 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 	private DmDataSource dataSourceOwner;
 	internal DmPoolOwner PoolOwner { get; private set; }
 	internal DmSession Session => Volatile.Read(ref session);
+	internal const string BrokenConnectionMessage = "Connection is broken because an earlier operation failed; " +
+		"close and reopen it. The earlier exception's FailureInfo describes the cause.";
 	private void OnSessionBroken(DmSession broken)
 	{
 		StateChangeTicket ticket = null;
@@ -190,6 +193,7 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 	internal DmExecutionLease BeginExecution(DmOperationPurpose purpose, DmDeadline deadline, int timeoutSeconds)
 	{
 		DmSession current = Session;
+		if (do_State == ConnectionState.Broken) throw new InvalidOperationException(BrokenConnectionMessage);
 		if (current == null || do_State != ConnectionState.Open)
 			throw new InvalidOperationException("Connection is not open.");
 		return current.BeginExecution(purpose, deadline, timeoutSeconds);
@@ -331,6 +335,18 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 	}
 
 	internal DbProviderFactory do_DbProviderFactory => DmClientFactory.Instance;
+
+	/// <summary>Capability gates of the open physical session; see <see cref="DmServerCapabilities"/>.</summary>
+	public DmServerCapabilities ServerCapabilities
+	{
+		get
+		{
+			if (do_State != ConnectionState.Open)
+				throw new InvalidOperationException("Server capabilities require an open connection.");
+			return new DmServerCapabilities(GetConnInstance().ConnProperty.ServerVersion,
+				DmTemporalLegacyAdapter.Profile(this));
+		}
+	}
 
 	public override string ServerVersion
 	{
@@ -530,7 +546,7 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 		string serverVersion)
 		=> (isolationLevel is System.Data.IsolationLevel.Unspecified or System.Data.IsolationLevel.ReadCommitted) ||
 			((isolationLevel is System.Data.IsolationLevel.ReadUncommitted or System.Data.IsolationLevel.Serializable) &&
-			 string.Equals(serverVersion, "8.1.5.60", StringComparison.Ordinal));
+			 DmServerCapabilities.IsMeasured(serverVersion));
 
 	private DmTransaction BeginLocalTransactionCore(System.Data.IsolationLevel isolationLevel, bool profileProbe)
 	{
@@ -817,7 +833,11 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 				(error as OperationCanceledException)?.CancellationToken ?? default;
 			return new DmOperationCanceledException(info, token, error);
 		}
+		if (error is DmException { InnerException: var socketCause } legacy && legacy.Number != 0 &&
+			DmTransportFailure.IsTransportFailure(socketCause))
+			return DmTransportFailure.Wrap(socketCause, info.WithConnectionLost(), legacy.Message);
 		if (error is DmException driverError) driverError.SetFailureInfo(info);
+		if (DmTransportFailure.IsTransportFailure(error)) return DmTransportFailure.Wrap(error, info.WithConnectionLost());
 		return error;
 	}
 

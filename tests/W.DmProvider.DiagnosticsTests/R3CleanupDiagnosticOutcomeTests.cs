@@ -133,8 +133,8 @@ public sealed class R3CleanupDiagnosticOutcomeTests
         Exception? error = asynchronous ? await Record.ExceptionAsync(() => reader.DisposeAsync().AsTask()) :
             Record.Exception(() => reader.Dispose());
         Assert.NotNull(error);
-        if (failure == "io") Assert.Same(fixture.Channel.ReceiveFailure, error);
-        if (failure == "truncated") Assert.IsType<EndOfStreamException>(error);
+        if (failure == "io") Assert.Same(fixture.Channel.ReceiveFailure, AssertTransport(error).InnerException);
+        if (failure == "truncated") Assert.IsType<EndOfStreamException>(AssertTransport(error).InnerException);
         if (failure == "deadline") Assert.IsType<DmTimeoutException>(error);
         Assert.True(reader.IsClosed);
         Assert.True(fixture.Channel.IsClosed);
@@ -171,7 +171,7 @@ public sealed class R3CleanupDiagnosticOutcomeTests
         fixture.Channel.FailSecondAllocation = true;
         Exception? error = asynchronous ? await Record.ExceptionAsync(() => command.ExecuteNonQueryAsync()) :
             Record.Exception(() => command.ExecuteNonQuery());
-        Assert.IsType<EndOfStreamException>(error);
+        Assert.IsType<EndOfStreamException>(AssertTransport(error).InnerException);
         Assert.Equal(new short[] { 3, 5, 4, 3 }, fixture.Channel.Opcodes);
         var business = Assert.Single(fixture.Channel.CloseInvocations);
         Assert.Same(business, fixture.Channel.FailedAllocationInvocation);
@@ -239,7 +239,7 @@ public sealed class R3CleanupDiagnosticOutcomeTests
             Assert.Equal(DmTransactionOutcome.OutcomeUnknown, timeout.FailureInfo.TransactionOutcome);
             Assert.False(timeout.FailureInfo.ConnectionReusable);
         }
-        else Assert.IsType<EndOfStreamException>(error);
+        else Assert.IsType<EndOfStreamException>(AssertTransport(error).InnerException);
         await observer.AssertResults(("transaction_begin", "success", 1), ("transaction_begin", failure == "deadline" ? "timeout" : "transport_error", 1));
         fixture.Channel.AssertPath(asynchronous);
     }
@@ -355,6 +355,15 @@ public sealed class R3CleanupDiagnosticOutcomeTests
         Assert.Equal(DmPhysicalSessionState.Ready, fixture.Session.State);
     }
 
+    private static DmException AssertTransport(Exception? error)
+    {
+        var transport = Assert.IsType<DmException>(error);
+        Assert.Equal(DmErrorKind.Transport, transport.ErrorKind);
+        Assert.Equal("WDM_TRANSPORT", transport.DriverErrorCode);
+        Assert.False(transport.FailureInfo.ConnectionReusable);
+        Assert.Equal(0, transport.Number);
+        return transport;
+    }
     private static Activity Caller() => new Activity("synthetic.cleanup.caller").SetIdFormat(ActivityIdFormat.W3C).Start();
     private static void AssertCleanupDidNotCompleteBusiness(DmInvocation cleanup)
     {

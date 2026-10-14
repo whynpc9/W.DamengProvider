@@ -149,6 +149,14 @@ public class DmError
 		throw new DmException(dmError.ToString(), dmError);
 	}
 
+	internal static void ThrowDmException(string errInfo, int code, Exception cause)
+	{
+		DmError dmError = new DmError(code, errInfo);
+		DmTrace.TracePrint("ex :" + dmError.State + " " + dmError.Message.ToString());
+		DmTrace.TracePrintStack();
+		throw new DmException(dmError.ToString(), dmError, cause);
+	}
+
 	internal static void ThrowDmException(string errInfo)
 	{
 		DmError dmError = new DmError(-1, errInfo);

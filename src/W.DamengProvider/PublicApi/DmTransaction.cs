@@ -66,8 +66,7 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	private int disposeStarted;
 
 	public DmTransactionOutcome Outcome => (DmTransactionOutcome)Volatile.Read(ref outcome);
-	public override bool SupportsSavepoints =>
-		string.Equals(connInst.ConnProperty.ServerVersion, "8.1.5.60", StringComparison.Ordinal);
+	public override bool SupportsSavepoints => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
 
 	/// <summary>A credential-free cleanup or protocol failure category, when one occurred.</summary>
 	public string FailureInfo => Volatile.Read(ref failureInfo);
@@ -748,6 +747,8 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	// lease and do not pass through this user-command guard.
 	internal static void ValidateCommandBinding(DmConnection connection, DmTransaction selected)
 	{
+		if (connection?.do_State == ConnectionState.Broken)
+			throw new InvalidOperationException(DmConnection.BrokenConnectionMessage);
 		if (connection == null || connection.Session == null || connection.do_State != ConnectionState.Open)
 			throw new InvalidOperationException("Command connection is not open.");
 		DmConnInstance current = connection.GetConnInstance();
@@ -777,7 +778,9 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	{
 		if (connection?.Session?.ActiveTransaction == null ||
 			!ReferenceEquals(connection.Session.ActiveTransaction, selected)) return;
-		var statements = DmParameterBinding.ScanTopLevelStatements(sql);
+		var shapes = DmParameterBinding.ScanTopLevelStatementShapes(sql);
+		var statements = new List<DmSqlStatementHead>(shapes.Count);
+		foreach (DmSqlStatementShape shape in shapes) statements.Add(shape.Head);
 		DmSqlSavepointControl control = default;
 		bool strictSavepoint = !hasBoundParameters && statements.Count == 1 &&
 			DmParameterBinding.TryParseSavepointControl(sql, out control);
@@ -788,9 +791,12 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 			selected.RequireSavepoints();
 			selected.ValidateRawSavepointCapacity(control);
 		}
-		foreach (DmSqlStatementHead statement in statements)
+		if (IsDmlOnlyAnonymousBlock(shapes)) return;
+		foreach (DmSqlStatementShape shape in shapes)
 		{
-			bool forbidden = statement.First switch
+			DmSqlStatementHead statement = shape.Head;
+			// A labeled statement (<<name>> BEGIN/DECLARE/LOOP ...) is PL/SQL control flow.
+			bool forbidden = shape.StartsWithLabel || statement.First switch
 			{
 				"COMMIT" => true,
 				"ROLLBACK" or "SAVEPOINT" or "RELEASE" => !strictSavepoint,
@@ -806,6 +812,27 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 				throw new NotSupportedException("Direct transaction or dynamic control SQL is unavailable inside a local transaction.");
 		}
 	}
+
+	// One BEGIN ... END block whose every statement is plain DML (or NULL) has the
+	// same transaction effect as running those statements one by one. Anything else
+	// in the block (DECLARE, nested blocks, control flow, EXCEPTION handlers, CALL,
+	// EXECUTE IMMEDIATE, COMMIT/ROLLBACK/SAVEPOINT, DDL, a label) keeps the fence.
+	// BEGIN must be the statement's first token and END its only token, so quoted
+	// labels such as <<"B">> or END "B" cannot hide behind the word-only heads.
+	internal static bool IsDmlOnlyAnonymousBlock(IReadOnlyList<DmSqlStatementShape> statements)
+	{
+		if (statements.Count < 2) return false;
+		DmSqlStatementShape first = statements[0], last = statements[^1];
+		if (first.Head.First != "BEGIN" || first.HasPrefixToken || !IsBlockDml(first.Head.Second)) return false;
+		if (last.Head != new DmSqlStatementHead("END", string.Empty, string.Empty) || last.HasNonWordToken) return false;
+		// Every interior statement must start with its DML word: no label or other prefix.
+		for (int index = 1; index < statements.Count - 1; index++)
+			if (statements[index].HasPrefixToken || statements[index].StartsWithLabel ||
+				!IsBlockDml(statements[index].Head.First)) return false;
+		return true;
+	}
+
+	private static bool IsBlockDml(string word) => word is "INSERT" or "UPDATE" or "DELETE" or "MERGE" or "SELECT" or "NULL";
 
 	private void ValidateRawSavepointCapacity(DmSqlSavepointControl control)
 	{
@@ -863,8 +890,7 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
-	private bool SupportsVerifiedDdlCompletion =>
-		string.Equals(connInst.ConnProperty.ServerVersion, "8.1.5.60", StringComparison.Ordinal);
+	private bool SupportsVerifiedDdlCompletion => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
 
 	internal void SetOutcomeFromSession(DmTransactionOutcome next)
 	{

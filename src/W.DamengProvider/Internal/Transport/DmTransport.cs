@@ -200,6 +200,7 @@ internal sealed class DmTransport : IDisposable
             deadline.ThrowIfExpired();
             throw lastFailure ?? new SocketException((int)SocketError.NotConnected);
         }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
         catch (OperationCanceledException) when (!closeSource.IsCancellationRequested)
         {
             Close();
@@ -296,6 +297,7 @@ internal sealed class DmTransport : IDisposable
             deadline.ThrowIfExpired();
             throw lastFailure ?? new SocketException((int)SocketError.NotConnected);
         }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
         catch
         {
             Close();
@@ -363,6 +365,9 @@ internal sealed class DmTransport : IDisposable
         }
         catch (Exception ex) when (ex is AuthenticationException or IOException)
         {
+            // A reset or EOF during the handshake is a transport loss; certificate
+            // validation failures arrive as AuthenticationException and stay unmarked.
+            DmTransportFailure.Observe(ex);
             throw new AuthenticationException("TLS authentication failed.", ex);
         }
         finally
@@ -436,6 +441,9 @@ internal sealed class DmTransport : IDisposable
         }
         catch (Exception ex) when (ex is AuthenticationException or IOException)
         {
+            // A reset or EOF during the handshake is a transport loss; certificate
+            // validation failures arrive as AuthenticationException and stay unmarked.
+            DmTransportFailure.Observe(ex);
             throw new AuthenticationException("TLS authentication failed.", ex);
         }
         finally
@@ -496,44 +504,52 @@ internal sealed class DmTransport : IDisposable
 
     internal void SendAll(byte[] buffer, int offset, int count, DmDeadline deadline, int timeoutMilliseconds, Action<int> onSent = null)
     {
-        DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "send");
-        ValidateRange(buffer, offset, count);
-        IDmByteChannel current = CurrentChannel();
-        int sent = 0;
-        while (sent < count)
+        try
         {
-            DmInvocation invocation = DmInvocation.Current;
-            int timeout;
-            try { timeout = Timeout(deadline, timeoutMilliseconds); }
-            catch (TimeoutException)
+            DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "send");
+            ValidateRange(buffer, offset, count);
+            IDmByteChannel current = CurrentChannel();
+            int sent = 0;
+            while (sent < count)
             {
-                invocation?.Lease.Session.TerminateInvocation(invocation, DmCancelSource.TotalDeadline);
-                invocation?.Lease.Session.MarkRecoverablePreSendFailure(invocation);
-                throw;
+                DmInvocation invocation = DmInvocation.Current;
+                int timeout;
+                try { timeout = Timeout(deadline, timeoutMilliseconds); }
+                catch (TimeoutException)
+                {
+                    invocation?.Lease.Session.TerminateInvocation(invocation, DmCancelSource.TotalDeadline);
+                    invocation?.Lease.Session.MarkRecoverablePreSendFailure(invocation);
+                    throw;
+                }
+                PrepareSendAttempt(invocation, sent == 0);
+                int progress = current.Send(buffer, offset + sent, count - sent, timeout);
+                if (progress > 0 && progress <= count - sent) DmDiagnosticsCore.NetworkBytes(progress, true);
+                CheckOperationDeadline(deadline);
+                if (progress <= 0 || progress > count - sent) throw new IOException("Socket send made no valid progress.");
+                sent += progress;
+                onSent?.Invoke(progress);
             }
-            PrepareSendAttempt(invocation, sent == 0);
-            int progress = current.Send(buffer, offset + sent, count - sent, timeout);
-            if (progress > 0 && progress <= count - sent) DmDiagnosticsCore.NetworkBytes(progress, true);
-            CheckOperationDeadline(deadline);
-            if (progress <= 0 || progress > count - sent) throw new IOException("Socket send made no valid progress.");
-            sent += progress;
-            onSent?.Invoke(progress);
         }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
     }
 
     internal int ReadSome(byte[] buffer, int offset, int count, DmDeadline deadline, int timeoutMilliseconds)
     {
-        DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "receive");
-        ValidateRange(buffer, offset, count);
-        if (count == 0) return 0;
-        DmInvocation.Current?.ThrowIfTerminated();
-        if (DmInvocation.Current is { } invocation) invocation.Phase = DmFailurePhase.Receive;
-        int read = CurrentChannel().Receive(buffer, offset, count, Timeout(deadline, timeoutMilliseconds));
-        if (read > 0 && read <= count) DmDiagnosticsCore.NetworkBytes(read, false);
-        CheckOperationDeadline(deadline);
-        if (read <= 0) throw new EndOfStreamException("Socket closed before the expected bytes arrived.");
-        if (read > count) throw new IOException("Socket returned an invalid byte count.");
-        return read;
+        try
+        {
+            DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "receive");
+            ValidateRange(buffer, offset, count);
+            if (count == 0) return 0;
+            DmInvocation.Current?.ThrowIfTerminated();
+            if (DmInvocation.Current is { } invocation) invocation.Phase = DmFailurePhase.Receive;
+            int read = CurrentChannel().Receive(buffer, offset, count, Timeout(deadline, timeoutMilliseconds));
+            if (read > 0 && read <= count) DmDiagnosticsCore.NetworkBytes(read, false);
+            CheckOperationDeadline(deadline);
+            if (read <= 0) throw new EndOfStreamException("Socket closed before the expected bytes arrived.");
+            if (read > count) throw new IOException("Socket returned an invalid byte count.");
+            return read;
+        }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
     }
 
     internal void ReadExactly(byte[] buffer, int offset, int count, DmDeadline deadline, int timeoutMilliseconds)
@@ -547,57 +563,65 @@ internal sealed class DmTransport : IDisposable
     internal async ValueTask SendAllAsync(byte[] buffer, int offset, int count, DmDeadline deadline,
         int timeoutMilliseconds, CancellationToken cancellationToken = default, Action<int> onSent = null)
     {
-        DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "send");
-        ValidateRange(buffer, offset, count);
-        DmInvocation.Current?.ThrowIfTerminated();
-        cancellationToken.ThrowIfCancellationRequested();
-        IDmByteChannel current = CurrentChannel();
-        int sent = 0;
-        while (sent < count)
+        try
         {
-            DmInvocation invocation = DmInvocation.Current;
-            DmIoCancellation budget;
-            try { budget = new DmIoCancellation(deadline, cancellationToken, closeSource.Token, timeoutMilliseconds); }
-            catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
+            DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "send");
+            ValidateRange(buffer, offset, count);
+            DmInvocation.Current?.ThrowIfTerminated();
+            cancellationToken.ThrowIfCancellationRequested();
+            IDmByteChannel current = CurrentChannel();
+            int sent = 0;
+            while (sent < count)
             {
-                if (ex is TimeoutException)
-                    invocation?.Lease.Session.TerminateInvocation(invocation, DmCancelSource.TotalDeadline);
-                if (sent == 0) invocation?.Lease.Session.MarkRecoverablePreSendFailure(invocation);
-                throw;
-            }
-            using (budget)
-            {
-                PrepareSendAttempt(invocation, sent == 0);
-                int progress;
-                try { progress = await current.SendAsync(buffer, offset + sent, count - sent, budget.Token).ConfigureAwait(false); }
-                catch (OperationCanceledException ex) { budget.RethrowCancellation(ex); throw; }
-                if (progress > 0 && progress <= count - sent) DmDiagnosticsCore.NetworkBytes(progress, true);
-                CheckOperationDeadline(deadline);
-                if (progress <= 0 || progress > count - sent) throw new IOException("Socket send made no valid progress.");
-                sent += progress;
-                onSent?.Invoke(progress);
+                DmInvocation invocation = DmInvocation.Current;
+                DmIoCancellation budget;
+                try { budget = new DmIoCancellation(deadline, cancellationToken, closeSource.Token, timeoutMilliseconds); }
+                catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
+                {
+                    if (ex is TimeoutException)
+                        invocation?.Lease.Session.TerminateInvocation(invocation, DmCancelSource.TotalDeadline);
+                    if (sent == 0) invocation?.Lease.Session.MarkRecoverablePreSendFailure(invocation);
+                    throw;
+                }
+                using (budget)
+                {
+                    PrepareSendAttempt(invocation, sent == 0);
+                    int progress;
+                    try { progress = await current.SendAsync(buffer, offset + sent, count - sent, budget.Token).ConfigureAwait(false); }
+                    catch (OperationCanceledException ex) { budget.RethrowCancellation(ex); throw; }
+                    if (progress > 0 && progress <= count - sent) DmDiagnosticsCore.NetworkBytes(progress, true);
+                    CheckOperationDeadline(deadline);
+                    if (progress <= 0 || progress > count - sent) throw new IOException("Socket send made no valid progress.");
+                    sent += progress;
+                    onSent?.Invoke(progress);
+                }
             }
         }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
     }
 
     internal async ValueTask<int> ReadSomeAsync(byte[] buffer, int offset, int count, DmDeadline deadline,
         int timeoutMilliseconds, CancellationToken cancellationToken = default)
     {
-        DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "receive");
-        ValidateRange(buffer, offset, count);
-        DmInvocation.Current?.ThrowIfTerminated();
-        cancellationToken.ThrowIfCancellationRequested();
-        if (count == 0) return 0;
-        if (DmInvocation.Current is { } invocation) invocation.Phase = DmFailurePhase.Receive;
-        using var budget = new DmIoCancellation(deadline, cancellationToken, closeSource.Token, timeoutMilliseconds);
-        int read;
-        try { read = await CurrentChannel().ReceiveAsync(buffer, offset, count, budget.Token).ConfigureAwait(false); }
-        catch (OperationCanceledException ex) { budget.RethrowCancellation(ex); throw; }
-        if (read > 0 && read <= count) DmDiagnosticsCore.NetworkBytes(read, false);
-        CheckOperationDeadline(deadline);
-        if (read <= 0) throw new EndOfStreamException("Socket closed before the expected bytes arrived.");
-        if (read > count) throw new IOException("Socket returned an invalid byte count.");
-        return read;
+        try
+        {
+            DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "receive");
+            ValidateRange(buffer, offset, count);
+            DmInvocation.Current?.ThrowIfTerminated();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (count == 0) return 0;
+            if (DmInvocation.Current is { } invocation) invocation.Phase = DmFailurePhase.Receive;
+            using var budget = new DmIoCancellation(deadline, cancellationToken, closeSource.Token, timeoutMilliseconds);
+            int read;
+            try { read = await CurrentChannel().ReceiveAsync(buffer, offset, count, budget.Token).ConfigureAwait(false); }
+            catch (OperationCanceledException ex) { budget.RethrowCancellation(ex); throw; }
+            if (read > 0 && read <= count) DmDiagnosticsCore.NetworkBytes(read, false);
+            CheckOperationDeadline(deadline);
+            if (read <= 0) throw new EndOfStreamException("Socket closed before the expected bytes arrived.");
+            if (read > count) throw new IOException("Socket returned an invalid byte count.");
+            return read;
+        }
+        catch (Exception ex) when (DmTransportFailure.Observe(ex)) { throw; }
     }
 
     internal async ValueTask ReadExactlyAsync(byte[] buffer, int offset, int count, DmDeadline deadline,

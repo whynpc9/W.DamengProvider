@@ -1648,11 +1648,13 @@ public class DmConnectionStringBuilder : DbConnectionStringBuilder, IFilterInfo
 			if (parsed.port.HasValue)
 			{
 				if (strictDuplicate && setProperty.TryGetValue(DmConst.PROP_KEY_PORT, out var existingPort) && !Equals(existingPort, parsed.port.Value))
-					throw new ArgumentException("Conflicting values for connection setting 'port'.");
+					throw new ArgumentException("Conflicting values for connection setting 'port'. " +
+						"Call Remove(\"port\") before assigning a server value with a different port.");
 			}
 		}
 		if (strictDuplicate && setProperty.TryGetValue(key, out var existing) && !Equals(existing, normalized))
-			throw new ArgumentException($"Conflicting values for connection setting '{key}'.");
+			throw new ArgumentException($"Conflicting values for connection setting '{key}'. " +
+				$"Call Remove(\"{key}\") before assigning a different value, including through a synonym.");
 		property[key] = normalized;
 		setProperty[key] = normalized;
 		base[key] = normalized;

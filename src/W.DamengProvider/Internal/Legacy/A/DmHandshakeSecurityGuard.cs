@@ -20,7 +20,9 @@ internal static class DmHandshakeSecurityGuard
         return negotiatedMode switch
         {
             0 when policy == DmTransportSecurity.PlaintextAllowed => false,
-            0 => throw new NotSupportedException("The server did not negotiate TLS transport."),
+            0 => throw new NotSupportedException("The server did not negotiate TLS transport. The default policy " +
+                "is RequireTls; enable TLS on the server, or explicitly allow plaintext for a trusted network " +
+                "with transport_security=PlaintextAllowed (DmConnectionStringBuilder.TransportSecurity)."),
             1 or 4 => true,
             5 => throw new NotSupportedException("Wire TLS mode 5 has not been verified."),
             2 => throw new NotSupportedException("Authentication-only TLS does not protect the business stream."),

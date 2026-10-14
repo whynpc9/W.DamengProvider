@@ -710,7 +710,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 						throw new InvalidOperationException("Execution did not return a reader.");
 					}
 					reader.AttachExecutionLease(lease, ownsLease: false);
-					object scalar = reader.do_FieldCount > 0 && reader.ReadOwned() ? reader.GetValueOwned(0) : null;
+					object scalar;
+					// A FETCH round trip may happen here; keep the async path's failure shape.
+					try { scalar = reader.do_FieldCount > 0 && reader.ReadOwned() ? reader.GetValueOwned(0) : null; }
+					catch (Exception error) { throw invocation.TranslateFailure(error); }
 					invocation.Complete();
 					completed = true;
 					return scalar;
@@ -1508,7 +1511,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		TimeSpan cleanupTimeout = statementConnection?.Settings?.CleanupTimeout ?? TimeSpan.FromSeconds(5);
 		using var lease = owner.BeginExecution(DmOperationPurpose.Query, DmDeadline.Start(cleanupTimeout, statementConnection?.OperationClock));
 		using var invocation = lease.BeginInvocation();
-		if (CleanupCurrentStatement(suppressFailure: false)) invocation.RecordDiagnosticCleanupSuccess();
+		try { if (CleanupCurrentStatement(suppressFailure: false)) invocation.RecordDiagnosticCleanupSuccess(); }
+		catch (Exception error) when (DmTransportFailure.IsTransportFailure(error)) { throw invocation.TranslateFailure(error); }
 	}
 
 	protected override void Dispose(bool disposing)
@@ -1728,7 +1732,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
                 if (temporal)
                 {
                     var binding = DmTemporalBindingResolver.Create(request, resolved.Source, selectedType,
-                        dmParameterInternal, temporalProfile);
+                        dmParameterInternal, temporalProfile, dmParameter.do_Value is null or DBNull);
                     obj = DmSysTypeConvertion.TypeConvertion(dmParameter);
                     if (!binding.ReliableFixed)
                     {

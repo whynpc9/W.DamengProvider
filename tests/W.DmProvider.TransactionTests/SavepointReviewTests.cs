@@ -89,6 +89,77 @@ public sealed class SavepointReviewTests
     }
 
     [Theory]
+    [InlineData("BEGIN UPDATE \"T\" SET \"NAME\" = 'x'; END;")]
+    [InlineData("begin insert into t values (1); delete from t where id = 2; end")]
+    [InlineData("BEGIN MERGE INTO T USING DUAL ON (1 = 1) WHEN MATCHED THEN UPDATE SET X = 1; NULL; END;")]
+    [InlineData("BEGIN UPDATE T SET X = (SELECT MAX(Y) FROM U); SELECT COUNT(*) INTO :n FROM T; END;")]
+    [InlineData("/* lead */ BEGIN UPDATE T SET N = 'COMMIT; ROLLBACK'; END; -- COMMIT")]
+    [InlineData("BEGIN UPDATE T SET X = 1; END;;\n /* trailing */ ;")]
+    public void DmlOnlyAnonymousBlocksAreAllowedInsideTheBoundTransaction(string sql)
+    {
+        using var fixture = new ActiveTransactionFixture();
+        DmTransaction.ValidateCommandSql(fixture.Connection, fixture.Transaction, sql);
+        DmTransaction.ValidateCommandSql(fixture.Connection, fixture.Transaction, sql, hasBoundParameters: true);
+        Assert.Equal(DmTransactionOutcome.Active, fixture.Transaction.Outcome);
+        Assert.Empty(fixture.Entries);
+    }
+
+    [Theory]
+    [InlineData("BEGIN UPDATE T SET X = 1; COMMIT; END;")]
+    [InlineData("BEGIN ROLLBACK; END;")]
+    [InlineData("BEGIN UPDATE T SET X = 1; ROLLBACK TO A; END;")]
+    [InlineData("BEGIN SAVEPOINT A; END;")]
+    [InlineData("BEGIN EXECUTE IMMEDIATE 'COMMIT'; END;")]
+    [InlineData("BEGIN control_proc(); END;")]
+    [InlineData("BEGIN CALL control_proc(); END;")]
+    [InlineData("BEGIN SET TRANSACTION READ ONLY; END;")]
+    [InlineData("BEGIN CREATE TABLE X (ID INT); END;")]
+    [InlineData("DECLARE V INT; BEGIN NULL; END;")]
+    [InlineData("BEGIN BEGIN NULL; END; END;")]
+    [InlineData("BEGIN UPDATE T SET X = 1; EXCEPTION WHEN OTHERS THEN NULL; END;")]
+    [InlineData("BEGIN IF 1 = 1 THEN NULL; END IF; END;")]
+    [InlineData("BEGIN NULL; END block_label;")]
+    [InlineData("BEGIN UPDATE T SET X = 1; END; COMMIT")]
+    [InlineData("BEGIN NULL; END; BEGIN NULL; END;")]
+    [InlineData("BEGIN UPDATE T SET X = 1;")]
+    [InlineData("BEGIN UPDATE T SET X = 1 WHERE ID IN (1; COMMIT; END;")]
+    [InlineData("BEGIN; END;")]
+    [InlineData("BEGIN NULL; \"CONTROL_PROC\"(); END;")]
+    [InlineData("BEGIN NULL; \"S\".\"P\"(1); END;")]
+    [InlineData("BEGIN NULL; END; \"P\"(1)")]
+    [InlineData("BEGIN NULL; [P](); END;")]
+    [InlineData("BEGIN NULL; (1); END;")]
+    [InlineData("<<\"B\">> BEGIN NULL; END \"B\";")]
+    [InlineData("<<B>> BEGIN NULL; END;")]
+    [InlineData("<<A>> <<B>> <<C>> BEGIN COMMIT; END;")]
+    [InlineData("BEGIN NULL; <<L>> UPDATE T SET X = 1; END;")]
+    [InlineData("BEGIN NULL; <<\"L\">> NULL; END;")]
+    [InlineData("BEGIN NULL; \"X\" UPDATE T SET X = 1; END;")]
+    [InlineData("/* lead */ <<B>> DECLARE V INT; BEGIN NULL; END;")]
+    [InlineData("BEGIN NULL; END \"B\";")]
+    [InlineData("\"X\" BEGIN NULL; END;")]
+    [InlineData("BEGIN NULL; END q'[B]';")]
+    public void AnonymousBlocksWithControlFlowOrTransactionEffectsRemainFenced(string sql)
+    {
+        using var fixture = new ActiveTransactionFixture();
+        Assert.Throws<NotSupportedException>(() =>
+            DmTransaction.ValidateCommandSql(fixture.Connection, fixture.Transaction, sql));
+        Assert.Equal(DmTransactionOutcome.Active, fixture.Transaction.Outcome);
+    }
+
+    [Fact]
+    public void CommandOnABrokenConnectionExplainsTheEarlierFailure()
+    {
+        using var fixture = new ActiveTransactionFixture();
+        fixture.Connection.do_State = ConnectionState.Broken;
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            DmTransaction.ValidateCommandBinding(fixture.Connection, fixture.Transaction));
+        Assert.Contains("broken because an earlier operation failed", error.Message, StringComparison.Ordinal);
+        Assert.Contains("FailureInfo", error.Message, StringComparison.Ordinal);
+        fixture.Connection.do_State = ConnectionState.Open;
+    }
+
+    [Theory]
     [InlineData("SAVEPOINT EF_save", (int)DmSqlSavepointKind.Save, "EF_save", false)]
     [InlineData("/* prefix */ SAVEPOINT \"__EFSavePoint\"; -- tail", (int)DmSqlSavepointKind.Save, "__EFSavePoint", true)]
     [InlineData("ROLLBACK TO EF_save", (int)DmSqlSavepointKind.Rollback, "EF_save", false)]

@@ -92,13 +92,17 @@ public sealed class CommandReaderAsyncTests
         Assert.Equal(1, fixture.Database.Channel.Sends);
         if (method is "close" or "dispose")
         {
-            var expected = Assert.IsType<EndOfStreamException>(error);
+            var wrapped = Assert.IsType<DmException>(error);
+            Assert.Equal(DmErrorKind.Transport, wrapped.ErrorKind);
+            Assert.Equal(DmOperationOutcome.Unknown, wrapped.FailureInfo.OperationOutcome);
+            Assert.False(wrapped.FailureInfo.ConnectionReusable);
+            var expected = Assert.IsType<EndOfStreamException>(wrapped.InnerException);
             Assert.True(fixture.Reader.IsClosed);
             Assert.True(fixture.Database.Channel.IsClosed);
             Task repeat = fixture.Reader.CloseAsync();
             Assert.True(repeat.IsFaulted);
-            var repeated = await Assert.ThrowsAsync<EndOfStreamException>(() => repeat);
-            Assert.Same(expected, repeated);
+            var repeated = await Assert.ThrowsAsync<DmException>(() => repeat);
+            Assert.Same(wrapped, repeated);
             Assert.Equal(1, fixture.Database.Channel.Sends);
             fixture.RecordAssertedCloseFailure(expected);
         }
@@ -226,8 +230,8 @@ internal sealed class ReaderAsyncFixture : IAsyncDisposable
         // normal cleanup itself is independently covered by the reply-barrier tests.
         await Database.DisposeAsync();
         try { await Reader.DisposeAsync(); }
-        catch (EndOfStreamException error) when (
-            ReferenceEquals(error, assertedCloseFailure) && Database.Channel.IsClosed && Reader.IsClosed)
+        catch (DmException error) when (
+            ReferenceEquals(error.InnerException, assertedCloseFailure) && Database.Channel.IsClosed && Reader.IsClosed)
         {
             // Only the exact EOF already asserted by the negative cleanup test is
             // repeated by the reader's shared faulted close task. Other failures escape.

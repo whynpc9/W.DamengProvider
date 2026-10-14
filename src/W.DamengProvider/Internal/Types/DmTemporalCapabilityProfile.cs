@@ -60,6 +60,25 @@ internal readonly record struct DmTemporalCapabilityProfile(DmTemporalProfileIde
             throw new NotSupportedException("Extended temporal writes require a verified profile or existing fixed six-digit metadata.");
     }
 
+    // NULL encodes no fraction, so a reliable server-described declaration may exceed
+    // the encodable precision, on the measured seven-digit profile only. Advisory
+    // targets were already narrowed by the binding and pass the ordinary gate.
+    internal void ValidateNullWriteTarget(DmTemporalWriteTarget target)
+    {
+        if (!target.ReliableFixed || target.CType == 14 || target.RequestedScale.HasValue ||
+            State != DmTemporalCapabilityState.VerifiedSeven)
+        {
+            ValidateWriteTarget(target);
+            return;
+        }
+        if (target.Format != DmTemporalResultFormat.OrdinaryPacked || target.Mask == 4)
+            throw new NotSupportedException("Temporal result format or local timezone semantics are not verified for writing.");
+        if (DmTemporalWireCodec.ForCType(target.CType) != target.Layout)
+            throw new InvalidOperationException("Temporal target layout does not match its type.");
+        if (target.ColumnScale is < 0 or > 9 || target.EncodedScale != target.ColumnScale)
+            throw new NotSupportedException("Temporal target has unsupported metadata precision.");
+    }
+
     internal void ValidateWriteValue(DmTemporalWriteTarget target, DmTemporalFields fields)
     {
         ValidateWriteTarget(target);

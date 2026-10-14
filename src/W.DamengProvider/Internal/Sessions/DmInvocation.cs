@@ -97,8 +97,18 @@ internal sealed class DmInvocation : IDisposable
             serverError.SetFailureInfo(CreateFailureInfo(error));
             return error;
         }
+        // A legacy communication DmException around an observed socket failure would
+        // report its client-side code as Number; rewrap it with Number 0, keeping the
+        // legacy text (for example per-endpoint connect failures) and the raw cause.
+        if (error is DmException { FailureInfo: null, InnerException: var socketCause } legacy &&
+            DmTransportFailure.IsTransportFailure(socketCause))
+            return DmTransportFailure.Wrap(socketCause, CreateFailureInfo(error).WithConnectionLost(), legacy.Message);
         if (error is DmException driverError && driverError.FailureInfo == null)
             driverError.SetFailureInfo(CreateFailureInfo(error));
+        // A socket failure always retires the physical session, even when the
+        // abort runs after this translation. Keep the raw error as InnerException.
+        if (DmTransportFailure.IsTransportFailure(error))
+            return DmTransportFailure.Wrap(error, CreateFailureInfo(error).WithConnectionLost());
         return error ?? new InvalidOperationException("The operation has no terminal failure.");
     }
     // Store the value itself: a mutable shared holder would let a child flow
