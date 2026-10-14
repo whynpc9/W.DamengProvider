@@ -265,7 +265,9 @@ object BrokenMessage()
     string? next = null;
     if (connection.State == ConnectionState.Broken)
         try { Scalar(connection, "SELECT 1 FROM DUAL"); } catch (InvalidOperationException e) { next = e.Message; }
-    Check("broken_message", number != null && (state == "Open" || next?.Contains("earlier operation failed", StringComparison.Ordinal) == true));
+    // A prepare-stage syntax error leaves the session Broken; the follow-up must explain why.
+    Check("broken_message", number != null && state == "Broken" &&
+        next?.Contains("earlier operation failed", StringComparison.Ordinal) == true);
     return new { number, state, next_message_mentions_earlier_failure = next?.Contains("earlier operation failed", StringComparison.Ordinal) };
 }
 
