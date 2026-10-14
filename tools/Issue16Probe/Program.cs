@@ -119,11 +119,12 @@ async Task<object> AnonymousBlocks()
                 $"BEGIN UPDATE \"{t}\" SET NAME='c' WHERE ID=1; COMMIT; END;",
                 $"BEGIN EXECUTE IMMEDIATE 'UPDATE \"{t}\" SET NAME=''d'''; END;",
                 $"DECLARE V INT; BEGIN UPDATE \"{t}\" SET NAME='e' WHERE ID=1; END;",
-                $"BEGIN UPDATE \"{t}\" SET NAME='f' WHERE ID=1; EXCEPTION WHEN OTHERS THEN NULL; END;"
+                $"BEGIN UPDATE \"{t}\" SET NAME='f' WHERE ID=1; EXCEPTION WHEN OTHERS THEN NULL; END;",
+                $"BEGIN NULL; \"{t}_PROC\"(); END;"
             })
             {
                 try { await Run(connection, tx, sql, asynchronous); rejected = false; break; }
-                catch (NotSupportedException) { rejected = true; }
+                catch (NotSupportedException) { rejected = true; continue; }
             }
             bool active = tx.Outcome == DmTransactionOutcome.Active && connection.State == ConnectionState.Open;
             tx.Rollback();
@@ -208,7 +209,7 @@ async Task<object> Transport()
     ExecFresh($"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, NAME VARCHAR(20))");
     ExecFresh($"INSERT INTO \"{t}\" VALUES (1,'a')");
     foreach (bool asynchronous in new[] { false, true })
-    foreach (string shape in new[] { "nonquery", "reader", "transaction" })
+    foreach (string shape in new[] { "nonquery", "reader", "scalar", "transaction" })
     {
         string id = (asynchronous ? "async_" : "sync_") + shape;
         await using var proxy = new ResettingProxy(serverHost, serverPort);
@@ -223,8 +224,12 @@ async Task<object> Transport()
         {
             using var command = connection.CreateCommand();
             command.Transaction = tx;
-            command.CommandText = shape == "reader" ? $"SELECT NAME FROM \"{t}\"" : $"UPDATE \"{t}\" SET NAME='lost' WHERE ID=1";
-            if (shape == "reader")
+            command.CommandText = shape is "reader" or "scalar" ? $"SELECT NAME FROM \"{t}\"" : $"UPDATE \"{t}\" SET NAME='lost' WHERE ID=1";
+            if (shape == "scalar")
+            {
+                if (asynchronous) await command.ExecuteScalarAsync(); else command.ExecuteScalar();
+            }
+            else if (shape == "reader")
             {
                 using var reader = asynchronous ? await command.ExecuteReaderAsync() : command.ExecuteReader();
                 while (asynchronous ? await reader.ReadAsync() : reader.Read()) { }

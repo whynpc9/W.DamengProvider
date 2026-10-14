@@ -425,9 +425,16 @@ internal sealed class DmParameterBinding
         var result = new ScanResult();
         var words = new List<string>(3);
         int parentheses = 0;
+        // A statement made only of quoted identifiers, literals or punctuation (for
+        // example a quoted procedure call) still yields an empty head for the fence.
+        bool statementHasToken = false;
         for (int index = 0; index < sql.Length;)
         {
             char current = sql[index];
+            bool comment = current == '-' && index + 1 < sql.Length && sql[index + 1] == '-' ||
+                current == '/' && index + 1 < sql.Length && sql[index + 1] == '*';
+            if (!comment && !char.IsWhiteSpace(current) && !(current == ';' && parentheses == 0))
+                statementHasToken = true;
             if (current == '-' && index + 1 < sql.Length && sql[index + 1] == '-')
             {
                 index += 2;
@@ -514,8 +521,9 @@ internal sealed class DmParameterBinding
             if (current == ')') { if (parentheses > 0) parentheses--; index++; continue; }
             if (current == ';' && parentheses == 0)
             {
-                AddHead(result.Heads, words);
+                AddHead(result.Heads, words, statementHasToken);
                 words.Clear();
+                statementHasToken = false;
                 index++;
                 continue;
             }
@@ -528,13 +536,19 @@ internal sealed class DmParameterBinding
             }
             index++;
         }
-        AddHead(result.Heads, words);
+        AddHead(result.Heads, words, statementHasToken);
         return result;
     }
 
-    private static void AddHead(List<DmSqlStatementHead> heads, List<string> words)
+    private static void AddHead(List<DmSqlStatementHead> heads, List<string> words, bool hasToken)
     {
-        if (words.Count == 0) return;
+        if (words.Count == 0 && !hasToken) return;
+        if (words.Count == 0)
+        {
+            if (heads.Count >= MaxMarkers) throw new InvalidDataException("Too many SQL statements.");
+            heads.Add(new DmSqlStatementHead(string.Empty, string.Empty, string.Empty));
+            return;
+        }
         if (heads.Count >= MaxMarkers) throw new InvalidDataException("Too many SQL statements.");
         heads.Add(new DmSqlStatementHead(words[0], words.Count > 1 ? words[1] : string.Empty,
             words.Count > 2 ? words[2] : string.Empty));

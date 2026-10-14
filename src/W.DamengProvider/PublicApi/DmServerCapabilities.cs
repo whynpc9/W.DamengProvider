@@ -44,7 +44,8 @@ public sealed class DmServerCapabilities
     /// <summary>
     /// Largest fractional-second scale accepted for non-NULL TIMESTAMP and TIMESTAMP WITH TIME ZONE
     /// parameter values: 7 on a verified seven-digit profile, otherwise 6. TIME values stay at 6.
-    /// A typed NULL parameter is accepted with any Scale up to 9.
+    /// A typed NULL parameter with a larger Scale declares at most this scale, or keeps a
+    /// server-described 8/9-digit column declaration on the verified seven-digit profile.
     /// </summary>
     public int MaxTemporalWriteScale { get; }
 

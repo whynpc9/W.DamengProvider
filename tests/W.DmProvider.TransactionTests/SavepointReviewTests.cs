@@ -94,6 +94,7 @@ public sealed class SavepointReviewTests
     [InlineData("BEGIN MERGE INTO T USING DUAL ON (1 = 1) WHEN MATCHED THEN UPDATE SET X = 1; NULL; END;")]
     [InlineData("BEGIN UPDATE T SET X = (SELECT MAX(Y) FROM U); SELECT COUNT(*) INTO :n FROM T; END;")]
     [InlineData("/* lead */ BEGIN UPDATE T SET N = 'COMMIT; ROLLBACK'; END; -- COMMIT")]
+    [InlineData("BEGIN UPDATE T SET X = 1; END;;\n /* trailing */ ;")]
     public void DmlOnlyAnonymousBlocksAreAllowedInsideTheBoundTransaction(string sql)
     {
         using var fixture = new ActiveTransactionFixture();
@@ -123,6 +124,11 @@ public sealed class SavepointReviewTests
     [InlineData("BEGIN UPDATE T SET X = 1;")]
     [InlineData("BEGIN UPDATE T SET X = 1 WHERE ID IN (1; COMMIT; END;")]
     [InlineData("BEGIN; END;")]
+    [InlineData("BEGIN NULL; \"CONTROL_PROC\"(); END;")]
+    [InlineData("BEGIN NULL; \"S\".\"P\"(1); END;")]
+    [InlineData("BEGIN NULL; END; \"P\"(1)")]
+    [InlineData("BEGIN NULL; [P](); END;")]
+    [InlineData("BEGIN NULL; (1); END;")]
     public void AnonymousBlocksWithControlFlowOrTransactionEffectsRemainFenced(string sql)
     {
         using var fixture = new ActiveTransactionFixture();

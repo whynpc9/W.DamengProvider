@@ -223,6 +223,11 @@ public sealed class TemporalNativeBindingContractTests
         Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL",
             new DmParameter("p", new DateTime(2026, 7, 23))));
         Assert.Null(fixture.Fields[0].TemporalBinding);
+        // The fixed-declaration NULL relaxation is limited to the measured seven-digit profile.
+        fixture.Physical.ConnProperty.property[DmConst.PROP_KEY_ENCODING] = "utf-8";
+        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL",
+            new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = 9 }));
+        Assert.Null(fixture.Fields[0].TemporalBinding);
     }
 
     [Fact]
