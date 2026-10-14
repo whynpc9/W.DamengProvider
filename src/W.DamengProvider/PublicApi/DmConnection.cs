@@ -833,6 +833,9 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 				(error as OperationCanceledException)?.CancellationToken ?? default;
 			return new DmOperationCanceledException(info, token, error);
 		}
+		if (error is DmException { InnerException: var socketCause } legacy && legacy.Number != 0 &&
+			DmTransportFailure.IsTransportFailure(socketCause))
+			return DmTransportFailure.Wrap(socketCause, info.WithConnectionLost(), legacy.Message);
 		if (error is DmException driverError) driverError.SetFailureInfo(info);
 		if (DmTransportFailure.IsTransportFailure(error)) return DmTransportFailure.Wrap(error, info.WithConnectionLost());
 		return error;

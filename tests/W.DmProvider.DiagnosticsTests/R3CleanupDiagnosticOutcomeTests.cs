@@ -361,6 +361,7 @@ public sealed class R3CleanupDiagnosticOutcomeTests
         Assert.Equal(DmErrorKind.Transport, transport.ErrorKind);
         Assert.Equal("WDM_TRANSPORT", transport.DriverErrorCode);
         Assert.False(transport.FailureInfo.ConnectionReusable);
+        Assert.Equal(0, transport.Number);
         return transport;
     }
     private static Activity Caller() => new Activity("synthetic.cleanup.caller").SetIdFormat(ActivityIdFormat.W3C).Start();

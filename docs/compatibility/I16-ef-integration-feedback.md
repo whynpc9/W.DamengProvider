@@ -15,13 +15,13 @@
 | `TransactionOutcome` | 本地事务 Active/Committing/RollingBack 时为 `OutcomeUnknown` |
 | `Number` | 0，不伪造服务器错误号 |
 
-覆盖 `Open`/`OpenAsync`（同步多端点路径保留原聚合消息，并把最后一个 socket 失败作为 `InnerException`）、`ExecuteNonQuery`/`ExecuteReader`/`ExecuteScalar`（同步与异步）、Reader 读取与关闭、事务控制、更换已准备命令的 `Connection`。TLS 握手中对端重置或 EOF 也按 Transport 报告，`InnerException` 为保留原 I/O 原因的 `AuthenticationException`；证书校验失败仍是认证失败，不归为 Transport。同步 LOB 消息路径保留原驱动错误号 `ECNET_COMMUNITION_ERROR`，但同样带 `InnerException` 并分类为 Transport。调用方传入的流式 LOB 输入抛出的 `IOException` 不是传输失败，仍按原异常抛出。超时、取消、提交结果未知的既有类型不变。`DmDiagnostics.FormatException` 对这类异常输出 `code=WDM_TRANSPORT`。
+覆盖 `Open`/`OpenAsync`（同步多端点路径保留原聚合消息，并把最后一个 socket 失败作为 `InnerException`）、`ExecuteNonQuery`/`ExecuteReader`/`ExecuteScalar`（同步与异步）、Reader 读取与关闭、事务控制、更换已准备命令的 `Connection`。TLS 握手中对端重置或 EOF 也按 Transport 报告，`InnerException` 为保留原 I/O 原因的 `AuthenticationException`；证书校验失败仍是认证失败，不归为 Transport。同步 LOB 消息路径与同步多端点连接原先产生的驱动通信错误（`ECNET_COMMUNITION_ERROR`）在公开边界重新包装：保留原消息文本，`Number` 为 0，`InnerException` 为原 socket/I/O 异常。调用方传入的流式 LOB 输入抛出的 `IOException` 不是传输失败，仍按原异常抛出。超时、取消、提交结果未知的既有类型不变。`DmDiagnostics.FormatException` 对这类异常输出 `code=WDM_TRANSPORT`。
 
 **行为变化。** 依赖 `catch (SocketException)`/`catch (IOException)` 的调用方应改为检查 `DmException.ErrorKind == DmErrorKind.Transport` 或 `InnerException`。
 
 ## 2. 事务内只含 DML 的匿名块
 
-Active 本地事务中，以下形状不再被发送前拒绝：一个 `BEGIN … END;` 块，块内每条语句以 `INSERT`、`UPDATE`、`DELETE`、`MERGE`、`SELECT` 或 `NULL` 开头，`END` 后无标签、无其他语句。判定使用既有词法扫描，字符串、引号标识符、注释和括号内的内容不作为语句头；只由引号标识符或标点组成的语句（例如 `"P"(1)`）视为非 DML；`BEGIN` 前不能有任何其他记号，`END` 后不能有标签（含引号标签）。以 `<<label>>` 开头的语句在 Active 事务中一律拒绝（原栅栏也未识别带标签的块，本次一并补上）。SQL 原文不改写。
+Active 本地事务中，以下形状不再被发送前拒绝：一个 `BEGIN … END;` 块，块内每条语句以 `INSERT`、`UPDATE`、`DELETE`、`MERGE`、`SELECT` 或 `NULL` 开头，`END` 后无标签、无其他语句。判定使用既有词法扫描，字符串、引号标识符、注释和括号内的内容不作为语句头；只由引号标识符或标点组成的语句（例如 `"P"(1)`）视为非 DML；`BEGIN` 及块内每条语句的首词前不能有任何其他记号（含 `<<label>>`），`END` 后不能有标签（含引号标签）。以 `<<label>>` 开头的语句在 Active 事务中一律拒绝（原栅栏也未识别带标签的块，本次一并补上）。SQL 原文不改写。
 
 仍在发送前拒绝（`NotSupportedException`，会话和事务保持 Active）：`DECLARE` 段、嵌套块、`IF`/`LOOP` 等控制流、`EXCEPTION` 处理段、过程调用（含 `CALL`/`EXEC`）、`EXECUTE IMMEDIATE`、`COMMIT`/`ROLLBACK`/`SAVEPOINT`/`SET TRANSACTION`、DDL、`END` 带标签、块后接其他语句。块外的普通语句判定不变。
 
@@ -72,5 +72,5 @@ Active 本地事务中，以下形状不再被发送前拒绝：一个 `BEGIN �
 
 ## 验证
 
-- 离线：十二套测试全部通过（2099 项）。新增或调整的测试覆盖匿名块判定的 6 个正例与 31 个拒绝形状（含引号过程名调用、引号及多重标签）、TLS 握手重置与证书拒绝的分类、typed NULL 绑定（advisory 降级、fixed 九位声明、非 NULL 仍拒绝）、能力快照与 gate 一致、传输失败包装与诊断格式、Broken 消息、同义键消息、明文提示。依赖原始 `IOException` 类型的 5 个既有测试改为断言 `DmException` 及其 `InnerException`。
+- 离线：十二套测试全部通过（2102 项）。新增或调整的测试覆盖匿名块判定的 6 个正例与 34 个拒绝形状（含引号过程名调用、引号及多重标签）、TLS 握手重置与证书拒绝的分类、typed NULL 绑定（advisory 降级、fixed 九位声明、非 NULL 仍拒绝）、能力快照与 gate 一致、传输失败包装与诊断格式、Broken 消息、同义键消息、明文提示。依赖原始 `IOException` 类型的 5 个既有测试改为断言 `DmException` 及其 `InnerException`。
 - 实库：[tools/Issue16Probe](../../tools/Issue16Probe/Program.cs)，经 `scripts/with-dameng-test.sh` 加载 TEST，先确认身份为 `WDM_PROVIDER_TEST`；传输失败使用本机 TCP 中继在连接建立后发送 RST，以及无监听端口的拒绝连接。探针只输出布尔、数字、枚举名和生成的对象名；结束时删除本轮创建的三张表，新连接确认同名前缀对象为 0。

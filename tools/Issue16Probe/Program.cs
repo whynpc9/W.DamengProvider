@@ -204,7 +204,7 @@ async Task<object> Transport()
         result[(asynchronous ? "async" : "sync") + "_connect_refused"] = Describe(error);
         Check((asynchronous ? "async" : "sync") + "_connect_refused", error is DmException { ErrorKind: DmErrorKind.Transport } d &&
             d.FailureInfo!.OperationOutcome == DmOperationOutcome.NotSent && d.FailureInfo.Phase == DmFailurePhase.Connect &&
-            !d.FailureInfo.ConnectionReusable && d.InnerException is SocketException);
+            !d.FailureInfo.ConnectionReusable && d.Number == 0 && d.InnerException is SocketException);
     }
     string t = T("NET");
     ExecFresh($"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, NAME VARCHAR(20))");
@@ -246,7 +246,7 @@ async Task<object> Transport()
         result[id] = new { error = Describe(error), state, next_message_mentions_broken = next?.Contains("broken", StringComparison.Ordinal), fresh,
             tx_outcome = tx?.Outcome.ToString() };
         var info = (error as DmException)?.FailureInfo;
-        Check(id, error is DmException { ErrorKind: DmErrorKind.Transport } && info!.ErrorCode == "WDM_TRANSPORT" &&
+        Check(id, error is DmException { ErrorKind: DmErrorKind.Transport, Number: 0 } && info!.ErrorCode == "WDM_TRANSPORT" &&
             info.OperationOutcome is DmOperationOutcome.Unknown or DmOperationOutcome.NotSent && !info.ConnectionReusable &&
             error.InnerException is SocketException or IOException && state == "Broken" && next?.Contains("broken", StringComparison.Ordinal) == true &&
             fresh == "a" && (tx == null || info.TransactionOutcome == DmTransactionOutcome.OutcomeUnknown) &&

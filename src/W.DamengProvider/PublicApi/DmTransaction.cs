@@ -825,8 +825,10 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		DmSqlStatementShape first = statements[0], last = statements[^1];
 		if (first.Head.First != "BEGIN" || first.HasPrefixToken || !IsBlockDml(first.Head.Second)) return false;
 		if (last.Head != new DmSqlStatementHead("END", string.Empty, string.Empty) || last.HasNonWordToken) return false;
+		// Every interior statement must start with its DML word: no label or other prefix.
 		for (int index = 1; index < statements.Count - 1; index++)
-			if (!IsBlockDml(statements[index].Head.First)) return false;
+			if (statements[index].HasPrefixToken || statements[index].StartsWithLabel ||
+				!IsBlockDml(statements[index].Head.First)) return false;
 		return true;
 	}
 

@@ -31,9 +31,9 @@ internal static class DmTransportFailure
         error is AuthenticationException { InnerException: SocketException or IOException } authentication &&
             observed.TryGetValue(authentication.InnerException, out _);
 
-    internal static DmException Wrap(Exception error, DmFailureInfo info)
+    internal static DmException Wrap(Exception error, DmFailureInfo info, string message = null)
     {
-        string message = info.Phase is DmFailurePhase.Dns or DmFailurePhase.Connect or DmFailurePhase.Authenticate
+        message ??= info.Phase is DmFailurePhase.Dns or DmFailurePhase.Connect or DmFailurePhase.Authenticate
             ? "The network connection to the server failed while connecting."
             : info.OperationOutcome == DmOperationOutcome.NotSent
                 ? "The network connection failed before the request was sent."
