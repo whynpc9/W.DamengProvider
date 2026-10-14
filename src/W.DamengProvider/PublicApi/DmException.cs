@@ -43,6 +43,12 @@ public class DmException : DbException
 	{
 	}
 
+	internal DmException(string message, Exception innerException, DmFailureInfo info)
+		: base(message, innerException)
+	{
+		FailureInfo = info;
+	}
+
 	internal DmException(DmError err)
 		: base(err.Message)
 	{
@@ -53,6 +59,14 @@ public class DmException : DbException
 	internal DmException(string message, DmError err)
 		: base(message, err.State)
 	{
+		m_ErrorCollection.Add(err);
+		Data["Server Error Code"] = err.State;
+	}
+
+	internal DmException(string message, DmError err, Exception innerException)
+		: base(message, innerException)
+	{
+		HResult = err.State;
 		m_ErrorCollection.Add(err);
 		Data["Server Error Code"] = err.State;
 	}

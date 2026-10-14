@@ -16,6 +16,13 @@ public sealed class DmFailureInfo
     public int? ServerErrorNumber { get; }
     internal DmFailureInfo WithCommitUnknown() => new(DmErrorKind.OutcomeUnknown, DmFailurePhase.Commit,
         "WDM_COMMIT_UNKNOWN", DmOperationOutcome.Unknown, DmTransactionOutcome.OutcomeUnknown, false, CancelSource, ServerErrorNumber);
+    // A lost session cannot confirm an in-flight local transaction's final state.
+    internal DmFailureInfo WithConnectionLost() => new(ErrorKind, Phase, ErrorCode, OperationOutcome,
+        TransactionOutcome is DmTransactionOutcome.Active or DmTransactionOutcome.Committing or
+            DmTransactionOutcome.RollingBack ||
+            (TransactionOutcome == DmTransactionOutcome.Starting && OperationOutcome != DmOperationOutcome.NotSent)
+            ? DmTransactionOutcome.OutcomeUnknown : TransactionOutcome,
+        false, CancelSource, ServerErrorNumber);
 
     internal DmFailureInfo(DmErrorKind errorKind, DmFailurePhase phase, string errorCode,
         DmOperationOutcome outcome, DmTransactionOutcome? transactionOutcome, bool reusable,
@@ -30,7 +37,23 @@ public sealed class DmFailureInfo
 public enum DmErrorKind { Unknown, Timeout, Canceled, Transport, Server, OutcomeUnknown }
 public enum DmFailurePhase { Unknown, Dns, Connect, Authenticate, Prepare, Send, Receive, Fetch, Commit, Rollback, Cleanup, PoolWait }
 public enum DmOperationOutcome { NotSent, ServerReported, Unknown }
-public enum DmCancelSource { None, User, Command, TotalDeadline, IdleTimeout }
+/// <summary>What ended an operation early.</summary>
+public enum DmCancelSource
+{
+    /// <summary>The operation was not canceled and no client deadline expired.</summary>
+    None,
+    /// <summary>The CancellationToken passed to the asynchronous call (including OpenAsync) was canceled.</summary>
+    User,
+    /// <summary><see cref="DmCommand.Cancel"/> (or the data source command's Cancel) was called while the command ran.</summary>
+    Command,
+    /// <summary>
+    /// The operation's absolute deadline expired: CommandTimeout for commands, readers and transaction
+    /// control, Connection Timeout for Open, or Cleanup Timeout for cleanup. Reported as a timeout.
+    /// </summary>
+    TotalDeadline,
+    /// <summary>Reserved for a per-read idle deadline; this release does not report it.</summary>
+    IdleTimeout
+}
 
 /// <summary>A client deadline expired. Number remains zero because no server error is invented.</summary>
 public sealed class DmTimeoutException : DmException

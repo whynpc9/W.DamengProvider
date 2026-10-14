@@ -1538,7 +1538,8 @@ internal class DmSetValue
 		else
 		{
 			var target = binding.Target ?? throw new InvalidOperationException("Temporal binding has no write target.");
-			binding.Profile.ValidateWriteTarget(target);
+			if (x is null or DBNull) binding.Profile.ValidateNullWriteTarget(target);
+			else binding.Profile.ValidateWriteTarget(target);
 			if (x is not (null or DBNull))
 			{
 				string text = x switch { string value => value, char[] chars => new string(chars), char character => character.ToString(), _ => null };

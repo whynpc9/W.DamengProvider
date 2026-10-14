@@ -1728,7 +1728,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
                 if (temporal)
                 {
                     var binding = DmTemporalBindingResolver.Create(request, resolved.Source, selectedType,
-                        dmParameterInternal, temporalProfile);
+                        dmParameterInternal, temporalProfile, dmParameter.do_Value is null or DBNull);
                     obj = DmSysTypeConvertion.TypeConvertion(dmParameter);
                     if (!binding.ReliableFixed)
                     {

@@ -15,6 +15,10 @@
 
 建议先推进 .NET 8/9/10；.NET 6 单独完成兼容设计及验证。性能方向先连接复用，再数组绑定与 DbBatch；存储过程和元数据可按实际业务需要独立安排。所有实施均遵循 [AGENTS.md](../AGENTS.md) 的分工与 TEST 边界。
 
+## 已合入、未发布
+
+- [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) EF 接入反馈：传输失败的 `FailureInfo`、事务内 DML 匿名块、8/9 位 typed NULL、Broken 提示、公开 `ServerCapabilities` 及若干消息改进，见[修订说明](compatibility/I16-ef-integration-feedback.md)。非 NULL 八九位写入、准备阶段失败的会话恢复及新 profile 证据仍随 #11 推进。
+
 ## .NET 扩展调研边界
 
 基线 `a67a929` 的隔离编译中，net9 原源码通过；net8/C#12 初始仅有证书加载与格式化重载四个错误。net8 研究副本使用条件 `Microsoft.Bcl.Cryptography 10.0.12`（传递依赖 `System.Formats.Asn1`）并替换两处空 Span 参数后，C# 错误消除，但 build/pack 因四套语言资源程序集缺失报 MSB3030，原因尚未确定。同一副本覆盖 net9 构建通过。此结果不代表 net8 完整构建、旧运行时执行或实库通过。

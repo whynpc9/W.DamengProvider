@@ -15,6 +15,21 @@ public sealed class ConfigurationTests
     private const string Safe = "server=127.0.0.1;user=test_user;password=" + Canary;
 
     [Fact]
+    public void SynonymConflictNamesTheCanonicalKeyToRemoveWithoutEchoingValues()
+    {
+        var conflicting = new DmConnectionStringBuilder(Safe);
+        var error = Assert.Throws<ArgumentException>(() => conflicting["UID"] = "other_user");
+        Assert.Contains("'user'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("Remove(\"user\")", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("other_user", error.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(Canary, error.Message, StringComparison.Ordinal);
+        var replaced = new DmConnectionStringBuilder(Safe);
+        Assert.True(replaced.Remove("UID"));
+        replaced["UID"] = "other_user";
+        Assert.Equal("other_user", replaced.User);
+    }
+
+    [Fact]
     public void SafeDefaultsAndStandardUnits()
     {
         var b = new DmConnectionStringBuilder();

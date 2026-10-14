@@ -25,6 +25,45 @@ public sealed class SerialCollection { }
 public sealed class DiagnosticsTests
 {
     [Fact]
+    public void OnlyDriverObservedTransportFailuresAreWrappedWithTransportMetadata()
+    {
+        var reset = new System.Net.Sockets.SocketException(104);
+        var callerInput = new System.IO.IOException("Synthetic caller stream failure.");
+        Assert.False(DmTransportFailure.Observe(reset));
+        Assert.False(DmTransportFailure.Observe(new InvalidOperationException()));
+        Assert.True(DmTransportFailure.IsTransportFailure(reset));
+        Assert.False(DmTransportFailure.IsTransportFailure(callerInput));
+        foreach (var (phase, outcome, text) in new[]
+        {
+            (DmFailurePhase.Connect, DmOperationOutcome.NotSent, "while connecting"),
+            (DmFailurePhase.Send, DmOperationOutcome.NotSent, "before the request was sent"),
+            (DmFailurePhase.Receive, DmOperationOutcome.Unknown, "outcome is unknown")
+        })
+        {
+            var info = new DmFailureInfo(DmErrorKind.Transport, phase, "WDM_TRANSPORT", outcome,
+                DmTransactionOutcome.Active, true).WithConnectionLost();
+            var wrapped = DmTransportFailure.Wrap(reset, info);
+            Assert.Same(reset, wrapped.InnerException);
+            Assert.Contains(text, wrapped.Message, StringComparison.Ordinal);
+            Assert.Equal(0, wrapped.Number);
+            Assert.False(wrapped.IsTransient);
+            Assert.False(wrapped.FailureInfo.ConnectionReusable);
+            Assert.Equal(DmTransactionOutcome.OutcomeUnknown, wrapped.FailureInfo.TransactionOutcome);
+            using var json = JsonDocument.Parse(DmDiagnostics.FormatException(wrapped));
+            Assert.Equal("DmException", json.RootElement.GetProperty("type").GetString());
+            Assert.Equal("WDM_TRANSPORT", json.RootElement.GetProperty("code").GetString());
+            Assert.Equal("Transport", json.RootElement.GetProperty("kind").GetString());
+            Assert.Equal(phase.ToString(), json.RootElement.GetProperty("phase").GetString());
+            Assert.Equal(outcome.ToString(), json.RootElement.GetProperty("operation_outcome").GetString());
+            Assert.False(json.RootElement.GetProperty("connection_reusable").GetBoolean());
+        }
+        // An unsent transaction start had no server transaction to lose.
+        var unsentStart = new DmFailureInfo(DmErrorKind.Transport, DmFailurePhase.Send, "WDM_TRANSPORT",
+            DmOperationOutcome.NotSent, DmTransactionOutcome.Starting, true).WithConnectionLost();
+        Assert.Equal(DmTransactionOutcome.Starting, unsentStart.TransactionOutcome);
+    }
+
+    [Fact]
     public void SafeFormatterDoesNotReadMessageDataInnerOrUntrustedTypeName()
     {
         const string marker = "SYNTHETIC_SQL_PASSWORD_TYPE_SECRET";

@@ -554,6 +554,12 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		{
 			if (CloseOwned()) invocation?.RecordDiagnosticCleanupSuccess();
 		}
+		catch (Exception error) when (invocation != null && DmTransportFailure.IsTransportFailure(error))
+		{
+			// Same public failure shape as CloseAsync, whose statement close translates.
+			lease?.Session.Detach(lease.Identity)?.AbortTransport();
+			throw invocation.TranslateFailure(error);
+		}
 		catch
 		{
 			lease?.Session.Detach(lease.Identity)?.AbortTransport();

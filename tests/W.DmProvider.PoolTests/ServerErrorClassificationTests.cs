@@ -534,7 +534,14 @@ public sealed class ServerErrorClassificationTests
         else
         {
             using var command = source.CreateCommand("INSERT INTO SYNTHETIC VALUES (1)");
-            error = Assert.Throws<IOException>(() => command.ExecuteNonQuery());
+            // The public boundary wraps the transport failure and keeps it as InnerException.
+            var wrapped = Assert.Throws<DmException>(() => command.ExecuteNonQuery());
+            error = Assert.IsType<IOException>(wrapped.InnerException);
+            Assert.Equal(DmErrorKind.Transport, wrapped.ErrorKind);
+            Assert.Equal("WDM_TRANSPORT", wrapped.DriverErrorCode);
+            Assert.Equal(DmOperationOutcome.Unknown, wrapped.FailureInfo.OperationOutcome);
+            Assert.False(wrapped.FailureInfo.ConnectionReusable);
+            Assert.Equal(0, wrapped.Number);
         }
         Assert.Same(channel.SendFailure, error);
         Assert.Equal(new short[] { 3, 91 }, channel.Opcodes);

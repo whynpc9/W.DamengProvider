@@ -10,8 +10,10 @@ public sealed class NegotiationPolicyTests
     public void PlaintextModeRequiresExplicitPolicy()
     {
         Assert.False(DmHandshakeSecurityGuard.RequiresFullTls(0, DmTransportSecurity.PlaintextAllowed));
-        Assert.Throws<NotSupportedException>(() =>
+        var rejected = Assert.Throws<NotSupportedException>(() =>
             DmHandshakeSecurityGuard.RequiresFullTls(0, DmTransportSecurity.RequireTls));
+        // The rejection names the explicit opt-in without enabling it.
+        Assert.Contains("transport_security=PlaintextAllowed", rejected.Message, StringComparison.Ordinal);
     }
 
     [Theory]

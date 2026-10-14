@@ -187,11 +187,41 @@ public sealed class TemporalNativeBindingContractTests
 
     [Theory]
     [InlineData(8)] [InlineData(9)]
-    public async Task TypedNullCannotBypassClosedHigherPrecision(byte scale)
+    public async Task TypedNullAtHigherScaleDeclaresTheWidestVerifiedScaleButValuesStayClosed(byte scale)
     {
         var fixture = new BindingFixture(); await fixture.Describe([new(2, 64, 0, 2)]);
+        using (var plan = fixture.Bind("SELECT :p FROM DUAL",
+            new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = scale }))
+        {
+            var binding = plan.TemporalBindings[0];
+            Assert.Equal(26, binding.CType); Assert.Equal(7, binding.EncodedScale); Assert.Equal(7, binding.WireScale);
+            Assert.Equal((int)scale, binding.RequestedScale); Assert.Null(binding.Target!.Value.RequestedScale);
+            Assert.Equal(7, BinaryPrimitives.ReadInt32LittleEndian(fixture.Packet().AsSpan(73)));
+        }
+        foreach (object value in new object[] { new DateTime(2026, 7, 23), new DateTime(2026, 7, 23).AddTicks(1) })
+        {
+            Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL",
+                new DmParameter("p", value) { DbType = DbType.DateTime2, Scale = scale }));
+            Assert.Null(fixture.Fields[0].TemporalBinding);
+        }
+    }
+
+    [Fact]
+    public async Task TypedNullKeepsAReliableNineDigitColumnDeclarationWhileValuesStayClosed()
+    {
+        var fixture = new BindingFixture(); await fixture.Describe([new(26, 9, 9, 1)]);
+        using (var plan = fixture.Bind("SELECT :p FROM DUAL",
+            new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = 9 }))
+        {
+            var binding = plan.TemporalBindings[0];
+            Assert.True(binding.ReliableFixed); Assert.Equal(9, binding.ColumnScale);
+            Assert.Equal(9, binding.EncodedScale); Assert.Equal(9, binding.WireScale);
+            Assert.Null(binding.Target!.Value.RequestedScale);
+        }
         Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL",
-            new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = scale }));
+            new DmParameter("p", new DateTime(2026, 7, 23)) { DbType = DbType.DateTime2, Scale = 9 }));
+        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL",
+            new DmParameter("p", new DateTime(2026, 7, 23))));
         Assert.Null(fixture.Fields[0].TemporalBinding);
     }
 
@@ -214,7 +244,13 @@ public sealed class TemporalNativeBindingContractTests
             Assert.Equal(3, plan.TemporalBindings[0].EncodedScale);
         Assert.Throws<OverflowException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", exact) { Scale = 3 }));
         await fixture.Describe([new(16, 8, 6, 1)]);
-        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = 7 }));
+        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", exact) { DbType = DbType.DateTime2, Scale = 7 }));
+        // A typed NULL keeps the server's fixed six-digit declaration.
+        using (var plan = fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2, Scale = 7 }))
+        {
+            Assert.Equal(16, plan.TemporalBindings[0].CType); Assert.Equal(6, plan.TemporalBindings[0].EncodedScale);
+            Assert.Equal(6, BinaryPrimitives.ReadInt32LittleEndian(fixture.Packet().AsSpan(73)));
+        }
     }
 
     [Fact]
@@ -243,7 +279,12 @@ public sealed class TemporalNativeBindingContractTests
         using var unknown = fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DateTime.MinValue));
         Assert.Equal(16, unknown.TemporalBindings[0].CType); Assert.Equal(6, unknown.TemporalBindings[0].EncodedScale);
         Assert.False(unknown.TemporalBindings[0].Profile.Identity.EncodingOverrideEmpty);
-        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2 }));
+        Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DateTime.MinValue) { DbType = DbType.DateTime2 }));
+        // Typed NULL on an unverified profile narrows to the six-digit legacy type.
+        using (var unknownNull = fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DBNull.Value) { DbType = DbType.DateTime2 }))
+        {
+            Assert.Equal(16, unknownNull.TemporalBindings[0].CType); Assert.Equal(6, unknownNull.TemporalBindings[0].EncodedScale);
+        }
         await fixture.Describe([new(26, 9, 6, 1)]);
         using var narrow = fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DateTime.MinValue));
         Assert.Equal(26, narrow.TemporalBindings[0].CType); Assert.True(narrow.TemporalBindings[0].ReliableFixed);

@@ -66,8 +66,7 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	private int disposeStarted;
 
 	public DmTransactionOutcome Outcome => (DmTransactionOutcome)Volatile.Read(ref outcome);
-	public override bool SupportsSavepoints =>
-		string.Equals(connInst.ConnProperty.ServerVersion, "8.1.5.60", StringComparison.Ordinal);
+	public override bool SupportsSavepoints => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
 
 	/// <summary>A credential-free cleanup or protocol failure category, when one occurred.</summary>
 	public string FailureInfo => Volatile.Read(ref failureInfo);
@@ -748,6 +747,8 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	// lease and do not pass through this user-command guard.
 	internal static void ValidateCommandBinding(DmConnection connection, DmTransaction selected)
 	{
+		if (connection?.do_State == ConnectionState.Broken)
+			throw new InvalidOperationException(DmConnection.BrokenConnectionMessage);
 		if (connection == null || connection.Session == null || connection.do_State != ConnectionState.Open)
 			throw new InvalidOperationException("Command connection is not open.");
 		DmConnInstance current = connection.GetConnInstance();
@@ -788,6 +789,7 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 			selected.RequireSavepoints();
 			selected.ValidateRawSavepointCapacity(control);
 		}
+		if (IsDmlOnlyAnonymousBlock(statements)) return;
 		foreach (DmSqlStatementHead statement in statements)
 		{
 			bool forbidden = statement.First switch
@@ -806,6 +808,22 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 				throw new NotSupportedException("Direct transaction or dynamic control SQL is unavailable inside a local transaction.");
 		}
 	}
+
+	// One BEGIN ... END block whose every statement is plain DML (or NULL) has the
+	// same transaction effect as running those statements one by one. Anything else
+	// in the block (DECLARE, nested blocks, control flow, EXCEPTION handlers, CALL,
+	// EXECUTE IMMEDIATE, COMMIT/ROLLBACK/SAVEPOINT, DDL, a label) keeps the fence.
+	internal static bool IsDmlOnlyAnonymousBlock(IReadOnlyList<DmSqlStatementHead> statements)
+	{
+		if (statements.Count < 2 || statements[0].First != "BEGIN" ||
+			statements[^1] != new DmSqlStatementHead("END", string.Empty, string.Empty)) return false;
+		if (!IsBlockDml(statements[0].Second)) return false;
+		for (int index = 1; index < statements.Count - 1; index++)
+			if (!IsBlockDml(statements[index].First)) return false;
+		return true;
+	}
+
+	private static bool IsBlockDml(string word) => word is "INSERT" or "UPDATE" or "DELETE" or "MERGE" or "SELECT" or "NULL";
 
 	private void ValidateRawSavepointCapacity(DmSqlSavepointControl control)
 	{
@@ -863,8 +881,7 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
-	private bool SupportsVerifiedDdlCompletion =>
-		string.Equals(connInst.ConnProperty.ServerVersion, "8.1.5.60", StringComparison.Ordinal);
+	private bool SupportsVerifiedDdlCompletion => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
 
 	internal void SetOutcomeFromSession(DmTransactionOutcome next)
 	{

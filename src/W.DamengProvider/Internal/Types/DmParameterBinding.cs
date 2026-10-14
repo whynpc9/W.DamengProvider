@@ -71,7 +71,8 @@ internal static class DmTemporalBindingResolver
     }
 
     internal static DmTemporalParameterBinding Create(DmParameterMetadata request,
-        DmParameterTypeSource source, int selectedType, DmField field, DmTemporalCapabilityProfile profile)
+        DmParameterTypeSource source, int selectedType, DmField field, DmTemporalCapabilityProfile profile,
+        bool nullValue = false)
     {
         ValidateRequest(request);
         var raw = field.TemporalServerMetadata;
@@ -119,6 +120,15 @@ internal static class DmTemporalBindingResolver
             defaultScale = explicitDateTime2 ? 7 : inferred && profile.DefaultSeven ? 7 : 6;
         }
         int scale = requested ?? columnScale ?? defaultScale;
+        // NULL carries no fractional digits. Keep the server's fixed declaration, or
+        // declare the widest scale this profile verifies instead of an unencodable one.
+        int? targetRequested = requested;
+        if (nullValue && cType != 14)
+        {
+            if (reliable) scale = columnScale.Value;
+            else scale = Math.Min(scale, cType is 16 or 26 or 23 or 27 && profile.DefaultSeven ? 7 : 6);
+            targetRequested = null;
+        }
         if (!reliable && cType is 16 or 26 or 23 or 27)
             cType = cType is 23 or 27 ? scale >= 7 ? 27 : 23 : scale >= 7 ? 26 : 16;
         var layout = DmTemporalWireCodec.ForCType(cType);
@@ -128,8 +138,9 @@ internal static class DmTemporalBindingResolver
             _ => throw new NotSupportedException("Temporal target type is unsupported.")
         };
         var target = new DmTemporalWriteTarget(cType, layout, DmTemporalResultFormat.OrdinaryPacked,
-            columnScale ?? scale, scale, requested, reliable, mask);
-        profile.ValidateWriteTarget(target); // Includes typed NULL before any marker is written.
+            columnScale ?? scale, scale, targetRequested, reliable, mask);
+        // Typed NULL is still checked before any marker is written.
+        if (nullValue) profile.ValidateNullWriteTarget(target); else profile.ValidateWriteTarget(target);
         return new(request, source, raw, reliable, profile, cType, width, layout,
             columnScale, requested, scale, reliable ? columnScale.Value : scale, mask,
             target, null, null, null);
