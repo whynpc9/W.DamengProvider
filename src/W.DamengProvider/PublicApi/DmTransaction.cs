@@ -778,7 +778,9 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	{
 		if (connection?.Session?.ActiveTransaction == null ||
 			!ReferenceEquals(connection.Session.ActiveTransaction, selected)) return;
-		var statements = DmParameterBinding.ScanTopLevelStatements(sql);
+		var shapes = DmParameterBinding.ScanTopLevelStatementShapes(sql);
+		var statements = new List<DmSqlStatementHead>(shapes.Count);
+		foreach (DmSqlStatementShape shape in shapes) statements.Add(shape.Head);
 		DmSqlSavepointControl control = default;
 		bool strictSavepoint = !hasBoundParameters && statements.Count == 1 &&
 			DmParameterBinding.TryParseSavepointControl(sql, out control);
@@ -789,10 +791,12 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 			selected.RequireSavepoints();
 			selected.ValidateRawSavepointCapacity(control);
 		}
-		if (IsDmlOnlyAnonymousBlock(statements)) return;
-		foreach (DmSqlStatementHead statement in statements)
+		if (IsDmlOnlyAnonymousBlock(shapes)) return;
+		foreach (DmSqlStatementShape shape in shapes)
 		{
-			bool forbidden = statement.First switch
+			DmSqlStatementHead statement = shape.Head;
+			// A labeled statement (<<name>> BEGIN/DECLARE/LOOP ...) is PL/SQL control flow.
+			bool forbidden = shape.StartsWithLabel || statement.First switch
 			{
 				"COMMIT" => true,
 				"ROLLBACK" or "SAVEPOINT" or "RELEASE" => !strictSavepoint,
@@ -813,13 +817,16 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	// same transaction effect as running those statements one by one. Anything else
 	// in the block (DECLARE, nested blocks, control flow, EXCEPTION handlers, CALL,
 	// EXECUTE IMMEDIATE, COMMIT/ROLLBACK/SAVEPOINT, DDL, a label) keeps the fence.
-	internal static bool IsDmlOnlyAnonymousBlock(IReadOnlyList<DmSqlStatementHead> statements)
+	// BEGIN must be the statement's first token and END its only token, so quoted
+	// labels such as <<"B">> or END "B" cannot hide behind the word-only heads.
+	internal static bool IsDmlOnlyAnonymousBlock(IReadOnlyList<DmSqlStatementShape> statements)
 	{
-		if (statements.Count < 2 || statements[0].First != "BEGIN" ||
-			statements[^1] != new DmSqlStatementHead("END", string.Empty, string.Empty)) return false;
-		if (!IsBlockDml(statements[0].Second)) return false;
+		if (statements.Count < 2) return false;
+		DmSqlStatementShape first = statements[0], last = statements[^1];
+		if (first.Head.First != "BEGIN" || first.HasPrefixToken || !IsBlockDml(first.Head.Second)) return false;
+		if (last.Head != new DmSqlStatementHead("END", string.Empty, string.Empty) || last.HasNonWordToken) return false;
 		for (int index = 1; index < statements.Count - 1; index++)
-			if (!IsBlockDml(statements[index].First)) return false;
+			if (!IsBlockDml(statements[index].Head.First)) return false;
 		return true;
 	}
 

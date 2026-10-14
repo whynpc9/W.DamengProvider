@@ -365,6 +365,9 @@ internal sealed class DmTransport : IDisposable
         }
         catch (Exception ex) when (ex is AuthenticationException or IOException)
         {
+            // A reset or EOF during the handshake is a transport loss; certificate
+            // validation failures arrive as AuthenticationException and stay unmarked.
+            DmTransportFailure.Observe(ex);
             throw new AuthenticationException("TLS authentication failed.", ex);
         }
         finally
@@ -438,6 +441,9 @@ internal sealed class DmTransport : IDisposable
         }
         catch (Exception ex) when (ex is AuthenticationException or IOException)
         {
+            // A reset or EOF during the handshake is a transport loss; certificate
+            // validation failures arrive as AuthenticationException and stay unmarked.
+            DmTransportFailure.Observe(ex);
             throw new AuthenticationException("TLS authentication failed.", ex);
         }
         finally

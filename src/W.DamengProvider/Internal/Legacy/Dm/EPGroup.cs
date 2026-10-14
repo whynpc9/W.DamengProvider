@@ -148,6 +148,8 @@ internal class EPGroup
 					ex = ex2;
 				}
 				if (DmTransportFailure.IsTransportFailure(ex2)) transportFailure = ex2;
+				else if (ex2 is DmException { InnerException: var cause } && DmTransportFailure.IsTransportFailure(cause))
+					transportFailure = cause;
 				stringBuilder.Append("[").Append(eP.ToString()).Append("]")
 					.Append(ex2.Message)
 					.Append(StringUtil.LINE_SEPARATOR);

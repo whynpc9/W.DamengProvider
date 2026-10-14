@@ -129,6 +129,13 @@ public sealed class SavepointReviewTests
     [InlineData("BEGIN NULL; END; \"P\"(1)")]
     [InlineData("BEGIN NULL; [P](); END;")]
     [InlineData("BEGIN NULL; (1); END;")]
+    [InlineData("<<\"B\">> BEGIN NULL; END \"B\";")]
+    [InlineData("<<B>> BEGIN NULL; END;")]
+    [InlineData("<<A>> <<B>> <<C>> BEGIN COMMIT; END;")]
+    [InlineData("/* lead */ <<B>> DECLARE V INT; BEGIN NULL; END;")]
+    [InlineData("BEGIN NULL; END \"B\";")]
+    [InlineData("\"X\" BEGIN NULL; END;")]
+    [InlineData("BEGIN NULL; END q'[B]';")]
     public void AnonymousBlocksWithControlFlowOrTransactionEffectsRemainFenced(string sql)
     {
         using var fixture = new ActiveTransactionFixture();

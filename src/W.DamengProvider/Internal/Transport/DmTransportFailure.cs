@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security.Authentication;
 
 namespace W.Dm.Internal.Transport;
 
@@ -23,8 +24,12 @@ internal static class DmTransportFailure
         return false;
     }
 
+    // The TLS upgrade reports every handshake failure as AuthenticationException;
+    // only one caused by an observed socket/stream failure is a transport loss.
     internal static bool IsTransportFailure(Exception error) =>
-        error is SocketException or IOException && observed.TryGetValue(error, out _);
+        error is SocketException or IOException ? observed.TryGetValue(error, out _) :
+        error is AuthenticationException { InnerException: SocketException or IOException } authentication &&
+            observed.TryGetValue(authentication.InnerException, out _);
 
     internal static DmException Wrap(Exception error, DmFailureInfo info)
     {

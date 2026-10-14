@@ -28,8 +28,10 @@ public sealed class AsyncTlsValidationTests
         DmTransportTestHooks.Reset();
         using var transport = new DmTransport("127.0.0.1", port);
         await transport.OpenAsync(DmDeadline.Start(TimeSpan.FromSeconds(5)), timeout.Token);
-        await Assert.ThrowsAsync<AuthenticationException>(() =>
+        var rejected = await Assert.ThrowsAsync<AuthenticationException>(() =>
             transport.UpgradeTlsAsync(options, DmDeadline.Start(TimeSpan.FromSeconds(5)), timeout.Token));
+        // Certificate validation remains an authentication failure, never a transport loss.
+        Assert.False(DmTransportFailure.IsTransportFailure(rejected));
 
         Assert.True(transport.IsClosed);
         Assert.Equal(0, DmTransportTestHooks.SuccessfulTlsUpgrades);
@@ -73,6 +75,41 @@ public sealed class AsyncTlsValidationTests
         transport.Close();
         await server.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(1, DmTransportTestHooks.DisposedTcpSockets);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PeerResetDuringHandshakeIsATransportLossWithTheAuthenticationChainPreserved(bool asynchronous)
+    {
+        using var issuer = new CertificateMaterial();
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        Task server = Task.Run(async () =>
+        {
+            using Socket peer = await listener.AcceptSocketAsync(timeout.Token);
+            await peer.ReceiveAsync(new byte[1], SocketFlags.None, timeout.Token); // ClientHello started.
+            peer.LingerState = new LingerOption(true, 0);
+            peer.Close();
+        });
+        using var transport = new DmTransport("127.0.0.1", port);
+        await transport.OpenAsync(DmDeadline.Start(TimeSpan.FromSeconds(5)), timeout.Token);
+        var options = Options("localhost", port, issuer.AuthorityPath);
+        var failure = asynchronous
+            ? await Assert.ThrowsAsync<AuthenticationException>(() =>
+                transport.UpgradeTlsAsync(options, DmDeadline.Start(TimeSpan.FromSeconds(5)), timeout.Token))
+            : Assert.Throws<AuthenticationException>(() => transport.UpgradeTls(options, DmDeadline.Start(TimeSpan.FromSeconds(5))));
+        Assert.True(failure.InnerException is IOException or SocketException);
+        Assert.True(DmTransportFailure.IsTransportFailure(failure));
+        var info = new DmFailureInfo(DmErrorKind.Transport, DmFailurePhase.Connect, "WDM_TRANSPORT",
+            DmOperationOutcome.NotSent, null, true).WithConnectionLost();
+        var wrapped = DmTransportFailure.Wrap(failure, info);
+        Assert.Same(failure, wrapped.InnerException);
+        Assert.Equal(DmErrorKind.Transport, wrapped.ErrorKind);
+        Assert.True(transport.IsClosed);
+        await server.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     private static DmTlsOptions Options(string targetHost, int port, string authorityPath) =>

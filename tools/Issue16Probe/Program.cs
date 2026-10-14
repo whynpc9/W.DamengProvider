@@ -107,8 +107,9 @@ async Task<object> AnonymousBlocks()
             string freshPartial = ScalarFresh($"SELECT COUNT(*) FROM \"{t}\" WHERE ID=2")!;
             string freshName = ScalarFresh($"SELECT NAME FROM \"{t}\" WHERE ID=1")!;
             result[mode + "_failing_block"] = new { number, kind, reusable, state, partialInside, priorInside, freshPartial, freshName, outcome = tx.Outcome.ToString() };
-            Check(mode + "_failing_block", number == -6602 && kind == "Server" && freshPartial == "0" && freshName == mode &&
-                (state != "Open" || (partialInside == "0" && priorInside == "before")));
+            Check(mode + "_failing_block", number == -6602 && kind == "Server" && reusable == true && state == "Open" &&
+                partialInside == "0" && priorInside == "before" && freshPartial == "0" && freshName == mode &&
+                tx.Outcome == DmTransactionOutcome.RolledBack);
         }
         using (var connection = Open())
         {
@@ -362,7 +363,12 @@ sealed class ResettingProxy : IAsyncDisposable
             {
                 int read = await from.ReceiveAsync(buffer, SocketFlags.None);
                 if (read <= 0) break;
-                await to.SendAsync(buffer.AsMemory(0, read), SocketFlags.None);
+                for (int sent = 0; sent < read;)
+                {
+                    int progress = await to.SendAsync(buffer.AsMemory(sent, read - sent), SocketFlags.None);
+                    if (progress <= 0) return;
+                    sent += progress;
+                }
             }
         }
         catch { }

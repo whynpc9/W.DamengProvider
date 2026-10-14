@@ -8,6 +8,11 @@ using W.Dm.Internal.Execution;
 namespace W.Dm.Internal.Types;
 
 internal readonly record struct DmSqlStatementHead(string First, string Second, string Third);
+// Non-word tokens (quoted identifiers, literals, punctuation, markers) outside comments:
+// before the first word, and anywhere in the statement. StartsWithLabel marks a
+// statement whose first token is a PL/SQL label (<<name>>), which hides its BEGIN.
+internal readonly record struct DmSqlStatementShape(DmSqlStatementHead Head, bool HasPrefixToken, bool HasNonWordToken,
+    bool StartsWithLabel = false);
 internal enum DmSqlSavepointKind { Save, Rollback, Release }
 internal readonly record struct DmSqlSavepointControl(DmSqlSavepointKind Kind, string Name, bool IsQuoted);
 
@@ -237,6 +242,7 @@ internal sealed class DmParameterBinding
         16 or 17 or 18 or 19 or 20 or 21 or 22 or 23 or 24 or 26 or 27 or 28;
 
     internal static IReadOnlyList<DmSqlStatementHead> ScanTopLevelStatements(string sql) => Scan(sql).Heads;
+    internal static IReadOnlyList<DmSqlStatementShape> ScanTopLevelStatementShapes(string sql) => Scan(sql).Shapes;
 
     // Parse only a complete single control statement. Keep the original SQL for
     // execution; decoded identifiers are used solely for ownership and tracking.
@@ -417,6 +423,7 @@ internal sealed class DmParameterBinding
         internal List<string> Named { get; } = new();
         internal int PositionalCount;
         internal List<DmSqlStatementHead> Heads { get; } = new();
+        internal List<DmSqlStatementShape> Shapes { get; } = new();
     }
 
     private static ScanResult Scan(string sql)
@@ -427,14 +434,23 @@ internal sealed class DmParameterBinding
         int parentheses = 0;
         // A statement made only of quoted identifiers, literals or punctuation (for
         // example a quoted procedure call) still yields an empty head for the fence.
-        bool statementHasToken = false;
+        bool statementHasToken = false, prefixToken = false, nonWordToken = false, label = false;
         for (int index = 0; index < sql.Length;)
         {
             char current = sql[index];
             bool comment = current == '-' && index + 1 < sql.Length && sql[index + 1] == '-' ||
                 current == '/' && index + 1 < sql.Length && sql[index + 1] == '*';
             if (!comment && !char.IsWhiteSpace(current) && !(current == ';' && parentheses == 0))
+            {
+                if (!statementHasToken) label = current == '<' && index + 1 < sql.Length && sql[index + 1] == '<';
                 statementHasToken = true;
+                bool alternateQuote = current is 'q' or 'Q' && index + 2 < sql.Length && sql[index + 1] == '\'';
+                if (parentheses != 0 || alternateQuote || !IsWordStart(current))
+                {
+                    nonWordToken = true;
+                    if (words.Count == 0) prefixToken = true;
+                }
+            }
             if (current == '-' && index + 1 < sql.Length && sql[index + 1] == '-')
             {
                 index += 2;
@@ -521,9 +537,9 @@ internal sealed class DmParameterBinding
             if (current == ')') { if (parentheses > 0) parentheses--; index++; continue; }
             if (current == ';' && parentheses == 0)
             {
-                AddHead(result.Heads, words, statementHasToken);
+                AddHead(result, words, statementHasToken, prefixToken, nonWordToken, label);
                 words.Clear();
-                statementHasToken = false;
+                statementHasToken = prefixToken = nonWordToken = label = false;
                 index++;
                 continue;
             }
@@ -536,22 +552,20 @@ internal sealed class DmParameterBinding
             }
             index++;
         }
-        AddHead(result.Heads, words, statementHasToken);
+        AddHead(result, words, statementHasToken, prefixToken, nonWordToken, label);
         return result;
     }
 
-    private static void AddHead(List<DmSqlStatementHead> heads, List<string> words, bool hasToken)
+    private static void AddHead(ScanResult result, List<string> words, bool hasToken, bool prefixToken, bool nonWordToken,
+        bool label)
     {
         if (words.Count == 0 && !hasToken) return;
-        if (words.Count == 0)
-        {
-            if (heads.Count >= MaxMarkers) throw new InvalidDataException("Too many SQL statements.");
-            heads.Add(new DmSqlStatementHead(string.Empty, string.Empty, string.Empty));
-            return;
-        }
-        if (heads.Count >= MaxMarkers) throw new InvalidDataException("Too many SQL statements.");
-        heads.Add(new DmSqlStatementHead(words[0], words.Count > 1 ? words[1] : string.Empty,
-            words.Count > 2 ? words[2] : string.Empty));
+        if (result.Heads.Count >= MaxMarkers) throw new InvalidDataException("Too many SQL statements.");
+        var head = words.Count == 0 ? new DmSqlStatementHead(string.Empty, string.Empty, string.Empty) :
+            new DmSqlStatementHead(words[0], words.Count > 1 ? words[1] : string.Empty,
+                words.Count > 2 ? words[2] : string.Empty);
+        result.Heads.Add(head);
+        result.Shapes.Add(new DmSqlStatementShape(head, prefixToken, nonWordToken, label));
     }
 
     private static bool IsWordStart(char value) => char.IsLetter(value) || value == '_';
