@@ -213,6 +213,8 @@ public sealed class DmBatch : DbBatch
 		}
 	}
 
+	internal bool IsDisposed => gate.IsDisposed;
+
 	internal void Release(DmBatchExecution execution)
 	{
 		Interlocked.CompareExchange(ref activeExecution, null, execution);

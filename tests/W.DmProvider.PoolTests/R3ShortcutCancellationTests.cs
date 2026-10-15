@@ -543,6 +543,39 @@ public sealed class R3ShortcutCancellationTests
     }
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task BatchDisposedBeforeReaderStillReleasesConnection(bool asynchronous, bool disposeBatchAsync)
+    {
+        using var handshake = new SyntheticPoolHandshake();
+        await using var source = new DmDataSource(PoolApiSettings.Text);
+        var channel = new ShortcutWireChannel(asynchronous);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        { handshake.Install(candidate, channel); return ValueTask.CompletedTask; };
+        await using DbBatch batch = source.CreateBatch();
+        DbBatchCommand command = batch.CreateBatchCommand();
+        command.CommandText = "SELECT VALUE FROM SYNTHETIC_TABLE";
+        batch.BatchCommands.Add(command);
+        await using DbDataReader reader = asynchronous ? await batch.ExecuteReaderAsync() : batch.ExecuteReader();
+        Assert.Equal(1, reader.FieldCount);
+        Assert.Equal(1, source.Snapshot.Leased);
+
+        if (disposeBatchAsync) await batch.DisposeAsync(); else batch.Dispose();
+        Assert.False(reader.IsClosed);
+        Assert.Equal(1, source.Snapshot.Leased);
+
+        if (asynchronous) await reader.DisposeAsync(); else reader.Dispose();
+        if (asynchronous) await reader.DisposeAsync(); else reader.Dispose();
+        Assert.True(reader.IsClosed);
+        Assert.True(channel.IsClosed);
+        Assert.True(source.Snapshot.IsQuiescent);
+        Assert.Equal(0, source.Snapshot.PhysicalCount);
+        channel.AssertIoPath();
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task ReaderCancellationAndConcurrentDisposeKeepCapacityAndPermitSafeCommandReuse(bool asynchronous)

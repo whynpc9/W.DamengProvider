@@ -374,13 +374,15 @@ internal sealed class DmDataSourceBatch : DbBatch
 
     private void Detach(DmConnection connection)
     {
-        try { if (ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
+        // A disposed batch is no longer configurable; its reader still returns the connection.
+        try { if (!batch.IsDisposed && ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
         finally { connection.Dispose(); }
     }
 
     private async ValueTask DetachAsync(DmConnection connection)
     {
-        try { if (ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
+        // A disposed batch is no longer configurable; its reader still returns the connection.
+        try { if (!batch.IsDisposed && ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
         finally { await connection.DisposeAsync().ConfigureAwait(false); }
     }
 

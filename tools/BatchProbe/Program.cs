@@ -807,8 +807,37 @@ async Task<object> BatchEntryPoints()
         batch.BatchCommands.Add(select);
         viaDataSource = Convert.ToString(await batch.ExecuteScalarAsync(), CultureInfo.InvariantCulture)!;
     }
+    // Disposing a data source batch before its reader still returns the connection cleanly.
+    var disposeOrder = new List<object>();
+    string pooledSettings = new DmConnectionStringBuilder(settings)
+        { ConnPooling = true, MaxPoolSize = 1, ConnPoolTimeout = 2000 }.ConnectionString;
+    await using (var dataSource = DmDataSource.Create(pooledSettings))
+    {
+        foreach (bool asynchronous in new[] { false, true })
+        foreach (bool disposeBatchAsync in new[] { false, true })
+        {
+            using DbBatch batch = dataSource.CreateBatch();
+            var select = batch.CreateBatchCommand(); select.CommandText = "SELECT 1 FROM DUAL";
+            batch.BatchCommands.Add(select);
+            using DbDataReader reader = asynchronous ? await batch.ExecuteReaderAsync() : batch.ExecuteReader();
+            bool valueRead = (asynchronous ? await reader.ReadAsync() : reader.Read()) && reader.GetInt32(0) == 1;
+            if (disposeBatchAsync) await batch.DisposeAsync(); else batch.Dispose();
+            string status = "ok";
+            try
+            {
+                if (asynchronous) await reader.DisposeAsync(); else reader.Dispose();
+                if (asynchronous) await reader.DisposeAsync(); else reader.Dispose();
+            }
+            catch (Exception error) { status = error.GetType().Name; }
+            // A leaked reader lease exhausts this one-slot pool and fails the next checkout.
+            using var next = dataSource.CreateCommand("SELECT 1 FROM DUAL");
+            bool reopened = Convert.ToInt32(asynchronous ? await next.ExecuteScalarAsync() : next.ExecuteScalar()) == 1;
+            types &= valueRead && status == "ok" && reader.IsClosed && reopened;
+            disposeOrder.Add(new { asynchronous, disposeBatchAsync, valueRead, status, reopened });
+        }
+    }
     Check("batch_entry_points", types && viaDataSource == "2");
-    return new { types, viaDataSource };
+    return new { types, viaDataSource, disposeOrder };
 }
 
 static string Json(object value) => JsonSerializer.Serialize(value);

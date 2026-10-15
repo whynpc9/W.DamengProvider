@@ -42,7 +42,7 @@
 | 计数 | 每个 `DmBatchCommand.RecordsAffected` 在该命令完成后设置；查询、未完成或未执行的命令为 -1。`ExecuteNonQuery` 与 Reader 的 `RecordsAffected` 为已完成命令计数之和，没有计数时为 -1 |
 | Reader | 按命令顺序给出结果集，没有结果集的命令不产生结果集。下一条命令在前一条结果耗尽时才执行。关闭 Reader 时仍执行剩余命令（与 SqlClient/Npgsql 一致），执行失败时 `Close` 抛出该异常。出错后 `Read`/`NextResult` 抛出 `InvalidOperationException`，关闭时不再执行；取消或连接失效后关闭也不再执行且不抛出。支持 `SequentialAccess`、`CloseConnection` |
 | 取消 | `DmBatch.Cancel()` 或异步 token 与 `DmCommand.Cancel` 相同：连接 Broken，进行中命令结果未知，不重放。落在两条命令之间的取消使下一条命令以取消失败、不发送 |
-| 其他 | `ExecuteScalar` 返回第一个结果集首行首列，并执行其余命令。`Prepare` 只做本地预检，语句在执行时准备。数据源批次每次执行打开并归还一个连接 |
+| 其他 | `ExecuteScalar` 返回第一个结果集首行首列，并执行其余命令。`Prepare` 只做本地预检，语句在执行时准备。数据源批次每次执行打开并归还一个连接；有 Reader 时由 Reader 结束归还，先释放批次不影响之后释放 Reader，同步与异步均适用 |
 
 **实库（sync/async）。** 6 条命令（INSERT、UPDATE、SELECT、DELETE、COUNT、空 SELECT）的 Reader 依次给出 3 个结果集，逐命令计数为 `1,2,-1,1,-1,-1`，总计 4。第二条 INSERT 主键冲突时：`BatchCommand` 为第 2 条，计数 `1,-1,-1`，新连接只见第一条的行，连接可继续使用；事务内同样停止，事务 Active，回滚后无效果；Reader 路径在前进时报告同一归属。提前关闭 Reader 后剩余 INSERT 已执行；Reader 打开时调用 `Cancel()` 后关闭不抛出，连接 Broken，后续 INSERT 未执行；连续 50 个批次后连接正常。锁等待超时：`DmTimeoutException` 归属第 2 条，第 1 条已提交、第 3 条未执行；取消同样，第 2 条最终全部或全无。通过 `DbConnection`/`DbProviderFactory` 基类型和 `DmDataSource.CreateBatch()` 执行成功。
 
@@ -63,4 +63,5 @@
 - 包消费者：`dotnet pack` 得到 `0.1.0-batch.local` 本地包，同一探针源码仅以 PackageReference 编译，加载的程序集与包内 DLL 哈希一致；array 与 batch 全部场景通过，清理残留 0。
 - 离线：12 个测试项目全部通过（含新增 `ArrayBindingAndBatchTests`）。issue #16 实库探针对候选源码回归通过。
 - 独立代码审查（只读）发现的取消后关闭抛出、出错后仍可前进执行后续命令、命令间取消丢失等问题已修正，并在上述最终候选上重跑离线、实库与包消费检查。
+- PR #19 review 修复（2026-10-15）：数据源批次先释放、Reader 后释放时，连接清理跳过已释放批次的属性设置，避免 `ObjectDisposedException`。独立代码复核通过；独立执行 Release `PoolTests` 308/308、`CommandTests` 31/31 通过，均退出 0。新增离线用例覆盖批次与 Reader 的 4 个同步/异步释放组合、Reader 重复释放，并确认物理连接关闭、池容量归零。构建 `tools/BatchProbe` 后，执行 `scripts/with-dameng-test.sh dotnet tools/BatchProbe/bin/net10.0/BatchProbe.dll batch` 退出 0：新 W 驱动身份为 `WDM_PROVIDER_TEST`，四种释放组合均读到 1、无释放异常，容量为 1 的池均可继续执行查询；`accepted=true`，本轮创建的 9 个对象全部删除，新连接确认残留为 0。本轮实库只重跑受影响的 batch 区段。
 - 已知环境现象：远程实例上长时间逐行循环偶发 `SocketException: ConnectionReset`（`WDM_TRANSPORT`，Receive），在未修改的基线上同样复现；性能对照的逐行基线遇到时在自己的表上清空后重跑一次并记录。
