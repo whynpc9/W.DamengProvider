@@ -48,18 +48,20 @@
     },
     {
       "issue": 12,
-      "status": "offline_verified_integration_pending",
-      "summary": "net8.0/net9.0/net10.0 source, tests and package/release consumers; after main integration 6528 offline tests and 21 first-init cases passed on actual runtimes; shared/TLS TEST pending missing configuration",
+      "status": "merged_unreleased",
+      "summary": "net8.0/net9.0/net10.0 targets, tests and package consumers; historical validation in I12, current four-target release checks in the next release report",
       "report": "../compatibility/I12-multitarget.md",
-      "pull_request": 21
+      "pull_request": 21,
+      "merged_commit": "83c492e"
     },
     {
       "issue": 9,
-      "status": "in_review",
+      "status": "merged_unreleased",
       "branch": "t3/handle-issue-9",
       "summary": "Stored procedures, scalar OUT/INOUT and function returns, managed output cursors, atomic output publication and explicit transaction guard",
       "report": "../compatibility/I09-stored-procedures.md",
-      "pull_request": 23
+      "pull_request": 23,
+      "merged_commit": "57cefaf"
     },
     {
       "issue": 10,
@@ -72,10 +74,35 @@
     },
     {
       "issue": 13,
-      "status": "offline_verified_shared_integration_verified_tls_pending",
-      "summary": "net6.0 target: typed DmDataSource without DbDataSource, TLS chain policy rebuilt in validation callback, Microsoft.Bcl.TimeProvider 8.0.1; 9626 offline tests on net6/8/9/10, 28 first-init cases, shared TEST smoke on all four runtimes; strict TLS TEST pending missing configuration",
+      "status": "merged_unreleased",
+      "summary": "net6.0 typed DmDataSource, equivalent TLS chain policy and TimeProvider compatibility; historical Linux validation in I13, current four-target release checks in the next release report",
       "report": "../compatibility/I13-net6.md",
-      "branch": "t3/issue-13-net-compatibility"
+      "branch": "t3/issue-13-net-compatibility",
+      "pull_request": 25,
+      "merged_commit": "c415be4"
     }
-  ]
+  ],
+  "next_release": {
+    "version": "0.2.0",
+    "state": "local_preflight_passed_pending_commit_and_publish",
+    "published": false,
+    "target_frameworks": [
+      "net6.0",
+      "net8.0",
+      "net9.0",
+      "net10.0"
+    ],
+    "report": "../release-0.2.0.md",
+    "source_commit": "c415be4883075fb707e32f2d5918d3a54960b4aa",
+    "source_has_preparation_diff": true,
+    "local_preflight_passed": true,
+    "offline_tests_passed": 9634,
+    "offline_tests_failed": 0,
+    "offline_tests_skipped": 0,
+    "first_initialization_passed": 28,
+    "shared_test_smoke": "verified_on_all_four_runtimes",
+    "isolated_tls_test_smoke": "verified_on_all_four_runtimes",
+    "independent_review": "passed",
+    "independent_validation": "passed"
+  }
 }

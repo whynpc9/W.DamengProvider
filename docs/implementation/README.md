@@ -4,7 +4,7 @@
 
 ## 当前实现与发布
 
-仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17、#18 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，以及 [issue #7/#8 数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)，这些改动未包含在该包中。存储过程、输出参数和游标的源码契约见 [issue #9](../compatibility/I09-stored-procedures.md)，也尚未发布。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
+仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。下一版 [0.2.0 正在准备](../release-0.2.0.md)：四目标、PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)均已合入，尚未发布。机器可读状态见 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
 
 | 内容 | 入口 |
 | --- | --- |
@@ -20,7 +20,7 @@
 | 物理连接复用前置调查 | [issue #6 性能基线与复位阻塞（8.1.5.60 无完整复位，维持销毁）](../compatibility/I06-pool-reuse-baseline.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
-| .NET 8/9/10 多目标 | [源码、包消费与运行时验证；实库 pending](../compatibility/I12-multitarget.md) |
+| .NET 8/9/10 多目标 | [原三目标验证记录](../compatibility/I12-multitarget.md)、[当前四目标发布准备](../release-0.2.0.md) |
 | .NET 6 兼容层 | [数据源 API 差异、TLS 等价验证、时间 API；验证记录](../compatibility/I13-net6.md) |
 | Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
 
@@ -28,7 +28,7 @@
 
 [AGENTS.md](../../AGENTS.md) 和[协作约定](active-ownership.md)适用于各类开发工具、模型和 harness。[本地达梦环境](local-dameng.md)、[隔离 TLS 环境](local-dameng-tls.md)规定 TEST 身份、secret 与精确对象清理边界；权限维护记录见 [SOI 目录访问](maintenance/T12-test-catalog-access.md)和[临时 Schema 授权记录](maintenance/EF-test-create-schema-temporary.md)。
 
-发布检查使用[发布指南](../release.md)中的 `eng/release.sh prepare`。专项入口见 `eng/T*.md` 和对应工具 README；其中固定旧包、下游 commit、manifest 或 approval 的入口只用于原样本重现，不是新任务的前置流程。没有显式测试连接时只跑离线检查，并报告 `integration_pending`。
+发布检查使用[发布指南](../release.md)中的 `eng/release.sh prepare`。脚本职责见 [eng 索引](../../eng/README.md)与 [TEST wrapper 索引](../../scripts/README.md)。专项入口见 `eng/T*.md` 和对应工具 README；其中固定旧包、下游 commit、manifest 或 approval 的入口只用于原样本重现，不是新任务的前置流程。没有显式测试连接时只跑离线检查，并报告 `integration_pending`。
 
 ## 历史材料
 

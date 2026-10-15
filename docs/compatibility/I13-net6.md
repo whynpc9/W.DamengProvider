@@ -2,6 +2,8 @@
 
 当前源码在同一 `W.DamengProvider` 包内生成 `net6.0;net8.0;net9.0;net10.0`。构建 SDK 仍由 `global.json` 固定为 10.0.401，产品与测试继续使用 C#12；已发布 `0.1.0-preview.1` 不含本改动。不包含 .NET Framework/netstandard、Core 3.1 或任何 EF 适配。
 
+PR #25 已合入 main。本页的 Linux 测试及严格 TLS 待验状态属于当时候选；当前发布候选的 macOS 四目标、shared/隔离 TLS 实库检查见 [0.2.0 发布准备](../release-0.2.0.md)。
+
 ## 实现方式
 
 沿用 [#12](I12-multitarget.md) 的做法：差异尽量收敛为全目标通用写法，只有平台缺少类型或虚成员时才使用 `#if`。
