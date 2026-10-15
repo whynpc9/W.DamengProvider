@@ -108,3 +108,24 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 ```
 
 本轮首次运行五个项目即全部通过。构建 / 测试期间受测产品与测试源码未改；真实数据库补验由独立验证者另行运行，不计入离线 TRX 数。
+
+
+## PR #23 review：排除遗留全局结果缓存
+
+针对 [r4280173685](https://github.com/whynpc9/W.DamengProvider/pull/23#discussion_r4280173685)，在 `734f67e` 上补充过程缓存排除差异：统一按捕获 plan 的 CommandType 判断，只允许 Text 进入全局缓存查询，以及同步执行、异步执行和 FETCH 的三个写入入口。每 statement 的行缓冲保留。
+
+公开配置实际上已通过 `DmConnectionStringBuilder.Normalize` 的非默认选项检查拒绝 `EnRsCache=true`；本轮不开放该功能。新增测试先验证 typed setter 和连接串两种公共入口继续拒绝，再仅在离线夹具中同时设置 logical/physical 配置快照、注入并恢复静态缓存，以实际覆盖内部遗留路径。预置精确匹配条目时，过程必须走到夹具 transport 的 Send，Text 对照零发送；同步/异步执行和 FETCH 的真实解码帧必须保留局部行数据，但不给过程登记全局条目。静态缓存为空的过程路径也通过。
+
+由实现者外的主 agent 串行运行 Command 与 Async 两套全部三目标，SDK/runtime 与前节相同：
+
+| 项目 | net8.0 | net9.0 | net10.0 | 退出码 |
+| --- | ---: | ---: | ---: | ---: |
+| Command | 172 | 172 | 172 | 0 |
+| Async（含13个缓存用例） | 170 | 170 | 170 | 0 |
+| 合计 | **342** | **342** | **342** | **0** |
+
+共 **1026/1026** 通过，零失败、跳过或中止。每项目沿用上述 `dotnet test` 参数及 `LogFilePrefix`，结果目录分别为 `.local/issue9/cache-review/Command` 和 `Async-r3`，包含命令、完整日志、结果 JSON 及各框架 TRX。受测产品在执行期间未变。
+
+保留初始记录：`Async` 首次因新测试把 `DbDataReader` 当作 `DmDataReader` 访问内部字段而编译失败，修为明确类型断言；`Async-r2` 每目标165通过、5失败，揭示最初夹具错误假设公开选项可启用，且只修改了 logical 配置，physical 缓存开关仍关闭。修正这些前置条件后保留全部缓存命中/写入及零发送断言，`Async-r3` 全部通过。产品代码未因这些测试问题改变。
+
+本轮没有执行新的数据库操作。缓存模式不属于公开支持范围，故撤回新增实库缓存探针；此前正常配置的三目标177项实库证据保留，不宣称提供新的缓存能力。

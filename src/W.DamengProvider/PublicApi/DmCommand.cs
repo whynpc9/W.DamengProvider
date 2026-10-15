@@ -69,6 +69,9 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private readonly DmCommandPlanGate commandPlanGate = new();
 	private DmCommandPlan activePlan;
 	internal DmCommandPlan ActivePlan => Volatile.Read(ref activePlan);
+	// Procedure calls may mutate server state and produce OUT values on every
+	// invocation. Their statement-local row buffer is never a reusable result.
+	internal bool AllowsGlobalResultCache => (ActivePlan?.CommandType ?? m_CommandType) == CommandType.Text;
 	private DmDataSourceExecution dataSourceExecution;
 	internal void BindDataSourceExecution(DmDataSourceExecution execution) => Volatile.Write(ref dataSourceExecution, execution);
 	internal void UnbindDataSourceExecution(DmDataSourceExecution execution) => Interlocked.CompareExchange(ref dataSourceExecution, null, execution);
@@ -1081,7 +1084,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 			statementConnection = m_Conn;
 		}
 		m_Stmt.__t02_field_04000931 = m_StmtSerial;
-		if (connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
+		if (AllowsGlobalResultCache && connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
 		{
 			bool flag = false;
 			RsKey key = new RsKey(connInstance.ConnProperty.Guid, connInstance.ConnProperty.CurrentSchema, GetCommandText(), do_DbParameterCollection.Count, do_DbParameterCollection);

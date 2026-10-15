@@ -240,7 +240,7 @@ internal partial class c
 			{
 				DmFrameReader.ValidateRows(num8, num11, P_0.a(false));
 				P_1.l().FillRows(0L, num8, P_0, dmInfo.rsBdta, rsBdtaRowidCol);
-				if (P_1.G().ConnProperty.EnRsCache && num10 > 0 && dmInfo.GetRowCount() == num8)
+				if (P_1.f()?.AllowsGlobalResultCache == true && P_1.G().ConnProperty.EnRsCache && num10 > 0 && dmInfo.GetRowCount() == num8)
 				{
 					RsKey key = new RsKey(P_1.G().ConnProperty.Guid, P_1.G().ConnProperty.CurrentSchema, P_1.C(), P_1.f().do_DbParameterCollection.Count, P_1.f().do_DbParameterCollection);
 					DmConnection.rsLRUCache.Add(key, P_1.l());
