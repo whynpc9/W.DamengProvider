@@ -3,6 +3,8 @@ using System.Data.Common;
 using System.Globalization;
 using System.Reflection;
 using System.Resources;
+using System.Runtime.Versioning;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using W.Dm;
@@ -23,16 +25,22 @@ internal static class Program
             Need(args.Length is 2 or 3 && args[0] is "offline" or "plaintext" or "tls", "usage");
             using var manifest = JsonDocument.Parse(File.ReadAllText(args[1]));
             Stage = "package_identity";
+            var target = Version.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>()!.FrameworkName.Split("Version=v")[1]);
+            string tfm = $"net{target.Major}.{target.Minor}";
+            Need(Environment.Version.Major == target.Major, "runtime_major_mismatch");
+            Report["target_framework"] = tfm; Report["runtime_major"] = Environment.Version.Major;
+            Report["runtime"] = RuntimeInformation.FrameworkDescription;
+            Report["selected_product_asset"] = $"lib/{tfm}/{PackageId}.dll";
             var assembly = typeof(DmConnection).Assembly;
             Need(assembly.GetName().Name == PackageId, "assembly_name_mismatch");
             Need(assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ==
                  manifest.RootElement.GetProperty("tag_version").GetString(), "assembly_version_mismatch");
             Need(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, PackageId + ".dll")), "assembly_location_mismatch");
             Need(assembly.GetReferencedAssemblies().All(a => !string.Equals(a.Name, "DM.DmProvider", StringComparison.OrdinalIgnoreCase)), "official_driver_reference");
-            foreach (var asset in manifest.RootElement.GetProperty("assets").EnumerateObject())
+            foreach (var asset in manifest.RootElement.GetProperty("assets").EnumerateObject().Where(a => a.Name.StartsWith($"lib/{tfm}/", StringComparison.Ordinal)))
             {
-                string relative = asset.Name["lib/net10.0/".Length..];
-                Need(Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, relative)))) ==
+                string relative = asset.Name[($"lib/{tfm}/").Length..];
+                Need(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, relative)))).ToLowerInvariant() ==
                      asset.Value.GetString(), "loaded_package_asset_mismatch");
             }
             using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "NuGetSmoke.deps.json")));
@@ -41,7 +49,7 @@ internal static class Program
             Report["assembly"] = assembly.GetName().Name;
             Report["package_version"] = manifest.RootElement.GetProperty("version").GetString();
             Report["package_sha256"] = manifest.RootElement.GetProperty("package_sha256").GetString();
-            Report["loaded_dll_sha256"] = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
+            Report["loaded_dll_sha256"] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location))).ToLowerInvariant();
             Stage = "factory_and_resources";
             DbProviderFactories.RegisterFactory(PackageId, DmClientFactory.Instance);
             Need(ReferenceEquals(DbProviderFactories.GetFactory(PackageId), DmClientFactory.Instance), "factory_registration_failed");
@@ -50,10 +58,16 @@ internal static class Program
             Need(connection is DmConnection && command is DmCommand &&
                  DmClientFactory.Instance.CreateParameter() is DmParameter &&
                  DmClientFactory.Instance.CreateConnectionStringBuilder() is DmConnectionStringBuilder, "factory_type_mismatch");
+            Need(typeof(DbException).IsAssignableFrom(typeof(DmException)), "public_exception_type_mismatch");
+            var parameter = new DmParameter("value", "中文") { DbType = DbType.String, Size = 20 };
+            Need(parameter.ParameterName == "value" && (string)parameter.Value == "中文" && parameter.DbType == DbType.String && parameter.Size == 20,
+                 "public_parameter_contract_mismatch");
             var manager = new ResourceManager("Dm.DmErrorDefinition", assembly);
-            foreach (string culture in new[] { "", "en", "zh-CN", "zh-HK", "zh-TW" })
+            var messages = new Dictionary<string, string> { [""] = "No error message", ["en"] = "No error message",
+                ["zh-CN"] = ": (无错误信息)", ["zh-HK"] = ": (無錯誤信息)", ["zh-TW"] = ": (無錯誤信息)" };
+            foreach (string culture in messages.Keys)
             {
-                Need(!string.IsNullOrWhiteSpace(manager.GetString("message.error", CultureInfo.GetCultureInfo(culture))), "localized_resource_missing");
+                Need(manager.GetString("message.error", CultureInfo.GetCultureInfo(culture)) == messages[culture], "localized_resource_lookup_mismatch");
                 if (culture.Length > 0)
                 {
                     var satellite = assembly.GetSatelliteAssembly(CultureInfo.GetCultureInfo(culture));
@@ -62,6 +76,9 @@ internal static class Program
                     Need(resource is not null, "satellite_resource_missing");
                 }
             }
+            Need(manager.GetString("message.error", CultureInfo.GetCultureInfo("en-US")) == messages["en"] &&
+                 manager.GetString("message.error", CultureInfo.GetCultureInfo("fr-FR")) == messages[""], "resource_parent_or_neutral_fallback_failed");
+            Report["culture_lookup_and_fallback"] = true;
             if (args[0] != "offline")
             {
                 Stage = "database_configuration";
@@ -141,6 +158,19 @@ internal static class Program
         {
             Stage = "database_create";
             await using var connection = await OpenAsync(settings);
+            Stage = "pre_canceled_command";
+            using (var canceled = new CancellationTokenSource())
+            using (var query = connection.CreateCommand())
+            {
+                canceled.Cancel(); query.CommandText = "SELECT 1 FROM DUAL";
+                bool observed = false;
+                try { await query.ExecuteScalarAsync(canceled.Token); }
+                catch (OperationCanceledException) { observed = true; }
+                Need(observed, "pre_canceled_command_not_canceled");
+            }
+            Need(await CountAsync(connection, "SELECT 1 FROM DUAL") == 1, "connection_unusable_after_pre_cancel");
+            Report["pre_canceled_command_and_reuse"] = true;
+            Stage = "database_create";
             Need(await CountAsync(connection, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME=:name", table) == 0, "table_name_already_exists");
             await ExecuteAsync(connection, $"CREATE TABLE {table}(ID INT PRIMARY KEY,V VARCHAR(400),D TIMESTAMP(6),B BLOB,C CLOB)");
             created = true;
@@ -159,6 +189,7 @@ internal static class Program
                 insert.Parameters.Add(new DmParameter("c", DmDbType.Clob) { Value = text });
                 Need(await insert.ExecuteNonQueryAsync() == 1, "insert_row_count_mismatch");
                 await transaction.CommitAsync();
+                Need(transaction.Outcome == DmTransactionOutcome.Committed, "commit_outcome_mismatch");
             }
             Stage = "fresh_parameter_reader";
             await using (var fresh = await OpenAsync(settings))
@@ -175,9 +206,25 @@ internal static class Program
             {
                 Need(await ExecuteAsync(connection, $"UPDATE {table} SET V='rollback' WHERE ID=1", transaction) == 1, "update_row_count_mismatch");
                 await transaction.RollbackAsync();
+                Need(transaction.Outcome == DmTransactionOutcome.RolledBack, "rollback_outcome_mismatch");
             }
             await using (var fresh = await OpenAsync(settings))
                 Need(await CountAsync(fresh, $"SELECT COUNT(*) FROM {table} WHERE ID=1 AND V='package-中文'") == 1, "rollback_not_persisted");
+            Stage = "reader_connection_disposal";
+            var disposable = await OpenAsync(settings);
+            try
+            {
+                using var select = disposable.CreateCommand(); select.CommandText = $"SELECT ID FROM {table}";
+                var reader = await select.ExecuteReaderAsync();
+                Need(await reader.ReadAsync(), "disposal_reader_empty");
+                await reader.DisposeAsync(); Need(reader.IsClosed, "disposed_reader_not_closed");
+                Need(await CountAsync(disposable, "SELECT 1 FROM DUAL") == 1, "connection_unusable_after_reader_disposal");
+            }
+            finally { await disposable.DisposeAsync(); }
+            Need(disposable.State == ConnectionState.Closed, "disposed_connection_not_closed");
+            await connection.CloseAsync(); Need(connection.State == ConnectionState.Closed, "connection_not_closed");
+            Report["reader_and_connection_disposal"] = true;
+            Report["final_transaction_state"] = "commit_and_rollback_completed_connections_closed";
             Report["parameter_reader_transaction_temporal_blob_clob"] = true;
         }
         finally

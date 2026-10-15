@@ -179,6 +179,6 @@ internal sealed class UploadRecordingChannel(bool recordDetails = true, bool asy
     { token.ThrowIfCancellationRequested(); return ValueTask.FromResult(SendCore(buffer, offset, count)); }
     public ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken token)
     { token.ThrowIfCancellationRequested(); return ValueTask.FromResult(ReadCore(buffer, offset, count)); }
-    internal string Digest() => Convert.ToHexStringLower(hash.GetHashAndReset());
+    internal string Digest() => Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
     public void Dispose() { IsClosed = true; hash.Dispose(); }
 }

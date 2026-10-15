@@ -115,7 +115,7 @@ public sealed class AsyncTransportTests
     }
 
     [Fact]
-    public async Task SocketReadAndTlsAuthenticationSuspendWhilePeerWithholdsReply()
+    public async Task SocketReadSuspendsWhilePeerWithholdsReply()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -128,8 +128,22 @@ public sealed class AsyncTransportTests
         Task read = transport.ReadSomeAsync(new byte[1], 0, 1, DmDeadline.Infinite, 0, readCancellation.Token).AsTask();
         Assert.False(read.IsCompleted);
         readCancellation.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read.WaitAsync(TimeSpan.FromSeconds(3)));
+        var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read.WaitAsync(TimeSpan.FromSeconds(3)));
+        Assert.Equal(readCancellation.Token, error.CancellationToken);
+    }
 
+    [Fact]
+    public async Task TlsAuthenticationSuspendsWhilePeerWithholdsReply()
+    {
+        // Use a fresh connection: canceling Socket.ReceiveAsync can mark the socket
+        // disconnected on .NET 8, preventing NetworkStream construction for TLS.
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        using var transport = new DmTransport("127.0.0.1", port);
+        Task<Socket> accepting = listener.AcceptSocketAsync();
+        await transport.OpenAsync(DmDeadline.Start(TimeSpan.FromSeconds(3)));
+        using Socket peer = await accepting.WaitAsync(TimeSpan.FromSeconds(3));
         var settings = new DmConnectionStringBuilder { Server = "127.0.0.1", Port = port }.ToSettings();
         using var tlsCancellation = new CancellationTokenSource();
         Task tls = transport.UpgradeTlsAsync(DmTlsOptions.FromSettings(settings), DmDeadline.Infinite, tlsCancellation.Token);

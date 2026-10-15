@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>W.DamengProvider</AssemblyName>
     <PackageId>W.DamengProvider</PackageId>
     <RootNamespace>W.Dm</RootNamespace>
@@ -9,14 +9,14 @@
     <FileVersion>0.1.0.0</FileVersion>
     <Authors>W.DamengProvider contributors</Authors>
     <Company>W.DamengProvider contributors</Company>
-    <Description>Dameng ADO.NET provider for .NET 10, with asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
+    <Description>Dameng ADO.NET provider for .NET 8, .NET 9, and .NET 10, with asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
     <PackageTags>Dameng;ADO.NET;database</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>Portions Copyright (C) DM; modifications Copyright (C) W.DamengProvider contributors</Copyright>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <LangVersion>13.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <NuGetAudit>false</NuGetAudit>
     <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
     <EnableSourceLink>false</EnableSourceLink>
@@ -27,7 +27,12 @@
     <PackageProjectUrl>https://github.com/whynpc9/W.DamengProvider</PackageProjectUrl>
     <GenerateRepositoryUrlAttribute>false</GenerateRepositoryUrlAttribute>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <!-- Localized resources use culture folders, so preserve their explicit Culture metadata on every target. -->
+    <RespectAlreadyAssignedItemCulture>true</RespectAlreadyAssignedItemCulture>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Microsoft.Bcl.Cryptography" Version="10.0.12" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="W.DmProvider.ConfigurationTests" />
     <InternalsVisibleTo Include="W.DmProvider.SessionTests" />
