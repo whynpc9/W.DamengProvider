@@ -460,6 +460,7 @@ public sealed class TemporalNativeReaderContractTests
             var info = new DmInfo(); info.SetColumnsInfo(Columns); info.rsBdta = format == DmTemporalResultFormat.Bdta;
             var cache = Cache(bytes, next);
             Reader = TemporalNativeWriterAdapterTests.WriterFixture.Uninitialized<DmDataReader>();
+            Set(Reader, "procedureChildren", Array.Empty<DmDataReader>());
             Reader.m_Statement = writer.Statement; Reader.m_RowCount = cache.totalRowCount;
             Set(Reader, "executionLease", lease); Set(Reader, "ownsExecutionLease", true); Set(Reader, "asyncCloseGate", new object()); Set(Reader, "m_Conn", Physical);
             Set(Reader, "m_Clobs", new ArrayList { null, null, null }); Set(Reader, "m_DbInfo", info); Set(Reader, "m_ColInfo", Columns); Set(Reader, "m_RsCache", cache);

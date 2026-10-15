@@ -1,0 +1,69 @@
+{
+  "run": "full5_final",
+  "driver": "W only",
+  "commands": [
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test tests/W.DmProvider.SchemaTests/W.DmProvider.SchemaTests.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "passed": 23
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test tests/W.DmProvider.CommandTests/W.DmProvider.CommandTests.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "passed": 53
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet build tools/SchemaProbe/SchemaProbe.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "warnings": 76,
+      "errors": 0
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 /home/air/Projects/W.DamengProvider/scripts/with-dameng-test.sh dotnet tools/SchemaProbe/bin/net10.0/SchemaProbe.dll --full",
+      "exit_code": 0
+    }
+  ],
+  "test_source_note": "Schema/Command suites passed after the metadata reader diagnostics correction. The final narrow server-parameter-count check was then verified by the coordinator async suite and this final rebuilt full probe.",
+  "identity": {
+    "user": "WDM_PROVIDER_TEST",
+    "schema": "WDM_PROVIDER_TEST",
+    "version": "8.1.5.60"
+  },
+  "positive_sync_async_collections": 15,
+  "permission_rejections": {
+    "collection": "ReservedWords",
+    "server_error": -5504,
+    "sync_and_async": true,
+    "connection_state": "Broken",
+    "connection_reusable": false
+  },
+  "reader_sync_async_full_schema_equal": [
+    "Default",
+    "SchemaOnly",
+    "KeyInfo",
+    "SchemaOnly, KeyInfo"
+  ],
+  "reader_cross_behavior_core_facets_equal_to_default": [
+    "SchemaOnly",
+    "KeyInfo",
+    "SchemaOnly, KeyInfo"
+  ],
+  "compared_facets": [
+    "ColumnName",
+    "ColumnOrdinal",
+    "ColumnSize",
+    "NumericPrecision",
+    "NumericScale",
+    "DataType",
+    "AllowDBNull",
+    "IsLong",
+    "BaseSchemaName",
+    "BaseTableName",
+    "BaseColumnName"
+  ],
+  "comparison": "Independent Python assertions over full.json; exit 0. Full schema arrays compared directly for sync/async, and each corresponding column compared on all listed facets across behaviors.",
+  "side_effect_counter_final": 1,
+  "created_objects": 5,
+  "owned_objects_remaining": 0,
+  "raw_local_result": "/tmp/wdm-i10-full-5.json"
+}

@@ -18,7 +18,7 @@ using W.Dm.Internal.Diagnostics;
 
 namespace W.Dm;
 
-public class DmCommand : DbCommand, ICloneable, IFilterInfo
+public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 {
 	internal long id = -1L;
 
@@ -40,6 +40,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private DmSession statementSession;
 	private DmConnection statementConnection;
 	private DmParameterMetadata[] preparedMetadata;
+	private string preparedSql;
 
 	private ArrayList m_refCursorStmt_arr = new ArrayList();
 
@@ -67,6 +68,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private bool running;
 	private readonly DmCommandPlanGate commandPlanGate = new();
 	private DmCommandPlan activePlan;
+	internal DmCommandPlan ActivePlan => Volatile.Read(ref activePlan);
+	// Procedure calls may mutate server state and produce OUT values on every
+	// invocation. Their statement-local row buffer is never a reusable result.
+	internal bool AllowsGlobalResultCache => (ActivePlan?.CommandType ?? m_CommandType) == CommandType.Text;
 	private DmDataSourceExecution dataSourceExecution;
 	internal void BindDataSourceExecution(DmDataSourceExecution execution) => Volatile.Write(ref dataSourceExecution, execution);
 	internal void UnbindDataSourceExecution(DmDataSourceExecution execution) => Interlocked.CompareExchange(ref dataSourceExecution, null, execution);
@@ -80,19 +85,29 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		return commandPlanGate.BeginMutation();
 	}
 
-	private DmCommandPlan EnterPlan()
+	private DmCommandPlan EnterPlan(bool arrayBindingAllowed = false)
 	{
 		CheckDisposed();
 		DmCommandPlan plan = commandPlanGate.Enter(() =>
 		{
 			CheckDisposed();
 			ValidateSupportedCommand();
-			if (ComplexTypeToBytes || ArrayBindCount != 0)
-				throw new NotSupportedException("Complex type conversion and array binding are not supported by this provider version.");
+			if (ComplexTypeToBytes)
+				throw new NotSupportedException("Complex type conversion is not supported by this provider version.");
+			int arrayBindCount = ArrayBindCount;
+			if (arrayBindCount < 0)
+				throw new InvalidOperationException("ArrayBindCount cannot be negative.");
+			if (arrayBindCount != 0 && m_CommandType != CommandType.Text)
+				throw new NotSupportedException("Array binding supports only Text commands.");
+			if (arrayBindCount != 0 && !arrayBindingAllowed)
+				throw new NotSupportedException("Array binding is supported only by ExecuteNonQuery.");
 			return DmCommandPlan.Capture(m_CommandText, m_CommandType, do_CommandTimeout,
-				m_Trx, m_Conn, m_Paras);
+				m_Trx, m_Conn, m_Paras, arrayBindCount);
 		});
 		Volatile.Write(ref activePlan, plan);
+		ResetProcedureOutputCapture();
+		procedureCursorStatements.Clear();
+		procedureCursorReaders.Clear();
 		try
 		{
 			Volatile.Read(ref dataSourceExecution)?.BindPlan(plan);
@@ -114,18 +129,19 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 		if (plan == null) return;
 		Interlocked.CompareExchange(ref activePlan, null, plan);
+		ResetProcedureOutputCapture();
 		plan.Dispose();
 		if (m_AlreadyDisposed && m_Stmt != null) ReleaseUnmanagedResource();
 	}
 
 	private void ValidateSupportedCommand()
 	{
-		if (m_CommandType != CommandType.Text)
-			throw new NotSupportedException("Only CommandType.Text is supported by this provider version.");
+		if (m_CommandType is not (CommandType.Text or CommandType.StoredProcedure))
+			throw new NotSupportedException("Only Text and StoredProcedure commands are supported.");
 		if (string.IsNullOrWhiteSpace(m_CommandText))
 			throw new InvalidOperationException("CommandText is required.");
 		foreach (DmParameter parameter in m_Paras)
-			if (parameter.Direction != ParameterDirection.Input || parameter.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor)
+			if (m_CommandType == CommandType.Text && (parameter.Direction != ParameterDirection.Input || parameter.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor))
 				throw new NotSupportedException("Output and cursor parameters are not supported by this provider version.");
 	}
 
@@ -554,13 +570,53 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	internal virtual int do_ExecuteNonQuery()
 	{
-		DmCommandPlan plan = EnterPlan();
+		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		try
 		{
+			RejectCursorCompletion(plan);
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
 			return ExecuteNonQueryComplete(lease, plan);
 		}
 		finally { ReleasePlan(plan); }
+	}
+
+	internal int ExecuteBatchNonQuery(DmCommandPlan plan, DmExecutionLease batchLease)
+	{
+		try
+		{
+			BeginBatchStep(plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)));
+			return ExecuteNonQueryComplete(batchLease, plan);
+		}
+		finally { ReleasePlan(plan); }
+	}
+
+	/// <summary>Captures and validates this command's plan before a batch executes any step.</summary>
+	internal DmCommandPlan EnterBatchPlan() => EnterPlan();
+
+	internal void ReleaseBatchPlan(DmCommandPlan plan) => ReleasePlan(plan);
+
+	internal static DmCommand ForBatchStep(string commandText, CommandType commandType, DmParameterCollection parameters,
+		DmConnection connection, DmTransaction transaction)
+	{
+		var command = new DmCommand(commandText, connection, transaction) { CommandType = commandType };
+		using var mutation = command.BeginMutation();
+		DmParameterCollection detached = parameters.CloneDetached();
+		detached.Command = command;
+		detached.AttachPlanGate(command.commandPlanGate);
+		command.m_Paras = detached;
+		return command;
+	}
+
+	// The batch owns the lease across steps; a step validates against its own plan
+	// and registers the lease for Cancel exactly like a standalone execution.
+	private void BeginBatchStep(DmCommandPlan plan, DmExecutionLease batchLease)
+	{
+		if (commandPlanGate.IsDisposed) throw new ObjectDisposedException(nameof(DmCommand));
+		if (plan.Connection == null || !ReferenceEquals(batchLease.Session, plan.Connection.Session) || batchLease.IsDisposed)
+			throw new InvalidOperationException("Batch execution does not own this command's connection.");
+		DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+		DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
+		CaptureExecution(plan, batchLease);
 	}
 
 	private int ExecuteNonQueryComplete(DmExecutionLease lease, DmCommandPlan plan)
@@ -588,7 +644,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					verifiedServerError = true;
 					throw TranslateCurrentFailure(error);
 				}
-				catch (Exception error) { throw invocation.TranslateFailure(error); }
+				catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 			}
 		}
 		catch (Exception error) when (verifiedServerError)
@@ -688,6 +744,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = EnterPlan();
 		try
 		{
+			RejectCursorCompletion(plan);
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
 			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "ExecuteScalar()");
 			DmDataReader reader = null;
@@ -713,7 +770,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					object scalar;
 					// A FETCH round trip may happen here; keep the async path's failure shape.
 					try { scalar = reader.do_FieldCount > 0 && reader.ReadOwned() ? reader.GetValueOwned(0) : null; }
-					catch (Exception error) { throw invocation.TranslateFailure(error); }
+					catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 					invocation.Complete();
 					completed = true;
 					return scalar;
@@ -738,7 +795,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	internal void do_Prepare()
 	{
-		DmCommandPlan plan = EnterPlan();
+		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		try
 		{
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
@@ -770,13 +827,25 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 		CheckCommandBehavior(behavior);
 		DmCommandPlan plan = EnterPlan();
+		return ExecuteDbDataReaderCore(behavior, plan, batchLease: null);
+	}
+
+	/// <summary>Runs one batch step under the batch's lease; the reader does not own that lease.</summary>
+	internal DmDataReader ExecuteBatchReader(DmCommandPlan plan, DmExecutionLease batchLease, CommandBehavior behavior)
+		=> ExecuteDbDataReaderCore(behavior, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)));
+
+	private DmDataReader ExecuteDbDataReaderCore(CommandBehavior behavior, DmCommandPlan plan, DmExecutionLease batchLease)
+	{
 		DmExecutionLease lease = null;
 		DmDataReader reader = null;
 		bool transferred = false;
 		bool verifiedServerError = false;
 		try
 		{
-			lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Reader);
+			if (RequiresReaderMetadata(behavior)) DmReaderMetadata.Validate(plan);
+			if (batchLease == null) lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Reader);
+			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
+			var metadata = RequiresReaderMetadata(behavior) ? PrepareReaderMetadata(plan, lease, behavior) : default;
 			using (var invocation = lease.BeginInvocation())
 			{
 				try { reader = ExecuteReaderOwned(behavior, userExecution: true); }
@@ -793,20 +862,24 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				}
 				invocation.Complete();
 			}
-			reader.AttachExecutionLease(lease);
+			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
+			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
+			plan.PublishCursorOutputs();
+			reader.PublishProcedureOutputsIfTerminal();
 			transferred = true;
 			return reader;
 		}
 		catch (Exception error)
 		{
-			if (verifiedServerError) CleanupAfterRecoverableExecutionFailure(lease, plan, error);
+			if (verifiedServerError || (RequiresReaderMetadata(behavior) && lease != null && m_Stmt != null))
+				CleanupAfterRecoverableExecutionFailure(lease, plan, error);
 			if (reader != null && !transferred)
 			{
 				try { m_Conn?.CloseExpectedSession(lease?.Session); } catch { }
 				try { reader.Close(); } catch { }
 			}
-			lease?.Dispose();
+			if (batchLease == null) lease?.Dispose();
 			if (!transferred) ReleasePlan(plan);
 			throw;
 		}
@@ -819,10 +892,13 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		CheckCommandBehavior(behavior);
 		DmCommandPlan plan = EnterPlan();
 		DmDataReader reader = null;
+		bool verifiedServerError = false;
 		try
 		{
 			using var invocation = borrowed.BeginInvocation();
 			try { reader = ExecuteReaderOwned(behavior); }
+			catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, borrowed))
+			{ verifiedServerError = true; throw invocation.TranslateFailure(error); }
 			catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 			if (reader == null)
 			{
@@ -834,8 +910,9 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			invocation.Complete();
 			return reader;
 		}
-		catch
+		catch (Exception error)
 		{
+			if (verifiedServerError) CleanupAfterRecoverableExecutionFailure(borrowed, plan, error);
 			if (reader != null)
 			{
 				try { m_Conn?.CloseExpectedSession(borrowed.Session); } catch { }
@@ -846,8 +923,138 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		}
 	}
 
+	internal async Task<DmDataReader> ExecuteInternalReaderAsync(DmExecutionLease borrowed,
+		CommandBehavior behavior, CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		if (borrowed == null || m_Conn == null || !ReferenceEquals(borrowed.Session, m_Conn.Session))
+			throw new InvalidOperationException("Internal reader lease does not belong to this command.");
+		CheckCommandBehavior(behavior);
+		DmCommandPlan plan = EnterPlan();
+		DmDataReader reader = null;
+		bool transferred = false;
+		bool verifiedServerError = false;
+		try
+		{
+			using (var invocation = borrowed.BeginInvocation(cancellationToken))
+			{
+				try { reader = await ExecuteReaderOwnedAsync(behavior, false, cancellationToken).ConfigureAwait(false); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, borrowed))
+				{ verifiedServerError = true; throw invocation.TranslateFailure(error); }
+				reader.AttachExecutionLease(borrowed, ownsLease: false);
+				reader.AttachCommandPlan(plan, ReleasePlan);
+				invocation.Complete();
+			}
+			transferred = true;
+			return reader;
+		}
+		catch (Exception error)
+		{
+			if (verifiedServerError)
+				await CleanupAfterRecoverableExecutionFailureAsync(borrowed, plan, error).ConfigureAwait(false);
+			if (reader != null && !transferred)
+			{
+				try { m_Conn?.CloseExpectedSession(borrowed.Session); } catch { }
+				try { await reader.CloseAsync().ConfigureAwait(false); } catch { }
+			}
+			throw;
+		}
+		finally
+		{
+			if (!transferred) await ReleasePlanAsync(plan).ConfigureAwait(false);
+		}
+	}
+
+	private static bool RequiresReaderMetadata(CommandBehavior behavior)
+		=> (behavior & (CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo)) != 0;
+
+	private (DmColumn[] Columns, DmReaderColumnMetadata[] Keys) PrepareReaderMetadata(
+		DmCommandPlan plan, DmExecutionLease lease, CommandBehavior behavior)
+	{
+		try
+		{
+			using (var invocation = lease.BeginInvocation())
+			{
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { PrepareInternalCore(false); ValidateReaderDescription(plan); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ throw invocation.TranslateFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecution(error); throw invocation.TranslateFailure(error); }
+			}
+			DmColumn[] columns = m_Stmt.F().GetColumnsInfo();
+			var keys = (behavior & CommandBehavior.KeyInfo) != 0
+				? DmReaderMetadata.Load(plan.Connection, lease, columns, plan.Sql) : null;
+			return (columns, keys);
+		}
+		catch (Exception originalError)
+		{
+			// A catalog failure must also release the business statement prepared above.
+			try
+			{
+				using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+				if (CleanupCurrentStatement(false, pool: false)) cleanup.RecordDiagnosticCleanupSuccess();
+			}
+			catch { lease.Session.Detach(lease.Identity)?.AbortTransport(); MarkRecoveryConnectionLost(originalError); }
+			throw;
+		}
+	}
+
+	private async Task<(DmColumn[] Columns, DmReaderColumnMetadata[] Keys)> PrepareReaderMetadataAsync(
+		DmCommandPlan plan, DmExecutionLease lease, CommandBehavior behavior, CancellationToken token)
+	{
+		try
+		{
+			using (var invocation = lease.BeginInvocation(token))
+			{
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { await PrepareInternalCoreAsync(false, token).ConfigureAwait(false); ValidateReaderDescription(plan); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ throw invocation.TranslateFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecutionAsync(error); throw invocation.TranslateFailure(error); }
+			}
+			DmColumn[] columns = m_Stmt.F().GetColumnsInfo();
+			var keys = (behavior & CommandBehavior.KeyInfo) != 0
+				? await DmReaderMetadata.LoadAsync(plan.Connection, lease, columns, plan.Sql, token).ConfigureAwait(false) : null;
+			return (columns, keys);
+		}
+		catch (Exception originalError)
+		{
+			try
+			{
+				using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+				if (await CleanupCurrentStatementAsync(false, CancellationToken.None, pool: false).ConfigureAwait(false))
+					cleanup.RecordDiagnosticCleanupSuccess();
+			}
+			catch { lease.Session.Detach(lease.Identity)?.AbortTransport(); MarkRecoveryConnectionLost(originalError); }
+			throw;
+		}
+	}
+
+	private void ValidateReaderDescription(DmCommandPlan plan)
+	{
+		var info = m_Stmt.F();
+		if (!info.GetHasResultSet() || info.GetColumnCount() == 0 || info.GetRetStmtType() != DmConst.RET_DML_SELECT)
+			throw new NotSupportedException("The server did not describe a query result.");
+		plan.Binding.ValidateServerCount(info.GetParameterCount());
+		for (int index = 0; index < info.GetParameterCount(); index++)
+			plan.Binding.ResolveServerParameter(index, info.GetParamsInfo()[index].GetName(), info.GetParameterCount());
+	}
+
+	private DmDataReader CreateDescribedReader(CommandBehavior behavior)
+	{
+		DmInvocation.Current?.ThrowIfTerminated();
+		if (m_Stmt == null) throw new InvalidOperationException("Query description is missing.");
+		rd = new DmDataReader(m_Stmt.F(), behavior, m_Stmt);
+		m_Stmt.__t02_field_04000929 = rd;
+		RetCmdType = m_Stmt.F().GetRetStmtType();
+		CurResultSetCache = null;
+		m_Stmt = null;
+		return rd;
+	}
+
 	private DmDataReader ExecuteReaderOwned(CommandBehavior behavior, bool userExecution = false)
 	{
+		if ((behavior & CommandBehavior.SchemaOnly) != 0) return CreateDescribedReader(behavior);
 		DmCommandPlan plan = userExecution ? Volatile.Read(ref activePlan) : null;
 		DmSqlSavepointControl? rawSavepoint = null;
 		if (plan?.Transaction != null &&
@@ -877,7 +1084,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			statementConnection = m_Conn;
 		}
 		m_Stmt.__t02_field_04000931 = m_StmtSerial;
-		if (connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
+		if (AllowsGlobalResultCache && connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
 		{
 			bool flag = false;
 			RsKey key = new RsKey(connInstance.ConnProperty.Guid, connInstance.ConnProperty.CurrentSchema, GetCommandText(), do_DbParameterCollection.Count, do_DbParameterCollection);
@@ -928,6 +1135,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				int rowCount = 0;
 				if (BindParametersLocally(ref rowCount, rd, behavior))
 				{
+					PrepareProcedureCursors();
 					rd = ExecutePreparedQuery(behavior);
 				}
 			}
@@ -953,7 +1161,12 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			AbortStatementAfterFailedExecution(error);
 			throw TranslateCurrentFailure(error);
 		}
-		try { rd?.SeekFirstReadableResultOwned(); }
+		try
+		{
+			MaterializeProcedureOutputs(m_Stmt);
+			AttachProcedureReader(rd);
+			rd?.SeekFirstReadableResultOwned();
+		}
 		catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 		RetCmdType = m_Stmt.m().GetRetStmtType();
 		CurResultSetCache = m_Stmt.l();
@@ -972,14 +1185,27 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private async Task<object> ExecuteCompleteAsync(bool scalar, CancellationToken cancellationToken)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		DmCommandPlan plan = EnterPlan();
+		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: !scalar);
+		return await ExecuteCompleteCoreAsync(scalar, plan, batchLease: null, cancellationToken).ConfigureAwait(false);
+	}
+
+	internal async Task<int> ExecuteBatchNonQueryAsync(DmCommandPlan plan, DmExecutionLease batchLease, CancellationToken cancellationToken)
+		=> (int)await ExecuteCompleteCoreAsync(false, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)),
+			cancellationToken).ConfigureAwait(false);
+
+	private async Task<object> ExecuteCompleteCoreAsync(bool scalar, DmCommandPlan plan, DmExecutionLease batchLease,
+		CancellationToken cancellationToken)
+	{
 		DmDataReader reader = null;
 		DmExecutionLease lease = null;
 		bool completed = false;
 		bool verifiedServerError = false;
 		try
 		{
-			lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Query, cancellationToken);
+			RejectCursorCompletion(plan);
+			cancellationToken.ThrowIfCancellationRequested();
+			if (batchLease == null) lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Query, cancellationToken);
+			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
 			try
 			{
 				using var invocation = lease.BeginInvocation(cancellationToken);
@@ -1002,7 +1228,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					completed = true;
 					return result;
 				}
-				catch (Exception error) { throw invocation.TranslateFailure(error); }
+				catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 			}
 			catch (Exception error) when (verifiedServerError)
 			{
@@ -1022,7 +1248,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			}
 			finally
 			{
-				lease?.Dispose();
+				if (batchLease == null) lease?.Dispose();
 				await ReleasePlanAsync(plan).ConfigureAwait(false);
 			}
 		}
@@ -1033,13 +1259,28 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		cancellationToken.ThrowIfCancellationRequested();
 		CheckCommandBehavior(behavior);
 		DmCommandPlan plan = EnterPlan();
+		return await ExecuteDbDataReaderCoreAsync(behavior, plan, batchLease: null, cancellationToken).ConfigureAwait(false);
+	}
+
+	internal Task<DmDataReader> ExecuteBatchReaderAsync(DmCommandPlan plan, DmExecutionLease batchLease,
+		CommandBehavior behavior, CancellationToken cancellationToken)
+		=> ExecuteDbDataReaderCoreAsync(behavior, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)), cancellationToken);
+
+	private async Task<DmDataReader> ExecuteDbDataReaderCoreAsync(CommandBehavior behavior, DmCommandPlan plan,
+		DmExecutionLease batchLease, CancellationToken cancellationToken)
+	{
 		DmExecutionLease lease = null;
 		DmDataReader reader = null;
 		bool transferred = false;
 		bool verifiedServerError = false;
 		try
 		{
-			lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Reader, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+			if (RequiresReaderMetadata(behavior)) DmReaderMetadata.Validate(plan);
+			if (batchLease == null) lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Reader, cancellationToken);
+			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
+			var metadata = RequiresReaderMetadata(behavior)
+				? await PrepareReaderMetadataAsync(plan, lease, behavior, cancellationToken).ConfigureAwait(false) : default;
 			using (var invocation = lease.BeginInvocation(cancellationToken))
 			{
 				try { reader = await ExecuteReaderOwnedAsync(behavior, true, cancellationToken).ConfigureAwait(false); }
@@ -1047,14 +1288,18 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				{ verifiedServerError = true; throw TranslateCurrentFailure(error); }
 				invocation.Complete();
 			}
-			reader.AttachExecutionLease(lease);
+			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
+			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
+			plan.PublishCursorOutputs();
+			reader.PublishProcedureOutputsIfTerminal();
 			transferred = true;
 			return reader;
 		}
 		catch (Exception error)
 		{
-			if (verifiedServerError) await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
+			if (verifiedServerError || (RequiresReaderMetadata(behavior) && lease != null && m_Stmt != null))
+				await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
 			if (reader != null && !transferred)
 			{
 				lease?.Session.Detach(lease.Identity)?.AbortTransport();
@@ -1066,7 +1311,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		{
 			if (!transferred)
 			{
-				lease?.Dispose();
+				if (batchLease == null) lease?.Dispose();
 				await ReleasePlanAsync(plan).ConfigureAwait(false);
 			}
 		}
@@ -1075,7 +1320,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	public override async Task PrepareAsync(CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		DmCommandPlan plan = EnterPlan();
+		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		DmExecutionLease lease = null;
 		bool verifiedServerError = false;
 		try
@@ -1120,7 +1365,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				succeeded = true;
 				return result;
 			}
-			catch (Exception error) { throw invocation.TranslateFailure(error); }
+			catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 		}
 		finally
 		{
@@ -1146,6 +1391,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		foreach (DmParameter parameter in ExecutionParameters)
 			if (parameter.do_Value is AbstractLob)
 				throw new NotSupportedException("Binding an existing LOB object asynchronously is not supported; use a byte array or string value.");
+		if ((behavior & CommandBehavior.SchemaOnly) != 0) return CreateDescribedReader(behavior);
 		DmCommandPlan plan = userExecution ? Volatile.Read(ref activePlan) : null;
 		DmSqlSavepointControl? rawSavepoint = null;
 		if (plan?.Transaction != null && ReferenceEquals(plan.Connection?.Session?.ActiveTransaction, plan.Transaction)
@@ -1164,6 +1410,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				await PrepareInternalCoreAsync(true, cancellationToken).ConfigureAwait(false);
 				int rowCount = 0;
 				if (!BindParametersLocally(ref rowCount, rd, behavior)) throw new InvalidOperationException("Parameter binding failed.");
+				await PrepareProcedureCursorsAsync(cancellationToken).ConfigureAwait(false);
 				rd = await m_Stmt.ExecutePreparedReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
 			}
 			if (rd == null) throw new InvalidOperationException("Execution did not return a reader.");
@@ -1174,6 +1421,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					throw new InvalidOperationException("Savepoint execution did not return a current control response.");
 				plan.Transaction.ConfirmUserSavepointControl(plan.Connection, rawSavepoint.Value, DmInvocation.Current?.Lease);
 			}
+			await MaterializeProcedureOutputsAsync(m_Stmt, cancellationToken).ConfigureAwait(false);
+			AttachProcedureReader(rd);
 			await rd.SeekFirstReadableResultOwnedAsync(cancellationToken).ConfigureAwait(false);
 			RetCmdType = m_Stmt.m().GetRetStmtType();
 			CurResultSetCache = m_Stmt.l();
@@ -1207,12 +1456,14 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (!checkCommandText || !m_Stmt.b())
 			await m_Stmt.PrepareAsync(GetCommandText(), cancellationToken).ConfigureAwait(false);
 		preparedMetadata = Volatile.Read(ref activePlan)?.ParameterMetadata;
+		preparedSql = GetCommandText();
 	}
 
 	private DmExecutionLease BeginValidatedUserExecutionAsync(DmCommandPlan plan, DmOperationPurpose purpose, CancellationToken token)
 	{
 		token.ThrowIfCancellationRequested();
 		DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+		ValidateProcedureTransaction(plan);
 		DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 		if (commandPlanGate.IsDisposed) throw new ObjectDisposedException(nameof(DmCommand));
 		if (plan.Connection == null) throw new InvalidOperationException("Command has no connection.");
@@ -1220,6 +1471,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		try
 		{
 			DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+			ValidateProcedureTransaction(plan);
 			DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 			CaptureExecution(plan, lease);
 			return lease;
@@ -1232,6 +1484,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		statementConnection = null;
@@ -1266,6 +1519,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		statementSession = null;
 		statementConnection = null;
 		try { statement?.o(); } catch { }
@@ -1279,6 +1533,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
 				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+			await CloseUnpublishedProcedureCursorsAsync().ConfigureAwait(false);
 			if (await CleanupCurrentStatementAsync(false, CancellationToken.None, pool: false).ConfigureAwait(false))
 				cleanup.RecordDiagnosticCleanupSuccess();
 		}
@@ -1293,6 +1548,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 		if (plan == null) return;
 		Interlocked.CompareExchange(ref activePlan, null, plan);
+		ResetProcedureOutputCapture();
 		plan.Dispose();
 		if (m_AlreadyDisposed && m_Stmt != null) await ReleaseUnmanagedResourceAsync().ConfigureAwait(false);
 	}
@@ -1302,6 +1558,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (rd != null && !rd.do_IsClosed) return;
 		var statement = Interlocked.Exchange(ref m_Stmt, null);
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var connection = statementConnection;
@@ -1426,6 +1683,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var ownerConnection = statementConnection;
@@ -1457,6 +1715,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var connection = statementConnection;
@@ -1486,6 +1745,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (rd != null && !rd.do_IsClosed) return;
 		var statement = Interlocked.Exchange(ref m_Stmt, null);
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var ownerConnection = statementConnection;
@@ -1575,10 +1835,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	private void CheckCommandBehavior(CommandBehavior behavior)
 	{
-		if ((behavior & (CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo)) != 0)
-			throw new NotSupportedException("SchemaOnly and KeyInfo require a separately verified metadata path.");
 		const CommandBehavior supported = CommandBehavior.SingleResult | CommandBehavior.SingleRow |
-			CommandBehavior.SequentialAccess | CommandBehavior.CloseConnection;
+			CommandBehavior.SequentialAccess | CommandBehavior.CloseConnection | CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo;
 		if ((behavior & ~supported) != 0)
 			throw new ArgumentOutOfRangeException(nameof(behavior));
 	}
@@ -1597,6 +1855,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		ValidateStatementOwnership();
 		if (!ReferenceEquals(m_Stmt.G()?.Session, m_Conn?.Session)) return true;
 		if (!m_Stmt.b() || preparedMetadata == null) return false;
+		if (!StringComparer.Ordinal.Equals(preparedSql, GetCommandText())) return true;
 		DmParameterMetadata[] current = Volatile.Read(ref activePlan)?.ParameterMetadata;
 		if (current == null || current.Length != preparedMetadata.Length) return true;
 		for (int index = 0; index < current.Length; index++)
@@ -1642,8 +1901,6 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	private void PrepareInternalCore(bool checkCommandText)
 	{
-		bool flag = false;
-		bool flag2 = false;
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "PrepareInternal()");
 		if (m_Conn == null || m_Conn.do_State == ConnectionState.Closed)
 		{
@@ -1662,37 +1919,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			statementConnection = m_Conn;
 		}
 		m_Stmt.__t02_field_04000931 = m_StmtSerial;
-		if (do_CommandType == CommandType.StoredProcedure && ExecutionParameters.do_Count > 0)
-		{
-			string text = do_CommandText + "(";
-			for (int i = 0; i < ExecutionParameters.do_Count; i++)
-			{
-				if (((DmParameter)ExecutionParameters[i]).do_Direction != ParameterDirection.ReturnValue)
-				{
-					text += "?,";
-					flag = true;
-				}
-				else if (!flag2)
-				{
-					flag2 = true;
-					text = "? = " + text;
-				}
-			}
-			if (flag)
-			{
-				text = text.Remove(text.Length - 1, 1);
-			}
-			text += ")";
-			if (!checkCommandText || !m_Stmt.b())
-			{
-				m_Stmt.D(text);
-			}
-		}
-		else if (!checkCommandText || !m_Stmt.b())
-		{
+		if (!checkCommandText || !m_Stmt.b())
 			m_Stmt.D(GetCommandText());
-		}
 		preparedMetadata = Volatile.Read(ref activePlan)?.ParameterMetadata;
+		preparedSql = GetCommandText();
 	}
 
 	private DmDataReader ExecutePreparedQuery(CommandBehavior behavior)
@@ -1748,62 +1978,118 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = Volatile.Read(ref activePlan) ??
 			throw new InvalidOperationException("Parameter binding requires an active command plan.");
 		plan.Binding.ValidateServerCount(parameterCount);
+		if (plan.CommandType == CommandType.StoredProcedure)
+		{
+			if (plan.HasOutputParameters && m_Stmt.G().ConnProperty.msgVersion < 12)
+				throw new NotSupportedException("Legacy procedure output framing is not verified.");
+			plan.Binding.ValidateServerParameters(ParamsInfo);
+		}
+		int rows = Math.Max(1, plan.ArrayBindCount);
+		if (plan.ArrayBindCount != 0) ValidateArrayStatement(m_Stmt.H().GetRetStmtType());
         var temporalBindings = new DmTemporalParameterBinding[parameterCount];
         var temporalProfile = DmTemporalLegacyAdapter.Profile(m_Conn);
         plan.ClearTemporalBindings();
         // A failed rebind must not expose a previously successful binding as current.
         for (int i = 0; i < parameterCount; i++) ParamsInfo[i].PublishTemporalBinding(null);
+		// A reused prepared handle keeps the previous execution's row slots; the request
+		// codec sends every slot, so size them to this plan before any value is bound.
+		for (int i = 0; i < parameterCount; i++)
+		{
+			var slots = ParamsInfo[i].GetParamValue();
+			slots.RemoveRange(1, slots.Count - 1);
+			while (slots.Count < rows) slots.Add(new DmParamValue());
+		}
 		for (int i = 0; i < parameterCount; i++)
 		{
 			DmParameterInternal dmParameterInternal = ParamsInfo[i];
-			if (dmParameterInternal.GetInOutType() != 0 || dmParameterInternal.GetCType() == 120)
+			if (plan.CommandType != CommandType.StoredProcedure && (dmParameterInternal.GetInOutType() != 0 || dmParameterInternal.GetCType() == 120))
 				throw new NotSupportedException("Output and cursor parameters are not supported by this provider version.");
+			DmParameter template = plan.Binding.ResolveServerParameter(i, dmParameterInternal.GetName(), parameterCount);
+			if (BindProcedureOutputDeclaration(plan, template, dmParameterInternal)) continue;
+			Func<int, DmParameter> rowValue = plan.RowParameters(template);
+			for (int row = 0; row < rows; row++)
 			{
-				DmParameter dmParameter = plan.Binding.ResolveServerParameter(i, dmParameterInternal.GetName(), parameterCount);
-				var resolved = dmParameter.ResolveType(dmParameterInternal);
-				byte describedFlag = dmParameterInternal.GetTypeFlag();
-                int selectedType = DmSqlType.DmDbTypeToDmSqlType(resolved.Type);
-                bool temporal = DmTemporalMetadataSemantics.IsTemporal(selectedType)
-                    || (describedFlag == 1 && DmTemporalMetadataSemantics.IsTemporal(dmParameterInternal.GetCType()));
-                var request = DmParameterMetadata.From(dmParameter);
-                if (temporal) DmTemporalBindingResolver.ValidateRequest(request);
-                object obj = temporal ? null : dmParameter.do_Value is DmLobInput streaming
-                    ? streaming : DmSysTypeConvertion.TypeConvertion(dmParameter);
-				SelectBoundCType(dmParameterInternal, resolved.Type, resolved.Source);
-                if (temporal)
-                {
-                    var binding = DmTemporalBindingResolver.Create(request, resolved.Source, selectedType,
-                        dmParameterInternal, temporalProfile, dmParameter.do_Value is null or DBNull);
-                    obj = DmSysTypeConvertion.TypeConvertion(dmParameter);
-                    if (!binding.ReliableFixed)
-                    {
-                        dmParameterInternal.resetType(binding.CType);
-                        dmParameterInternal.SetPrecision(binding.Precision);
-                        dmParameterInternal.SetScale(binding.WireScale);
-                    }
-                    m_SetValue.SetResolvedTemporalObject(dmParameterInternal.GetParamValue()[0], obj, m_Conn,
-                        dmParameter.DmSqlTypeName, dmParameterInternal, binding);
-                    temporalBindings[i] = binding;
-                    continue;
-                }
-				int? effectiveScale = dmParameter.m_SetScaleFlag ? dmParameter.do_Scale : null;
-				int? effectivePrecision = dmParameter.m_SetPrecFlag ? dmParameter.do_Precision : null;
-				if (describedFlag == 2 && dmParameterInternal.GetCType() == 17 &&
-					(!dmParameter.m_SetSizeFlag || dmParameter.do_Size <= 0))
-					throw new InvalidOperationException("An explicit fixed BINARY parameter requires a positive Size.");
-				if (dmParameterInternal.GetTypeFlag() != 1 && dmParameter.m_SetSizeFlag &&
-					dmParameterInternal.GetCType() is 17 or 18)
-					effectivePrecision = dmParameterInternal.GetCType() == 18 && dmParameter.do_Size == 0
-						? Math.Max(1, obj is byte[] bytes ? bytes.Length : 0) : dmParameter.do_Size;
-				m_SetValue.SetResolvedObject(dmParameterInternal.GetParamValue()[0], obj, m_Conn,
-					dmParameter.DmSqlTypeName, dmParameterInternal.GetCType(), dmParameterInternal,
-					effectivePrecision,
-					effectiveScale);
+				var binding = BindRow(dmParameterInternal, rowValue(row), row, temporalProfile);
+				if (row == 0) temporalBindings[i] = binding; // Row zero carries the request descriptor.
 			}
+			if (plan.ArrayBindCount != 0)
+				ValidateArrayDescriptor(dmParameterInternal, template.do_ParameterName,
+					m_Conn.GetConnInstance().ConnProperty.lobOffRowLen);
 		}
         plan.PublishTemporalBindings(temporalBindings);
         for (int i = 0; i < parameterCount; i++) ParamsInfo[i].PublishTemporalBinding(temporalBindings[i]);
 		return true;
+	}
+
+	private static void ValidateArrayStatement(int statementType)
+	{
+		if (statementType is not (DmConst.RET_DML_INSERT or DmConst.RET_DML_UPDATE or DmConst.RET_DML_DELETE or DmConst.RET_DML_MERGE))
+			throw new NotSupportedException("Array binding supports only INSERT, UPDATE, DELETE and MERGE statements.");
+	}
+
+	/// <summary>
+	/// The request carries one descriptor per parameter for all rows. Mirror the codec's choice
+	/// (row zero, or server metadata for an advisory NULL row zero) and require every non-NULL
+	/// row to have been encoded against it.
+	/// </summary>
+	internal static void ValidateArrayDescriptor(DmParameterInternal parameter, string name, int lobOffRowLen)
+	{
+		var values = parameter.GetParamValue();
+		foreach (DmParamValue value in values)
+			if (!value.GetIsInDataNull() && (value.StreamingInput != null ||
+				parameter.GetCType() is 12 or 19 && (value.m_InValue?.Length ?? 0) >= lobOffRowLen))
+				throw new NotSupportedException("Array-bound LOB values must fit in-row; execute larger LOB values individually.");
+		if (parameter.GetTypeFlag() == 1) return; // Fixed server metadata encodes every row.
+		bool fromServer = parameter.GetTypeFlag() != 0 && values[0].GetIsInDataNull();
+		int type = fromServer ? parameter.GetCType() : values[0].GetSqlType();
+		int precision = fromServer ? parameter.GetPrecision() : values[0].GetPrec();
+		int scale = fromServer ? parameter.GetScale() : values[0].GetScale();
+		foreach (DmParamValue value in values)
+			if (!value.GetIsInDataNull() && (value.GetSqlType() != type || value.GetPrec() != precision || value.GetScale() != scale))
+				throw new InvalidOperationException(
+					$"Array-bound parameter '{name}' rows resolve to different wire descriptors; set DbType, Size, Precision and Scale explicitly.");
+	}
+
+	private DmTemporalParameterBinding BindRow(DmParameterInternal dmParameterInternal,
+		DmParameter dmParameter, int row, DmTemporalCapabilityProfile temporalProfile)
+	{
+		DmParamValue slot = dmParameterInternal.GetParamValue()[row];
+		var resolved = dmParameter.ResolveType(dmParameterInternal);
+		byte describedFlag = dmParameterInternal.GetTypeFlag();
+		int selectedType = DmSqlType.DmDbTypeToDmSqlType(resolved.Type);
+		bool temporal = DmTemporalMetadataSemantics.IsTemporal(selectedType)
+			|| (describedFlag == 1 && DmTemporalMetadataSemantics.IsTemporal(dmParameterInternal.GetCType()));
+		var request = DmParameterMetadata.From(dmParameter);
+		if (temporal) DmTemporalBindingResolver.ValidateRequest(request);
+		object obj = temporal ? null : dmParameter.do_Value is DmLobInput streaming
+			? streaming : DmSysTypeConvertion.TypeConvertion(dmParameter);
+		SelectBoundCType(dmParameterInternal, resolved.Type, resolved.Source);
+		if (temporal)
+		{
+			var binding = DmTemporalBindingResolver.Create(request, resolved.Source, selectedType,
+				dmParameterInternal, temporalProfile, dmParameter.do_Value is null or DBNull);
+			obj = DmSysTypeConvertion.TypeConvertion(dmParameter);
+			if (!binding.ReliableFixed)
+			{
+				dmParameterInternal.resetType(binding.CType);
+				dmParameterInternal.SetPrecision(binding.Precision);
+				dmParameterInternal.SetScale(binding.WireScale);
+			}
+			m_SetValue.SetResolvedTemporalObject(slot, obj, m_Conn, dmParameter.DmSqlTypeName, dmParameterInternal, binding);
+			return binding;
+		}
+		int? effectiveScale = dmParameter.m_SetScaleFlag ? dmParameter.do_Scale : null;
+		int? effectivePrecision = dmParameter.m_SetPrecFlag ? dmParameter.do_Precision : null;
+		if (describedFlag == 2 && dmParameterInternal.GetCType() == 17 &&
+			(!dmParameter.m_SetSizeFlag || dmParameter.do_Size <= 0))
+			throw new InvalidOperationException("An explicit fixed BINARY parameter requires a positive Size.");
+		if (dmParameterInternal.GetTypeFlag() != 1 && dmParameter.m_SetSizeFlag &&
+			dmParameterInternal.GetCType() is 17 or 18)
+			effectivePrecision = dmParameterInternal.GetCType() == 18 && dmParameter.do_Size == 0
+				? Math.Max(1, obj is byte[] bytes ? bytes.Length : 0) : dmParameter.do_Size;
+		m_SetValue.SetResolvedObject(slot, obj, m_Conn, dmParameter.DmSqlTypeName, dmParameterInternal.GetCType(),
+			dmParameterInternal, effectivePrecision, effectiveScale);
+		return null;
 	}
 
 	private static void SelectBoundCType(DmParameterInternal serverParameter, DmDbType resolvedType,
@@ -1871,7 +2157,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	internal string GetCommandText()
 	{
 		DmCommandPlan plan = Volatile.Read(ref activePlan);
-		if (plan != null) return plan.Sql;
+		if (plan != null) return plan.WireSql;
 		if (m_CommandText == null || m_CommandText.Trim().Equals(""))
 		{
 			throw new InvalidOperationException(new DmError(DmErrorDefinition.ECNET_NO_COMMAND_TEXT).ToStringOnlyInfo());
@@ -1893,6 +2179,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommand dmCommand = new DmCommand(do_CommandText, do_DbConnection, do_DbTransaction);
 		dmCommand.do_CommandTimeout = do_CommandTimeout;
 		dmCommand.do_CommandType = do_CommandType;
+		dmCommand.ArrayBindCount = ArrayBindCount;
 		foreach (DmParameter item in do_DbParameterCollection)
 		{
 			dmCommand.do_DbParameterCollection.do_Add(item.Clone());
@@ -1950,8 +2237,11 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		AfterExecutionCaptured?.Invoke(lease);
 	}
 
-	private static Exception TranslateCurrentFailure(Exception error)
-		=> DmInvocation.Current?.TranslateFailure(error) ?? error;
+	private Exception TranslateCurrentFailure(Exception error)
+	{
+		ActivePlan?.FailOutputs();
+		return DmInvocation.Current?.TranslateFailure(error) ?? error;
+	}
 
 	private DmExecutionLease BeginCommandExecution(DmOperationPurpose purpose)
 	{
@@ -1966,11 +2256,13 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private DmExecutionLease BeginValidatedUserExecution(DmCommandPlan plan, DmOperationPurpose purpose)
 	{
 		DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+		ValidateProcedureTransaction(plan);
 		DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 		DmExecutionLease lease = BeginCommandExecution(purpose);
 		try
 		{
 			DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+			ValidateProcedureTransaction(plan);
 			DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 			CaptureExecution(plan, lease);
 			return lease;
@@ -2014,6 +2306,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
 				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+			CloseUnpublishedProcedureCursors();
 			// STMT_CLOSE response must be fully verified before recording cleanup success.
 			if (CleanupCurrentStatement(suppressFailure: false, pool: false)) cleanup.RecordDiagnosticCleanupSuccess();
 		}

@@ -883,7 +883,7 @@ internal partial class B
 				P_1.l().totalRowCount = P_4;
 			}
 			P_1.l().FillRows(0L, num, P_2, isRsBdta, rsBdtaRowidCol);
-			if (P_1.G().ConnProperty.EnRsCache && num2 > 0 && P_4 == num)
+			if (P_1.f()?.AllowsGlobalResultCache == true && P_1.G().ConnProperty.EnRsCache && num2 > 0 && P_4 == num)
 			{
 				RsKey key = new RsKey(P_1.G().ConnProperty.Guid, P_1.G().ConnProperty.CurrentSchema, P_1.C(), P_1.f().do_DbParameterCollection.Count, P_1.f().do_DbParameterCollection);
 				DmConnection.rsLRUCache.Add(key, P_1.l());

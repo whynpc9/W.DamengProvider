@@ -79,6 +79,7 @@ public sealed class CommandCancellationTests
         statement.__t02_method_0600088A(true);
         var metadata = Array.Empty<W.Dm.Internal.Execution.DmParameterMetadata>();
         ReaderAsyncFixture.SetField(command, "preparedMetadata", metadata);
+        ReaderAsyncFixture.SetField(command, "preparedSql", command.CommandText);
         using var caller = new CancellationTokenSource();
         DmTransportTestHooks.BeforeSendAttempt = _ => { if (byCommand) command.Cancel(); else caller.Cancel(); };
         try

@@ -42,7 +42,10 @@ class PackageContracts(unittest.TestCase):
         ET.SubElement(metadata, "license", type="expression").text = "Apache-2.0"
         ET.SubElement(metadata, "repository", type="git", url=release.REPOSITORY, commit=self.commit)
         dependencies = ET.SubElement(metadata, "dependencies")
-        ET.SubElement(dependencies, "group", targetFramework="net10.0")
+        for tfm in release.TFMS:
+            group = ET.SubElement(dependencies, "group", targetFramework=tfm)
+            if tfm == "net8.0":
+                ET.SubElement(group, "dependency", id="Microsoft.Bcl.Cryptography", version=release.COMPATIBILITY_VERSION)
         package = ET.Element("package"); package.append(metadata)
         assets = {asset: b"synthetic contract-only binary" for asset in release.ASSETS}
         assets.update({name: (self.root / name).read_bytes() for name in ("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md")})
@@ -91,12 +94,32 @@ class PackageContracts(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(release.Rejected):
                 self.check(lambda _, assets: assets.update({name: b"stale"}))
 
+    def test_rejects_missing_target(self):
+        for tfm in release.TFMS:
+            with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
+                self.check(lambda _, assets: assets.pop(f"lib/{tfm}/W.DamengProvider.dll"))
+
     def test_rejects_missing_satellite(self):
+        for tfm in release.TFMS:
+            for culture in release.RESOURCE_CULTURES:
+                with self.subTest(tfm=tfm, culture=culture), self.assertRaises(release.Rejected):
+                    self.check(lambda _, assets: assets.pop(f"lib/{tfm}/{culture}/W.DamengProvider.resources.dll"))
+
+    def test_rejects_wrong_dependency_group(self):
+        for tfm in release.TFMS:
+            with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
+                self.check(lambda metadata, _: metadata.find(f"dependencies/group[@targetFramework='{tfm}']").set("targetFramework", "net7.0"))
+
+    def test_rejects_wrong_compatibility_version_or_dependency_on_newer_target(self):
         with self.assertRaises(release.Rejected):
-            self.check(lambda _, assets: assets.pop("lib/net10.0/zh-CN/W.DamengProvider.resources.dll"))
+            self.check(lambda metadata, _: metadata.find("dependencies/group/dependency").set("version", "10.0.11"))
+        for tfm in ("net9.0", "net10.0"):
+            with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
+                self.check(lambda metadata, _: ET.SubElement(metadata.find(f"dependencies/group[@targetFramework='{tfm}']"),
+                           "dependency", id="Microsoft.Bcl.Cryptography", version=release.COMPATIBILITY_VERSION))
 
     def test_rejects_extra_native_or_official_or_source_assets(self):
-        for name in ("lib/net10.0/DM.DmProvider.dll", "runtimes/linux-x64/native/libdm.so", "src/secret.cs", "lib/net9.0/W.DamengProvider.dll"):
+        for name in ("lib/net10.0/DM.DmProvider.dll", "runtimes/linux-x64/native/libdm.so", "src/secret.cs", "lib/net7.0/W.DamengProvider.dll"):
             with self.subTest(name=name), self.assertRaises(release.Rejected):
                 self.check(lambda _, assets: assets.update({name: b"unexpected"}))
 
@@ -107,6 +130,66 @@ class PackageContracts(unittest.TestCase):
     def test_rejects_traversal(self):
         with self.assertRaises(release.Rejected):
             self.check(lambda _, assets: assets.update({"../outside": b"unsafe"}))
+
+
+class ConsumerContracts(unittest.TestCase):
+    def consumer(self, tfm):
+        identity = "1.2.3"
+        key = release.PACKAGE + "/" + identity
+        asset = f"lib/{tfm}/{release.PACKAGE}.dll"
+        target = {key: {"compile": {asset: {}}, "runtime": {asset: {}}}}
+        if tfm == "net8.0":
+            target[key]["dependencies"] = {"Microsoft.Bcl.Cryptography": release.COMPATIBILITY_VERSION}
+            target["Microsoft.Bcl.Cryptography/" + release.COMPATIBILITY_VERSION] = {
+                "dependencies": {"System.Formats.Asn1": release.COMPATIBILITY_VERSION}}
+            target["System.Formats.Asn1/" + release.COMPATIBILITY_VERSION] = {}
+        libraries = {name: {"type": "package"} for name in target}
+        assets = {"libraries": libraries, "targets": {tfm: target}, "project": {"frameworks": {tfm: {
+            "dependencies": {release.PACKAGE: {"version": "[1.2.3]"}}}}}}
+        deps = {"libraries": {**libraries, "Smoke/1.0.0": {"type": "project"}}, "targets": {tfm: {key: {"runtime": {asset: {}}}}}}
+        return assets, deps, identity, key
+
+    def test_accepts_approved_closure_for_each_target(self):
+        for tfm in release.TFMS:
+            assets, deps, identity, _ = self.consumer(tfm)
+            self.assertEqual(tfm, release.inspect_consumer(assets, deps, tfm, identity)["tfm"])
+
+    def test_rejects_wrong_compile_or_runtime_asset(self):
+        for tfm in release.TFMS:
+            for kind in ("compile", "runtime", "deps"):
+                assets, deps, identity, key = self.consumer(tfm)
+                if kind == "deps":
+                    deps["targets"][tfm][key]["runtime"] = {"lib/net7.0/W.DamengProvider.dll": {}}
+                else:
+                    assets["targets"][tfm][key][kind] = {"lib/net7.0/W.DamengProvider.dll": {}}
+                with self.subTest(tfm=tfm, kind=kind), self.assertRaises(release.Rejected):
+                    release.inspect_consumer(assets, deps, tfm, identity)
+
+    def test_rejects_unapproved_or_missing_dependency_and_direct_transitive_reference(self):
+        for mutation in ("extra", "missing", "direct", "edge", "runtime"):
+            assets, deps, identity, key = self.consumer("net8.0")
+            if mutation == "extra": assets["libraries"]["DM.DmProvider/1.0.0"] = {"type": "package"}
+            if mutation == "missing": assets["libraries"].pop("System.Formats.Asn1/" + release.COMPATIBILITY_VERSION)
+            if mutation == "direct": assets["project"]["frameworks"]["net8.0"]["dependencies"]["Microsoft.Bcl.Cryptography"] = {}
+            if mutation == "edge": assets["targets"]["net8.0"][key]["dependencies"] = {}
+            if mutation == "runtime": deps["libraries"].pop("System.Formats.Asn1/" + release.COMPATIBILITY_VERSION)
+            with self.subTest(mutation=mutation), self.assertRaises(release.Rejected):
+                release.inspect_consumer(assets, deps, "net8.0", identity)
+
+    def test_package_cache_path_normalizes_uppercase_prerelease(self):
+        self.assertEqual(Path("packages/w.damengprovider/1.2.3-rc.1/w.damengprovider.1.2.3-rc.1.nupkg"),
+                         release.cached_product_package(Path("packages"), "1.2.3-RC.1"))
+
+    def test_product_source_mapping_has_only_exact_local_feed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            destination = Path(temp) / "NuGet.Config"
+            release.consumer_sources(Path(temp) / "feed", destination)
+            root = ET.parse(destination).getroot()
+            mapping = root.find("packageSourceMapping")
+            self.assertEqual([release.PACKAGE], [e.get("pattern") for e in mapping.find("packageSource[@key='candidate']")])
+            remote = {e.get("pattern") for e in mapping.find("packageSource[@key='approved']")}
+            self.assertEqual(set(release.APPROVED_TRANSITIVE) | {"Microsoft.NETCore.App.Ref", "Microsoft.AspNetCore.App.Ref"}, remote)
+            self.assertNotIn(release.PACKAGE, remote)
 
 
 class TestResultContracts(unittest.TestCase):

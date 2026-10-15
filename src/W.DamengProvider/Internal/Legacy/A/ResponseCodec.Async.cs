@@ -14,189 +14,6 @@ using AsyncProtocol = W.Dm.Internal.Legacy.A.B;
 namespace W.Dm.Internal.Legacy.A;
 internal partial class c
 {
-	private static async Task AAsync(DmParameter P_0, b P_1, A P_2, DmParameterInternal P_3, DmGetValue P_4, int P_5, bool P_6, CancellationToken cancellationToken = default)
-	{
-		cancellationToken = AsyncProtocol.AsyncCancellationToken(cancellationToken);
-		object obj = null;
-		byte[] array = null;
-		int num = P_1.D();
-		if ((num == 65534 || num == 65533) && P_0.DmSqlType != DmDbType.Cursor && P_0.DmSqlType != DmDbType.RefCursor)
-		{
-			P_0.do_Value = DBNull.Value;
-			return;
-		}
-		if (num >= 0 && num != 65534 && num != 65533)
-		{
-			array = P_1.F(num);
-		}
-		switch (P_0.DmSqlType)
-		{
-		case DmDbType.Cursor:
-		case DmDbType.RefCursor:
-			if (P_3.GetCType() == 120)
-			{
-				obj = P_3;
-				if (P_0.do_Direction == ParameterDirection.ReturnValue)
-				{
-					await P_2.h().AAsync(P_2.f().RetRefCursorStmt, (short)1, cancellationToken).ConfigureAwait(false);
-				}
-				else
-				{
-					await P_2.h().AAsync(P_0.refCursorStmt, (short)1, cancellationToken).ConfigureAwait(false);
-				}
-			}
-			break;
-		case DmDbType.Blob:
-		case DmDbType.Binary:
-		case DmDbType.VarBinary:
-			obj = await P_4.GetBytesAsync(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale(), cancellationToken).ConfigureAwait(false);
-			break;
-		case DmDbType.Bit:
-		{
-			bool boolean = P_4.GetBoolean(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			obj = ((P_2.G().ConnProperty.CompatibleMode != CompatibleMode.MYSQL) ? ((object)boolean) : ((object)(boolean ? 1 : 0)));
-			break;
-		}
-		case DmDbType.Char:
-		case DmDbType.Clob:
-		case DmDbType.Text:
-		case DmDbType.VarChar:
-			obj = await P_4.GetStringAsync(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale(), cancellationToken).ConfigureAwait(false);
-			break;
-		case DmDbType.Time:
-			obj = P_4.GetTime(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Date:
-			obj = P_4.GetDate(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.DateTime:
-			obj = P_4.GetTimestamp(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.DateTimeOffset:
-			obj = P_4.GetTimestampTZ(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.TimeOffset:
-			obj = P_4.GetTimeTZ(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Decimal:
-			obj = P_4.GetBigDecimal(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.XDEC:
-			obj = P_4.GetDmDecimal(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Double:
-			obj = P_4.GetDouble(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Float:
-			obj = P_4.GetFloat(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.IntervalDayToSecond:
-			obj = P_4.GetINTERVALDT(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.IntervalYearToMonth:
-			obj = P_4.GetINTERVALYM(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Int16:
-			obj = P_4.GetShort(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Int32:
-			obj = P_4.GetInt(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Int64:
-			obj = P_4.GetLong(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.SByte:
-			obj = P_4.GetSByte(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.Byte:
-			obj = P_4.GetByte(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.UInt16:
-			obj = P_4.GetUshort(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.UInt32:
-			obj = P_4.GetUint(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.UInt64:
-			obj = P_4.GetUlong(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale());
-			break;
-		case DmDbType.ARRAY:
-			obj = P_4.ToComplexType(array, P_3, P_2.G().Conn);
-			if (obj is DmArray)
-			{
-				ComplexTypeData[] arrData = ((DmArray)obj).m_arrData;
-				if (arrData == null || arrData.Length == 0)
-				{
-					obj = null;
-					break;
-				}
-				object[] array2 = new object[arrData.Length];
-				for (int i = 0; i < arrData.Length; i++)
-				{
-					AsyncProtocol.CheckAsyncTermination(cancellationToken);
-					array2[i] = arrData[i].m_dumyData;
-				}
-				obj = array2;
-			}
-			else if (obj is DmStruct)
-			{
-				throw new NotSupportedException("GetParamData");
-			}
-			break;
-		default:
-			array = P_1.F(num);
-			obj = await P_4.GetObjectAsync(P_5, array, P_3.GetCType(), P_3.GetPrecision(), P_3.GetScale(), cancellationToken).ConfigureAwait(false);
-			break;
-		}
-		if (P_6)
-		{
-			P_0.do_Value = obj;
-		}
-	}
-	private static async Task aAsync(b P_0, A P_1, CancellationToken cancellationToken = default)
-	{
-		cancellationToken = AsyncProtocol.AsyncCancellationToken(cancellationToken);
-		string serverEncoding = P_1.G().ConnProperty.ServerEncoding;
-		bool newLobFlag = P_1.G().ConnProperty.NewLobFlag;
-		DmField[] paramsInfo = P_1.F().GetParamsInfo();
-		// Output parameters are length-prefixed packed scalars, independent of the result set's BDTA format.
-		DmGetValue dmGetValue = new DmGetValue(serverEncoding, P_1, newLobFlag, paramsInfo, DmTemporalResultFormat.OrdinaryPacked);
-		DmParameterInternal[] ParamsInfo = null;
-		DmParameterInternal dmParameterInternal = null;
-		DmParameter dmParameter = null;
-		P_1.H().GetParamsInfo(out ParamsInfo);
-		bool flag = ArrayUtil.IsAllMatch(P_1.f().Parameters, ParamsInfo);
-		bool flag2 = P_1.G().ConnProperty.msgVersion >= 12;
-		for (int i = 0; i < P_1.H().GetParameterCount(); i++)
-		{
-			AsyncProtocol.CheckAsyncTermination(cancellationToken);
-			dmParameterInternal = ParamsInfo[i];
-			int sqlType = dmParameterInternal.GetSqlType();
-			int scale = dmParameterInternal.GetScale();
-			if (sqlType == 12 && scale == 5)
-			{
-				throw new InvalidOperationException("UNSUPPORT USERDEFINED TYPE");
-			}
-			dmParameter = (flag ? ((DmParameter)P_1.f().Parameters[dmParameterInternal.GetName()]) : ((DmParameter)P_1.f().Parameters[i]));
-			if (dmParameter.do_Direction == ParameterDirection.Input)
-			{
-				continue;
-			}
-			if (flag2)
-			{
-				int num = A(P_0.F(4));
-				for (int j = 0; j < num; j++)
-				{
-					AsyncProtocol.CheckAsyncTermination(cancellationToken);
-					await AAsync(dmParameter, P_0, P_1, dmParameterInternal, dmGetValue, i, j == 0, cancellationToken).ConfigureAwait(false);
-				}
-			}
-			else
-			{
-				await AAsync(dmParameter, P_0, P_1, dmParameterInternal, dmGetValue, i, true, cancellationToken).ConfigureAwait(false);
-			}
-		}
-	}
 	public static async Task AAsync(b P_0, A P_1, DmConnProperty P_2, short requestOpcode = 0, bool executionVsPrepare = false, CancellationToken cancellationToken = default)
 	{
 		cancellationToken = AsyncProtocol.AsyncCancellationToken(cancellationToken);
@@ -220,7 +37,7 @@ internal partial class c
 		DmRowId rowId = null;
 		dmInfo.Execid = P_0.aH();
 		int num10 = P_0.ah();
-		if (num4 < 0 || num8 < 0 || num9 < 0 || num10 < 0) throw new System.IO.InvalidDataException("Negative result metadata length or count.");
+		if (num4 < 0 || num6 < 0 || num8 < 0 || num9 < 0 || num10 < 0) throw new System.IO.InvalidDataException("Negative result metadata length or count.");
 		DmConnInstance dmConnInstance = P_1.G();
 		dmConnInstance.trxStatus = P_0.aI();
 		dmConnInstance.do_setTrxFinish(dmConnInstance.trxStatus);
@@ -250,6 +67,7 @@ internal partial class c
 		case 158:
 		case 159:
 		case 162:
+		case 164: // MERGE carries its row count like INSERT/UPDATE/DELETE.
 			dmInfo.SetRecordsAffected(num5);
 			break;
 		case 160:
@@ -275,7 +93,7 @@ internal partial class c
 		}
 		if (num6 > 0)
 		{
-			await aAsync(P_0, P_1, cancellationToken).ConfigureAwait(false);
+			P_1.f().CaptureProcedureOutputs(P_0, P_1, num6);
 		}
 		int num11;
 		switch (num3)
@@ -422,7 +240,7 @@ internal partial class c
 			{
 				DmFrameReader.ValidateRows(num8, num11, P_0.a(false));
 				P_1.l().FillRows(0L, num8, P_0, dmInfo.rsBdta, rsBdtaRowidCol);
-				if (P_1.G().ConnProperty.EnRsCache && num10 > 0 && dmInfo.GetRowCount() == num8)
+				if (P_1.f()?.AllowsGlobalResultCache == true && P_1.G().ConnProperty.EnRsCache && num10 > 0 && dmInfo.GetRowCount() == num8)
 				{
 					RsKey key = new RsKey(P_1.G().ConnProperty.Guid, P_1.G().ConnProperty.CurrentSchema, P_1.C(), P_1.f().do_DbParameterCollection.Count, P_1.f().do_DbParameterCollection);
 					DmConnection.rsLRUCache.Add(key, P_1.l());

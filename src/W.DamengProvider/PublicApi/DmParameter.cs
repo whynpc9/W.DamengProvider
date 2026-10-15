@@ -863,8 +863,9 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 
 	internal void ValidateTypeConfiguration()
 	{
-		if (explicitDmSqlType && (explicitDmSqlTypeValue is DmDbType.ARRAY or DmDbType.Class or DmDbType.XDEC))
-			throw new NotSupportedException("Complex and XDEC input types are not supported by this provider version.");
+		if (explicitDmSqlType && (explicitDmSqlTypeValue is DmDbType.ARRAY or DmDbType.Class ||
+			explicitDmSqlTypeValue == DmDbType.XDEC && m_Direct is not (ParameterDirection.Output or ParameterDirection.ReturnValue)))
+			throw new NotSupportedException("Complex parameter types and XDEC input types are not supported by this provider version.");
 		if (!explicitDbType || !explicitDmSqlType) return;
 		DmDbType expected = DefaultProviderType(explicitDbTypeValue);
 		bool compatible = WidenUnsigned(expected) == WidenUnsigned(explicitDmSqlTypeValue) ||
@@ -991,7 +992,37 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 
 	internal DmParameter CloneForPlan() => CloneCore(strictSnapshot: true);
 
-	private DmParameter CloneCore(bool strictSnapshot)
+	// Execution publishes only after every output has been validated. Do not invoke
+	// filters, the public mutation gate, or input type inference on this path.
+	internal void PublishOutputValue(object value) => m_value = value;
+
+	/// <summary>Snapshots one array-bound row; the template's own value is the row array.</summary>
+	internal DmParameter CloneForArrayRow(object element)
+	{
+		if (element is Stream or TextReader or DmLobInput)
+			throw new NotSupportedException("Streaming inputs cannot be array-bound.");
+		element ??= DBNull.Value;
+		var clone = CloneCore(strictSnapshot: false, element);
+		clone.m_value = CopyMutableValue(element, strictSnapshot: true);
+		if (!clone.explicitDbType && !clone.explicitDmSqlType) clone.InferFromValue(clone.m_value);
+		return clone;
+	}
+
+	internal bool HasInferredType => !explicitDbType && !explicitDmSqlType && inferredTypeKnown;
+
+	internal bool SameInferredType(DmParameter other) =>
+		m_DbType == other.m_DbType && m_DmSqlType == other.m_DmSqlType && inferredTypeKnown == other.inferredTypeKnown;
+
+	/// <summary>A NULL array row takes the CLR mapping of the parameter's non-NULL rows.</summary>
+	internal void AdoptInferredType(DmParameter source)
+	{
+		if (explicitDbType || explicitDmSqlType || m_value is not DBNull) return;
+		m_DbType = source.m_DbType;
+		m_DmSqlType = source.m_DmSqlType;
+		inferredTypeKnown = source.inferredTypeKnown;
+	}
+
+	private DmParameter CloneCore(bool strictSnapshot, object valueOverride = null)
 	{
 		var clone = new DmParameter
 		{
@@ -1011,7 +1042,10 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 			m_pre = m_pre,
 			m_SourceCol = m_SourceCol,
 			m_DataRowVer = m_DataRowVer,
-			m_value = strictSnapshot && (m_value is Stream or TextReader) ? FreezeStreamingInput() : CopyMutableValue(m_value, strictSnapshot),
+			m_value = strictSnapshot && m_Direct is ParameterDirection.Output or ParameterDirection.ReturnValue
+				? DBNull.Value
+				: valueOverride != null ? null
+				: strictSnapshot && (m_value is Stream or TextReader) ? FreezeStreamingInput() : CopyMutableValue(m_value, strictSnapshot),
 			m_SourceColumnNullMapping = m_SourceColumnNullMapping,
 			m_refCursorStmt = null,
 			m_DmSqlTypeName = m_DmSqlTypeName,
@@ -1021,6 +1055,8 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 			m_SetPrecFlag = m_SetPrecFlag,
 			m_SetScaleFlag = m_SetScaleFlag
 		};
+		if (strictSnapshot && m_Direct is ParameterDirection.Output or ParameterDirection.ReturnValue && !m_SetSizeFlag)
+			clone.m_Size = 0;
 		if (strictSnapshot && !clone.explicitDbType && !clone.explicitDmSqlType)
 			clone.InferFromValue(clone.m_value);
 		return clone;

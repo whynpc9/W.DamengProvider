@@ -182,6 +182,7 @@ public sealed class ReaderReviewTests
             cache.totalRowCount = 1;
             cache.datas = [[[], value!, new byte[4]]];
             Reader = Uninitialized<DmDataReader>();
+            Set("procedureChildren", Array.Empty<DmDataReader>());
             Reader.m_Statement = statement;
             Set("executionLease", lease);
             Set("m_Conn", physical);

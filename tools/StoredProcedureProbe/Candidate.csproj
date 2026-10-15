@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><NuGetAudit>false</NuGetAudit><AssemblyName>StoredProcedureProbe.Candidate</AssemblyName><DefineConstants>$(DefineConstants);CANDIDATE</DefineConstants></PropertyGroup>
+  <ItemGroup><Compile Include="Program.cs"/><Compile Include="Candidate.cs"/><ProjectReference Include="../../src/W.DamengProvider/W.DamengProvider.csproj" /><PackageReference Include="DM.DmProvider" Version="[8.3.1.47463]" /></ItemGroup>
+</Project>

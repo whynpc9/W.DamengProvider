@@ -441,7 +441,7 @@ internal sealed class DmSession
                 throw new InvalidOperationException("Server error receipt has no current wire owner.");
             bool canPreserve = preserveSession && (prepare ? DmServerErrorRecovery.IsPrepareScoped(error.Number) : DmServerErrorRecovery.IsStatementScoped(error.Number)) &&
                 transport != null && DmServerErrorRecovery.IsMeasuredProfile(transport.ConnProperty.ServerVersion) &&
-                invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader &&
+                invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader or DmOperationPurpose.Metadata &&
                 (activeTransaction != null
                     ? transactionState == DmLocalTransactionState.Active &&
                         ReferenceEquals(activeTransaction, transport.Transaction) &&
@@ -469,7 +469,7 @@ internal sealed class DmSession
         {
             if (invocation == null || !HasCurrentInputFailureOwnerUnderLock(invocation) ||
                 state != DmPhysicalSessionState.Busy || activeWire != null || DmWireExchange.Current != null ||
-                invocation.Lease.Purpose is not (DmOperationPurpose.Query or DmOperationPurpose.Reader) ||
+                invocation.Lease.Purpose is not (DmOperationPurpose.Query or DmOperationPurpose.Reader or DmOperationPurpose.Metadata) ||
                 invocation.ActiveParameterBinding != null)
                 throw new InvalidOperationException("Parameter binding has no current idle wire owner.");
             invocation.ParameterBindingFailureException = null;
