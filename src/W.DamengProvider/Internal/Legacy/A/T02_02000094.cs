@@ -718,6 +718,7 @@ internal partial class c
 		case 158:
 		case 159:
 		case 162:
+		case 164: // MERGE carries its row count like INSERT/UPDATE/DELETE.
 			dmInfo.SetRecordsAffected(num5);
 			break;
 		case 160:

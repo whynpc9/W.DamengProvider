@@ -348,3 +348,93 @@ internal sealed class DmDataSourceReader : DbDataReader
         GC.SuppressFinalize(this);
     }
 }
+
+/// <summary>A data source batch; each execution opens a pooled connection and returns it when the run or its reader ends.</summary>
+internal sealed class DmDataSourceBatch : DbBatch
+{
+    private readonly DmDataSource source;
+    private readonly DmBatch batch = new();
+    internal DmDataSourceBatch(DmDataSource source) => this.source = source;
+    protected override DbBatchCommandCollection DbBatchCommands => batch.BatchCommands;
+    public override int Timeout { get => batch.Timeout; set => batch.Timeout = value; }
+    protected override DbConnection DbConnection
+    { get => null; set => throw new NotSupportedException("A data source batch owns its connection."); }
+    protected override DbTransaction DbTransaction
+    { get => null; set => throw new NotSupportedException("Use a data source connection for transactions."); }
+    protected override DbBatchCommand CreateDbBatchCommand() => new DmBatchCommand();
+    public override void Cancel() => batch.Cancel();
+    public override void Prepare() => batch.Prepare();
+    public override Task PrepareAsync(CancellationToken cancellationToken = default) => batch.PrepareAsync(cancellationToken);
+
+    private DmConnection Attach(DmConnection connection)
+    {
+        try { batch.Connection = connection; return connection; }
+        catch { connection.Dispose(); throw; }
+    }
+
+    private void Detach(DmConnection connection)
+    {
+        try { if (ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
+        finally { connection.Dispose(); }
+    }
+
+    private async ValueTask DetachAsync(DmConnection connection)
+    {
+        try { if (ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
+        finally { await connection.DisposeAsync().ConfigureAwait(false); }
+    }
+
+    public override int ExecuteNonQuery()
+    {
+        DmConnection connection = Attach(source.OpenConnection());
+        try { return batch.ExecuteNonQuery(); }
+        finally { Detach(connection); }
+    }
+
+    public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default)
+    {
+        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
+        try { return await batch.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false); }
+        finally { await DetachAsync(connection).ConfigureAwait(false); }
+    }
+
+    public override object ExecuteScalar()
+    {
+        DmConnection connection = Attach(source.OpenConnection());
+        try { return batch.ExecuteScalar(); }
+        finally { Detach(connection); }
+    }
+
+    public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default)
+    {
+        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
+        try { return await batch.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false); }
+        finally { await DetachAsync(connection).ConfigureAwait(false); }
+    }
+
+    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+    {
+        DmConnection connection = Attach(source.OpenConnection());
+        try
+        {
+            DbDataReader reader = batch.ExecuteReader(behavior);
+            return new DmDataSourceReader(reader, () => Detach(connection), () => DetachAsync(connection));
+        }
+        catch { Detach(connection); throw; }
+    }
+
+    protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+    {
+        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
+        try
+        {
+            DbDataReader reader = await batch.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
+            return new DmDataSourceReader(reader, () => Detach(connection), () => DetachAsync(connection));
+        }
+        catch { await DetachAsync(connection).ConfigureAwait(false); throw; }
+    }
+
+    public override void Dispose() => batch.Dispose();
+
+    public override ValueTask DisposeAsync() => batch.DisposeAsync();
+}
