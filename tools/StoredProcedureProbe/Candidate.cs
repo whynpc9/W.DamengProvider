@@ -27,7 +27,7 @@ internal static class Candidate
             Raw = Environment.GetEnvironmentVariable("DAMENG_TEST_CONNECTION_STRING") ?? throw new InvalidOperationException("integration_pending");
             using (var c = Open())
             {
-                Results.Add(new { lane = "W", user = TestUser, server = c.ServerVersion, assembly = typeof(DmConnection).Assembly.FullName, module=typeof(DmConnection).Assembly.ManifestModule.ModuleVersionId, loaded_assembly=typeof(DmConnection).Assembly.Location });
+                Results.Add(new { lane = "W", runtime = Environment.Version.ToString(), target_framework = AppContext.TargetFrameworkName, user = TestUser, server = c.ServerVersion, assembly = typeof(DmConnection).Assembly.FullName, module=typeof(DmConnection).Assembly.ManifestModule.ModuleVersionId, loaded_assembly=typeof(DmConnection).Assembly.Location });
                 Create(c, "TABLE", "DATA", "(ID INT PRIMARY KEY, T TIMESTAMP(9), Z DATETIME(9) WITH TIME ZONE, B BLOB, C CLOB)");
                 Create(c, "PROCEDURE", "P", "(A IN INT, B OUT INT, C IN OUT INT) AS BEGIN B := A+10; C := C+A; END;");
                 Create(c, "PROCEDURE", "P2", "(A IN INT, B OUT INT, C IN OUT INT) AS BEGIN B := A+20; C := C+A*2; END;");

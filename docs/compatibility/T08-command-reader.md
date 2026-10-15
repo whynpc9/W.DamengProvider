@@ -2,7 +2,7 @@
 
 当前已发布 `0.1.0-preview.1`；本页描述产品行为及历史阶段证据，正式发布范围见[发布记录](../release-0.1.0-preview.1.md)。
 
-命令只开放已验证的 CommandType.Text 路径。当前发布状态见 [progress.json](../implementation/progress.json)；历史协议表征见 [T08-protocol-results.md](../implementation/T08-protocol-results.md)。
+已发布包只开放 CommandType.Text；未发布源码新增 [StoredProcedure、输出参数及受管游标](I09-stored-procedures.md)。当前发布状态见 [progress.json](../implementation/progress.json)；历史协议表征见 [T08-protocol-results.md](../implementation/T08-protocol-results.md)。
 
 - 执行期间冻结 SQL、参数 metadata/值和超时；返回的 Reader 持有计划直到关闭。修改 Command、Parameter 或参数集合会立即失败。byte[]/char[] 输入复制；未明确支持的可变参数对象在执行前拒绝。Clone 不共享参数父关系。
 - 空 rowset 保留。ExecuteReader 定位首个可读结果；NextResult 更新整套列信息、类型读取器和缓存。纯 DML Reader 没有伪造数据行。
@@ -10,8 +10,8 @@
 - Scalar 对第一可读结果的空集返回 null，SQL NULL 返回 DBNull。NonQuery 完成结果遍历后才返回；后续服务器错误不会作为成功忽略。
 - 支持的行为标志逐位处理。SchemaOnly/KeyInfo 尚未开放，在发送前拒绝。SequentialAccess 下的有界流式 LOB 范围见 [数据源与流式 LOB 说明](R3.md)。
 - GetSchemaTable 只使用当前响应的本地 metadata；未知 IsKey/IsUnique 为 DBNull，不执行辅助目录 SQL。依赖 T05 查询填出键属性的代码需要调整。
-- 正常关闭 Reader 使用有限、独立的 CleanupTimeout。提前关闭使用已验证的 statement-close 请求，不通过发送额外 MORE_RESULT 来恢复会话。无法确认同步状态的失败路径关闭捕获的物理会话；需显式重新 Open。不能把断开描述为服务端已确认回滚。
+- 正常关闭 Reader 使用有限、独立的 CleanupTimeout。Text 提前关闭使用已验证的 statement-close 请求，不通过额外 MORE_RESULT 恢复会话；过程提前关闭需在同一有限清理期限内终结结果并获取输出，随后关闭子游标和 statement。无法确认同步状态的失败路径关闭捕获的物理会话；需显式重新 Open。不能把断开描述为服务端已确认回滚。
 - Dispose Command 后，已有 Reader 可继续消费并关闭；新的 Command 调用被拒绝。没有活动 Reader 的 prepared statement 也使用有限清理期限。
-- 参数编码错误不再触发旧的逐元素数组执行补救逻辑；未开放 StoredProcedure、输出参数、RefCursor 或复杂类型，ComplexTypeToBytes 非默认值明确拒绝。数组绑定（ArrayBindCount）与 DbBatch 的后续开放范围见[数组绑定与 DbBatch](I07-I08-array-binding-dbbatch.md)。
+- 参数编码错误不再触发旧的逐元素数组执行补救逻辑；复杂类型及 ComplexTypeToBytes 非默认值仍明确拒绝；StoredProcedure、输出参数和 RefCursor 的源码范围见 [I09](I09-stored-procedures.md)，Text 命令仍仅接受 Input。数组绑定（ArrayBindCount）与 DbBatch 的后续开放范围见[数组绑定与 DbBatch](I07-I08-array-binding-dbbatch.md)。
 
 RecordsAffected 和键 metadata 的变化是有意调整。历史包消费测试覆盖 ef-savechanges-v1 的选定 SQL 契约；当前发布候选仍需执行适用的包消费与 EF 回归检查。

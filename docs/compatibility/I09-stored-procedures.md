@@ -90,4 +90,6 @@ while (await cursor.ReadAsync())
 
 ## 验证入口
 
+独立离线回归见 [三目标验证记录](I09-offline-validation.md)，包含 .NET 8/9/10 的 12 套测试及主线批处理整合。
+
 可复用探针见 [StoredProcedureProbe](../../tools/StoredProcedureProbe/README.md)。每次实库运行先核对 `WDM_PROVIDER_TEST` 身份及 Schema，只使用本轮唯一过程、函数、表并由新连接检查最终状态和精确对象清理。官方驱动的 ReturnValue 位置错误、游标缓存生命周期或时间输入降级只作对照，不作为 W 的预期行为。

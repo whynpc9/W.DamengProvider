@@ -92,7 +92,7 @@ DECIMAL(28,9) 输出精确为 `1234567890123456789.123456789`；BLOB 输出 `byt
 - R5 新增 Prepared/PrepareAsync 后改用相同参数描述但不同过程，结果正确。新取消测试先由过程插入专用 marker 并 COMMIT，再继续未提交业务写入及等待；独立连接观察 marker=1 后才执行 token cancel / 同步 Cancel，避免把固定计时器误称发送后取消。两者最终 marker=1、业务0；预取消 marker=0、业务0。同步/异步timeout也观察 marker=1、业务0；同步timeout实际返回普通 DmException 包裹 SocketException(TimedOut)，异步返回 DmTimeoutException。已收紧后续断言，二者不能被笼统“发生异常”替代。
 
 
-## 最终 W 集成结果
+## 合并主线前 W 集成结果
 
 `/tmp/wdm-i09-candidate-r7.json`：**55/55 通过，退出码0**。本轮使用上述 Candidate 命令，构建日志 `/tmp/wdm-i09-candidate-build-r7.log`；加载程序集 `tools/StoredProcedureProbe/bin/Debug/net10.0/W.DamengProvider.dll` 的 MVID 为 `82905a60-8469-4bc5-b51a-342a021d0675`。这是本轮实际受测程序集身份，不是后续运行的固定门槛。
 
@@ -121,3 +121,42 @@ DECIMAL(28,9) 输出精确为 `1234567890123456789.123456789`；BLOB 输出 `byt
 R6 的 interval 归一修复后，又发现普通 TIME 被条件表达式隐式转换成 DateTimeOffset；该轮53例中51通过，2个精确类型断言失败，保留 `/tmp/wdm-i09-candidate-r6.json`。修复后先单独运行 `additional_types`，实际普通 TIME 为 `System.DateTime 1900-01-01T12:34:56.1234560`，再执行上述55例全矩阵。未放宽类型或精度断言。R4 的清理核验 SocketException 未留足消息，无法事后断言其确切原因；R5/R6/R7 均由 W 新连接完成了精确对象最终核验，历史失败不改写为成功。
 
 本文件负责官方表征与 W 实库矩阵。独立离线回归由另一验证者记录。尚未实库证明的范围包括非100ns九位时间值、超过64MiB实际LOB拒绝、未声明复杂类型和旧协议版本；不得因当前矩阵通过而宣称这些能力。
+
+
+## 合并主线后的三目标验收
+
+合并 commit `7f390ed`（集成主线 DbBatch/数组绑定与 .NET 8/9/10 目标）后，使用同一份 Candidate 源码分别构建并运行三个真实 runtime。探针新增 `runtime` 和 `target_framework` 元数据；产品在测试期间无修改。每目标 **59/59 通过，退出码0**，共177例，保留上述合并前 R7 记录。
+
+| 目标 | 实际 Environment.Version | 产品程序集 MVID | JSON 报告 |
+| --- | --- | --- | --- |
+| net8.0 | 8.0.32 | `bdf03642-707e-40cf-8383-df371c43cfb4` | `/tmp/wdm-i09-candidate-merged-net8.json` |
+| net9.0 | 9.0.21 | `1f8a3056-4b9f-4052-9782-fb933bc9e10f` | `/tmp/wdm-i09-candidate-merged-net9.json` |
+| net10.0 | 10.0.12 | `6dee0b20-0518-485a-974e-6a3816598d3a` | `/tmp/wdm-i09-candidate-merged-net10.json` |
+
+在原55例之外，每目标新增以下同步及异步验收：
+
+- DbBatch 第一条为 INSERT、第二条为 StoredProcedure；整批抛 `NotSupportedException`，独立新连接确认第一条 INSERT 的精确业务ID行数为0。
+- 存储过程 `ArrayBindCount=2`；抛 `NotSupportedException`，OUT 保留旧值，独立新连接确认两个业务ID均为0。
+
+三轮继续覆盖全部原有精确值、输出发布、游标生命周期、取消和超时断言。预取消最终 marker0/业务0；真实观察 marker 后的同步/异步取消以及同步/异步timeout最终 marker1/业务0。每轮连接身份为 `WDM_PROVIDER_TEST`、服务器8.1.5.60；对象精确清单保存在各报告。三个本轮前缀分别为 `I09W_6A7DB8C1B3BF499E`、`I09W_15F133305E59456C`、`I09W_DBEEAB9024544B88`，每轮12对象逐名删除并由 W 新连接逐名核验不存在，无官方恢复清理、无前缀删除。
+
+执行环境与命令（在仓库根目录依次以 `i09_tfm=net8.0`、`net9.0`、`net10.0` 执行；下述变量只表示工具路径和目标，不含连接信息）：
+
+```sh
+export DOTNET_ROOT=/home/air/.t3/worktrees/W.DamengProvider/t3-5b93f0cb/.local/issue12/dotnet
+export DOTNET_ROOT_X64="$DOTNET_ROOT"
+export DOTNET_CLI_HOME="$PWD/.local/issue9/validation/dotnet-home"
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1
+i09_tfm=net8.0
+"$DOTNET_ROOT/dotnet" restore tools/StoredProcedureProbe/Candidate.csproj \
+  -p:TargetFramework="$i09_tfm" -p:TargetFrameworks="$i09_tfm" \
+  -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers -v:q
+"$DOTNET_ROOT/dotnet" build tools/StoredProcedureProbe/Candidate.csproj --no-restore \
+  -p:TargetFramework="$i09_tfm" \
+  -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers -v:q
+/home/air/Projects/W.DamengProvider/scripts/with-dameng-test.sh \
+  "$DOTNET_ROOT/dotnet" "tools/StoredProcedureProbe/bin/Debug/$i09_tfm/StoredProcedureProbe.Candidate.dll" \
+  "/tmp/wdm-i09-candidate-merged-${i09_tfm%.0}.json"
+```
+
+构建/还原日志使用 `/tmp/wdm-i09-candidate-merged-net{8,9,10}-{build,restore}.log`。三个构建均0错误，20条既有探针 nullable 警告。首次直接 `build -p:TargetFramework=net8.0` 因已有 assets 只有 net10 目标报 NETSDK1005（未执行数据库操作）；随后显式 restore 同时指定 TargetFramework 与 TargetFrameworks，三目标均成功。没有清理全局 NuGet 缓存。三目标验证没有扩大前述未实库覆盖范围。
