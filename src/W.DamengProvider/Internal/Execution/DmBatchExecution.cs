@@ -48,6 +48,8 @@ internal sealed class DmBatchExecution : IDisposable
         for (int index = 0; index < commands.Length; index++)
         {
             DmBatchCommand source = commands[index];
+            if (source.CommandType != CommandType.Text)
+                throw new NotSupportedException("DbBatch supports only Text commands.");
             steps[index] = DmCommand.ForBatchStep(source.CommandText, source.CommandType, source.Parameters, connection, transaction);
             plans[index] = steps[index].EnterBatchPlan();
             // Transaction-control text is rejected for every step before the first one runs.

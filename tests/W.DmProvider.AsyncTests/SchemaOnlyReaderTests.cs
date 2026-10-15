@@ -11,6 +11,38 @@ namespace W.DmProvider.AsyncTests;
 public sealed class SchemaOnlyReaderTests
 {
     [Theory]
+    [InlineData(CommandBehavior.SchemaOnly, false)]
+    [InlineData(CommandBehavior.SchemaOnly, true)]
+    [InlineData(CommandBehavior.KeyInfo, false)]
+    [InlineData(CommandBehavior.KeyInfo, true)]
+    [InlineData(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo, false)]
+    [InlineData(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo, true)]
+    public async Task ProcedureMetadataModesRejectBeforeAnyProtocolBytes(CommandBehavior behavior, bool async)
+    {
+        await using var database = new TransactionAsyncFixture();
+        await using var command = new DmCommand("P", database.Connection, database.Transaction)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        var output = new DmParameter("B", DmDbType.Int32)
+        {
+            Direction = ParameterDirection.Output,
+            Value = 17
+        };
+        command.Parameters.Add(output);
+        if (async)
+            await Assert.ThrowsAsync<NotSupportedException>(() => command.ExecuteReaderAsync(behavior));
+        else
+            Assert.Throws<NotSupportedException>(() => command.ExecuteReader(behavior));
+        Assert.Equal(0, database.Channel.Sends);
+        Assert.Equal(DmPhysicalSessionState.Ready, database.Session.State);
+        Assert.Equal(17, output.Value);
+        command.CommandText = "OTHER_P";
+        output.Value = 23;
+        using var next = database.Session.BeginExecution(DmOperationPurpose.Metadata);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task DescribeUsesPrepareOnlyAndAllNavigationIsLocal(bool async)

@@ -158,6 +158,7 @@ public sealed class TemporalNativeReaderRouteTests
             cache.datas = next == null ? [[[], value!, BitConverter.GetBytes(42), locator]]
                 : [[[], value!, BitConverter.GetBytes(42), locator], [[], next, BitConverter.GetBytes(43), locator]];
             Reader = TemporalNativeWriterAdapterTests.WriterFixture.Uninitialized<DmDataReader>();
+            Set(Reader, "procedureChildren", Array.Empty<DmDataReader>());
             Reader.m_Statement = writer.Statement; Reader.m_RowCount = cache.totalRowCount;
             Set(Reader, "executionLease", lease); Set(Reader, "ownsExecutionLease", true);
             Set(Reader, "asyncCloseGate", new object()); Set(Reader, "m_Conn", Physical);

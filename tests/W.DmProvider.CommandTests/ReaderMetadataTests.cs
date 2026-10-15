@@ -39,7 +39,7 @@ public sealed class ReaderMetadataTests
     [Fact]
     public void DescribeRejectsProceduresAndUnboundMarkers()
     {
-        using var procedure = Plan("SELECT 1 FROM DUAL", type: CommandType.StoredProcedure);
+        using var procedure = Plan("P", type: CommandType.StoredProcedure);
         Assert.Throws<NotSupportedException>(() => DmReaderMetadata.Validate(procedure));
         using var unbound = Plan("SELECT :value FROM DUAL");
         Assert.Throws<InvalidOperationException>(() => DmReaderMetadata.Validate(unbound));

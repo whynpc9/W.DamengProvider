@@ -18,7 +18,7 @@ using W.Dm.Internal.Diagnostics;
 
 namespace W.Dm;
 
-public class DmCommand : DbCommand, ICloneable, IFilterInfo
+public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 {
 	internal long id = -1L;
 
@@ -40,6 +40,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private DmSession statementSession;
 	private DmConnection statementConnection;
 	private DmParameterMetadata[] preparedMetadata;
+	private string preparedSql;
 
 	private ArrayList m_refCursorStmt_arr = new ArrayList();
 
@@ -67,6 +68,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private bool running;
 	private readonly DmCommandPlanGate commandPlanGate = new();
 	private DmCommandPlan activePlan;
+	internal DmCommandPlan ActivePlan => Volatile.Read(ref activePlan);
+	// Procedure calls may mutate server state and produce OUT values on every
+	// invocation. Their statement-local row buffer is never a reusable result.
+	internal bool AllowsGlobalResultCache => (ActivePlan?.CommandType ?? m_CommandType) == CommandType.Text;
 	private DmDataSourceExecution dataSourceExecution;
 	internal void BindDataSourceExecution(DmDataSourceExecution execution) => Volatile.Write(ref dataSourceExecution, execution);
 	internal void UnbindDataSourceExecution(DmDataSourceExecution execution) => Interlocked.CompareExchange(ref dataSourceExecution, null, execution);
@@ -92,12 +97,17 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			int arrayBindCount = ArrayBindCount;
 			if (arrayBindCount < 0)
 				throw new InvalidOperationException("ArrayBindCount cannot be negative.");
+			if (arrayBindCount != 0 && m_CommandType != CommandType.Text)
+				throw new NotSupportedException("Array binding supports only Text commands.");
 			if (arrayBindCount != 0 && !arrayBindingAllowed)
 				throw new NotSupportedException("Array binding is supported only by ExecuteNonQuery.");
 			return DmCommandPlan.Capture(m_CommandText, m_CommandType, do_CommandTimeout,
 				m_Trx, m_Conn, m_Paras, arrayBindCount);
 		});
 		Volatile.Write(ref activePlan, plan);
+		ResetProcedureOutputCapture();
+		procedureCursorStatements.Clear();
+		procedureCursorReaders.Clear();
 		try
 		{
 			Volatile.Read(ref dataSourceExecution)?.BindPlan(plan);
@@ -119,18 +129,19 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 		if (plan == null) return;
 		Interlocked.CompareExchange(ref activePlan, null, plan);
+		ResetProcedureOutputCapture();
 		plan.Dispose();
 		if (m_AlreadyDisposed && m_Stmt != null) ReleaseUnmanagedResource();
 	}
 
 	private void ValidateSupportedCommand()
 	{
-		if (m_CommandType != CommandType.Text)
-			throw new NotSupportedException("Only CommandType.Text is supported by this provider version.");
+		if (m_CommandType is not (CommandType.Text or CommandType.StoredProcedure))
+			throw new NotSupportedException("Only Text and StoredProcedure commands are supported.");
 		if (string.IsNullOrWhiteSpace(m_CommandText))
 			throw new InvalidOperationException("CommandText is required.");
 		foreach (DmParameter parameter in m_Paras)
-			if (parameter.Direction != ParameterDirection.Input || parameter.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor)
+			if (m_CommandType == CommandType.Text && (parameter.Direction != ParameterDirection.Input || parameter.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor))
 				throw new NotSupportedException("Output and cursor parameters are not supported by this provider version.");
 	}
 
@@ -562,6 +573,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		try
 		{
+			RejectCursorCompletion(plan);
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
 			return ExecuteNonQueryComplete(lease, plan);
 		}
@@ -632,7 +644,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					verifiedServerError = true;
 					throw TranslateCurrentFailure(error);
 				}
-				catch (Exception error) { throw invocation.TranslateFailure(error); }
+				catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 			}
 		}
 		catch (Exception error) when (verifiedServerError)
@@ -732,6 +744,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = EnterPlan();
 		try
 		{
+			RejectCursorCompletion(plan);
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
 			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "ExecuteScalar()");
 			DmDataReader reader = null;
@@ -757,7 +770,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					object scalar;
 					// A FETCH round trip may happen here; keep the async path's failure shape.
 					try { scalar = reader.do_FieldCount > 0 && reader.ReadOwned() ? reader.GetValueOwned(0) : null; }
-					catch (Exception error) { throw invocation.TranslateFailure(error); }
+					catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 					invocation.Complete();
 					completed = true;
 					return scalar;
@@ -852,6 +865,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
 			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
+			plan.PublishCursorOutputs();
+			reader.PublishProcedureOutputsIfTerminal();
 			transferred = true;
 			return reader;
 		}
@@ -1069,7 +1084,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			statementConnection = m_Conn;
 		}
 		m_Stmt.__t02_field_04000931 = m_StmtSerial;
-		if (connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
+		if (AllowsGlobalResultCache && connInstance.ConnProperty.EnRsCache && !rawSavepoint.HasValue)
 		{
 			bool flag = false;
 			RsKey key = new RsKey(connInstance.ConnProperty.Guid, connInstance.ConnProperty.CurrentSchema, GetCommandText(), do_DbParameterCollection.Count, do_DbParameterCollection);
@@ -1120,6 +1135,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				int rowCount = 0;
 				if (BindParametersLocally(ref rowCount, rd, behavior))
 				{
+					PrepareProcedureCursors();
 					rd = ExecutePreparedQuery(behavior);
 				}
 			}
@@ -1145,7 +1161,12 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			AbortStatementAfterFailedExecution(error);
 			throw TranslateCurrentFailure(error);
 		}
-		try { rd?.SeekFirstReadableResultOwned(); }
+		try
+		{
+			MaterializeProcedureOutputs(m_Stmt);
+			AttachProcedureReader(rd);
+			rd?.SeekFirstReadableResultOwned();
+		}
 		catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 		RetCmdType = m_Stmt.m().GetRetStmtType();
 		CurResultSetCache = m_Stmt.l();
@@ -1181,6 +1202,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		bool verifiedServerError = false;
 		try
 		{
+			RejectCursorCompletion(plan);
 			cancellationToken.ThrowIfCancellationRequested();
 			if (batchLease == null) lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Query, cancellationToken);
 			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
@@ -1206,7 +1228,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					completed = true;
 					return result;
 				}
-				catch (Exception error) { throw invocation.TranslateFailure(error); }
+				catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 			}
 			catch (Exception error) when (verifiedServerError)
 			{
@@ -1269,6 +1291,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
 			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
+			plan.PublishCursorOutputs();
+			reader.PublishProcedureOutputsIfTerminal();
 			transferred = true;
 			return reader;
 		}
@@ -1341,7 +1365,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				succeeded = true;
 				return result;
 			}
-			catch (Exception error) { throw invocation.TranslateFailure(error); }
+			catch (Exception error) { ActivePlan?.FailOutputs(); throw invocation.TranslateFailure(error); }
 		}
 		finally
 		{
@@ -1386,6 +1410,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				await PrepareInternalCoreAsync(true, cancellationToken).ConfigureAwait(false);
 				int rowCount = 0;
 				if (!BindParametersLocally(ref rowCount, rd, behavior)) throw new InvalidOperationException("Parameter binding failed.");
+				await PrepareProcedureCursorsAsync(cancellationToken).ConfigureAwait(false);
 				rd = await m_Stmt.ExecutePreparedReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
 			}
 			if (rd == null) throw new InvalidOperationException("Execution did not return a reader.");
@@ -1396,6 +1421,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					throw new InvalidOperationException("Savepoint execution did not return a current control response.");
 				plan.Transaction.ConfirmUserSavepointControl(plan.Connection, rawSavepoint.Value, DmInvocation.Current?.Lease);
 			}
+			await MaterializeProcedureOutputsAsync(m_Stmt, cancellationToken).ConfigureAwait(false);
+			AttachProcedureReader(rd);
 			await rd.SeekFirstReadableResultOwnedAsync(cancellationToken).ConfigureAwait(false);
 			RetCmdType = m_Stmt.m().GetRetStmtType();
 			CurResultSetCache = m_Stmt.l();
@@ -1429,12 +1456,14 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (!checkCommandText || !m_Stmt.b())
 			await m_Stmt.PrepareAsync(GetCommandText(), cancellationToken).ConfigureAwait(false);
 		preparedMetadata = Volatile.Read(ref activePlan)?.ParameterMetadata;
+		preparedSql = GetCommandText();
 	}
 
 	private DmExecutionLease BeginValidatedUserExecutionAsync(DmCommandPlan plan, DmOperationPurpose purpose, CancellationToken token)
 	{
 		token.ThrowIfCancellationRequested();
 		DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+		ValidateProcedureTransaction(plan);
 		DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 		if (commandPlanGate.IsDisposed) throw new ObjectDisposedException(nameof(DmCommand));
 		if (plan.Connection == null) throw new InvalidOperationException("Command has no connection.");
@@ -1442,6 +1471,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		try
 		{
 			DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+			ValidateProcedureTransaction(plan);
 			DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 			CaptureExecution(plan, lease);
 			return lease;
@@ -1454,6 +1484,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		statementConnection = null;
@@ -1488,6 +1519,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		statementSession = null;
 		statementConnection = null;
 		try { statement?.o(); } catch { }
@@ -1501,6 +1533,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
 				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+			await CloseUnpublishedProcedureCursorsAsync().ConfigureAwait(false);
 			if (await CleanupCurrentStatementAsync(false, CancellationToken.None, pool: false).ConfigureAwait(false))
 				cleanup.RecordDiagnosticCleanupSuccess();
 		}
@@ -1515,6 +1548,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 		if (plan == null) return;
 		Interlocked.CompareExchange(ref activePlan, null, plan);
+		ResetProcedureOutputCapture();
 		plan.Dispose();
 		if (m_AlreadyDisposed && m_Stmt != null) await ReleaseUnmanagedResourceAsync().ConfigureAwait(false);
 	}
@@ -1524,6 +1558,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (rd != null && !rd.do_IsClosed) return;
 		var statement = Interlocked.Exchange(ref m_Stmt, null);
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var connection = statementConnection;
@@ -1648,6 +1683,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var ownerConnection = statementConnection;
@@ -1679,6 +1715,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		var statement = m_Stmt;
 		m_Stmt = null;
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var connection = statementConnection;
@@ -1708,6 +1745,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		if (rd != null && !rd.do_IsClosed) return;
 		var statement = Interlocked.Exchange(ref m_Stmt, null);
 		preparedMetadata = null;
+		preparedSql = null;
 		var owner = statementSession;
 		statementSession = null;
 		var ownerConnection = statementConnection;
@@ -1817,6 +1855,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		ValidateStatementOwnership();
 		if (!ReferenceEquals(m_Stmt.G()?.Session, m_Conn?.Session)) return true;
 		if (!m_Stmt.b() || preparedMetadata == null) return false;
+		if (!StringComparer.Ordinal.Equals(preparedSql, GetCommandText())) return true;
 		DmParameterMetadata[] current = Volatile.Read(ref activePlan)?.ParameterMetadata;
 		if (current == null || current.Length != preparedMetadata.Length) return true;
 		for (int index = 0; index < current.Length; index++)
@@ -1862,8 +1901,6 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	private void PrepareInternalCore(bool checkCommandText)
 	{
-		bool flag = false;
-		bool flag2 = false;
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "PrepareInternal()");
 		if (m_Conn == null || m_Conn.do_State == ConnectionState.Closed)
 		{
@@ -1882,37 +1919,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			statementConnection = m_Conn;
 		}
 		m_Stmt.__t02_field_04000931 = m_StmtSerial;
-		if (do_CommandType == CommandType.StoredProcedure && ExecutionParameters.do_Count > 0)
-		{
-			string text = do_CommandText + "(";
-			for (int i = 0; i < ExecutionParameters.do_Count; i++)
-			{
-				if (((DmParameter)ExecutionParameters[i]).do_Direction != ParameterDirection.ReturnValue)
-				{
-					text += "?,";
-					flag = true;
-				}
-				else if (!flag2)
-				{
-					flag2 = true;
-					text = "? = " + text;
-				}
-			}
-			if (flag)
-			{
-				text = text.Remove(text.Length - 1, 1);
-			}
-			text += ")";
-			if (!checkCommandText || !m_Stmt.b())
-			{
-				m_Stmt.D(text);
-			}
-		}
-		else if (!checkCommandText || !m_Stmt.b())
-		{
+		if (!checkCommandText || !m_Stmt.b())
 			m_Stmt.D(GetCommandText());
-		}
 		preparedMetadata = Volatile.Read(ref activePlan)?.ParameterMetadata;
+		preparedSql = GetCommandText();
 	}
 
 	private DmDataReader ExecutePreparedQuery(CommandBehavior behavior)
@@ -1968,6 +1978,12 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		DmCommandPlan plan = Volatile.Read(ref activePlan) ??
 			throw new InvalidOperationException("Parameter binding requires an active command plan.");
 		plan.Binding.ValidateServerCount(parameterCount);
+		if (plan.CommandType == CommandType.StoredProcedure)
+		{
+			if (plan.HasOutputParameters && m_Stmt.G().ConnProperty.msgVersion < 12)
+				throw new NotSupportedException("Legacy procedure output framing is not verified.");
+			plan.Binding.ValidateServerParameters(ParamsInfo);
+		}
 		int rows = Math.Max(1, plan.ArrayBindCount);
 		if (plan.ArrayBindCount != 0) ValidateArrayStatement(m_Stmt.H().GetRetStmtType());
         var temporalBindings = new DmTemporalParameterBinding[parameterCount];
@@ -1986,9 +2002,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		for (int i = 0; i < parameterCount; i++)
 		{
 			DmParameterInternal dmParameterInternal = ParamsInfo[i];
-			if (dmParameterInternal.GetInOutType() != 0 || dmParameterInternal.GetCType() == 120)
+			if (plan.CommandType != CommandType.StoredProcedure && (dmParameterInternal.GetInOutType() != 0 || dmParameterInternal.GetCType() == 120))
 				throw new NotSupportedException("Output and cursor parameters are not supported by this provider version.");
 			DmParameter template = plan.Binding.ResolveServerParameter(i, dmParameterInternal.GetName(), parameterCount);
+			if (BindProcedureOutputDeclaration(plan, template, dmParameterInternal)) continue;
 			Func<int, DmParameter> rowValue = plan.RowParameters(template);
 			for (int row = 0; row < rows; row++)
 			{
@@ -2140,7 +2157,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	internal string GetCommandText()
 	{
 		DmCommandPlan plan = Volatile.Read(ref activePlan);
-		if (plan != null) return plan.Sql;
+		if (plan != null) return plan.WireSql;
 		if (m_CommandText == null || m_CommandText.Trim().Equals(""))
 		{
 			throw new InvalidOperationException(new DmError(DmErrorDefinition.ECNET_NO_COMMAND_TEXT).ToStringOnlyInfo());
@@ -2220,8 +2237,11 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		AfterExecutionCaptured?.Invoke(lease);
 	}
 
-	private static Exception TranslateCurrentFailure(Exception error)
-		=> DmInvocation.Current?.TranslateFailure(error) ?? error;
+	private Exception TranslateCurrentFailure(Exception error)
+	{
+		ActivePlan?.FailOutputs();
+		return DmInvocation.Current?.TranslateFailure(error) ?? error;
+	}
 
 	private DmExecutionLease BeginCommandExecution(DmOperationPurpose purpose)
 	{
@@ -2236,11 +2256,13 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	private DmExecutionLease BeginValidatedUserExecution(DmCommandPlan plan, DmOperationPurpose purpose)
 	{
 		DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+		ValidateProcedureTransaction(plan);
 		DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 		DmExecutionLease lease = BeginCommandExecution(purpose);
 		try
 		{
 			DmTransaction.ValidateCommandBinding(plan.Connection, plan.Transaction);
+			ValidateProcedureTransaction(plan);
 			DmTransaction.ValidateCommandSql(plan.Connection, plan.Transaction, plan.Sql, plan.Binding.MarkerCount != 0);
 			CaptureExecution(plan, lease);
 			return lease;
@@ -2284,6 +2306,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
 				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+			CloseUnpublishedProcedureCursors();
 			// STMT_CLOSE response must be fully verified before recording cleanup success.
 			if (CleanupCurrentStatement(suppressFailure: false, pool: false)) cleanup.RecordDiagnosticCleanupSuccess();
 		}

@@ -16,7 +16,7 @@ dotnet add package W.DamengProvider --version 0.1.0-preview.1
 
 仅 `net8.0` 依赖官方 `Microsoft.Bcl.Cryptography 10.0.12`（传递依赖 `System.Formats.Asn1 10.0.12`）；`net9.0` 和 `net10.0` 使用平台 API，无额外运行时 NuGet 依赖。按[微软生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)，.NET 8/9 支持期均到 2026-11-10；库兼容验证不延长运行时维护期。
 
-仓库源码另包含未随该包发布的 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。阅读兼容文档时请区分源码行为与包版本。
+仓库源码另包含未随该包发布的 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。源码还支持 [存储过程、标量输出/返回值与受管输出游标](docs/compatibility/I09-stored-procedures.md)。阅读兼容文档时请区分源码行为与包版本。
 
 ## 使用
 

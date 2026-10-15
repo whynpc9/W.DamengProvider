@@ -21,6 +21,7 @@ public sealed class CommandDeadlineTests
         statement.__t02_method_0600088A(true);
         var metadata = Array.Empty<W.Dm.Internal.Execution.DmParameterMetadata>();
         ReaderAsyncFixture.SetField(command, "preparedMetadata", metadata);
+        ReaderAsyncFixture.SetField(command, "preparedSql", command.CommandText);
         DmTransportTestHooks.BeforeSendAttempt = _ => clock.Advance(TimeSpan.FromSeconds(1));
         try
         {

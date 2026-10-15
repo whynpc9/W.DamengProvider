@@ -84,6 +84,90 @@ public sealed class ArrayBindingAndBatchTests
         Assert.Throws<NotSupportedException>(() => command.ExecuteNonQuery());
     }
 
+    [Theory]
+    [InlineData("reader")]
+    [InlineData("nonquery")]
+    [InlineData("scalar")]
+    [InlineData("prepare")]
+    [InlineData("reader_async")]
+    [InlineData("nonquery_async")]
+    [InlineData("scalar_async")]
+    [InlineData("prepare_async")]
+    public async Task ProcedureArrayBindingRejectsBeforeConnectionUse(string operation)
+    {
+        using var command = new DmCommand("P")
+        {
+            CommandType = CommandType.StoredProcedure,
+            ArrayBindCount = 2
+        };
+        command.Parameters.Add(new DmParameter("A", new[] { 1, 2 }));
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+        {
+            switch (operation)
+            {
+                case "reader": command.ExecuteReader(); break;
+                case "nonquery": command.ExecuteNonQuery(); break;
+                case "scalar": command.ExecuteScalar(); break;
+                case "prepare": command.Prepare(); break;
+                case "reader_async": await command.ExecuteReaderAsync(); break;
+                case "nonquery_async": await command.ExecuteNonQueryAsync(); break;
+                case "scalar_async": await command.ExecuteScalarAsync(); break;
+                case "prepare_async": await command.PrepareAsync(); break;
+            }
+        });
+        // Failure releases the execution gate and leaves the caller's values intact.
+        command.ArrayBindCount = 0;
+        Assert.Equal(new[] { 1, 2 }, Assert.IsType<int[]>(command.Parameters[0].Value));
+    }
+
+    [Fact]
+    public void ProcedureArrayPlanRejectsBeforeInspectingArrayRows()
+    {
+        // A malformed row shape must not hide the unsupported operation itself.
+        using var command = new DmCommand("P");
+        command.Parameters.Add(new DmParameter("A", (object)1));
+        Assert.Throws<NotSupportedException>(() => DmCommandPlan.Capture(
+            "P", CommandType.StoredProcedure, 30, null, null, command.Parameters, 2));
+    }
+
+    [Theory]
+    [InlineData("reader")]
+    [InlineData("nonquery")]
+    [InlineData("scalar")]
+    [InlineData("prepare")]
+    [InlineData("reader_async")]
+    [InlineData("nonquery_async")]
+    [InlineData("scalar_async")]
+    [InlineData("prepare_async")]
+    public async Task BatchRejectsLaterProcedureBeforeExecutingEarlierInsert(string operation)
+    {
+        using var batch = new DmBatch();
+        var insert = new DmBatchCommand("INSERT INTO T VALUES (1)");
+        var procedure = new DmBatchCommand("P") { CommandType = CommandType.StoredProcedure };
+        batch.BatchCommands.Add(insert);
+        batch.BatchCommands.Add(procedure);
+        // No connection exists: reaching connection acquisition would produce a
+        // different exception, and neither command can send a request.
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+        {
+            switch (operation)
+            {
+                case "reader": batch.ExecuteReader(); break;
+                case "nonquery": batch.ExecuteNonQuery(); break;
+                case "scalar": batch.ExecuteScalar(); break;
+                case "prepare": batch.Prepare(); break;
+                case "reader_async": await batch.ExecuteReaderAsync(); break;
+                case "nonquery_async": await batch.ExecuteNonQueryAsync(); break;
+                case "scalar_async": await batch.ExecuteScalarAsync(); break;
+                case "prepare_async": await batch.PrepareAsync(); break;
+            }
+        });
+        Assert.Equal(-1, insert.RecordsAffected);
+        Assert.Equal(-1, procedure.RecordsAffected);
+        batch.Timeout = 5;
+        procedure.CommandType = CommandType.Text;
+    }
+
     private static DmParameterInternal Described(byte typeFlag, int cType, int precision, int scale, params DmParamValue[] rows)
     {
         var parameter = (DmParameterInternal)RuntimeHelpers.GetUninitializedObject(typeof(DmParameterInternal));

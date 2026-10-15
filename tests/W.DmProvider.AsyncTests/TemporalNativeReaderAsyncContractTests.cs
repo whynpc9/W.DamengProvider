@@ -100,6 +100,7 @@ public sealed class TemporalNativeReaderAsyncContractTests
             byte[]? first = nullValue ? null : Wire(type, type == 16 ? 1000 : 1);
             cache.datas = [[[], first!, BitConverter.GetBytes(42), InlineClob()], [[], Wire(type, type == 16 ? 1000 : 100), BitConverter.GetBytes(43), InlineClob()]];
             Reader = Uninitialized<DmDataReader>(); Reader.m_Statement = statement; Reader.m_RowCount = 2;
+            Set(Reader, "procedureChildren", Array.Empty<DmDataReader>());
             Set(Reader, "executionLease", lease); Set(Reader, "ownsExecutionLease", true); Set(Reader, "asyncCloseGate", new object());
             Set(Reader, "m_Conn", physical); Set(Reader, "m_Clobs", new ArrayList { null, null, null }); Set(Reader, "m_DbInfo", info);
             Set(Reader, "m_ColInfo", columns); Set(Reader, "m_RsCache", cache);
