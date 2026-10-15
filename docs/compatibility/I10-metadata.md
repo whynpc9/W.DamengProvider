@@ -69,7 +69,7 @@
 
 `ReservedWords` 需要读取 `V$RESERVED_WORDS`，当前 TEST 返回服务器权限错误 -5504。同步/异步都保留此错误并废弃未确认可复用的会话，不返回空集合或用静态词表冒充当前服务器词表。该限制明确保留，未扩大账号授权。`Schemas` / `Databases` 使用现有 SOI 角色可见的系统目录。
 
-本项不包含 EF scaffold、其它运行时或服务器版本的验收；源码改动尚未包含在已发布的 0.1.0-preview.1 包。
+本项不包含 EF scaffold 或其它服务器版本的验收；元数据实库验证使用 .NET 10，合入 #12 后的三个目标离线回归见下文；源码改动尚未包含在已发布的 0.1.0-preview.1 包。
 
 
 ## 本次实现与验证记录
@@ -94,3 +94,6 @@ Prepare 的 8 项表征请求均为 opcode 5 / execute=false；副作用函数�
 原 PR `06269bb` 的目录查询仅取得约束，未区分视图与真实无约束表。新增实库回归在原产品 DLL 上复现同步/异步 KeyInfo 与 SchemaOnly|KeyInfo 的 4 项视图未知键断言失败。修复将对象类型与约束放在同一目录查询中：只有确认 TABLE 才投影已知键属性，VIEW 和不可确认来源保留 DBNull；LEFT JOIN 保留真实无约束表的目录行。这没有增加目录往返，也不改变可空性。
 
 新增离线覆盖 VIEW/SYNONYM/不可见来源，即使错误携带约束也不产生已知键声明；真实无约束表保持 false/false。独立代码审查与行为验证记录见 [view-review.json](../implementation/evidence/I10-metadata-20261015/view-review.json)。
+
+
+PR #21 合入后，PR #22 同步 `main@83c492e`，保留多目标发布工具与 runtime 安装，新增 SchemaTests 也覆盖 net8.0/net9.0/net10.0。合并候选 `f68c7d8` 的 Schema 23、Command 72、Async 151、Diagnostics 85 在三个真实 runtime 各通过，共 993 项；发布工具 23 项通过。初次本机执行缺少系统 net9 runtime，切换到现有 issue12 SDK/runtime 目录后通过，未使用跨主版本 roll-forward。[命令和结果](../implementation/evidence/I10-metadata-20261015/pr-multitarget.json) 保留该环境失败及覆盖边界。
