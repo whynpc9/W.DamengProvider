@@ -7,6 +7,7 @@ using W.Dm.Internal.Sessions;
 using W.Dm.Internal.Transport;
 using Xunit;
 using LegacyBuffer = W.Dm.Internal.Legacy.A.b;
+using W.DmProvider.TestSupport;
 
 namespace W.DmProvider.TransportTests;
 
@@ -117,7 +118,7 @@ public sealed class AsyncTransportTests
     [Fact]
     public async Task SocketReadSuspendsWhilePeerWithholdsReply()
     {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var transport = new DmTransport("127.0.0.1", port);
@@ -137,7 +138,7 @@ public sealed class AsyncTransportTests
     {
         // Use a fresh connection: canceling Socket.ReceiveAsync can mark the socket
         // disconnected on .NET 8, preventing NetworkStream construction for TLS.
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var transport = new DmTransport("127.0.0.1", port);

@@ -4,6 +4,7 @@ using W.Dm.Internal.Diagnostics;
 using W.Dm.Internal.Sessions;
 using W.Dm.Internal.Transport;
 using Xunit;
+using W.DmProvider.TestSupport;
 
 namespace W.DmProvider.TransportTests;
 
@@ -16,7 +17,7 @@ public sealed class R3ConnectionMetricTests
     [Fact]
     public void FailedAddressCandidateIsNotCountedAsAnEstablishedConnection()
     {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         try
         {

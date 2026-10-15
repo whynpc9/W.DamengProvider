@@ -44,8 +44,8 @@ class PackageContracts(unittest.TestCase):
         dependencies = ET.SubElement(metadata, "dependencies")
         for tfm in release.TFMS:
             group = ET.SubElement(dependencies, "group", targetFramework=tfm)
-            if tfm == "net8.0":
-                ET.SubElement(group, "dependency", id="Microsoft.Bcl.Cryptography", version=release.COMPATIBILITY_VERSION)
+            for name, version in release.direct_dependencies(tfm).items():
+                ET.SubElement(group, "dependency", id=name, version=version)
         package = ET.Element("package"); package.append(metadata)
         assets = {asset: b"synthetic contract-only binary" for asset in release.ASSETS}
         assets.update({name: (self.root / name).read_bytes() for name in ("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md")})
@@ -111,12 +111,15 @@ class PackageContracts(unittest.TestCase):
                 self.check(lambda metadata, _: metadata.find(f"dependencies/group[@targetFramework='{tfm}']").set("targetFramework", "net7.0"))
 
     def test_rejects_wrong_compatibility_version_or_dependency_on_newer_target(self):
-        with self.assertRaises(release.Rejected):
-            self.check(lambda metadata, _: metadata.find("dependencies/group/dependency").set("version", "10.0.11"))
-        for tfm in ("net9.0", "net10.0"):
+        for tfm in ("net6.0", "net8.0"):
             with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
+                self.check(lambda metadata, _: metadata.find(f"dependencies/group[@targetFramework='{tfm}']/dependency")
+                           .set("version", "10.0.11"))
+        for tfm, name in (("net9.0", "Microsoft.Bcl.Cryptography"), ("net10.0", "Microsoft.Bcl.Cryptography"),
+                          ("net8.0", "Microsoft.Bcl.TimeProvider"), ("net9.0", "Microsoft.Bcl.TimeProvider")):
+            with self.subTest(tfm=tfm, name=name), self.assertRaises(release.Rejected):
                 self.check(lambda metadata, _: ET.SubElement(metadata.find(f"dependencies/group[@targetFramework='{tfm}']"),
-                           "dependency", id="Microsoft.Bcl.Cryptography", version=release.COMPATIBILITY_VERSION))
+                           "dependency", id=name, version="10.0.12"))
 
     def test_rejects_extra_native_or_official_or_source_assets(self):
         for name in ("lib/net10.0/DM.DmProvider.dll", "runtimes/linux-x64/native/libdm.so", "src/secret.cs", "lib/net7.0/W.DamengProvider.dll"):
@@ -138,11 +141,10 @@ class ConsumerContracts(unittest.TestCase):
         key = release.PACKAGE + "/" + identity
         asset = f"lib/{tfm}/{release.PACKAGE}.dll"
         target = {key: {"compile": {asset: {}}, "runtime": {asset: {}}}}
-        if tfm == "net8.0":
-            target[key]["dependencies"] = {"Microsoft.Bcl.Cryptography": release.COMPATIBILITY_VERSION}
-            target["Microsoft.Bcl.Cryptography/" + release.COMPATIBILITY_VERSION] = {
-                "dependencies": {"System.Formats.Asn1": release.COMPATIBILITY_VERSION}}
-            target["System.Formats.Asn1/" + release.COMPATIBILITY_VERSION] = {}
+        if release.direct_dependencies(tfm):
+            target[key]["dependencies"] = dict(release.direct_dependencies(tfm))
+        for name, edges in release.dependency_closure(tfm).items():
+            target[name] = {"dependencies": dict(edges)} if edges else {}
         libraries = {name: {"type": "package"} for name in target}
         assets = {"libraries": libraries, "targets": {tfm: target}, "project": {"frameworks": {tfm: {
             "dependencies": {release.PACKAGE: {"version": "[1.2.3]"}}}}}}
@@ -166,15 +168,18 @@ class ConsumerContracts(unittest.TestCase):
                     release.inspect_consumer(assets, deps, tfm, identity)
 
     def test_rejects_unapproved_or_missing_dependency_and_direct_transitive_reference(self):
-        for mutation in ("extra", "missing", "direct", "edge", "runtime"):
-            assets, deps, identity, key = self.consumer("net8.0")
-            if mutation == "extra": assets["libraries"]["DM.DmProvider/1.0.0"] = {"type": "package"}
-            if mutation == "missing": assets["libraries"].pop("System.Formats.Asn1/" + release.COMPATIBILITY_VERSION)
-            if mutation == "direct": assets["project"]["frameworks"]["net8.0"]["dependencies"]["Microsoft.Bcl.Cryptography"] = {}
-            if mutation == "edge": assets["targets"]["net8.0"][key]["dependencies"] = {}
-            if mutation == "runtime": deps["libraries"].pop("System.Formats.Asn1/" + release.COMPATIBILITY_VERSION)
-            with self.subTest(mutation=mutation), self.assertRaises(release.Rejected):
-                release.inspect_consumer(assets, deps, "net8.0", identity)
+        for tfm, direct, transitive in (("net6.0", "Microsoft.Bcl.TimeProvider", "Microsoft.Bcl.AsyncInterfaces/8.0.0"),
+                                        ("net8.0", "Microsoft.Bcl.Cryptography", "System.Formats.Asn1/10.0.12")):
+            for mutation in ("extra", "missing", "direct", "edge", "transitive_edge", "runtime"):
+                assets, deps, identity, key = self.consumer(tfm)
+                if mutation == "extra": assets["libraries"]["DM.DmProvider/1.0.0"] = {"type": "package"}
+                if mutation == "missing": assets["libraries"].pop(transitive)
+                if mutation == "direct": assets["project"]["frameworks"][tfm]["dependencies"][direct] = {}
+                if mutation == "edge": assets["targets"][tfm][key]["dependencies"] = {}
+                if mutation == "transitive_edge": assets["targets"][tfm][transitive]["dependencies"] = {"DM.DmProvider": "1.0.0"}
+                if mutation == "runtime": deps["libraries"].pop(transitive)
+                with self.subTest(tfm=tfm, mutation=mutation), self.assertRaises(release.Rejected):
+                    release.inspect_consumer(assets, deps, tfm, identity)
 
     def test_package_cache_path_normalizes_uppercase_prerelease(self):
         self.assertEqual(Path("packages/w.damengprovider/1.2.3-rc.1/w.damengprovider.1.2.3-rc.1.nupkg"),

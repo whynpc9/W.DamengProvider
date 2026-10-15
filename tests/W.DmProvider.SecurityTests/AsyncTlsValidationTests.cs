@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using W.Dm;
 using W.Dm.Internal.Transport;
 using Xunit;
+using W.DmProvider.TestSupport;
 
 namespace W.DmProvider.SecurityTests;
 
@@ -19,7 +20,7 @@ public sealed class AsyncTlsValidationTests
         using var issuer = new CertificateMaterial();
         using var unrelated = new CertificateMaterial();
         using var serverCertificate = issuer.Server();
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
@@ -58,7 +59,7 @@ public sealed class AsyncTlsValidationTests
     {
         using var issuer = new CertificateMaterial();
         using var certificate = issuer.Server();
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
@@ -83,7 +84,7 @@ public sealed class AsyncTlsValidationTests
     public async Task PeerResetDuringHandshakeIsATransportLossWithTheAuthenticationChainPreserved(bool asynchronous)
     {
         using var issuer = new CertificateMaterial();
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));

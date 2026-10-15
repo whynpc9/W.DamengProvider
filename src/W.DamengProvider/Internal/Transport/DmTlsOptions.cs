@@ -65,13 +65,22 @@ internal sealed class DmTlsOptions
 
             if (caCertificatePath.Length != 0)
             {
-                var ca = X509CertificateLoader.LoadCertificateFromFile(caCertificatePath);
+                var ca = DmCertificateLoader.LoadCertificateFromFile(caCertificatePath);
                 owned.Add(ca);
                 ValidateCaCertificate(ca);
                 policy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                 policy.CustomTrustStore.Add(ca);
             }
+#if NET7_0_OR_GREATER
             authentication.CertificateChainPolicy = policy;
+#else
+            // .NET 6 has no CertificateChainPolicy. The callback rebuilds the chain
+            // with the same policy, so the platform chain result is never used and
+            // need not repeat an online revocation check inside the handshake.
+            authentication.CertificateRevocationCheckMode = X509RevocationMode.NoCheck;
+            authentication.RemoteCertificateValidationCallback = (_, certificate, platformChain, errors) =>
+                ValidateServerCertificate(policy, certificate, platformChain, errors);
+#endif
 
             if (clientCertificatePath.Length != 0)
             {
@@ -80,7 +89,7 @@ internal sealed class DmTlsOptions
                 if (!client.HasPrivateKey) throw new AuthenticationException("TLS client certificate has no private key.");
                 authentication.ClientCertificates = new X509CertificateCollection { client };
             }
-            return new DmTlsOptionsScope(authentication, owned);
+            return new DmTlsOptionsScope(authentication, policy, owned);
         }
         catch (TimeoutException)
         {
@@ -101,7 +110,7 @@ internal sealed class DmTlsOptions
             // Schannel requires a native key container; macOS requires a keychain.
             // Without PersistKeySet, .NET removes these temporary keys when the
             // certificate held by the TLS scope is disposed.
-            return X509CertificateLoader.LoadPkcs12FromFile(clientCertificatePath,
+            return DmCertificateLoader.LoadPkcs12FromFile(clientCertificatePath,
                 clientCertificatePassword,
                 OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
                     ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet);
@@ -118,11 +127,46 @@ internal sealed class DmTlsOptions
         using (pem)
         {
             byte[] pfx = pem.Export(X509ContentType.Pkcs12);
-            try { return X509CertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.DefaultKeySet); }
+            try { return DmCertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.DefaultKeySet); }
             finally { CryptographicOperations.ZeroMemory(pfx); }
         }
     }
 
+#if !NET7_0_OR_GREATER
+    /// <summary>Equivalent of SslStream's CertificateChainPolicy handling on .NET 7+.</summary>
+    internal static bool ValidateServerCertificate(X509ChainPolicy policy, X509Certificate certificate,
+        X509Chain platformChain, SslPolicyErrors errors)
+    {
+        // Only chain trust is re-evaluated. A missing certificate or a host name
+        // mismatch reported by SslStream is final.
+        if (certificate == null || (errors & ~SslPolicyErrors.RemoteCertificateChainErrors) != SslPolicyErrors.None)
+            return false;
+
+        using var chain = new X509Chain();
+        X509ChainPolicy rebuilt = chain.ChainPolicy;
+        rebuilt.TrustMode = policy.TrustMode;
+        rebuilt.CustomTrustStore.AddRange(policy.CustomTrustStore);
+        rebuilt.RevocationMode = policy.RevocationMode;
+        rebuilt.RevocationFlag = policy.RevocationFlag;
+        rebuilt.VerificationFlags = policy.VerificationFlags;
+        rebuilt.UrlRetrievalTimeout = policy.UrlRetrievalTimeout;
+        foreach (Oid usage in policy.ApplicationPolicy) rebuilt.ApplicationPolicy.Add(usage);
+        // Intermediates sent by the server only help path building; ExtraStore
+        // never makes them trust anchors in either System or CustomRootTrust mode.
+        if (platformChain != null) rebuilt.ExtraStore.AddRange(platformChain.ChainPolicy.ExtraStore);
+
+        var leaf = certificate as X509Certificate2;
+        bool ownsLeaf = leaf == null;
+        leaf ??= new X509Certificate2(certificate);
+        try { return chain.Build(leaf); }
+        finally
+        {
+            foreach (X509ChainElement element in chain.ChainElements) element.Certificate.Dispose();
+            if (ownsLeaf) leaf.Dispose();
+        }
+    }
+
+#endif
     private static void ValidateCaCertificate(X509Certificate2 certificate)
     {
         bool isCa = false;
@@ -145,10 +189,14 @@ internal sealed class DmTlsOptionsScope : IDisposable
     private readonly IReadOnlyList<X509Certificate2> certificates;
     private int disposed;
     internal SslClientAuthenticationOptions Authentication { get; }
+    /// <summary>The server chain policy; enforced by SslStream on .NET 7+ and by the validation callback on .NET 6.</summary>
+    internal X509ChainPolicy ChainPolicy { get; }
 
-    internal DmTlsOptionsScope(SslClientAuthenticationOptions authentication, IReadOnlyList<X509Certificate2> certificates)
+    internal DmTlsOptionsScope(SslClientAuthenticationOptions authentication, X509ChainPolicy chainPolicy,
+        IReadOnlyList<X509Certificate2> certificates)
     {
         Authentication = authentication;
+        ChainPolicy = chainPolicy;
         this.certificates = certificates;
     }
 

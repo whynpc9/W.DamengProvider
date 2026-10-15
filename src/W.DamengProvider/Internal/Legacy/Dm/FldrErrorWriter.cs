@@ -224,7 +224,7 @@ public class FldrErrorWriter : BaseFlusher
 					Interlocked.Increment(ref lineCount);
 				}
 			}
-			if (switchMode == 1 && Interlocked.Read(in lineCount) == switchLimit)
+			if (switchMode == 1 && Interlocked.Read(ref lineCount) == switchLimit)
 			{
 				doFlush(buffer);
 				Interlocked.Exchange(ref lineCount, 0L);
@@ -246,7 +246,7 @@ public class FldrErrorWriter : BaseFlusher
 		{
 			if (logFile != null)
 			{
-				return switchLimit == Interlocked.Read(in lineCount);
+				return switchLimit == Interlocked.Read(ref lineCount);
 			}
 			return true;
 		}

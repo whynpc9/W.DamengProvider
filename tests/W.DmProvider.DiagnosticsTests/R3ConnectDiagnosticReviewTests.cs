@@ -290,6 +290,17 @@ public sealed class R3ConnectDiagnosticReviewTests
 
     // Real TCP/production Startup+Login parsing with small independent synthetic
     // golden replies. Incoming LOGIN bodies are discarded and never persisted.
+    // Stream.ReadExactlyAsync is .NET 7+.
+    private static async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, CancellationToken token)
+    {
+        while (buffer.Length > 0)
+        {
+            int read = await stream.ReadAsync(buffer, token);
+            if (read == 0) throw new EndOfStreamException();
+            buffer = buffer[read..];
+        }
+    }
+
     private sealed class HandshakeServer : IAsyncDisposable
     {
         private readonly TcpListener listener = new(IPAddress.Loopback, 0);
@@ -331,11 +342,11 @@ public sealed class R3ConnectDiagnosticReviewTests
                 {
                     int first = await stream.ReadAsync(header.AsMemory(0, 1), lifetime.Token);
                     if (first == 0) return;
-                    await stream.ReadExactlyAsync(header.AsMemory(1), lifetime.Token);
+                    await ReadExactlyAsync(stream, header.AsMemory(1), lifetime.Token);
                     short opcode = BinaryPrimitives.ReadInt16LittleEndian(header.AsSpan(4));
                     int body = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(6));
                     if (body < 0 || body > 1048576) throw new InvalidDataException("Synthetic client frame boundary.");
-                    while (body > 0) { int count = Math.Min(body, discard.Length); await stream.ReadExactlyAsync(discard.AsMemory(0, count), lifetime.Token); Array.Clear(discard); body -= count; }
+                    while (body > 0) { int count = Math.Min(body, discard.Length); await ReadExactlyAsync(stream, discard.AsMemory(0, count), lifetime.Token); Array.Clear(discard); body -= count; }
                     if (ordinal == 0) lock (gate) firstRequests.Add(opcode);
                     bool schema = opcode is 5 or 91;
                     if (opcode == 1 && failure == "auth_eof" || schema && failure == "schema_eof") return;

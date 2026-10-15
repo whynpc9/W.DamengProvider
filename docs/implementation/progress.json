@@ -69,6 +69,13 @@
       "branch": "t3/handle-issue-10",
       "pull_request": 22,
       "merged_commit": "1dec19e"
+    },
+    {
+      "issue": 13,
+      "status": "offline_verified_shared_integration_verified_tls_pending",
+      "summary": "net6.0 target: typed DmDataSource without DbDataSource, TLS chain policy rebuilt in validation callback, Microsoft.Bcl.TimeProvider 8.0.1; 9626 offline tests on net6/8/9/10, 28 first-init cases, shared TEST smoke on all four runtimes; strict TLS TEST pending missing configuration",
+      "report": "../compatibility/I13-net6.md",
+      "branch": "t3/issue-13-net-compatibility"
     }
   ]
 }

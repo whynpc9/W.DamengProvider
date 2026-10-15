@@ -34,7 +34,12 @@ public class DmClientFactory : DbProviderFactory, IServiceProvider
 		return new DmConnection();
 	}
 
+#if NET7_0_OR_GREATER
 	public override DbDataSource CreateDataSource(string connectionString) => new DmDataSource(connectionString);
+#else
+	// .NET 6 has no DbProviderFactory.CreateDataSource; only typed callers can reach this.
+	public DmDataSource CreateDataSource(string connectionString) => new DmDataSource(connectionString);
+#endif
 
 	public override DbConnectionStringBuilder CreateConnectionStringBuilder()
 	{

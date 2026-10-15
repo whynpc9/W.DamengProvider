@@ -6,7 +6,7 @@
 - NuGet 包、产品项目和程序集：`W.DamengProvider`；公开命名空间：`W.Dm`。
 - 产品源码：`src/W.DamengProvider/W.DamengProvider.csproj`。旧 `W.DmProvider` 包依赖和程序集引用必须更新并重新编译；测试项目及诊断源名称保留原标识。
 - 默认开发版本为 `0.1.0-preview.1`。发布版本由 `v` 开头的合法 SemVer tag 决定，例如 `v0.1.0-preview.1`、`v0.1.0`；不能将其他分支推送或 PR 当成发布操作。
-- SDK 按 `global.json` 固定为 10.0.401，运行目标为 .NET 8/9/10，产品和测试统一 C#12；必须另行安装三个主版本的运行时。
+- SDK 按 `global.json` 固定为 10.0.401，运行目标为 .NET 6/8/9/10，产品和测试统一 C#12；必须另行安装四个主版本的运行时。
 
 ## 发布前检查
 
@@ -19,9 +19,9 @@ bash eng/release.sh prepare --tag v0.1.0-preview.2 --commit "$(git rev-parse HEA
 
 `dotnet` 不在 PATH 时设置 `DOTNET_COMMAND` 为实际可执行文件路径。入口配置任务专用 `DOTNET_CLI_HOME`，关闭首次初始化与遥测，并使用单节点、禁用 build server 和共享编译参数。
 
-该入口在每个 TFM 顺序执行十二套离线测试，要求正式 TRX 无失败、跳过或中止；同一次打包产出三目标共十五个托管程序集（每目标主 DLL 和 en/zh-CN/zh-HK/zh-TW 四套语言资源）。包检查核对身份、版本、许可证、README、上游声明、仓库 commit 及每个依赖组：仅 net8 允许 `Microsoft.Bcl.Cryptography 10.0.12`，net9/10 为空，不允许第三方原生资产或意外依赖。
+该入口在每个 TFM 顺序执行十二套离线测试，要求正式 TRX 无失败、跳过或中止；同一次打包产出四目标共二十个托管程序集（每目标主 DLL 和 en/zh-CN/zh-HK/zh-TW 四套语言资源）。包检查核对身份、版本、许可证、README、上游声明、仓库 commit 及每个依赖组：仅 net6 允许 `Microsoft.Bcl.TimeProvider 8.0.1`、net8 允许 `Microsoft.Bcl.Cryptography 10.0.12`，net9/10 为空，不允许第三方原生资产或意外依赖。
 
-各目标从全新缓存恢复独立 PackageReference 应用：产品精确映射到本次本地 feed，已核准的加密兼容包及其 `System.Formats.Asn1 10.0.12` 传递依赖映射到 nuget.org。源映射另允许 SDK 所需的两个官方 reference pack ID（`Microsoft.NETCore.App.Ref`、`Microsoft.AspNetCore.App.Ref`），它们不属于应用运行依赖。验证所选 TFM 资产及依赖闭包，在对应真实 runtime 执行公开 API、文化资源和回退 smoke，以及七个独立首次初始化场景。消费者限制 roll-forward 在当前主版本内，运行时校验实际主版本，不能以 .NET 10 代替 8/9。失败会终止准备，保留结果目录及命令退出码。`pack-smoke` 仅供受影响打包检查，不代替完整 `prepare`。
+各目标从全新缓存恢复独立 PackageReference 应用：产品精确映射到本次本地 feed，已核准的兼容包及其传递依赖（net6 `Microsoft.Bcl.AsyncInterfaces 8.0.0`、net8 `System.Formats.Asn1 10.0.12`）映射到 nuget.org。源映射另允许 SDK 所需的两个官方 reference pack ID（`Microsoft.NETCore.App.Ref`、`Microsoft.AspNetCore.App.Ref`），它们不属于应用运行依赖。验证所选 TFM 资产及依赖闭包，在对应真实 runtime 执行公开 API、文化资源和回退 smoke，以及七个独立首次初始化场景。消费者限制 roll-forward 在当前主版本内，运行时校验实际主版本，不能以 .NET 10 代替 6/8/9。失败会终止准备，保留结果目录及命令退出码。`pack-smoke` 仅供受影响打包检查，不代替完整 `prepare`。
 
 本地命令可验证未提交修改，但包中 `RepositoryCommit` 此时仍是传入的 HEAD；它不能单独证明该 commit 包含未提交源码。正式发布前须提交并合入待发布版本，再对该版本重跑准备与相关实库检查。
 
@@ -31,14 +31,14 @@ bash eng/release.sh prepare --tag v0.1.0-preview.2 --commit "$(git rev-parse HEA
 
 ```sh
 manifest="$(cat .local/nuget-release/manifest-path.txt)"
-for tfm in net8.0 net9.0 net10.0; do
+for tfm in net6.0 net8.0 net9.0 net10.0; do
   smoke="$(cat ".local/nuget-release/smoke-path-$tfm.txt")"
   scripts/with-dameng-test.sh dotnet "$smoke" plaintext "$manifest" "$PWD"
   scripts/with-dameng-tls-test.sh dotnet "$smoke" tls "$manifest" "$PWD"
 done
 ```
 
-运行前同样设置任务专用 `DOTNET_CLI_HOME`、`DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1` 和 `DOTNET_CLI_TELEMETRY_OPTOUT=1`；若准备时使用自定义 `DOTNET_COMMAND`，上述命令也须使用该宿主，确保三个 runtime 均可见。
+运行前同样设置任务专用 `DOTNET_CLI_HOME`、`DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1` 和 `DOTNET_CLI_TELEMETRY_OPTOUT=1`；若准备时使用自定义 `DOTNET_COMMAND`，上述命令也须使用该宿主，确保四个 runtime 均可见。
 
 仅使用 `scripts/with-dameng-test.sh` 与 `scripts/with-dameng-tls-test.sh` 加载专用 TEST 配置。
 

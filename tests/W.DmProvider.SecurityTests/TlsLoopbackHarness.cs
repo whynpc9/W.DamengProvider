@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using W.Dm;
 using W.Dm.Internal.Transport;
+using W.DmProvider.TestSupport;
 
 namespace W.DmProvider.SecurityTests;
 
@@ -19,9 +20,10 @@ internal static class TlsLoopbackHarness
     internal static async Task<Outcome> ConnectAsync(CertificateMaterial certificates,
         X509Certificate2 serverCertificate, string targetHost, string trustRootPath,
         bool requireClientCertificate = false, bool sendClientCertificate = false, bool usePfxClient = false,
-        Action<Exception, DmTransport>? onClientFailure = null)
+        Action<Exception, DmTransport>? onClientFailure = null, X509Certificate2Collection? serverChain = null,
+        DmTlsRevocationMode revocation = DmTlsRevocationMode.NoCheck)
     {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new LoopbackTcpListener();
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
@@ -34,7 +36,10 @@ internal static class TlsLoopbackHarness
                 using var ssl = new SslStream(peer.GetStream(), leaveInnerStreamOpen: false);
                 var serverOptions = new SslServerAuthenticationOptions
                 {
-                    ServerCertificate = serverCertificate,
+                    ServerCertificate = serverChain == null ? serverCertificate : null,
+                    // Sends the supplied intermediates with the leaf; offline avoids any URL retrieval.
+                    ServerCertificateContext = serverChain == null ? null
+                        : SslStreamCertificateContext.Create(serverCertificate, serverChain, offline: true),
                     EnabledSslProtocols = SslProtocols.None,
                     ClientCertificateRequired = requireClientCertificate,
                     CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
@@ -66,7 +71,7 @@ internal static class TlsLoopbackHarness
             Port = port,
             TransportSecurity = DmTransportSecurity.RequireTls,
             TlsCaCertificatePath = trustRootPath,
-            TlsRevocationMode = DmTlsRevocationMode.NoCheck
+            TlsRevocationMode = revocation
         };
         if (sendClientCertificate)
         {
