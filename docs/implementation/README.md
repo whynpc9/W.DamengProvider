@@ -19,6 +19,7 @@
 | 数据源、容量调度与流式 LOB | [数据源与 LOB](../compatibility/R3.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
+| Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
 
 ## 开发与验证
 
