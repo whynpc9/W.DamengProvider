@@ -190,13 +190,17 @@ public sealed class TemporalNativeWriterAdapterTests
 
     [Theory]
     [InlineData(8)] [InlineData(9)]
-    public void WholeSecondsAndNullCannotBypassClosedWritePrecision(int scale)
+    public void HighScaleLegacyAdapterAcceptsClrTicksWhileSemanticWritesRemainClosed(int scale)
     {
         var fixture = new WriterFixture("8.1.5.60", 21, "utf-8");
         var field = fixture.Parameter(26, scale, fixedSource: true);
-        Assert.Throws<NotSupportedException>(() => fixture.Write(new DateTime(2026, 7, 23), field, scale));
+        foreach (DateTime value in new[] { new DateTime(2026, 7, 23).AddTicks(1), DateTime.MaxValue })
+        {
+            byte[] wire = fixture.Write(value, field, scale);
+            Assert.Equal(value.Ticks, DmTemporalInteger.ProjectDateTime(DmTemporalWireCodec.DecodeRaw(wire, DmTemporalWireLayout.Timestamp9, scale)).Ticks);
+        }
         Assert.Throws<NotSupportedException>(() => fixture.Write("2026-07-23 00:00:00.000000000", field, scale));
-        Assert.Throws<NotSupportedException>(() => fixture.Write(DBNull.Value, field, scale));
+        Assert.Empty(fixture.Write(DBNull.Value, field, scale) ?? Array.Empty<byte>());
     }
 
     [Fact]

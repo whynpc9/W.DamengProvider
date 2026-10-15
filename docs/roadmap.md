@@ -17,7 +17,7 @@
 
 ## 已合入、未发布
 
-- [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) EF 接入反馈：传输失败的 `FailureInfo`、事务内 DML 匿名块、8/9 位 typed NULL、Broken 提示、公开 `ServerCapabilities` 及若干消息改进，见[修订说明](compatibility/I16-ef-integration-feedback.md)。非 NULL 八九位写入、准备阶段失败的会话恢复及新 profile 证据仍随 #11 推进。
+- [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) EF 接入反馈：传输失败的 `FailureInfo`、事务内 DML 匿名块、8/9 位 typed NULL、Broken 提示、公开 `ServerCapabilities` 及若干消息改进，见[修订说明](compatibility/I16-ef-integration-feedback.md)。后续源码修订开放已验证 extended profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare 错误恢复及本地绑定失败后的会话保留；其他 profile 证据仍随 #11 推进。
 
 ## .NET 扩展边界
 

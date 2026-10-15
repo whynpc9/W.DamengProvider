@@ -20,7 +20,7 @@ public sealed class ServerCapabilitiesTests
         Assert.True(capabilities.SupportsSerializable);
         Assert.True(capabilities.SupportsStatementErrorRecovery);
         Assert.True(capabilities.SupportsTableDdlInTransaction);
-        Assert.Equal(7, capabilities.MaxTemporalWriteScale);
+        Assert.Equal(9, capabilities.MaxTemporalWriteScale);
         Assert.Equal("TP01-v11-shared-physical", capabilities.TemporalProfile);
         Assert.Equal(DmConnection.IsPublicTransactionIsolationSupported(IsolationLevel.Serializable, "8.1.5.60"),
             capabilities.SupportsSerializable);

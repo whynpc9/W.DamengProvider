@@ -648,7 +648,11 @@ internal partial class A
 				return;
 			}
 		}
-		if (P_0)
+		if (!P_1)
+		{
+			__t02_field_04000923?.DiscardStmt(this);
+		}
+		else if (P_0)
 		{
 			__t02_field_04000923.RemoveStmt(this);
 		}

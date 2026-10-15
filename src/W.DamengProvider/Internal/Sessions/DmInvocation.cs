@@ -33,6 +33,10 @@ internal sealed class DmInvocation : IDisposable
     // invocation's historical Prepare/Allocate sends. Never exported to diagnostics.
     internal Exception LocalInputFailureException;
     internal DmWireExchange LocalInputFailureWire;
+    internal DmWireExchange LastWireExchange;
+    internal DmLocalParameterBindingScope ActiveParameterBinding;
+    internal DmLocalParameterBindingScope RejectedParameterBinding;
+    internal Exception ParameterBindingFailureException;
     internal bool IsDisposed => Volatile.Read(ref disposed) != 0;
 
     internal void ActivateCancellation()
@@ -55,7 +59,8 @@ internal sealed class DmInvocation : IDisposable
     }
     internal bool ShouldAbortAfterFailure(Exception error)
     {
-        if (error != null && Lease.Session.IsRecoverableLocalInputFailure(this, error)) return false;
+        if (error != null && (Lease.Session.IsRecoverableLocalInputFailure(this, error) ||
+            Lease.Session.IsRecoverableParameterBindingFailure(this, error))) return false;
         if (error is DmException server && server.HasVerifiedServerResponse && server.CanPreserveSessionAfterServerError &&
             server.VerifiedResponseIdentity == Identity)
             return false;
@@ -181,6 +186,10 @@ internal sealed class DmInvocation : IDisposable
         {
             LocalInputFailureException = null;
             LocalInputFailureWire = null;
+            LastWireExchange = null;
+            ActiveParameterBinding = null;
+            RejectedParameterBinding = null;
+            ParameterBindingFailureException = null;
             operationCancellation.Dispose();
             // Complete records are emitted only after the coordinator/user call
             // has fixed its terminal cause and transaction outcome. No sink runs here.
@@ -208,6 +217,19 @@ internal sealed class DmInvocation : IDisposable
             }
         }
     }
+}
+
+internal sealed class DmLocalParameterBindingScope : IDisposable
+{
+    internal DmInvocation Invocation { get; }
+    internal DmWireExchange PriorWire { get; }
+    internal int ThreadId { get; } = Environment.CurrentManagedThreadId;
+    internal DmLocalParameterBindingScope(DmInvocation invocation)
+    {
+        Invocation = invocation;
+        PriorWire = invocation.LastWireExchange;
+    }
+    public void Dispose() => Invocation.Lease.Session.EndLocalParameterBinding(this);
 }
 
 internal sealed class DmWireExchange : IDisposable

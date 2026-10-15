@@ -438,7 +438,7 @@ internal partial class c
 	{
 		if (P_0.L() < 0)
 		{
-            ThrowOwnedStatementServerError(P_0, P_1, P_1.G().ConnProperty, 0, allowPreservation: false);
+            ThrowOwnedStatementServerError(P_0, P_1, P_1.G().ConnProperty, 0, allowPreservation: true, prepare: true);
 		}
 		DmInfo dmInfo = new DmInfo(P_1.G());
 		int num = P_0.j();
@@ -1134,7 +1134,7 @@ internal partial class c
 	}
 
     internal static void ThrowOwnedStatementServerError(b response, A statement, DmConnProperty settings,
-        short requestOpcode, bool allowPreservation)
+        short requestOpcode, bool allowPreservation, bool prepare = false)
     {
         if (response.L() >= 0) throw new System.IO.InvalidDataException("Statement error response has no negative server code.");
         DmInvocation invocation = DmInvocation.Current ?? throw new InvalidOperationException("Server error has no invocation.");
@@ -1150,7 +1150,8 @@ internal partial class c
         var error = new DmException(diagnostic);
         // Inside a local transaction it must be the statement's own active transaction;
         // otherwise only autocommit with no local transaction state in flight.
-        bool preserve = allowPreservation && DmServerErrorRecovery.IsStatementScoped(diagnostic.State) &&
+        bool preserve = allowPreservation &&
+            (prepare ? DmServerErrorRecovery.IsPrepareScoped(diagnostic.State) : DmServerErrorRecovery.IsStatementScoped(diagnostic.State)) &&
             DmServerErrorRecovery.IsMeasuredProfile(settings.ServerVersion) &&
             invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader &&
             (owner.ActiveTransaction != null
@@ -1159,7 +1160,7 @@ internal partial class c
                 : statement.G().Transaction == null && settings.AutoCommit &&
                     DmServerErrorRecovery.IsIdleTransactionState(owner.TransactionState));
         if (preserve) DmTransactionProtocolTrace.RecordDiagnosticBody(requestOpcode, response);
-        owner.AcceptServerError(invocation, exchange, error, preserve);
+        owner.AcceptServerError(invocation, exchange, error, preserve, prepare: prepare);
         throw error;
     }
 

@@ -43,9 +43,10 @@ public sealed class DmServerCapabilities
 
     /// <summary>
     /// Largest fractional-second scale accepted for non-NULL TIMESTAMP and TIMESTAMP WITH TIME ZONE
-    /// parameter values: 7 on a verified seven-digit profile, otherwise 6. TIME values stay at 6.
-    /// A typed NULL parameter with a larger Scale declares at most this scale, or keeps a
-    /// server-described 8/9-digit column declaration on the verified seven-digit profile.
+    /// parameter values: 9 on the verified extended timestamp profile, otherwise 6. CLR values
+    /// retain their 100ns resolution; an 8/9-digit declaration does not add precision to them.
+    /// TIME values stay at 6. Default inferred timestamp declarations stay at 7 on the verified
+    /// profile. A typed NULL can keep a server-described 8/9-digit column declaration there.
     /// </summary>
     public int MaxTemporalWriteScale { get; }
 
@@ -63,7 +64,7 @@ public sealed class DmServerCapabilities
             System.Data.IsolationLevel.Serializable, serverVersion);
         SupportsStatementErrorRecovery = DmServerErrorRecovery.IsMeasuredProfile(serverVersion);
         SupportsTableDdlInTransaction = IsMeasuredProfile;
-        MaxTemporalWriteScale = temporal.DefaultSeven ? 7 : 6;
+        MaxTemporalWriteScale = temporal.DefaultSeven ? 9 : 6;
         TemporalProfile = temporal.EvidenceId;
     }
 

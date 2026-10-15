@@ -449,6 +449,26 @@ internal class DmConnInstance
 		}
 	}
 
+	internal void DiscardStmt(global::W.Dm.Internal.Legacy.A.A stmt)
+	{
+		lock (stmt_queue)
+		{
+			// Cache lookup retains prepared handles. A handle being closed must
+			// disappear by identity, even if its SQL changed while checked out.
+			pstmtCache?.RemoveValue(stmt);
+			int count = stmt_queue.Count;
+			for (int i = 0; i < count; i++)
+			{
+				var cached = stmt_queue.Dequeue();
+				if (!ReferenceEquals(cached, stmt)) stmt_queue.Enqueue(cached);
+			}
+			lock (m_Stmts)
+			{
+				m_Stmts.RemoveAll(active => ReferenceEquals(active, stmt));
+			}
+		}
+	}
+
 	public void RemoveStmt(global::W.Dm.Internal.Legacy.A.A stmt)
 	{
 		lock (m_Stmts)
@@ -466,13 +486,15 @@ internal class DmConnInstance
 		{
 			return;
 		}
+		global::W.Dm.Internal.Legacy.A.A[] statements;
 		lock (m_Stmts)
 		{
-			foreach (global::W.Dm.Internal.Legacy.A.A stmt in m_Stmts)
-			{
-				stmt.__t02_method_060008BE(false, keep_tcp);
-			}
+			statements = m_Stmts.ToArray();
 			m_Stmts.Clear();
+		}
+		foreach (global::W.Dm.Internal.Legacy.A.A stmt in statements)
+		{
+			stmt.__t02_method_060008BE(false, keep_tcp);
 		}
 	}
 

@@ -131,7 +131,7 @@ internal static class DmTemporalBindingResolver
         if (nullValue && cType != 14)
         {
             if (reliable) scale = columnScale.Value;
-            else scale = Math.Min(scale, cType is 16 or 26 or 23 or 27 && profile.DefaultSeven ? 7 : 6);
+            else scale = Math.Min(scale, cType is 16 or 26 or 23 or 27 && profile.DefaultSeven ? 9 : 6);
             targetRequested = null;
         }
         if (!reliable && cType is 16 or 26 or 23 or 27)

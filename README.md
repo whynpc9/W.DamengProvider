@@ -14,7 +14,7 @@ dotnet add package W.DamengProvider --version 0.1.0-preview.1
 
 运行环境为 .NET 10；构建使用仓库 `global.json` 指定的 SDK。
 
-仓库源码另包含已合入、未随该包发布的 [issue #16 修订](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL 和 `ServerCapabilities`。阅读兼容文档时请区分源码行为与包版本。
+仓库源码另包含未随该包发布的 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。阅读兼容文档时请区分源码行为与包版本。
 
 ## 使用
 

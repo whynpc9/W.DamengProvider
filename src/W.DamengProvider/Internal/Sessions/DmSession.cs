@@ -426,7 +426,7 @@ internal sealed class DmSession
         AdvanceInvocation(invocation, send: false);
     }
 
-    internal void AcceptServerError(DmInvocation invocation, DmWireExchange exchange, DmException error, bool preserveSession)
+    internal void AcceptServerError(DmInvocation invocation, DmWireExchange exchange, DmException error, bool preserveSession, bool prepare = false)
     {
         ArgumentNullException.ThrowIfNull(invocation);
         ArgumentNullException.ThrowIfNull(exchange);
@@ -439,7 +439,7 @@ internal sealed class DmSession
                 !exchange.Owns(this, invocation) || !ReferenceEquals(DmWireExchange.Current, exchange) ||
                 !ReferenceEquals(DmInvocation.Current, invocation))
                 throw new InvalidOperationException("Server error receipt has no current wire owner.");
-            bool canPreserve = preserveSession && DmServerErrorRecovery.IsStatementScoped(error.Number) &&
+            bool canPreserve = preserveSession && (prepare ? DmServerErrorRecovery.IsPrepareScoped(error.Number) : DmServerErrorRecovery.IsStatementScoped(error.Number)) &&
                 transport != null && DmServerErrorRecovery.IsMeasuredProfile(transport.ConnProperty.ServerVersion) &&
                 invocation.Lease.Purpose is DmOperationPurpose.Query or DmOperationPurpose.Reader &&
                 (activeTransaction != null
@@ -459,6 +459,65 @@ internal sealed class DmSession
         lock (gate) return invocation != null && !invocation.SendAttempted &&
             (invocation.TerminalCause != DmCancelSource.None || IsRecoverableUnsentTransactionControl(invocation));
     }
+
+    // Only DmCommand's synchronous BindParameters boundary creates this scope.
+    // A receipt is valid only if binding did not enter any protocol exchange,
+    // including a completed locator read or an exchange that failed before send.
+    internal DmLocalParameterBindingScope BeginLocalParameterBinding(DmInvocation invocation)
+    {
+        lock (gate)
+        {
+            if (invocation == null || !HasCurrentInputFailureOwnerUnderLock(invocation) ||
+                state != DmPhysicalSessionState.Busy || activeWire != null || DmWireExchange.Current != null ||
+                invocation.Lease.Purpose is not (DmOperationPurpose.Query or DmOperationPurpose.Reader) ||
+                invocation.ActiveParameterBinding != null)
+                throw new InvalidOperationException("Parameter binding has no current idle wire owner.");
+            invocation.ParameterBindingFailureException = null;
+            invocation.RejectedParameterBinding = null;
+            return invocation.ActiveParameterBinding = new DmLocalParameterBindingScope(invocation);
+        }
+    }
+
+    internal bool TryAcceptParameterBindingFailure(DmLocalParameterBindingScope scope, Exception error)
+    {
+        if (scope == null || error == null) return false;
+        // Cancellation, deadlines and unknown I/O remain terminal. The scope and
+        // absence of any wire activity establish locality, never an exception allowlist.
+        for (Exception cause = error; cause != null; cause = cause.InnerException)
+            if (cause is OperationCanceledException or TimeoutException or DmTimeoutException or
+                System.IO.IOException or System.Net.Sockets.SocketException ||
+                cause is DmException { HasVerifiedServerResponse: true }) return false;
+        lock (gate)
+        {
+            DmInvocation invocation = scope.Invocation;
+            if (scope.ThreadId != Environment.CurrentManagedThreadId || !HasParameterBindingOwnerUnderLock(scope) ||
+                !ReferenceEquals(invocation.ActiveParameterBinding, scope)) return false;
+            if (invocation.ParameterBindingFailureException != null)
+                return ReferenceEquals(invocation.ParameterBindingFailureException, error);
+            invocation.ParameterBindingFailureException = error;
+            invocation.RejectedParameterBinding = scope;
+            return true;
+        }
+    }
+
+    internal void EndLocalParameterBinding(DmLocalParameterBindingScope scope)
+    {
+        lock (gate)
+            if (ReferenceEquals(scope.Invocation.ActiveParameterBinding, scope)) scope.Invocation.ActiveParameterBinding = null;
+    }
+
+    internal bool IsRecoverableParameterBindingFailure(DmInvocation invocation, Exception error)
+    {
+        lock (gate)
+            return invocation != null && error != null && ReferenceEquals(invocation.ParameterBindingFailureException, error) &&
+                invocation.RejectedParameterBinding is { } scope && ReferenceEquals(scope.Invocation, invocation) &&
+                HasParameterBindingOwnerUnderLock(scope);
+    }
+
+    private bool HasParameterBindingOwnerUnderLock(DmLocalParameterBindingScope scope) =>
+        HasCurrentInputFailureOwnerUnderLock(scope.Invocation) &&
+        state == DmPhysicalSessionState.Busy && activeWire == null && DmWireExchange.Current == null &&
+        ReferenceEquals(scope.PriorWire, scope.Invocation.LastWireExchange);
 
     internal bool TryAcceptLocalInputFailure(DmInvocation invocation, DmWireExchange exchange, Exception error)
     {
@@ -689,7 +748,10 @@ internal sealed class DmSession
                 throw new InvalidOperationException("Wire owner became stale.");
             invocation.LocalInputFailureException = null;
             invocation.LocalInputFailureWire = null;
+            invocation.ParameterBindingFailureException = null;
+            invocation.RejectedParameterBinding = null;
             activeWire = new DmWireExchange(this, invocation);
+            invocation.LastWireExchange = activeWire;
             return activeWire;
         }
     }
@@ -742,6 +804,13 @@ internal sealed class DmSession
                 invocation.TerminalCause == DmCancelSource.None && !invocation.UserCancellationToken.IsCancellationRequested &&
                 (invocation.Deadline.IsInfinite || invocation.Deadline.RemainingTime != TimeSpan.Zero) &&
                 state is not (DmPhysicalSessionState.Broken or DmPhysicalSessionState.Closed);
+            invocation.DiagnosticLocalInputFailure |= activeWire == null &&
+                invocation.ParameterBindingFailureException != null && invocation.RejectedParameterBinding is { } binding &&
+                ReferenceEquals(binding.Invocation, invocation) && ReferenceEquals(binding.PriorWire, invocation.LastWireExchange) &&
+                ReferenceEquals(activeLease, invocation.Lease) && invocation.Identity.SessionId == SessionId &&
+                invocation.Identity.LeaseGeneration == leaseGeneration && !invocation.Completed &&
+                invocation.TerminalCause == DmCancelSource.None && !invocation.UserCancellationToken.IsCancellationRequested &&
+                (invocation.Deadline.IsInfinite || invocation.Deadline.RemainingTime != TimeSpan.Zero) && state == DmPhysicalSessionState.Busy;
             activeInvocation = null;
             if (invocation.DiagnosticOperation is DmDiagnosticOperation.Commit or DmDiagnosticOperation.Rollback)
                 invocation.DiagnosticTransactionOutcome = GetTransactionOutcomeUnderLock();
