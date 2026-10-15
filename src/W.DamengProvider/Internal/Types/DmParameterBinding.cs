@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 using W.Dm.Internal.Lobs;
@@ -160,6 +161,9 @@ internal sealed class DmParameterBinding
     private readonly int[] occurrenceIndexes;
     private readonly int[] distinctIndexes;
     private readonly bool named;
+    private bool procedure;
+    private int[] procedureServerIndexes;
+    private string[] procedureServerNames;
 
     private DmParameterBinding(DmParameterCollection parameters, int[] occurrences, int[] distinct, bool named)
     {
@@ -170,6 +174,106 @@ internal sealed class DmParameterBinding
     }
 
     internal int MarkerCount => occurrenceIndexes.Length;
+
+    internal static DmParameterBinding CreateProcedure(DmParameterCollection parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        if (parameters.Count > MaxMarkers)
+            throw new NotSupportedException("Too many procedure parameters.");
+        var order = new List<int>(parameters.Count);
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var inputIdentities = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        int returnIndex = -1;
+        for (int index = 0; index < parameters.Count; index++)
+        {
+            DmParameter parameter = parameters.do_GetParameter(index);
+            if (parameter.do_Value is DmLobInput input && !inputIdentities.Add(input.SourceIdentity))
+                throw new NotSupportedException("One streaming input cannot be bound to multiple procedure arguments.");
+            if (!names.Add(NormalizeProcedureName(parameter.do_ParameterName)))
+                throw new InvalidOperationException("Procedure parameter names must be unique.");
+            if (parameter.do_Direction == ParameterDirection.ReturnValue)
+            {
+                if (returnIndex >= 0) throw new InvalidOperationException("A function has only one return parameter.");
+                returnIndex = index;
+            }
+            else if (parameter.do_Direction is ParameterDirection.Input or ParameterDirection.Output or ParameterDirection.InputOutput)
+                order.Add(index);
+            else throw new NotSupportedException("Unknown procedure parameter direction.");
+            if (parameter.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor && parameter.do_Direction != ParameterDirection.Output)
+                throw new NotSupportedException("Cursor parameters require Output direction.");
+        }
+        if (returnIndex >= 0) order.Insert(0, returnIndex);
+        int[] indexes = order.ToArray();
+        return new DmParameterBinding(parameters, indexes, indexes, named: false) { procedure = true };
+    }
+
+    // Validate the whole description before selecting any individual parameter: a
+    // partial name match must never silently combine named and positional binding.
+    internal void ValidateServerParameters(DmParameterInternal[] descriptors)
+    {
+        ArgumentNullException.ThrowIfNull(descriptors);
+        procedureServerIndexes = null;
+        procedureServerNames = null;
+        ValidateServerCount(descriptors.Length);
+        if (!procedure) return;
+        int firstArgument = occurrenceIndexes.Length != 0 &&
+            parameters.do_GetParameter(occurrenceIndexes[0]).do_Direction == ParameterDirection.ReturnValue ? 1 : 0;
+        var serverNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int namedCount = 0;
+        for (int index = 0; index < descriptors.Length; index++)
+        {
+            if (descriptors[index] == null) throw new InvalidOperationException("Server parameter description is missing.");
+            if (index < firstArgument) continue;
+            string name = NormalizeProcedureName(descriptors[index].GetName());
+            if (name.Length == 0) continue;
+            namedCount++;
+            if (!serverNames.Add(name)) throw new InvalidOperationException("Server parameter names are duplicated.");
+        }
+        if (namedCount != 0 && namedCount != descriptors.Length - firstArgument)
+            throw new InvalidOperationException("Server parameter descriptions mix named and unnamed arguments.");
+        var indexes = (int[])occurrenceIndexes.Clone();
+        var names = new string[descriptors.Length];
+        var selected = new HashSet<int>();
+        for (int index = 0; index < descriptors.Length; index++)
+        {
+            DmParameterInternal described = descriptors[index];
+            names[index] = NormalizeProcedureName(described.GetName());
+            if (namedCount != 0 && index >= firstArgument)
+            {
+                indexes[index] = parameters.do_IndexOf(described.GetName());
+                if (indexes[index] < 0 || parameters.do_GetParameter(indexes[index]).do_Direction == ParameterDirection.ReturnValue)
+                    throw new InvalidOperationException("Server procedure argument has no matching parameter name.");
+            }
+            if (!selected.Add(indexes[index]))
+                throw new InvalidOperationException("Server parameter mapping is ambiguous.");
+            ParameterDirection expected = parameters.do_GetParameter(indexes[index]).do_Direction;
+            int mode = described.GetInOutType();
+            int expectedMode = expected switch
+            {
+                ParameterDirection.Input => 0,
+                ParameterDirection.Output or ParameterDirection.ReturnValue => 1,
+                ParameterDirection.InputOutput => 2,
+                _ => -1
+            };
+            // The server caches the registered cursor as INOUT after its first execution.
+            // Its public contract remains OUT; the input is our owned statement id.
+            bool registeredOutputCursor = described.GetCType() == 120 && expected == ParameterDirection.Output && mode == 2;
+            if (mode != expectedMode && !registeredOutputCursor)
+                throw new InvalidOperationException("Procedure parameter direction conflicts with server metadata.");
+            if ((expected != ParameterDirection.Input && described.GetCType() == 28) ||
+                described.GetTypeFlag() is not (1 or 2) || DmSqlType.isComplexType(described.GetCType(), described.GetScale()) ||
+                (!IsReliableDescribe(described.GetCType()) && described.GetCType() != 120))
+                throw new NotSupportedException("This procedure parameter type is not supported.");
+            bool cursor = parameters.do_GetParameter(indexes[index]).DmSqlType is DmDbType.Cursor or DmDbType.RefCursor;
+            if ((described.GetCType() == 120) != cursor)
+                throw new InvalidOperationException("Cursor parameters require an explicit cursor type matching server metadata.");
+        }
+        procedureServerNames = names;
+        procedureServerIndexes = indexes;
+    }
+
+    private static string NormalizeProcedureName(string name) =>
+        !string.IsNullOrEmpty(name) && name[0] is ':' or '@' ? name.Substring(1) : name ?? string.Empty;
 
     internal static DmParameterBinding Create(string sql, DmParameterCollection parameters)
     {
@@ -221,6 +325,13 @@ internal sealed class DmParameterBinding
         if (serverIndex < 0 || serverIndex >= serverCount ||
             (serverCount != occurrenceIndexes.Length && serverCount != distinctIndexes.Length))
             throw new InvalidOperationException("Server parameter metadata does not match SQL markers.");
+        if (procedure)
+        {
+            if (procedureServerIndexes == null || !StringComparer.OrdinalIgnoreCase.Equals(
+                procedureServerNames[serverIndex], NormalizeProcedureName(serverName)))
+                throw new InvalidOperationException("Procedure parameter description was not validated or has changed.");
+            return parameters.do_GetParameter(procedureServerIndexes[serverIndex]);
+        }
         if (named && !string.IsNullOrWhiteSpace(serverName))
         {
             int byName = parameters.do_IndexOf(serverName);

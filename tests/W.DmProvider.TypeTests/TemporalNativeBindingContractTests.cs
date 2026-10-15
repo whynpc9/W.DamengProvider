@@ -329,7 +329,7 @@ public sealed class TemporalNativeBindingContractTests
         Assert.Throws<NotSupportedException>(() => fixture.Bind("SELECT :p FROM DUAL", new DmParameter("p", DBNull.Value) { DmSqlType = DmDbType.IntervalDayToSecond, Scale = 7 }));
     }
 
-    internal readonly record struct DescribeField(int Type, int Precision, int Scale, byte Flag);
+    internal readonly record struct DescribeField(int Type, int Precision, int Scale, byte Flag, short InOut = 0);
     internal sealed class BindingFixture
     {
         private readonly TemporalNativeWriterAdapterTests.WriterFixture codec = new("8.1.5.60", 21, "utf-8");
@@ -404,6 +404,7 @@ public sealed class TemporalNativeBindingContractTests
                 BinaryPrimitives.WriteInt32LittleEndian(record[8..], field.Scale);
                 BinaryPrimitives.WriteInt32LittleEndian(record[12..], 1);
                 BinaryPrimitives.WriteInt16LittleEndian(record[16..], field.Flag == 2 ? (short)8 : (short)0);
+                BinaryPrimitives.WriteInt16LittleEndian(record[22..], field.InOut);
             }
             for (int index = 0; index < 19; index++) frame[19] ^= frame[index];
             return frame;

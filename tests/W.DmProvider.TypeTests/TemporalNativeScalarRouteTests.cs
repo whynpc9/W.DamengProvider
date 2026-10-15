@@ -2,9 +2,8 @@ using System.Buffers.Binary;
 using System.Collections;
 using System.Data;
 using System.IO;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
 using W.Dm;
+using W.Dm.Internal.Execution;
 using W.Dm.Internal.Legacy.A;
 using W.Dm.Internal.Types;
 using Xunit;
@@ -32,19 +31,36 @@ public sealed class TemporalNativeScalarRouteTests
         var (field, bytes, expected, dbType) = Sample(fixture, type);
         // BDTA result metadata must not turn these independent scalar values into BDTA rows.
         field.isBdta = true;
+        field.SetInOutType(1);
         var info = new DmInfo(fixture.Physical);
         info.SetParaNum(1); info.SetParamsInfo([field]); info.rsBdta = true;
         fixture.Statement.__t02_method_06000898(info);
-        var parameter = new DmParameter { ParameterName = "value", Direction = ParameterDirection.Output, DmSqlType = dbType };
-        var command = new DmCommand(); command.Parameters.Add(parameter);
+        var parameter = new DmParameter { ParameterName = "value", Direction = ParameterDirection.Output, DmSqlType = dbType, Value = "previous" };
+        using var command = new DmCommand("OUTPUT_ROUTE") { CommandType = CommandType.StoredProcedure };
+        command.Parameters.Add(parameter);
+        using var plan = DmCommandPlan.Capture(command.CommandText, command.CommandType, 30,
+            null!, fixture.Connection, (DmParameterCollection)command.Parameters);
+        plan.Binding.ValidateServerParameters([field]);
+        Fixture.Set(command, "activePlan", plan);
         fixture.Statement.__t02_method_0600089A(command);
         byte[] payload = OutputPayload(bytes, message);
         var buffer = new LegacyBuffer(payload);
 
-        object? result = Invoke(typeof(c), asyncRead ? "aAsync" : "a",
-            asyncRead ? [buffer, fixture.Statement, CancellationToken.None] : [buffer, fixture.Statement]);
-        if (asyncRead) await Assert.IsAssignableFrom<Task>(result);
-
+        if (message < 12)
+        {
+            Assert.Throws<NotSupportedException>(() => command.CaptureProcedureOutputs(buffer, fixture.Statement, 1));
+            Assert.Throws<InvalidOperationException>(plan.PublishOutputs);
+            Assert.Equal("previous", parameter.Value);
+            Assert.Equal(0, buffer.a());
+            return;
+        }
+        command.CaptureProcedureOutputs(buffer, fixture.Statement, 1);
+        Assert.Equal("previous", parameter.Value);
+        if (asyncRead) await command.MaterializeProcedureOutputsAsync(fixture.Statement, CancellationToken.None);
+        else command.MaterializeProcedureOutputs(fixture.Statement);
+        // Both native materialization routes stage their result without exposing it.
+        Assert.Equal("previous", parameter.Value);
+        plan.PublishOutputs();
         Assert.Equal(expected, parameter.Value);
         Assert.Equal(payload.Length, buffer.a());
     }
@@ -144,15 +160,4 @@ public sealed class TemporalNativeScalarRouteTests
         return payload;
     }
 
-    private static object? Invoke(Type type, string name, object?[] arguments)
-    {
-        try
-        {
-            var method = type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-                .Single(candidate => candidate.Name == name && candidate.GetParameters().Length == arguments.Length);
-            return method.Invoke(null, arguments);
-        }
-        catch (TargetInvocationException wrapper) when (wrapper.InnerException != null)
-        { ExceptionDispatchInfo.Capture(wrapper.InnerException).Throw(); throw; }
-    }
 }

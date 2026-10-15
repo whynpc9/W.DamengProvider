@@ -1,13 +1,13 @@
 # 后续工作
 
-按当前源码整理。当前已发布 [面向 .NET 10 的驱动预览版 0.1.0-preview.1](release-0.1.0-preview.1.md)；本页列出的扩展均为待办，不是当前包支持声明。GitHub issue 是后续进展入口；源码中已合入但尚未发布的改动单列于下方。
+按当前源码整理。当前已发布 [面向 .NET 10 的驱动预览版 0.1.0-preview.1](release-0.1.0-preview.1.md)；本页区分待办与未发布源码能力，不是当前包支持声明。GitHub issue 是后续进展入口；源码中已合入但尚未发布的改动单列于下方。
 
 | 方向 | Issue | 当前缺口与推进方式 |
 | --- | --- | --- |
 | 物理连接复用 | [#6](https://github.com/whynpc9/W.DamengProvider/issues/6) | 当前每租约新建、归还销毁。先取得性能基线与完整 reset 证据，再开放安全复用。 |
 | 数组绑定 | [#7](https://github.com/whynpc9/W.DamengProvider/issues/7) | 当前明确拒绝；先表征批量协议、逐行结果与失败语义。 |
 | DbBatch | [#8](https://github.com/whynpc9/W.DamengProvider/issues/8) | 复用 #7 协议研究，另行证明多命令、多结果及错误归属。 |
-| 存储过程与输出/游标参数 | [#9](https://github.com/whynpc9/W.DamengProvider/issues/9) | 当前仅 Text/Input；扩展前明确输出读取时机及游标生命周期。 |
+| 存储过程与输出/游标参数 | [#9](https://github.com/whynpc9/W.DamengProvider/issues/9) | 源码已实现严格过程调用、标量 OUT/INOUT、函数返回和受管 OUT 游标；显式事务组合、游标输入及过程批调用拒绝。见[源码契约](compatibility/I09-stored-procedures.md)，尚未发布。 |
 | 元数据 API | [#10](https://github.com/whynpc9/W.DamengProvider/issues/10) | GetSchemaAsync、SchemaOnly、KeyInfo 尚未开放，按最小权限语义补齐。 |
 | OS 与服务器兼容覆盖 | [#11](https://github.com/whynpc9/W.DamengProvider/issues/11) | [Windows / win-x64 / DM 8.1.5.60 明文](compatibility/I11-windows.md)与 [Ubuntu WSL2 / linux-x64 离线及包消费](compatibility/I11-linux-validation.md)已有记录；Linux 实库及长时资源、额外服务器 profile 和远程 TLS 等继续按实际环境推进。 |
 | .NET 8/9/10 多目标 | [#12](https://github.com/whynpc9/W.DamengProvider/issues/12) | 优先扩展8/9；包括运行测试、包依赖与资源、消费者和发布设施。 |

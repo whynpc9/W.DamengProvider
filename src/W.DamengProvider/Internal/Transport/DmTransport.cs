@@ -478,12 +478,30 @@ internal sealed class DmTransport : IDisposable
         deadline.ThrowIfExpired();
     }
 
-    private static int Timeout(DmDeadline deadline, int limitMilliseconds)
+    private static int Timeout(DmDeadline deadline, int limitMilliseconds, out DmCancelSource source)
     {
         CheckOperationDeadline(deadline);
         int remaining = deadline.IsInfinite ? 0 : Math.Max(1, deadline.RemainingMilliseconds);
-        if (limitMilliseconds <= 0) return remaining;
-        return remaining == 0 ? limitMilliseconds : Math.Min(remaining, limitMilliseconds);
+        if (limitMilliseconds > 0 && (remaining == 0 || limitMilliseconds < remaining))
+        {
+            source = DmCancelSource.IdleTimeout;
+            return limitMilliseconds;
+        }
+        source = remaining == 0 ? DmCancelSource.None : DmCancelSource.TotalDeadline;
+        return remaining;
+    }
+
+    private static bool IsNativeSocketTimeout(Exception error) =>
+        error is SocketException { SocketErrorCode: SocketError.TimedOut } ||
+        error is IOException { InnerException: { } inner } && IsNativeSocketTimeout(inner);
+
+    private static Exception TranslateNativeSocketTimeout(DmInvocation invocation, DmCancelSource source, Exception error)
+    {
+        // Use the budget selected before this I/O, not a later clock observation.
+        // Session arbitration preserves any cancellation that already won the race.
+        if (invocation == null) return new TimeoutException("The operation I/O deadline expired.", error);
+        invocation.Lease.Session.TerminateInvocation(invocation, source);
+        return invocation.TranslateFailure(error);
     }
 
     private static void PrepareSendAttempt(DmInvocation invocation, bool first)
@@ -514,7 +532,8 @@ internal sealed class DmTransport : IDisposable
             {
                 DmInvocation invocation = DmInvocation.Current;
                 int timeout;
-                try { timeout = Timeout(deadline, timeoutMilliseconds); }
+                DmCancelSource timeoutSource;
+                try { timeout = Timeout(deadline, timeoutMilliseconds, out timeoutSource); }
                 catch (TimeoutException)
                 {
                     invocation?.Lease.Session.TerminateInvocation(invocation, DmCancelSource.TotalDeadline);
@@ -522,7 +541,10 @@ internal sealed class DmTransport : IDisposable
                     throw;
                 }
                 PrepareSendAttempt(invocation, sent == 0);
-                int progress = current.Send(buffer, offset + sent, count - sent, timeout);
+                int progress;
+                try { progress = current.Send(buffer, offset + sent, count - sent, timeout); }
+                catch (Exception error) when (timeoutSource != DmCancelSource.None && IsNativeSocketTimeout(error))
+                { throw TranslateNativeSocketTimeout(invocation, timeoutSource, error); }
                 if (progress > 0 && progress <= count - sent) DmDiagnosticsCore.NetworkBytes(progress, true);
                 CheckOperationDeadline(deadline);
                 if (progress <= 0 || progress > count - sent) throw new IOException("Socket send made no valid progress.");
@@ -541,8 +563,14 @@ internal sealed class DmTransport : IDisposable
             ValidateRange(buffer, offset, count);
             if (count == 0) return 0;
             DmInvocation.Current?.ThrowIfTerminated();
-            if (DmInvocation.Current is { } invocation) invocation.Phase = DmFailurePhase.Receive;
-            int read = CurrentChannel().Receive(buffer, offset, count, Timeout(deadline, timeoutMilliseconds));
+            DmInvocation invocation = DmInvocation.Current;
+            if (invocation != null) invocation.Phase = DmFailurePhase.Receive;
+            IDmByteChannel current = CurrentChannel();
+            int timeout = Timeout(deadline, timeoutMilliseconds, out DmCancelSource timeoutSource);
+            int read;
+            try { read = current.Receive(buffer, offset, count, timeout); }
+            catch (Exception error) when (timeoutSource != DmCancelSource.None && IsNativeSocketTimeout(error))
+            { throw TranslateNativeSocketTimeout(invocation, timeoutSource, error); }
             if (read > 0 && read <= count) DmDiagnosticsCore.NetworkBytes(read, false);
             CheckOperationDeadline(deadline);
             if (read <= 0) throw new EndOfStreamException("Socket closed before the expected bytes arrived.");

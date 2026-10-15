@@ -4,7 +4,7 @@
 
 ## 当前实现与发布
 
-仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，这些改动未包含在该包中。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
+仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，这些改动未包含在该包中。存储过程、输出参数和游标的源码契约见 [issue #9](../compatibility/I09-stored-procedures.md)，也尚未发布。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
 
 | 内容 | 入口 |
 | --- | --- |

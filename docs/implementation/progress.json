@@ -34,6 +34,13 @@
       "branch": "fix/temporal-write-and-prepare-recovery",
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
       "report": "../compatibility/I16-ef-integration-feedback.md"
+    },
+    {
+      "issue": 9,
+      "status": "implemented_unreleased",
+      "branch": "t3/handle-issue-9",
+      "summary": "Stored procedures, scalar OUT/INOUT and function returns, managed output cursors, atomic output publication and explicit transaction guard",
+      "report": "../compatibility/I09-stored-procedures.md"
     }
   ]
 }

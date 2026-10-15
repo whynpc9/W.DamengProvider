@@ -17,7 +17,7 @@ using W.Dm.Internal.Transport;
 
 namespace W.Dm;
 
-public class DmDataReader : DbDataReader, IFilterInfo
+public partial class DmDataReader : DbDataReader, IFilterInfo
 {
 	internal long id = -1L;
 
@@ -161,13 +161,21 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public override Stream GetStream(int ordinal)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		return new DmLobReadStream(ActivateLobCursor(ordinal, false));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override TextReader GetTextReader(int ordinal)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		return new DmLobTextReader(ActivateLobCursor(ordinal, true));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	private static void ValidateLobRange<T>(long offset, T[] buffer, int bufferOffset, int length)
@@ -247,17 +255,18 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	private DmExecutionLease ReaderLease => Volatile.Read(ref executionLease) ??
 		throw new InvalidOperationException("Reader has no execution lease.");
 
-	private static T CompleteReaderInvocation<T>(DmInvocation invocation, T value)
+	private T CompleteReaderInvocation<T>(DmInvocation invocation, T value)
 	{
 		invocation.ThrowIfTerminated();
 		invocation.Complete();
+		PublishProcedureOutputsIfTerminal();
 		return value;
 	}
 
 	// A getter that reached the wire and returned successfully completes its
 	// invocation; cached no-I/O getters deliberately record no span. Remote LOB
 	// reads reuse the ambient reader invocation, so nothing else completes it.
-	private static T CompleteReaderInvocationIfSent<T>(DmInvocation invocation, T value)
+	private T CompleteReaderInvocationIfSent<T>(DmInvocation invocation, T value)
 	{
 		if (invocation != null && invocation.SendAttempted) return CompleteReaderInvocation(invocation, value);
 		return value;
@@ -341,7 +350,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		get
 		{
 			var lease = Volatile.Read(ref executionLease);
-			return m_IsClosed || (lease != null && !lease.Session.IsCurrent(lease.Identity.SessionId, lease.Identity.LeaseGeneration));
+			return m_IsClosed || ProcedureParentInvalid || (lease != null && !lease.Session.IsCurrent(lease.Identity.SessionId, lease.Identity.LeaseGeneration));
 		}
 	}
 
@@ -352,12 +361,16 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		get
 		{
 			using var invocation = BeginReaderInvocation();
+		try
+		{
 			if (filterHead == null)
 			{
 				return CompleteReaderInvocationIfSent(invocation, do_this(number));
 			}
 			return filterHead.getThis(this, number);
-		}
+				}
+		catch { MarkProcedureFailure(); throw; }
+	}
 	}
 
 	public override object this[string name]
@@ -365,12 +378,16 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		get
 		{
 			using var invocation = BeginReaderInvocation();
+		try
+		{
 			if (filterHead == null)
 			{
 				return CompleteReaderInvocationIfSent(invocation, do_this(name));
 			}
 			return filterHead.getThis(this, name);
-		}
+				}
+		catch { MarkProcedureFailure(); throw; }
+	}
 	}
 
 	public override int Depth
@@ -552,17 +569,24 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		}
 		try
 		{
+			FinishProcedureResultsOwned();
+			CloseProcedureChildrenOwned();
 			if (CloseOwned()) invocation?.RecordDiagnosticCleanupSuccess();
+			PublishProcedureOutputsAfterClose();
 		}
 		catch (Exception error) when (invocation != null && DmTransportFailure.IsTransportFailure(error))
 		{
+			MarkProcedureFailure();
 			// Same public failure shape as CloseAsync, whose statement close translates.
 			lease?.Session.Detach(lease.Identity)?.AbortTransport();
+			AbandonProcedureReaderState();
 			throw invocation.TranslateFailure(error);
 		}
 		catch
 		{
+			MarkProcedureFailure();
 			lease?.Session.Detach(lease.Identity)?.AbortTransport();
+			AbandonProcedureReaderState();
 			throw;
 		}
 		finally
@@ -597,7 +621,11 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool sameSession = lease != null && lease.Session.IsCurrent(lease.Identity.SessionId, lease.Identity.LeaseGeneration)
 			&& ReferenceEquals(m_Conn?.Session, lease.Session);
 		bool closedStatement = sameSession && statement != null && !statement.P();
-		if (closedStatement) statement.p();
+		if (closedStatement)
+		{
+			if (procedurePlan != null || procedureParent != null) statement.__t02_method_060008BE(true, false);
+			else statement.p();
+		}
 		else statement?.o();
 		if (sameSession && (m_Behavior & CommandBehavior.CloseConnection) != 0)
 			m_Conn.Conn?.CloseExpectedSession(lease.Session);
@@ -617,6 +645,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	internal byte do_GetByte(int i)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		byte[] value = null;
 		checkClosed();
 		GetByteArrayValue(i, ref value);
@@ -624,12 +654,16 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		int precision = m_ColInfo[i].GetPrecision();
 		int scale = m_ColInfo[i].GetScale();
 		return m_GetVal.GetByte(i, value, cType, precision, scale);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal long do_GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 	{
 		ValidateLobRange(fieldOffset, buffer, bufferoffset, length);
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		checkClosed(); CheckIndex(i);
 		int type = m_ColInfo[i].GetCType();
 		if (type is not (3 or 12 or 17 or 18 or 19 or 54))
@@ -713,6 +747,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			m_StreamPos = cursor.Position; return CompleteReaderInvocationIfSent(invocation, (long)total);
 		}
 		finally { if (temporary) cursor.Dispose(); }
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal char do_GetChar(int i)
@@ -729,6 +765,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	{
 		ValidateCharRange(fieldoffset, buffer, bufferoffset, length);
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		checkClosed(); CheckIndex(i);
 		int type = m_ColInfo[i].GetCType();
 		if (type is not (0 or 1 or 2 or 19 or 28 or 54))
@@ -790,6 +828,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			m_StreamPos = cursor.Position; return CompleteReaderInvocationIfSent(invocation, (long)total);
 		}
 		finally { if (temporary) cursor.Dispose(); }
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal string do_GetDataTypeName(int i)
@@ -1015,6 +1055,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	internal object do_GetProviderSpecificValue(int ordinal)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		CheckIndex(ordinal);
 		int cType = m_ColInfo[ordinal].GetCType();
 		if (cType is not (9 or 24)) return CompleteReaderInvocationIfSent(invocation, GetValueOwned(ordinal));
@@ -1026,22 +1068,32 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		return CompleteReaderInvocationIfSent(invocation, cType == 9
 			? (object)DmNumericCodec.DecodeDecimal(value, precision > 0 && scale >= 0 ? scale : null)
 			: DmNumericCodec.DecodeScaledInt64(value, scale));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal int do_GetProviderSpecificValues(object[] values)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		checkClosed();
 		if (values == null) return 0;
 		int count = Math.Min(values.Length, m_DbInfo.GetColumnCount());
 		for (int i = 0; i < count; i++) values[i] = do_GetProviderSpecificValue(i);
 		return CompleteReaderInvocationIfSent(invocation, count);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal DataTable do_GetSchemaTable()
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		return GetSchemaTableOwned();
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	private DataTable GetSchemaTableOwned()
@@ -1061,16 +1113,22 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	internal DataTable do_GetDataTable()
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "do_GetDataTable()");
 		checkClosed();
 		DataTable dataTable = new DataTable();
 		new DmDataAdapter().do_Fill(dataTable, this);
 		return dataTable;
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal string do_GetString(int i)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		byte[] value = null;
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetString(int i)");
 		checkClosed();
@@ -1083,12 +1141,18 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
 		}
 		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetString(i, value, cType, precision, scale));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal object do_GetValue(int i)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		return CompleteReaderInvocationIfSent(invocation, GetValueOwned(i));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal object GetValueOwned(int i)
@@ -1134,6 +1198,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	internal int do_GetValues(object[] values)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetValues(object[] values)");
 		checkClosed();
 		if (values == null)
@@ -1150,11 +1216,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			values[i] = do_GetValue(i);
 		}
 		return CompleteReaderInvocationIfSent(invocation, num);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal bool do_IsDBNull(int i)
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "IsDBNull(int i)");
 		checkClosed();
 		byte[] value = null;
@@ -1164,12 +1234,18 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			return true;
 		}
 		return false;
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal bool do_NextResult()
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		return NextResultOwned();
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	private bool NextResultOwned() => AdvanceToReadableResultOwned(initialSeek: false);
@@ -1197,6 +1273,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		for (int step = 0; step < 4096; step++)
 		{
 			DmInfo next = statement.h().A(statement, m_DbInfo, 0);
+			statement.f().MaterializeProcedureOutputs(statement);
 			resultCursor.Observe(next);
 			ApplyResult(next, statement);
 			if (resultCursor.IsTerminal) return false;
@@ -1233,7 +1310,11 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	internal bool do_Read()
 	{
 		using var invocation = BeginInternalInvocation();
+		try
+		{
 		return CompleteReaderInvocationIfSent(invocation, ReadOwned());
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal bool ReadOwned()
@@ -1277,7 +1358,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 
 	public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
 		try
 		{
@@ -1285,13 +1366,13 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			AfterInvocationEntered?.Invoke(invocation.Identity);
 			return CompleteReaderInvocation(invocation, await ReadOwnedAsync(cancellationToken).ConfigureAwait(false));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	internal async Task<bool> ReadOwnedAsync(CancellationToken cancellationToken)
 	{
 		DmInvocation.Current?.ThrowIfTerminated();
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		checkClosed();
 		ClearClobs();
 		if (is_SequentialAccess) m_SequentialSeq = -1;
@@ -1305,14 +1386,14 @@ public class DmDataReader : DbDataReader, IFilterInfo
 
 	public override async Task<bool> NextResultAsync(CancellationToken cancellationToken)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
 		try
 		{
 			invocation.ThrowIfTerminated();
 			return CompleteReaderInvocation(invocation, await AdvanceToReadableResultOwnedAsync(false, cancellationToken).ConfigureAwait(false));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	internal Task<bool> NextResultForCommandOwnedAsync(CancellationToken token)
@@ -1338,6 +1419,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		for (int step = 0; step < 4096; step++)
 		{
 			DmInfo next = await statement.h().MoreResultsAsync(statement, m_DbInfo, 0, token).ConfigureAwait(false);
+			await statement.f().MaterializeProcedureOutputsAsync(statement, token).ConfigureAwait(false);
 			resultCursor.Observe(next);
 			ApplyResult(next, statement);
 			if (resultCursor.IsTerminal) return false;
@@ -1385,9 +1467,10 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		if (Interlocked.CompareExchange(ref closeStarted, 1, 0) != 0) return;
 		var lease = Volatile.Read(ref executionLease);
 		DmInvocation invocation = null;
+		bool ownedInvocation = procedureParent != null && ReferenceEquals(DmInvocation.Current?.Lease, lease);
 		try
 		{
-			if (lease != null &&
+			if (lease != null && !ownedInvocation &&
 				lease.Session.State is not (DmPhysicalSessionState.Broken or DmPhysicalSessionState.Closed))
 			{
 				TimeSpan timeout = commandPlan?.CleanupTimeout ?? m_Conn.Conn.Settings.CleanupTimeout;
@@ -1397,6 +1480,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 				{ lease.Session.Detach(lease.Identity)?.AbortTransport(); }
 			}
 			if (m_IsClosed) return;
+			await FinishProcedureResultsOwnedAsync().ConfigureAwait(false);
+			await CloseProcedureChildrenOwnedAsync().ConfigureAwait(false);
 			InvalidateLobFlows();
 		m_IsClosed = true;
 			m_DbInfo = null;
@@ -1407,15 +1492,16 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			m_Statement = null;
 			bool sameSession = lease != null && lease.Session.IsCurrent(lease.Identity.SessionId, lease.Identity.LeaseGeneration)
 				&& ReferenceEquals(m_Conn?.Session, lease.Session);
-			bool closedStatement = sameSession && invocation != null && statement != null && !statement.P();
+			bool closedStatement = sameSession && (invocation != null || ownedInvocation) && statement != null && !statement.P();
 			if (closedStatement)
-				await statement.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+				await statement.CloseAsync(true, procedurePlan == null && procedureParent == null, CancellationToken.None).ConfigureAwait(false);
 			else statement?.o();
 			if (sameSession && (m_Behavior & CommandBehavior.CloseConnection) != 0)
 				await m_Conn.Conn.CloseExpectedSessionAsync(lease.Session).ConfigureAwait(false);
-			if (closedStatement) invocation.RecordDiagnosticCleanupSuccess();
+			if (closedStatement) invocation?.RecordDiagnosticCleanupSuccess();
+			PublishProcedureOutputsAfterClose();
 		}
-		catch { lease?.Session.Detach(lease.Identity)?.AbortTransport(); throw; }
+		catch { MarkProcedureFailure(); lease?.Session.Detach(lease.Identity)?.AbortTransport(); AbandonProcedureReaderState(); throw; }
 		finally
 		{
 			invocation?.Dispose();
@@ -1441,19 +1527,19 @@ public class DmDataReader : DbDataReader, IFilterInfo
 
 	public override Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
 		try
 		{
 			invocation.ThrowIfTerminated();
 			return CompleteReaderInvocationIfSent(invocation, Task.FromResult(GetSchemaTableOwned()));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	public override Task<bool> IsDBNullAsync(int ordinal, CancellationToken cancellationToken)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
 		try
 		{
@@ -1464,12 +1550,12 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			GetByteArrayValue(ordinal, ref value); // Already fetched row bytes; no network access.
 			return CompleteReaderInvocationIfSent(invocation, Task.FromResult(value == null));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	public override async Task<T> GetFieldValueAsync<T>(int ordinal, CancellationToken cancellationToken)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
+		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
 		try
 		{
@@ -1495,7 +1581,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			else throw new NotSupportedException("Asynchronous LOB field conversion supports object, string and byte array values.");
 			return CompleteReaderInvocationIfSent(invocation, (T)value);
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	internal async Task<object> GetValueOwnedAsync(int ordinal, CancellationToken token)
@@ -1527,241 +1613,337 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public override bool GetBoolean(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetBoolean(i));
 		}
 		return filterHead.GetBoolean(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override byte GetByte(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetByte(i));
 		}
 		return filterHead.GetByte(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetBytes(i, fieldOffset, buffer, bufferoffset, length));
 		}
 		return filterHead.GetBytes(this, i, fieldOffset, buffer, bufferoffset, length);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override char GetChar(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetChar(i));
 		}
 		return filterHead.GetChar(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetChars(i, fieldoffset, buffer, bufferoffset, length));
 		}
 		return filterHead.GetChars(this, i, fieldoffset, buffer, bufferoffset, length);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override string GetDataTypeName(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetDataTypeName(i);
 		}
 		return filterHead.GetDataTypeName(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override DateTime GetDateTime(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetDateTime(i));
 		}
 		return filterHead.GetDateTime(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override decimal GetDecimal(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetDecimal(i));
 		}
 		return filterHead.GetDecimal(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override double GetDouble(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetDouble(i));
 		}
 		return filterHead.GetDouble(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override IEnumerator GetEnumerator()
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetEnumerator();
 		}
 		return filterHead.GetEnumerator(this);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override Type GetFieldType(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetFieldType(i);
 		}
 		return filterHead.GetFieldType(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override float GetFloat(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetFloat(i));
 		}
 		return filterHead.GetFloat(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override Guid GetGuid(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetGuid(i));
 		}
 		return filterHead.GetGuid(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override short GetInt16(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetInt16(i));
 		}
 		return filterHead.GetInt16(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override int GetInt32(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetInt32(i));
 		}
 		return filterHead.GetInt32(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override long GetInt64(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetInt64(i));
 		}
 		return filterHead.GetInt64(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override string GetName(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetName(i);
 		}
 		return filterHead.GetName(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override int GetOrdinal(string name)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetOrdinal(name);
 		}
 		return filterHead.GetOrdinal(this, name);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override Type GetProviderSpecificFieldType(int ordinal)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_GetProviderSpecificFieldType(ordinal);
 		}
 		return filterHead.GetProviderSpecificFieldType(this, ordinal);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override object GetProviderSpecificValue(int ordinal)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValue(ordinal));
 		}
 		return filterHead.GetProviderSpecificValue(this, ordinal);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override int GetProviderSpecificValues(object[] values)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValues(values));
 		}
 		return filterHead.GetProviderSpecificValues(this, values);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override DataTable GetSchemaTable()
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return GetSchemaTableOwned();
 		}
 		return filterHead.GetSchemaTable(this);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override string GetString(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetString(i));
 		}
 		return filterHead.GetString(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override object GetValue(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetValue(i));
 		}
 		return filterHead.GetValue(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override T GetFieldValue<T>(int ordinal)
@@ -1772,7 +1954,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			invocation.ThrowIfTerminated();
 			return CompleteReaderInvocationIfSent(invocation, GetFieldValueOwned<T>(ordinal));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	private T GetFieldValueOwned<T>(int ordinal)
@@ -1844,21 +2026,29 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public override int GetValues(object[] values)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return CompleteReaderInvocationIfSent(invocation, do_GetValues(values));
 		}
 		return filterHead.GetValues(this, values);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override bool IsDBNull(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		if (filterHead == null)
 		{
 			return do_IsDBNull(i);
 		}
 		return filterHead.IsDBNull(this, i);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public override bool NextResult()
@@ -1873,7 +2063,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			}
 			return CompleteReaderInvocation(invocation, filterHead.NextResult(this));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	public override bool Read()
@@ -1889,7 +2079,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 			}
 			return CompleteReaderInvocation(invocation, filterHead.Read(this));
 		}
-		catch (Exception error) { throw invocation.TranslateFailure(error); }
+		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}
 
 	protected override void Dispose(bool disposing)
@@ -2000,6 +2190,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public bool Previous()
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Previous()");
 		checkClosed();
 		ClearClobs();
@@ -2010,11 +2202,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool result = m_RsCache.do_previous();
 		m_CurrentRow = m_RsCache.currentPos;
 		return CompleteReaderInvocationIfSent(invocation, result);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public bool First()
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "First()");
 		checkClosed();
 		ClearClobs();
@@ -2025,11 +2221,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool result = m_RsCache.do_first();
 		m_CurrentRow = m_RsCache.currentPos;
 		return CompleteReaderInvocationIfSent(invocation, result);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public bool Last()
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Last()");
 		checkClosed();
 		ClearClobs();
@@ -2040,11 +2240,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool result = m_RsCache.do_last();
 		m_CurrentRow = m_RsCache.currentPos;
 		return CompleteReaderInvocationIfSent(invocation, result);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public bool Absolute(int pos)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Absolute()");
 		checkClosed();
 		ClearClobs();
@@ -2055,11 +2259,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool result = m_RsCache.do_absolute(pos);
 		m_CurrentRow = m_RsCache.currentPos;
 		return CompleteReaderInvocationIfSent(invocation, result);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public bool Relative(int pos)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Relative()");
 		checkClosed();
 		ClearClobs();
@@ -2070,20 +2278,28 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		bool result = m_RsCache.do_relative(pos);
 		m_CurrentRow = m_RsCache.currentPos;
 		return CompleteReaderInvocationIfSent(invocation, result);
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public new DbDataReader GetData(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetData(int i)");
 		checkClosed();
 		DmError.ThrowUnsupportedException();
 		return null;
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public DateTimeOffset GetDateTimeOffset(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		byte[] value = null;
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDateTime(int i)");
 		checkClosed();
@@ -2092,11 +2308,15 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		int precision = m_ColInfo[i].GetPrecision();
 		int scale = m_ColInfo[i].GetScale();
 		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetTimestampTZ(i, value, cType, precision, scale));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	public DmXDec GetDmDecimal(int i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		byte[] value = null;
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDecimal(int i)");
 		checkClosed();
@@ -2105,6 +2325,8 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		int precision = m_ColInfo[i].GetPrecision();
 		int scale = m_ColInfo[i].GetScale();
 		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetDmDecimal(i, value, cType, precision, scale));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	internal Type GetFieldTypeInner(int i)
@@ -2117,7 +2339,11 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public DmBlob GetBlob(short i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		return CompleteReaderInvocationIfSent(invocation, GetBlobOwned(i));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	private DmBlob GetBlobOwned(short i)
@@ -2129,7 +2355,11 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	public DmClob GetClob(short i)
 	{
 		using var invocation = BeginReaderInvocation();
+		try
+		{
 		return CompleteReaderInvocationIfSent(invocation, GetClobOwned(i));
+			}
+		catch { MarkProcedureFailure(); throw; }
 	}
 
 	private DmClob GetClobOwned(short i)
