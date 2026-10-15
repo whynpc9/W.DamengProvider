@@ -28,7 +28,7 @@ jobs:
           global-json-file: global.json
       - name: Release script behavior contracts
         run: python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
-      - name: Twelve offline suites, package inspection, independent consumers and first initialization
+      - name: Offline suites, package inspection, independent consumers and first initialization
         shell: bash
         run: bash eng/release.sh prepare --tag "v0.0.0-ci.${{ github.run_id }}.${{ github.run_attempt }}" --commit "$(git rev-parse HEAD)"
       - name: Preserve validation results

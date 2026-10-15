@@ -19,7 +19,7 @@ REPOSITORY = "https://github.com/whynpc9/W.DamengProvider"
 PROJECT = ROOT / "src/W.DamengProvider/W.DamengProvider.csproj"
 FLAGS = ["-m:1", "/nodeReuse:false", "/p:UseSharedCompilation=false", "--disable-build-servers"]
 SUITES = ("Configuration", "Session", "Transport", "Security", "Command", "Type",
-          "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics")
+          "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics", "Schema")
 RESOURCE_CULTURES = ("en", "zh-CN", "zh-HK", "zh-TW")
 ASSETS = {f"lib/net10.0/{PACKAGE}.dll"} | {
     f"lib/net10.0/{culture}/{PACKAGE}.resources.dll" for culture in RESOURCE_CULTURES}
