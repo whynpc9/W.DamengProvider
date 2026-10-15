@@ -8,10 +8,15 @@ using W.Dm;
 
 // Real-server checks for GitHub issue #16. Output holds only booleans, numbers,
 // enum names and generated object names; never the connection string.
-const string TestUser = "WDM_PROVIDER_TEST";
+string TestUser = Environment.GetEnvironmentVariable("DAMENG_TEST_EXPECTED_USER") ?? "WDM_PROVIDER_TEST";
+if (TestUser != "WDM_PROVIDER_TEST" && !System.Text.RegularExpressions.Regex.IsMatch(TestUser, @"\AWDM_PROVIDER_TEST_I11_[A-F0-9]{8}\z"))
+    throw new InvalidOperationException("configured_test_identity_invalid");
 string raw = Environment.GetEnvironmentVariable("DAMENG_TEST_CONNECTION_STRING")
     ?? throw new InvalidOperationException("test connection missing");
 var baseBuilder = new DmConnectionStringBuilder(raw) { ConnPooling = false, TransportSecurity = DmTransportSecurity.PlaintextAllowed };
+if (!baseBuilder.User.Equals(TestUser, StringComparison.OrdinalIgnoreCase))
+    throw new InvalidOperationException("configured_test_identity_invalid");
+baseBuilder.Schema = TestUser;
 string settings = baseBuilder.ConnectionString;
 string serverHost = baseBuilder.Server;
 int serverPort = baseBuilder.Port;
@@ -322,6 +327,7 @@ async Task<object> Transport()
         {
             using var connection = new DmConnection(refused.ConnectionString);
             if (asynchronous) await connection.OpenAsync(); else connection.Open();
+            VerifyIdentity(connection);
         }
         catch (Exception e) { error = e; }
         result[(asynchronous ? "async" : "sync") + "_connect_refused"] = Describe(error);
@@ -340,6 +346,7 @@ async Task<object> Transport()
         var viaProxy = new DmConnectionStringBuilder(settings) { Server = "127.0.0.1", Port = proxy.Port };
         using var connection = new DmConnection(viaProxy.ConnectionString);
         connection.Open();
+        VerifyIdentity(connection);
         DmTransaction? tx = shape == "transaction" ? (DmTransaction)connection.BeginTransaction() : null;
         if (tx != null) Exec(connection, $"UPDATE \"{t}\" SET NAME='tx' WHERE ID=1", tx);
         proxy.ResetAll();
@@ -420,7 +427,18 @@ object Cleanup()
     return new { dropped, failures = cleanupFailures, fresh_remaining = remaining };
 }
 
-DmConnection Open() { var connection = new DmConnection(settings); connection.Open(); return connection; }
+DmConnection Open()
+{
+    var connection = new DmConnection(settings);
+    try { connection.Open(); VerifyIdentity(connection); return connection; }
+    catch { connection.Dispose(); throw; }
+}
+void VerifyIdentity(DmConnection connection)
+{
+    if (Scalar(connection, "SELECT USER FROM DUAL") != TestUser ||
+        Scalar(connection, "SELECT SF_GET_SCHEMA_NAME_BY_ID(CURRENT_SCHID()) FROM DUAL") != TestUser)
+        throw new InvalidOperationException("server_test_identity_or_schema_mismatch");
+}
 void ExecFresh(string sql) { using var connection = Open(); Exec(connection, sql); }
 string? ScalarFresh(string sql) { using var connection = Open(); return Scalar(connection, sql); }
 void Exec(DbConnection connection, string sql, DbTransaction? transaction = null)

@@ -10,7 +10,7 @@ using W.Dm.Internal.Transport;
 
 internal static partial class Program
 {
-    private static readonly object ResourceBudget = new
+    private static object ResourceBudget => new
     {
         declared_before_measurement = true, warmup_seconds = 60, measurement_seconds = 600, minimum_completed_cycles = 500,
         maximum_concurrency = 4, sample_interval_seconds = 5, minimum_measurement_samples = 121,
@@ -20,7 +20,7 @@ internal static partial class Program
         window_seconds = 60, rss_half_window_median_growth_bytes = 64L * 1024 * 1024,
         gc_heap_half_window_median_growth_bytes = 32L * 1024 * 1024,
         second_half_thread_growth_per_100_cycles = 1.0, second_half_fd_growth_per_100_cycles = 1.0,
-        scope = "TLS_resource_soak_not_T17_large_value_or_full_R3_matrix"
+        scope = Mode == "shared" ? "shared_resource_soak_not_T17_large_value_or_full_R3_matrix" : "TLS_resource_soak_not_T17_large_value_or_full_R3_matrix"
     };
     private static long Completed, Commits, Rollbacks, MeasuredCycles;
     private static int ActiveCycles, PeakConcurrency;
@@ -230,7 +230,7 @@ internal static partial class Program
         }
         internal Dictionary<string, long> Counts { get { lock (gate) return new(counts); } }
         internal bool AsyncOnly { get { lock (gate) return !unknown && counts.Where(p => p.Key.StartsWith("sync_", StringComparison.Ordinal)).All(p => p.Value == 0) &&
-            counts["async_connect"] > 0 && counts["async_tls"] > 0 && counts["async_send"] > 0 && counts["async_receive"] > 0; } }
+            counts["async_connect"] > 0 && (Mode == "tls" ? counts["async_tls"] > 0 : counts["async_tls"] == 0) && counts["async_send"] > 0 && counts["async_receive"] > 0; } }
         public void Dispose() => hook.SetValue(null, null);
     }
 }

@@ -14,7 +14,14 @@ using W.Dm.Config;
 
 internal static class Program
 {
-    private const string TestUser = "WDM_PROVIDER_TEST";
+    private static string TestUser => ExpectedTestUser();
+    private static string ExpectedTestUser()
+    {
+        string user = Environment.GetEnvironmentVariable("DAMENG_TEST_EXPECTED_USER") ?? "WDM_PROVIDER_TEST";
+        if (user != "WDM_PROVIDER_TEST" && !Regex.IsMatch(user, @"\AWDM_PROVIDER_TEST_I11_[A-F0-9]{8}\z"))
+            throw new InvalidOperationException("configured_test_identity_invalid");
+        return user;
+    }
     private const long BlobBytes = 64L * 1024 * 1024 + 1024;
     private const int BlobBufferBytes = 32 * 1024, TextCycles = 10, TextBufferChars = 4093;
     private const int CommandSeconds = 300, ConnectSeconds = 15, ProcessSeconds = 1800;

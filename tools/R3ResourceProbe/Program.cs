@@ -13,7 +13,14 @@ using W.DmProvider.DiagnosticsTesting;
 
 internal static partial class Program
 {
-    private const string User = "WDM_PROVIDER_TEST";
+    private static string User => ExpectedTestUser();
+    private static string ExpectedTestUser()
+    {
+        string user = Environment.GetEnvironmentVariable("DAMENG_TEST_EXPECTED_USER") ?? "WDM_PROVIDER_TEST";
+        if (user != "WDM_PROVIDER_TEST" && !Regex.IsMatch(user, @"\AWDM_PROVIDER_TEST_I11_[A-F0-9]{8}\z"))
+            throw new InvalidOperationException("configured_test_identity_invalid");
+        return user;
+    }
     private static readonly Dictionary<string, object?> Report = new()
     {
         ["schema_version"] = 1, ["task"] = "T18", ["implementation"] = "W-package", ["accepted"] = false,
@@ -31,7 +38,7 @@ internal static partial class Program
         int code = 1;
         try
         {
-            Require(args.Length == 4 && (args[0] is "offline" or "tls" or "release-environment" || args[0].StartsWith("first-init:", StringComparison.Ordinal)), "usage");
+            Require(args.Length == 4 && (args[0] is "offline" or "shared" or "tls" or "release-environment" || args[0].StartsWith("first-init:", StringComparison.Ordinal)), "usage");
             Mode = args[0]; Repo = Path.GetFullPath(args[1]); PackageManifest = args[2]; Output = args[3]; Report["mode"] = Mode;
             Stage = "exact_package_identity"; VerifyPackage(PackageManifest);
             Report["resource_budget"] = ResourceBudget;
@@ -55,9 +62,11 @@ internal static partial class Program
             }
             else
             {
-                Stage = "configure_tls"; ConfigureTls(); await RunSoakAsync();
+                Stage = "configure_" + Mode; Configure(); await RunSoakAsync();
                 Stage = "healthy_final_operation_diagnostics"; VerifyHealthyFinalOperationDiagnostics();
-                Report["status"] = "tls_resource_scope_verified"; Report["integration"] = "TLS_only_upstream_pending";
+                Report["status"] = Mode == "tls" ? "tls_resource_scope_verified" : "shared_resource_scope_verified";
+                Report["integration"] = Mode == "tls" ? "TLS_only_upstream_pending" : "shared_only_upstream_pending";
+                Report["resource_scope"] = Mode == "tls" ? "isolated_TLS" : OperatingSystem.IsWindows() ? "Windows_shared_plaintext" : "shared_plaintext";
             }
             Report["accepted"] = true; code = 0;
         }
@@ -136,19 +145,23 @@ internal static partial class Program
         }
         Report["first_init_cases"] = cases;
     }
-    private static void ConfigureTls()
+    private static void Configure()
     {
-        string raw = Environment.GetEnvironmentVariable("DAMENG_TLS_TEST_CONNECTION_STRING") ?? throw new ProbeFailure("integration_pending");
+        string raw = Environment.GetEnvironmentVariable(Mode == "tls" ? "DAMENG_TLS_TEST_CONNECTION_STRING" : "DAMENG_TEST_CONNECTION_STRING") ?? throw new ProbeFailure("integration_pending");
         var b = new DmConnectionStringBuilder(raw);
-        Require(b.User.Equals(User, StringComparison.OrdinalIgnoreCase) && b.Server == "127.0.0.1" && b.Port == 15236, "isolated_tls_test_identity_required_before_authentication");
+        Require(b.User.Equals(User, StringComparison.OrdinalIgnoreCase), "test_identity_required_before_authentication");
+        if (Mode == "tls") Require(b.Server == "127.0.0.1" && b.Port == 15236, "isolated_tls_target_required");
         b.Schema = User; b.Pooling = true; b.MaxPoolSize = 4; b.MaxPoolWaiters = 16; b.PoolAcquireTimeout = TimeSpan.FromSeconds(15);
         b.ConnectTimeout = TimeSpan.FromSeconds(15); b.CommandTimeout = 15; b.PersistSecurityInfo = false; b.StmtPooling = false; b.PreparePooling = false; b.LogLevel = LogLevel.OFF;
-        b.TransportSecurity = DmTransportSecurity.RequireTls;
-        string certs = Path.Combine(Repo, ".local", "t07", "certs", "client_ssl", User);
-        b.TlsCaCertificatePath = Path.Combine(certs, "ca-cert.pem"); b.TlsClientCertificatePath = Path.Combine(certs, "client-cert.pem");
-        b.TlsClientPrivateKeyPath = Path.Combine(certs, "client-key.pem"); b.TlsRevocationMode = DmTlsRevocationMode.NoCheck;
-        Settings = b.ConnectionString; Report["explicit_transport"] = "RequireTls";
-        Report["tls_revocation_policy"] = "NoCheck_for_isolated_ephemeral_CA_without_CRL";
+        b.TransportSecurity = Mode == "tls" ? DmTransportSecurity.RequireTls : DmTransportSecurity.PlaintextAllowed;
+        if (Mode == "tls")
+        {
+            string certs = Path.Combine(Repo, ".local", "t07", "certs", "client_ssl", User);
+            b.TlsCaCertificatePath = Path.Combine(certs, "ca-cert.pem"); b.TlsClientCertificatePath = Path.Combine(certs, "client-cert.pem");
+            b.TlsClientPrivateKeyPath = Path.Combine(certs, "client-key.pem"); b.TlsRevocationMode = DmTlsRevocationMode.NoCheck;
+            Report["tls_revocation_policy"] = "NoCheck_for_isolated_ephemeral_CA_without_CRL";
+        }
+        Settings = b.ConnectionString; Report["explicit_transport"] = b.TransportSecurity.ToString();
     }
     private static void VerifyHealthyFinalOperationDiagnostics()
     {

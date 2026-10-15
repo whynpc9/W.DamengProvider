@@ -12,7 +12,14 @@ using W.Dm.Config;
 
 internal static class Program
 {
-    private const string TestUser = "WDM_PROVIDER_TEST";
+    private static string TestUser => ExpectedTestUser();
+    private static string ExpectedTestUser()
+    {
+        string user = Environment.GetEnvironmentVariable("DAMENG_TEST_EXPECTED_USER") ?? "WDM_PROVIDER_TEST";
+        if (user != "WDM_PROVIDER_TEST" && !Regex.IsMatch(user, @"\AWDM_PROVIDER_TEST_I11_[A-F0-9]{8}\z"))
+            throw new InvalidOperationException("configured_test_identity_invalid");
+        return user;
+    }
     private const string IdentitySql = "SELECT USER,SF_GET_SCHEMA_NAME_BY_ID(CURRENT_SCHID()) FROM DUAL";
     private static readonly Dictionary<string, object?> Report = new()
     {
@@ -102,8 +109,8 @@ internal static class Program
         var builder = new DmConnectionStringBuilder
         {
             Server = "synthetic.invalid", User = "SYNTHETIC_USER", Password = "synthetic_secret_marker",
-            Pooling = true, MaxPoolSize = 1, MaxPoolWaiters = 2, TlsCaCertificatePath = "/synthetic/ca.pem",
-            TlsClientCertificatePath = "/synthetic/client.pfx", TlsClientCertificatePassword = "synthetic_certificate_secret_marker"
+            Pooling = true, MaxPoolSize = 1, MaxPoolWaiters = 2, TlsCaCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "ca.pem"),
+            TlsClientCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "client.pfx"), TlsClientCertificatePassword = "synthetic_certificate_secret_marker"
         };
         long created = Observe.Created;
         await using (var source = new DmDataSource(builder.ConnectionString))

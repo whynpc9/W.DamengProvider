@@ -1,0 +1,230 @@
+[
+  {
+    "stage": "pack-r2",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "pack",
+      "C:\\projects\\W.DamengProvider\\src\\W.DamengProvider\\W.DamengProvider.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "feed",
+      "/p:Version=0.1.1-i11.20261015.24e792d.r2",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/pack-r2.log"
+  },
+  {
+    "stage": "Issue16Probe-r2.json",
+    "argv": [
+      "dotnet",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/apps-r2/Issue16Probe/Issue16Probe.dll"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 29.165
+  },
+  {
+    "stage": "R2CancellationProbe-r2-stdout.json",
+    "argv": [
+      "dotnet",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/apps-r2/R2CancellationProbe/R2CancellationProbe.dll",
+      "shared",
+      "C:/projects/W.DamengProvider",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/manifest-r2.json",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/R2CancellationProbe-r2.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 7.648
+  },
+  {
+    "stage": "R3LobProbe-r2-stdout.json",
+    "argv": [
+      "dotnet",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/apps-r2/R3LobProbe/R3LobProbe.dll",
+      "shared",
+      "C:/projects/W.DamengProvider",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/manifest-r2.json",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/R3LobProbe-r2.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 25.773
+  },
+  {
+    "stage": "R3PoolProbe-r2-stdout.json",
+    "argv": [
+      "dotnet",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/apps-r2/R3PoolProbe/R3PoolProbe.dll",
+      "shared",
+      "C:/projects/W.DamengProvider",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/manifest-r2.json",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/R3PoolProbe-r2.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 11.786
+  },
+  {
+    "stage": "build-r2-WindowsCompatibilityProbe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\WindowsCompatibilityProbe\\WindowsCompatibilityProbe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\WindowsCompatibilityProbe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/WindowsCompatibilityProbe-build-r2.log"
+  },
+  {
+    "stage": "build-r2-R3ResourceProbe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\R3ResourceProbe\\R3ResourceProbe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\R3ResourceProbe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/R3ResourceProbe-build-r2.log"
+  },
+  {
+    "stage": "build-r2-R3PoolProbe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\R3PoolProbe\\R3PoolProbe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\R3PoolProbe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/R3PoolProbe-build-r2.log"
+  },
+  {
+    "stage": "build-r2-R2CancellationProbe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\R2CancellationProbe\\R2CancellationProbe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\R2CancellationProbe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/R2CancellationProbe-build-r2.log"
+  },
+  {
+    "stage": "build-r2-R3LobProbe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\R3LobProbe\\R3LobProbe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\R3LobProbe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/R3LobProbe-build-r2.log"
+  },
+  {
+    "stage": "build-r2-Issue16Probe",
+    "cwd": "C:\\projects\\W.DamengProvider\\.local\\windows-i11",
+    "argv": [
+      "dotnet",
+      "build",
+      "C:\\projects\\W.DamengProvider\\tools\\Issue16Probe\\Issue16Probe.csproj",
+      "-c",
+      "Release",
+      "-o",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11\\apps-r2\\Issue16Probe",
+      "/p:R3PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R3PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "/p:R2PackageVersion=0.1.1-i11.20261015.24e792d.r2",
+      "/p:R2PackageSource=C:\\projects\\W.DamengProvider\\.local\\windows-i11/feed",
+      "-m:1",
+      "/nodeReuse:false",
+      "/p:UseSharedCompilation=false",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "log": ".local/windows-i11/Issue16Probe-build-r2.log"
+  },
+  {
+    "stage": "resource-r2",
+    "argv": [
+      "dotnet",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/apps-r2/R3ResourceProbe/R3ResourceProbe.dll",
+      "shared",
+      "C:/projects/W.DamengProvider",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/manifest-r2.json",
+      "C:\\projects\\W.DamengProvider\\.local\\windows-i11/R3ResourceProbe-r2.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 701.135
+  },
+  {
+    "stage": "profile-final",
+    "argv": [
+      "dotnet",
+      ".local\\windows-i11\\apps-r2\\WindowsCompatibilityProbe\\WindowsCompatibilityProbe.dll",
+      ".local\\windows-i11\\profile-final.json"
+    ],
+    "exit_code": 0
+  }
+]

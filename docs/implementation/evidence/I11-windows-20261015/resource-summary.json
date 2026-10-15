@@ -1,0 +1,73 @@
+{
+  "total_cycles": 19361,
+  "measurement_cycles": 17639,
+  "commits": 17167,
+  "rollbacks": 2194,
+  "physical_created": 19365,
+  "physical_disposed": 19365,
+  "measurement_seconds": 599.9909767,
+  "measurement_samples": 121,
+  "quiescent_samples": 3,
+  "rss_mib_range": [
+    74.0625,
+    87.4140625
+  ],
+  "rss_max_growth_mib": 9.26953125,
+  "heap_max_growth_mib": 2.7904434204101562,
+  "windows_handles_range": [
+    320,
+    344
+  ],
+  "windows_handles_baseline": 320,
+  "windows_handles_quiescent": [
+    319,
+    319,
+    319
+  ],
+  "threads_baseline": 18,
+  "threads_range": [
+    16,
+    22
+  ],
+  "threads_quiescent": [
+    11,
+    11,
+    11
+  ],
+  "fd_available": false,
+  "dropped_delta": 0,
+  "final_database_state": "unique_owned_objects_absent",
+  "final_diagnostics": {
+    "ConnectionsCreated": 19365,
+    "ConnectionsClosed": 19365,
+    "PoolCreating": 0,
+    "PoolLeased": 0,
+    "PoolClosing": 0,
+    "PoolWaiting": 0,
+    "RegistryEntries": 0,
+    "QueueDepth": 0,
+    "QueueCapacity": 4096,
+    "QueuePeak": 13,
+    "Dropped": 0,
+    "CallbackFailures": 0,
+    "SentBytes": 832316366,
+    "ReceivedBytes": 843857867,
+    "LobReadChunks": 38722,
+    "LobWriteChunks": 20672,
+    "Acquires": 19367,
+    "Operations": 271091,
+    "InitializationState": 1,
+    "WorkerStarts": 1,
+    "ExportedRecords": 290458
+  },
+  "network_io_counts": {
+    "async_connect": 19365,
+    "sync_connect": 0,
+    "async_tls": 0,
+    "sync_tls": 0,
+    "async_send": 445378,
+    "sync_send": 0,
+    "async_receive": 913255,
+    "sync_receive": 0
+  }
+}

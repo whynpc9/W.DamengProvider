@@ -3,6 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import statistics
 import sys
 import uuid
@@ -83,7 +84,7 @@ def main():
     result = strict_json(Path(sys.argv[1]).read_text())
     manifest = strict_json(Path(sys.argv[2]).read_text())
     mode = sys.argv[4]
-    require(mode in ('offline', 'tls', 'release-environment') and result.get('task') == 'T18' and result.get('schema_version') == 1 and
+    require(mode in ('offline', 'shared', 'tls', 'release-environment') and result.get('task') == 'T18' and result.get('schema_version') == 1 and
             result.get('mode') == mode and result.get('accepted') is True and result.get('exit_code') == 0 and
             result.get('production_release_accepted') is False and result.get('reference_kind') == 'exact_PackageReference' and
             result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
@@ -98,7 +99,7 @@ def main():
             'rss_growth_bytes': 268435456, 'gc_heap_growth_bytes': 134217728, 'thread_growth': 16, 'fd_growth': 16,
             'quiescent_fd_growth': 8, 'window_seconds': 60, 'rss_half_window_median_growth_bytes': 67108864,
             'gc_heap_half_window_median_growth_bytes': 33554432, 'second_half_thread_growth_per_100_cycles': 1.0,
-            'second_half_fd_growth_per_100_cycles': 1.0, 'scope': 'TLS_resource_soak_not_T17_large_value_or_full_R3_matrix'})
+            'second_half_fd_growth_per_100_cycles': 1.0, 'scope': ('shared_resource_soak_not_T17_large_value_or_full_R3_matrix' if mode == 'shared' else 'TLS_resource_soak_not_T17_large_value_or_full_R3_matrix')})
     if mode == 'offline':
         require(result.get('status') == 'offline_verified' and result.get('integration') == 'integration_pending')
         cases = result.get('first_init_cases', [])
@@ -113,10 +114,12 @@ def main():
     elif mode == 'release-environment':
         require(result.get('status') == 'release_environment_preflight_only' and result.get('server_identity_verified') is False)
     else:
-        require(result.get('status') == 'tls_resource_scope_verified' and result.get('integration') == 'TLS_only_upstream_pending' and
-                result.get('resource_measurement_complete') is True and result.get('explicit_transport') == 'RequireTls' and
+        require(result.get('status') == ('tls_resource_scope_verified' if mode == 'tls' else 'shared_resource_scope_verified') and
+                result.get('integration') == ('TLS_only_upstream_pending' if mode == 'tls' else 'shared_only_upstream_pending') and
+                result.get('resource_measurement_complete') is True and result.get('explicit_transport') == ('RequireTls' if mode == 'tls' else 'PlaintextAllowed') and
                 result.get('server_identity') == result.get('server_schema') == result.get('final_verification_identity') ==
-                result.get('final_verification_schema') == 'WDM_PROVIDER_TEST' and result.get('cleanup_verified') is True and
+                result.get('final_verification_schema') and
+                re.fullmatch(r'WDM_PROVIDER_TEST(?:_I11_[A-F0-9]{8})?', result.get('server_identity', '')) is not None and result.get('cleanup_verified') is True and
                 result.get('final_database_state') == 'unique_owned_objects_absent' and result.get('measurement_completed_cycles', 0) >= 500 and
                 0 < result.get('peak_concurrency', 0) <= 4 and result.get('confirmed_commits', 0) > 0 and result.get('confirmed_rollbacks', 0) > 0)
         samples = result.get('samples', [])
@@ -179,11 +182,12 @@ def main():
         require(set(counts) == {prefix + operation for prefix in ('async_', 'sync_') for operation in ('connect', 'tls', 'send', 'receive')} and
                 all(type(value) is int and value >= 0 for value in counts.values()) and
                 all(counts['sync_' + operation] == 0 for operation in ('connect', 'tls', 'send', 'receive')) and
-                all(counts['async_' + operation] > 0 for operation in ('connect', 'tls', 'send', 'receive')))
+                all(counts['async_' + operation] > 0 for operation in ('connect', 'send', 'receive')) and
+                (counts['async_tls'] > 0 if mode == 'tls' else counts['async_tls'] == 0))
         result_summary = {'unavailable_native_metrics': unavailable, 'window_median_deltas': windows,
                           'second_half_threads_per_100_cycles': thread_slope, 'second_half_fds_per_100_cycles': fd_slope}
         print(json.dumps({'task': 'T18', 'status': 'resource_budget_verified', 'mode': mode, 'package_version': manifest['version'],
-                          'scoped_acceptance': 'TLS_only_upstream_pending', 'budgets': result_summary}, separators=(',', ':')))
+                          'scoped_acceptance': result['integration'], 'budgets': result_summary}, separators=(',', ':')))
         return
     print(json.dumps({'task': 'T18', 'status': 'accepted', 'mode': mode, 'package_version': manifest['version'],
                       'production_release_accepted': False}, separators=(',', ':')))

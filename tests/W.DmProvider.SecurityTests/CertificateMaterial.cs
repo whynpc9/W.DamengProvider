@@ -43,7 +43,8 @@ internal sealed class CertificateMaterial : IDisposable
                 san.AddDnsName(dnsName);
                 if (includeIp) san.AddIpAddress(IPAddress.Loopback);
                 request.CertificateExtensions.Add(san.Build());
-            }, valid ? now.AddDays(-1) : now.AddDays(-4), valid ? now.AddDays(10) : now.AddDays(-2));
+            }, valid ? now.AddDays(-1) : now.AddDays(-4), valid ? now.AddDays(10) : now.AddDays(-2),
+            forTlsServer: true);
     }
 
     internal X509Certificate2 Client(bool writePemFiles = false)
@@ -66,7 +67,8 @@ internal sealed class CertificateMaterial : IDisposable
     }
 
     private X509Certificate2 Issue(string subject, string extendedKeyUsage,
-        Action<CertificateRequest>? configure, DateTimeOffset notBefore, DateTimeOffset notAfter)
+        Action<CertificateRequest>? configure, DateTimeOffset notBefore, DateTimeOffset notAfter,
+        bool forTlsServer = false)
     {
         RSA key = RSA.Create(2048);
         leafKeys.Add(key);
@@ -82,6 +84,19 @@ internal sealed class CertificateMaterial : IDisposable
         serial[0] &= 0x7f;
         using var issued = request.Create(Authority, notBefore, notAfter, serial);
         var withKey = issued.CopyWithPrivateKey(key);
+        if (forTlsServer && OperatingSystem.IsWindows())
+        {
+            // Schannel needs a native key container for the loopback TLS server.
+            // DefaultKeySet creates a temporary key that is removed on Dispose;
+            // no certificate is installed in a system trust store.
+            byte[] pfx = withKey.Export(X509ContentType.Pkcs12);
+            try
+            {
+                using var generated = withKey;
+                withKey = X509CertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.DefaultKeySet);
+            }
+            finally { CryptographicOperations.ZeroMemory(pfx); }
+        }
         leaves.Add(withKey);
         return withKey;
     }

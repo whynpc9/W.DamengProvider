@@ -57,9 +57,9 @@ public sealed class DmPoolIdentityTests
             case "idle": changed.ReadIdleTimeout += TimeSpan.FromMilliseconds(1); break;
             case "cleanup": changed.CleanupTimeout += TimeSpan.FromMilliseconds(1); break;
             case "security": changed.TransportSecurity = DmTransportSecurity.PlaintextAllowed; break;
-            case "ca": changed.TlsCaCertificatePath = "/synthetic/rotated-ca.pem"; break;
-            case "certificate": changed.TlsClientCertificatePath = "/synthetic/rotated-client.pem"; break;
-            case "key": changed.TlsClientPrivateKeyPath = "/synthetic/rotated-key.pem"; break;
+            case "ca": changed.TlsCaCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "rotated-ca.pem"); break;
+            case "certificate": changed.TlsClientCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "rotated-client.pem"); break;
+            case "key": changed.TlsClientPrivateKeyPath = Path.Combine(Path.GetTempPath(), "synthetic", "rotated-key.pem"); break;
             case "certificatePassword": changed.TlsClientCertificatePassword = "synthetic_key_password_rotated"; break;
             case "revocation": changed.TlsRevocationMode = DmTlsRevocationMode.NoCheck; break;
             case "persist": changed.PersistSecurityInfo = true; break;
@@ -91,8 +91,10 @@ public sealed class DmPoolIdentityTests
         Server = "identity.invalid", User = "SYNTHETIC_USER", Password = "synthetic_secret",
         Schema = "SYNTHETIC_SCHEMA", Pooling = true, MaxPoolSize = 1, MaxPoolWaiters = 4,
         Language = 0, TransportSecurity = DmTransportSecurity.RequireTls,
-        TlsCaCertificatePath = "/synthetic/ca.pem", TlsClientCertificatePath = "/synthetic/client.pem",
-        TlsClientPrivateKeyPath = "/synthetic/key.pem", TlsClientCertificatePassword = "synthetic_key_password",
+        TlsCaCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "ca.pem"),
+        TlsClientCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "client.pem"),
+        TlsClientPrivateKeyPath = Path.Combine(Path.GetTempPath(), "synthetic", "key.pem"),
+        TlsClientCertificatePassword = "synthetic_key_password",
         TlsRevocationMode = DmTlsRevocationMode.Online
     };
 

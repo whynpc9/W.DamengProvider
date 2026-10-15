@@ -1,0 +1,51 @@
+{
+  "runtime": ".NET 10.0.9",
+  "rid": "win-x64",
+  "os": "Microsoft Windows 10.0.26200",
+  "user": "WDM_PROVIDER_TEST_I11_7C42A9D1",
+  "schema": "WDM_PROVIDER_TEST_I11_7C42A9D1",
+  "server_version": "8.1.5.60",
+  "capabilities": {
+    "ServerVersion": "8.1.5.60",
+    "IsMeasuredProfile": true,
+    "SupportsSavepoints": true,
+    "SupportsReadUncommitted": true,
+    "SupportsSerializable": true,
+    "SupportsStatementErrorRecovery": true,
+    "SupportsTableDdlInTransaction": true,
+    "MaxTemporalWriteScale": 9,
+    "TemporalProfile": "TP01-v11-shared-physical"
+  },
+  "server_encoding": "UTF-8",
+  "message_version": 21,
+  "explicit_transport": "PlaintextAllowed",
+  "remaining_tables": "0",
+  "remaining_objects": "0",
+  "assembly_version": "0.1.1-i11.20261015.24e792d.r2",
+  "metadata": {
+    "full_version": [
+      "DM Database Server 64 V8",
+      "DB Version: 0x7000d",
+      "03134284604-20260707-335949-20228",
+      "Msg Version: 6",
+      "Gsu level(5) cnt: 102"
+    ],
+    "unicode_flag": [
+      "1"
+    ]
+  },
+  "require_tls_failure": {
+    "type": "Unknown",
+    "code": "Unknown",
+    "kind": "Unknown",
+    "phase": "Unknown",
+    "operation_outcome": "Unknown",
+    "transaction_outcome": "Unknown",
+    "cancel_source": "Unknown",
+    "server_number": null,
+    "connection_reusable": null
+  },
+  "require_tls_rejected": true,
+  "accepted": true,
+  "exit_code": 0
+}

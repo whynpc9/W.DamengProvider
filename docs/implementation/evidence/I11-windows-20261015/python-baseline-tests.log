@@ -1,0 +1,26 @@
+FE
+======================================================================
+ERROR: test_symlink_manifest_and_helper_rejected (test_source_identity.SourceIdentityTests.test_symlink_manifest_and_helper_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\projects\W.DamengProvider\.local\windows-i11\python-baseline\test_source_identity.py", line 117, in test_symlink_manifest_and_helper_rejected
+    other = self.base / 'other.json'; self.manifest.rename(other); self.manifest.symlink_to(other)
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Python314\Lib\pathlib\__init__.py", line 1213, in symlink_to
+    os.symlink(target, self, target_is_directory)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 1314] A required privilege is not held by the client: 'C:\\Users\\Hongyi Wang\\AppData\\Local\\Temp\\tmp9_gbrkl2\\other.json' -> 'C:\\Users\\Hongyi Wang\\AppData\\Local\\Temp\\tmp9_gbrkl2\\producer.json'
+
+======================================================================
+FAIL: test_actual_execute_bit_change_is_rejected (test_source_identity.SourceIdentityTests.test_actual_execute_bit_change_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\projects\W.DamengProvider\.local\windows-i11\python-baseline\test_source_identity.py", line 98, in test_actual_execute_bit_change_is_rejected
+    with self.assertRaisesRegex(identity.SourceIdentityError, 'source_not_bound'): self.record()
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: SourceIdentityError not raised
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.113s
+
+FAILED (failures=1, errors=1)

@@ -117,11 +117,11 @@ public sealed class DmPoolRegistryTests
     public void DirectExplicitTlsFilesAreRejectedBeforePoolCreation(string kind)
     {
         var builder = Builder("a");
-        if (kind == "ca") builder.TlsCaCertificatePath = "/synthetic/ca.pem";
+        if (kind == "ca") builder.TlsCaCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "ca.pem");
         else
         {
-            builder.TlsClientCertificatePath = "/synthetic/client.pem";
-            if (kind == "key") builder.TlsClientPrivateKeyPath = "/synthetic/key.pem";
+            builder.TlsClientCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic", "client.pem");
+            if (kind == "key") builder.TlsClientPrivateKeyPath = Path.Combine(Path.GetTempPath(), "synthetic", "key.pem");
         }
         var registry = new DmPoolRegistry();
         var error = Assert.Throws<NotSupportedException>(() => registry.GetOrCreate(builder.ToSettings()));

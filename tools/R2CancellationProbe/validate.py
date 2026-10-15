@@ -3,6 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 
 
@@ -92,8 +93,9 @@ def main():
             report.get('package_version') == package['version'] and report.get('package_sha256') == package['package_sha256'] and
             report.get('loaded_assembly_sha256') == loaded == package['assets']['lib/net10.0/W.DamengProvider.dll'] and
             len(report.get('loaded_assembly_mvid', '')) == 36 and report.get('reference_kind') == 'exact_PackageReference' and
-            report.get('server_identity') == report.get('server_schema') == 'WDM_PROVIDER_TEST' and
-            report.get('final_verification_identity') == report.get('final_verification_schema') == 'WDM_PROVIDER_TEST' and
+            re.fullmatch(r'WDM_PROVIDER_TEST(?:_I11_[A-F0-9]{8})?', report.get('server_identity', '')) is not None and
+            report.get('server_identity') == report.get('server_schema') ==
+            report.get('final_verification_identity') == report.get('final_verification_schema') and
             report.get('server_version') == ('8.1.4.6' if mode == 'tls' else '8.1.5.60') and
             report.get('explicit_transport') == ('RequireTls' if mode == 'tls' else 'PlaintextAllowed') and
             report.get('cleanup_verified') is True and report.get('final_database_state') == 'random_object_absent' and

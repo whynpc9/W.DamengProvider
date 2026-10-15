@@ -1,0 +1,66 @@
+{
+  "task": "T18",
+  "status": "resource_budget_verified",
+  "mode": "shared",
+  "package_version": "0.1.1-i11.20261015.24e792d.r2",
+  "scoped_acceptance": "shared_only_upstream_pending",
+  "budgets": {
+    "unavailable_native_metrics": [
+      "FileDescriptors"
+    ],
+    "window_median_deltas": [
+      {
+        "start_seconds": 0,
+        "RssBytes": 280576.0,
+        "GcHeapBytes": 112296.0
+      },
+      {
+        "start_seconds": 60,
+        "RssBytes": -878592.0,
+        "GcHeapBytes": 8396.0
+      },
+      {
+        "start_seconds": 120,
+        "RssBytes": -612352.0,
+        "GcHeapBytes": -377556.0
+      },
+      {
+        "start_seconds": 180,
+        "RssBytes": 1034240.0,
+        "GcHeapBytes": 34240.0
+      },
+      {
+        "start_seconds": 240,
+        "RssBytes": 6144.0,
+        "GcHeapBytes": 159300.0
+      },
+      {
+        "start_seconds": 300,
+        "RssBytes": -911360.0,
+        "GcHeapBytes": -1296952.0
+      },
+      {
+        "start_seconds": 360,
+        "RssBytes": 1998848.0,
+        "GcHeapBytes": 1077932.0
+      },
+      {
+        "start_seconds": 420,
+        "RssBytes": 497664.0,
+        "GcHeapBytes": 518560.0
+      },
+      {
+        "start_seconds": 480,
+        "RssBytes": 2959360.0,
+        "GcHeapBytes": 283604.0
+      },
+      {
+        "start_seconds": 540,
+        "RssBytes": 364544.0,
+        "GcHeapBytes": -1147308.0
+      }
+    ],
+    "second_half_threads_per_100_cycles": 0.01127271256338924,
+    "second_half_fds_per_100_cycles": null
+  }
+}

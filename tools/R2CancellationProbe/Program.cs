@@ -9,7 +9,14 @@ using W.Dm.Config;
 
 internal static partial class Program
 {
-    private const string User = "WDM_PROVIDER_TEST";
+    private static string User => ExpectedTestUser();
+    private static string ExpectedTestUser()
+    {
+        string user = Environment.GetEnvironmentVariable("DAMENG_TEST_EXPECTED_USER") ?? "WDM_PROVIDER_TEST";
+        if (user != "WDM_PROVIDER_TEST" && !System.Text.RegularExpressions.Regex.IsMatch(user, @"\AWDM_PROVIDER_TEST_I11_[A-F0-9]{8}\z"))
+            throw new InvalidOperationException("configured_test_identity_invalid");
+        return user;
+    }
     private static string Mode = "", Settings = "", Table = "", Stage = "arguments", ReportPath = "";
     private static Hooks? Observation;
     private static readonly Dictionary<string, object?> Cases = new();

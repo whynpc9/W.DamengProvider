@@ -1,0 +1,142 @@
+{
+  "source_base": "24e792d",
+  "uncommitted_change": "Windows TLS client key loading plus test fixtures and probe adapters; see accompanying diff",
+  "first_run": [
+    {
+      "project": "W.DmProvider.AsyncTests",
+      "total": 134,
+      "passed": 134,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_31_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.CommandTests",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_35_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.ConfigurationTests",
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_38_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.DiagnosticsTests",
+      "total": 84,
+      "passed": 84,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_43_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.IsolationTests",
+      "total": 78,
+      "passed": 78,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_52_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.LobTests",
+      "total": 258,
+      "passed": 258,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_25_56_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.PoolTests",
+      "total": 304,
+      "passed": 277,
+      "failed": 27,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_05_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.SecurityTests",
+      "total": 41,
+      "passed": 33,
+      "failed": 8,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_10_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.SessionTests",
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_16_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.TransactionTests",
+      "total": 135,
+      "passed": 135,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_20_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.TransportTests",
+      "total": 115,
+      "passed": 115,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_24_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.TypeTests",
+      "total": 958,
+      "passed": 958,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline\\Hongyi_Wang_LEGION-PC_2026-10-15_13_26_30_net10.0.trx"
+    }
+  ],
+  "affected_reruns": [
+    {
+      "project": "W.DmProvider.PoolTests",
+      "total": 304,
+      "passed": 304,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline-recheck\\Hongyi_Wang_LEGION-PC_2026-10-15_13_28_18_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.SecurityTests",
+      "total": 41,
+      "passed": 39,
+      "failed": 2,
+      "trx": ".local\\windows-i11\\offline-recheck\\Hongyi_Wang_LEGION-PC_2026-10-15_13_28_22_net10.0.trx"
+    },
+    {
+      "project": "W.DmProvider.SecurityTests",
+      "total": 41,
+      "passed": 41,
+      "failed": 0,
+      "trx": ".local\\windows-i11\\offline-final\\Hongyi_Wang_LEGION-PC_2026-10-15_13_30_16_net10.0.trx"
+    }
+  ],
+  "final_combined": {
+    "total": 2156,
+    "passed": 2156,
+    "failed": 0,
+    "skipped": 0
+  },
+  "test_user": "WDM_PROVIDER_TEST_I11_7C42A9D1",
+  "sdk": "10.0.301",
+  "runtime": ".NET 10.0.9",
+  "rid": "win-x64",
+  "build_flags": [
+    "-m:1",
+    "/nodeReuse:false",
+    "/p:UseSharedCompilation=false",
+    "--disable-build-servers"
+  ],
+  "pending": [
+    "Linux",
+    "additional_server_profiles",
+    "remote_database_TLS",
+    "published_preview_package_Windows",
+    "hour_or_day_resource_soak",
+    "official_driver",
+    "restored_driver"
+  ],
+  "wrapper_rejections": {
+    "SA": true,
+    "configured_user_mismatch": true
+  }
+}

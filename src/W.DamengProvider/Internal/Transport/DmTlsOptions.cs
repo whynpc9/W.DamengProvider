@@ -75,16 +75,7 @@ internal sealed class DmTlsOptions
 
             if (clientCertificatePath.Length != 0)
             {
-                X509Certificate2 client = clientPrivateKeyPath.Length != 0
-                    ? clientCertificatePassword.Length == 0
-                        ? X509Certificate2.CreateFromPemFile(clientCertificatePath, clientPrivateKeyPath)
-                        : X509Certificate2.CreateFromEncryptedPemFile(clientCertificatePath,
-                            clientCertificatePassword.AsSpan(), clientPrivateKeyPath)
-                    : X509CertificateLoader.LoadPkcs12FromFile(clientCertificatePath,
-                        clientCertificatePassword,
-                        // macOS PFX keys require a temporary keychain. .NET removes it when
-                        // the certificate held by this TLS scope is disposed.
-                        OperatingSystem.IsMacOS() ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet);
+                X509Certificate2 client = LoadClientCertificate();
                 owned.Add(client);
                 if (!client.HasPrivateKey) throw new AuthenticationException("TLS client certificate has no private key.");
                 authentication.ClientCertificates = new X509CertificateCollection { client };
@@ -100,6 +91,35 @@ internal sealed class DmTlsOptions
         {
             foreach (var certificate in owned) certificate.Dispose();
             throw new AuthenticationException("TLS certificate configuration is invalid.");
+        }
+    }
+
+    private X509Certificate2 LoadClientCertificate()
+    {
+        if (clientPrivateKeyPath.Length == 0)
+        {
+            // Schannel requires a native key container; macOS requires a keychain.
+            // Without PersistKeySet, .NET removes these temporary keys when the
+            // certificate held by the TLS scope is disposed.
+            return X509CertificateLoader.LoadPkcs12FromFile(clientCertificatePath,
+                clientCertificatePassword,
+                OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                    ? X509KeyStorageFlags.DefaultKeySet : X509KeyStorageFlags.EphemeralKeySet);
+        }
+
+        var pem = clientCertificatePassword.Length == 0
+            ? X509Certificate2.CreateFromPemFile(clientCertificatePath, clientPrivateKeyPath)
+            : X509Certificate2.CreateFromEncryptedPemFile(clientCertificatePath,
+                clientCertificatePassword.AsSpan(), clientPrivateKeyPath);
+        if (!OperatingSystem.IsWindows()) return pem;
+
+        // PEM loading produces an ephemeral key that Schannel cannot use for mTLS.
+        // Reimport in memory so the native key has the same scoped lifetime as PFX.
+        using (pem)
+        {
+            byte[] pfx = pem.Export(X509ContentType.Pkcs12);
+            try { return X509CertificateLoader.LoadPkcs12(pfx, null, X509KeyStorageFlags.DefaultKeySet); }
+            finally { CryptographicOperations.ZeroMemory(pfx); }
         }
     }
 

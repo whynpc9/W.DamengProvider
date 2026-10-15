@@ -1,0 +1,8 @@
+{
+  "assets": {
+    "lib/net10.0/W.DamengProvider.dll": "f3219a51f22d60c9571c371fa4b5641e104493c63302e896c1755297b223bb44"
+  },
+  "package_sha256": "099a6189a5483a52b4256061500c4a2a37e1ba0597d1eb342d413e68db6db28e",
+  "schema_version": 1,
+  "version": "0.1.1-i11.20261015.24e792d.r2"
+}

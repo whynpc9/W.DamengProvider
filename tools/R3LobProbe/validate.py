@@ -73,7 +73,8 @@ def main():
                     'LOB06_input_exception', 'LOB06_upload_cancel', 'LOB06_read_cancel'}
         require(set(cases) == required and result.get('status') == 'streaming_verified' and result.get('integration') == 'real_test_schema' and
                 result.get('server_identity') == result.get('server_schema') == result.get('final_verification_identity') ==
-                result.get('final_verification_schema') == 'WDM_PROVIDER_TEST' and result.get('cleanup_verified') is True and
+                result.get('final_verification_schema') and
+                re.fullmatch(r'WDM_PROVIDER_TEST(?:_I11_[A-F0-9]{8})?', result.get('server_identity', '')) is not None and result.get('cleanup_verified') is True and
                 result.get('final_database_state') == 'unique_owned_objects_absent' and
                 result.get('server_version') == ('8.1.4.6' if mode == 'tls' else '8.1.5.60') and
                 result.get('server_encoding') == ('gb18030' if mode == 'tls' else 'utf-8') and result.get('message_version') == (11 if mode == 'tls' else 21) and

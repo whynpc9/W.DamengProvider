@@ -1,0 +1,50 @@
+{
+  "all_resource_python_tests": {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/R3ResourceProbe",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 1,
+    "total": 50,
+    "passed": 48,
+    "failed": 1,
+    "errors": 1
+  },
+  "diagnostic_health": {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/R3ResourceProbe",
+      "-p",
+      "test_diagnostic_health.py"
+    ],
+    "exit_code": 0,
+    "passed": 38
+  },
+  "baseline_comparison": {
+    "source": "24e792d",
+    "files": [
+      "tools/R3ResourceProbe/source_identity.py",
+      "tools/R3ResourceProbe/test_source_identity.py"
+    ],
+    "exit_code": 1,
+    "same_failures": [
+      "test_actual_execute_bit_change_is_rejected",
+      "test_symlink_manifest_and_helper_rejected"
+    ],
+    "causes": [
+      "Windows chmod does not supply the POSIX execute-bit semantics asserted by this test",
+      "symlink creation is unavailable to this process: WinError 1314"
+    ],
+    "product_failure": false
+  }
+}

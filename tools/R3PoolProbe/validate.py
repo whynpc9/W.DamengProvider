@@ -42,7 +42,8 @@ def main():
     else:
         require(result.get('status') == 'pool_discard_verified' and result.get('integration') == 'real_test_schema' and
                 result.get('server_identity') == result.get('server_schema') == result.get('final_verification_identity') ==
-                result.get('final_verification_schema') == 'WDM_PROVIDER_TEST' and
+                result.get('final_verification_schema') and
+                re.fullmatch(r'WDM_PROVIDER_TEST(?:_I11_[A-F0-9]{8})?', result.get('server_identity', '')) is not None and
                 re.fullmatch(r'\d+(\.\d+){1,5}', result.get('server_version', '')) is not None and
                 result.get('cleanup_verified') is True and result.get('final_database_state') == 'unique_owned_objects_absent' and
                 result.get('pooling_enabled') is True and result.get('persist_security_info') is False and

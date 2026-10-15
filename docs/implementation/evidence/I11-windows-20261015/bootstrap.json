@@ -1,0 +1,239 @@
+{
+  "admin_identity_verified": true,
+  "server_version": "8.1.5.60",
+  "existing_test_users": "0",
+  "user_created": true,
+  "minimal_grants_acknowledged": true,
+  "test_user": "WDM_PROVIDER_TEST_I11_7C42A9D1",
+  "test_schema": "WDM_PROVIDER_TEST_I11_7C42A9D1",
+  "privileges": [
+    [
+      "CREATE TABLE",
+      "NO"
+    ],
+    [
+      "CREATE VIEW",
+      "NO"
+    ],
+    [
+      "CREATE PROCEDURE",
+      "NO"
+    ],
+    [
+      "CREATE SEQUENCE",
+      "NO"
+    ],
+    [
+      "CREATE TRIGGER",
+      "NO"
+    ],
+    [
+      "CREATE INDEX",
+      "NO"
+    ],
+    [
+      "CREATE SESSION",
+      "NO"
+    ],
+    [
+      "INSERT TABLE",
+      "NO"
+    ],
+    [
+      "UPDATE TABLE",
+      "NO"
+    ],
+    [
+      "DELETE TABLE",
+      "NO"
+    ],
+    [
+      "SELECT TABLE",
+      "NO"
+    ],
+    [
+      "REFERENCES TABLE",
+      "NO"
+    ],
+    [
+      "GRANT TABLE",
+      "NO"
+    ],
+    [
+      "INSERT VIEW",
+      "NO"
+    ],
+    [
+      "UPDATE VIEW",
+      "NO"
+    ],
+    [
+      "DELETE VIEW",
+      "NO"
+    ],
+    [
+      "SELECT VIEW",
+      "NO"
+    ],
+    [
+      "GRANT VIEW",
+      "NO"
+    ],
+    [
+      "EXECUTE PROCEDURE",
+      "NO"
+    ],
+    [
+      "GRANT PROCEDURE",
+      "NO"
+    ],
+    [
+      "SELECT SEQUENCE",
+      "NO"
+    ],
+    [
+      "GRANT SEQUENCE",
+      "NO"
+    ],
+    [
+      "EXECUTE PACKAGE",
+      "NO"
+    ],
+    [
+      "GRANT PACKAGE",
+      "NO"
+    ],
+    [
+      "SELECT MATERIALIZED VIEW",
+      "NO"
+    ],
+    [
+      "GRANT DOMAIN",
+      "NO"
+    ],
+    [
+      "USAGE DOMAIN",
+      "NO"
+    ],
+    [
+      "DUMP TABLE",
+      "NO"
+    ],
+    [
+      "DROP TABLE",
+      "NO"
+    ],
+    [
+      "DROP VIEW",
+      "NO"
+    ],
+    [
+      "DROP SCHEMA",
+      "NO"
+    ],
+    [
+      "DROP PROCEDURE",
+      "NO"
+    ],
+    [
+      "DROP PACKAGE",
+      "NO"
+    ],
+    [
+      "DROP SEQUENCE",
+      "NO"
+    ],
+    [
+      "DROP DOMAIN",
+      "NO"
+    ],
+    [
+      "DROP LINK",
+      "NO"
+    ],
+    [
+      "DROP OPERATOR",
+      "NO"
+    ],
+    [
+      "DROP PARTITION GROUP",
+      "NO"
+    ],
+    [
+      "DROP MATERIALIZED VIEW",
+      "NO"
+    ],
+    [
+      "DROP SYNONYM",
+      "NO"
+    ],
+    [
+      "DROP TRIGGER",
+      "NO"
+    ],
+    [
+      "DROP INDEX",
+      "NO"
+    ],
+    [
+      "DROP CONTEXT INDEX",
+      "NO"
+    ],
+    [
+      "ALTER TABLE",
+      "NO"
+    ],
+    [
+      "ALTER VIEW",
+      "NO"
+    ],
+    [
+      "ALTER MATERIALIZED VIEW",
+      "NO"
+    ],
+    [
+      "ALTER SEQUENCE",
+      "NO"
+    ],
+    [
+      "ALTER TRIGGER",
+      "NO"
+    ],
+    [
+      "ALTER INDEX",
+      "NO"
+    ],
+    [
+      "ALTER CONTEXT INDEX",
+      "NO"
+    ],
+    [
+      "ALTER LIBRARY",
+      "NO"
+    ],
+    [
+      "DROP LIBRARY",
+      "NO"
+    ],
+    [
+      "EXECUTE LIBRARY",
+      "NO"
+    ],
+    [
+      "GRANT LIBRARY",
+      "NO"
+    ],
+    [
+      "GRANT SCHEMA",
+      "NO"
+    ]
+  ],
+  "roles": [
+    [
+      "PUBLIC",
+      "N"
+    ]
+  ],
+  "tables": "0",
+  "accepted": true
+}

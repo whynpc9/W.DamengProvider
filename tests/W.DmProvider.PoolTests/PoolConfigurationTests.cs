@@ -45,7 +45,11 @@ public sealed class PoolConfigurationTests
     public async Task DirectExplicitCertificatePoolingRejectsWithoutCreatingSocket()
     {
         long sockets = DmTransportTestHooks.CreatedTcpSockets;
-        using var connection = new DmConnection(PoolApiSettings.Text + ";TlsCaCertificatePath=/tmp/synthetic-ca.pem");
+        var builder = new DmConnectionStringBuilder(PoolApiSettings.Text)
+        {
+            TlsCaCertificatePath = Path.Combine(Path.GetTempPath(), "synthetic-ca.pem")
+        };
+        using var connection = new DmConnection(builder.ConnectionString);
         await Assert.ThrowsAsync<NotSupportedException>(() => connection.OpenAsync());
         Assert.Equal(sockets, DmTransportTestHooks.CreatedTcpSockets);
         Assert.Equal(System.Data.ConnectionState.Closed, connection.State);

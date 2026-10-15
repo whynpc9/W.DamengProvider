@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "task": "T16",
+  "status": "accepted",
+  "mode": "shared",
+  "integration": "real_test_schema",
+  "reuse_policy": "discard",
+  "session_reset_verified": false,
+  "package_version": "0.1.1-i11.20261015.24e792d.r2",
+  "package_sha256": "099a6189a5483a52b4256061500c4a2a37e1ba0597d1eb342d413e68db6db28e"
+}
