@@ -15,6 +15,6 @@
 
 ## 暂不开放的入口
 
-statement cache、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项不能通过非默认值启用。`EnlistTransaction`、Reconnect、FLDR、DmFldrExport 和两代 BulkCopy 直接拒绝；底层 `DmFldrDllCall` 从 public 改为 internal。所有旧 `IFilterInfo.filterHead` 只接受 `null`；共享 `BaseFilter` 链不构造。`DmTrace`、`Logger` 和 `LogWriter` 的旧输出路径为 no-op，非 None 的 `DmTrace.Level` 设置拒绝。`DbProviderFactory.CanCreateBatch=false`，`CanCreateDataSourceEnumerator=false`。
+statement cache、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项不能通过非默认值启用。`EnlistTransaction`、Reconnect、FLDR、DmFldrExport 和两代 BulkCopy 直接拒绝；底层 `DmFldrDllCall` 从 public 改为 internal。所有旧 `IFilterInfo.filterHead` 只接受 `null`；共享 `BaseFilter` 链不构造。`DmTrace`、`Logger` 和 `LogWriter` 的旧输出路径为 no-op，非 None 的 `DmTrace.Level` 设置拒绝。`CanCreateDataSourceEnumerator=false`；`DbProviderFactory.CanCreateBatch` 在 0.1.0-preview.1 为 false，未发布源码起为 true（见 [I07/I08](I07-I08-array-binding-dbbatch.md)）。
 
 这些守卫保留了部分兼容类型和签名，但不承诺这些功能的行为。直接池化与 DmDataSource 的现行边界见 [R3](R3.md)。

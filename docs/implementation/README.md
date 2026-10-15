@@ -4,7 +4,7 @@
 
 ## 当前实现与发布
 
-仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，这些改动未包含在该包中。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
+仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17、#18 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，以及 [issue #7/#8 数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)，这些改动未包含在该包中。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
 
 | 内容 | 入口 |
 | --- | --- |
@@ -12,7 +12,7 @@
 | 配置、单位与别名 | [连接选项](../compatibility/T04-options.md)、[兼容变化](../compatibility/T04-breaking-changes.md) |
 | 会话与资源所有权 | [会话契约](../compatibility/T05-session-ownership.md) |
 | 传输与安全 | [帧与期限](../compatibility/T06-transport-boundaries.md)、[TLS](../compatibility/T07-security.md) |
-| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md) |
+| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md) |
 | 类型与时间精度 | [类型](../compatibility/T09-types.md)、[时间精度](../compatibility/TP-temporal-precision.md) |
 | 事务、隔离级别与保存点 | [事务](../compatibility/T10-transactions.md)、[隔离级别](../compatibility/T11-isolation.md) |
 | 异步与取消 | [异步契约](../compatibility/R2.md) |
