@@ -45,6 +45,37 @@ internal static class Candidate
             foreach (bool async in new[] { false, true })
             {
                 string lane = async ? "async" : "sync";
+                await Case(lane + "_batch_procedure_preflight", async () =>
+                {
+                    using var c = Open(); using var batch = new DmBatch(c);
+                    int id = async ? 701 : 700;
+                    batch.BatchCommands.Add(new DmBatchCommand($"INSERT INTO \"{Name("DATA")}\" (ID) VALUES({id})"));
+                    batch.BatchCommands.Add(new DmBatchCommand($"\"{TestUser}\".\"{Name("Z")}\"") { CommandType = CommandType.StoredProcedure });
+                    Exception? error = null;
+                    try { if (async) await batch.ExecuteNonQueryAsync(); else batch.ExecuteNonQuery(); }
+                    catch (Exception e) { error = e; }
+                    Require(error is NotSupportedException, "batch_procedure_not_rejected");
+                    using var fresh = Open();
+                    int rows = Convert.ToInt32(Scalar(fresh, $"SELECT COUNT(*) FROM \"{Name("DATA")}\" WHERE ID={id}"));
+                    Require(rows == 0, "batch_preflight_executed_first_insert");
+                    return new { failure = Error(error!), final_rows = rows };
+                });
+                await Case(lane + "_array_procedure_preflight", async () =>
+                {
+                    using var c = Open(); using var cmd = Proc(c, "R"); int id = async ? 810 : 800;
+                    cmd.ArrayBindCount = 2;
+                    cmd.Parameters.Add(P("K", DmDbType.Int32, ParameterDirection.Input, new[] { id, id + 1 }));
+                    var output = P("B", DmDbType.Int32, ParameterDirection.Output, -1); cmd.Parameters.Add(output);
+                    Exception? error = null;
+                    try { if (async) await cmd.ExecuteNonQueryAsync(); else cmd.ExecuteNonQuery(); }
+                    catch (Exception e) { error = e; }
+                    Require(error is NotSupportedException, "array_procedure_not_rejected");
+                    Require((int)output.Value! == -1, "array_procedure_changed_output");
+                    using var fresh = Open();
+                    int rows = Convert.ToInt32(Scalar(fresh, $"SELECT COUNT(*) FROM \"{Name("DATA")}\" WHERE ID IN ({id},{id + 1})"));
+                    Require(rows == 0, "array_preflight_executed_procedure");
+                    return new { failure = Error(error!), final_rows = rows };
+                });
                 await Case(lane+"_prepared_reuse_and_sql_change",async()=>{using var c=Open();using var cmd=Proc(c,"P");cmd.Parameters.Add(P("A",DmDbType.Int32,ParameterDirection.Input,2));cmd.Parameters.Add(P("B",DmDbType.Int32,ParameterDirection.Output,-1));cmd.Parameters.Add(P("C",DmDbType.Int32,ParameterDirection.InputOutput,5));if(async)await cmd.PrepareAsync();else cmd.Prepare();if(async)await cmd.ExecuteNonQueryAsync();else cmd.ExecuteNonQuery();Require((int)cmd.Parameters[1].Value! ==12 && (int)cmd.Parameters[2].Value! ==7,"prepared_initial");cmd.CommandText=$"\"{TestUser}\".\"{Name("P2")}\"";if(async)await cmd.ExecuteNonQueryAsync();else cmd.ExecuteNonQuery();Require((int)cmd.Parameters[1].Value! ==22 && (int)cmd.Parameters[2].Value! ==11,"prepared_sql_change");return Values(cmd);});
                 await Case(lane+"_additional_types",async()=>{using var c=Open();using var cmd=Proc(c,"V");foreach(var x in new[]{("D",DmDbType.Date),("T",DmDbType.Time),("I",DmDbType.IntervalDayToSecond),("Y",DmDbType.IntervalYearToMonth),("S",DmDbType.VarChar),("B",DmDbType.VarBinary),("X",DmDbType.XDEC)})cmd.Parameters.Add(P(x.Item1,x.Item2,ParameterDirection.Output,DBNull.Value));if(async)await cmd.ExecuteNonQueryAsync();else cmd.ExecuteNonQuery();Results.Add(new{observed_case=lane+"_additional_types",parameters=Values(cmd)});Require((DateTime)cmd.Parameters[0].Value! ==new DateTime(2026,10,15),"date_value");Require(cmd.Parameters[1].Value is DateTime t && t.TimeOfDay==new TimeSpan(0,12,34,56).Add(TimeSpan.FromTicks(1234560)),"time_value");Require(cmd.Parameters[2].Value is DmIntervalDT dt && dt.getDay()==2 && dt.getHour()==3 && dt.getMinute()==4 && dt.getSecond()==5 && dt.getMsec()==123456,"interval_dt_value");Require(cmd.Parameters[3].Value is DmIntervalYM ym && ym.getYear()==3 && ym.getMonth()==4,"interval_ym_value");Require((string)cmd.Parameters[4].Value! =="I09 字符串","string_value");Require(cmd.Parameters[5].Value is byte[] b && b.SequenceEqual(new byte[]{0,17,254,255}),"binary_value");Require(cmd.Parameters[6].Value is W.Dm.DmDecimal xdec && xdec.ToString()=="123456789012345678901234567890123.12345","xdec_value");return Values(cmd);});
                 await Case(lane+"_decimal_overflow_no_publish",async()=>{using var c=Open();using var cmd=Proc(c,"V");foreach(var x in new[]{("D",DmDbType.Date),("T",DmDbType.Time),("I",DmDbType.IntervalDayToSecond),("Y",DmDbType.IntervalYearToMonth),("S",DmDbType.VarChar),("B",DmDbType.VarBinary),("X",DmDbType.Decimal)})cmd.Parameters.Add(P(x.Item1,x.Item2,ParameterDirection.Output,DBNull.Value));Exception? error=null;try{if(async)await cmd.ExecuteNonQueryAsync();else cmd.ExecuteNonQuery();}catch(Exception e){error=e;}Require(error is OverflowException,"large_decimal_not_rejected");Require(cmd.Parameters.Cast<DmParameter>().All(p=>p.Value==DBNull.Value),"large_decimal_partial_publish");return Error(error!);});

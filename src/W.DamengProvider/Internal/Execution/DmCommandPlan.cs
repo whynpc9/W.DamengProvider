@@ -63,6 +63,18 @@ internal sealed class DmCommandPlanGate
         }
     }
 
+    /// <summary>Marks a batch or batch command as executing without a command plan.</summary>
+    internal void EnterExecution(string owner)
+    {
+        lock (state)
+        {
+            if (disposed) throw new ObjectDisposedException(owner);
+            if (executing || mutationDepth != 0)
+                throw new InvalidOperationException($"{owner} is executing or being modified.");
+            executing = true;
+        }
+    }
+
     private void EndMutation()
     {
         lock (state)
@@ -115,16 +127,32 @@ internal sealed class DmCommandPlan : IDisposable
     internal DmTemporalParameterBinding[] TemporalBindings { get; private set; }
     internal bool HasOutputParameters => originalOutputs.Count != 0;
     internal bool HasCursorParameters { get; }
+    /// <summary>Zero for a scalar execution; otherwise the number of array-bound rows.</summary>
+    internal int ArrayBindCount { get; }
+    private readonly DmParameter[][] arrayRows;
 
     internal void ClearTemporalBindings() => TemporalBindings = null;
 
     internal void PublishTemporalBindings(DmTemporalParameterBinding[] bindings) =>
         TemporalBindings = (DmTemporalParameterBinding[])bindings.Clone();
 
+    /// <summary>Maps a resolved template parameter to its frozen values, one per row.</summary>
+    internal Func<int, DmParameter> RowParameters(DmParameter template)
+    {
+        if (arrayRows == null)
+            return row => row == 0 ? template : throw new ArgumentOutOfRangeException(nameof(row));
+        int index = Parameters.do_IndexOf(template);
+        if (index < 0) throw new InvalidOperationException("Parameter does not belong to this command plan.");
+        return row => arrayRows[row][index];
+    }
+
     private DmCommandPlan(string sql, string wireSql, CommandType commandType, int timeoutSeconds,
         DmTransaction transaction, DmConnection connection, DmParameterCollection parameters,
-        DmParameterBinding binding, DmParameterMetadata[] parameterMetadata, DmParameterCollection originals)
+        DmParameterBinding binding, DmParameterMetadata[] parameterMetadata, DmParameterCollection originals,
+        DmParameter[][] arrayRows = null)
     {
+        this.arrayRows = arrayRows;
+        ArrayBindCount = arrayRows?.Length ?? 0;
         Sql = sql;
         WireSql = wireSql;
         CommandType = commandType;
@@ -147,10 +175,15 @@ internal sealed class DmCommandPlan : IDisposable
     }
 
     internal static DmCommandPlan Capture(string sql, CommandType commandType, int timeoutSeconds,
-        DmTransaction transaction, DmConnection connection, DmParameterCollection parameters)
+        DmTransaction transaction, DmConnection connection, DmParameterCollection parameters, int arrayBindCount = 0)
     {
         ArgumentNullException.ThrowIfNull(parameters);
-        DmParameterCollection copy = parameters.CloneDetached(forPlan: true);
+        if (arrayBindCount != 0 && commandType != CommandType.Text)
+            throw new NotSupportedException("Array binding supports only CommandType.Text.");
+        DmParameter[][] rows = arrayBindCount == 0 ? null : CaptureArrayRows(parameters, arrayBindCount);
+        DmParameterCollection copy = rows == null ? parameters.CloneDetached(forPlan: true) : new DmParameterCollection();
+        // Row zero is the template used for marker resolution and prepared-metadata identity.
+        if (rows != null) foreach (DmParameter parameter in rows[0]) copy.do_Add(parameter);
         foreach (DmParameter parameter in copy) parameter.ValidateTypeConfiguration();
         string wireSql = commandType == CommandType.StoredProcedure ? DmProcedureCall.Create(sql, copy) : sql;
         DmParameterBinding binding = commandType == CommandType.StoredProcedure
@@ -162,7 +195,7 @@ internal sealed class DmCommandPlan : IDisposable
             if (DmTemporalMetadataSemantics.IsTemporal(DmSqlType.DmDbTypeToDmSqlType(metadata[index].DmSqlType)))
                 DmTemporalBindingResolver.ValidateRequest(metadata[index]);
         }
-        return new DmCommandPlan(sql, wireSql, commandType, timeoutSeconds, transaction, connection, copy, binding, metadata, parameters);
+        return new DmCommandPlan(sql, wireSql, commandType, timeoutSeconds, transaction, connection, copy, binding, metadata, parameters, rows);
     }
 
     internal void StageOutput(DmParameter snapshot, object value)
@@ -218,6 +251,39 @@ internal sealed class DmCommandPlan : IDisposable
             publishedCursors.Clear();
             stagedOutputs.Clear();
         }
+    }
+
+    private static DmParameter[][] CaptureArrayRows(DmParameterCollection parameters, int count)
+    {
+        if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "ArrayBindCount cannot be negative.");
+        if (parameters.do_Count == 0)
+            throw new InvalidOperationException("Array binding requires at least one parameter.");
+        var rows = new DmParameter[count][];
+        for (int row = 0; row < count; row++) rows[row] = new DmParameter[parameters.do_Count];
+        for (int index = 0; index < parameters.do_Count; index++)
+        {
+            DmParameter parameter = parameters.do_GetParameter(index);
+            if (parameter.do_Value is not Array values || values.Rank != 1 || values.Length != count)
+                throw new InvalidOperationException(
+                    $"Array-bound parameter '{parameter.do_ParameterName}' requires a one-dimensional array of ArrayBindCount values.");
+            DmParameter typed = null;
+            for (int row = 0; row < count; row++)
+            {
+                object element = values.GetValue(values.GetLowerBound(0) + row);
+                DmParameter clone = parameter.CloneForArrayRow(element);
+                if (clone.HasInferredType)
+                {
+                    if (typed == null) typed = clone;
+                    else if (!clone.SameInferredType(typed))
+                        throw new InvalidOperationException(
+                            $"Array-bound parameter '{parameter.do_ParameterName}' mixes values with different CLR type mappings; set DbType or DmSqlType.");
+                }
+                rows[row][index] = clone;
+            }
+            if (typed != null)
+                for (int row = 0; row < count; row++) rows[row][index].AdoptInferredType(typed);
+        }
+        return rows;
     }
 
     internal void Attach(DmCommandPlanGate owner)

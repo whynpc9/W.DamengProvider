@@ -1,10 +1,10 @@
 # 实现与测试文档
 
-当前产品项目为 `src/W.DamengProvider`，包与程序集名为 `W.DamengProvider`，公开命名空间为 `W.Dm`，目标框架为 .NET 10。驱动负责 ADO.NET、协议、传输、事务、类型、取消、容量管理与诊断；EF 模型、SQL 翻译和迁移由独立适配项目负责，驱动生产项目不引用 EF。
+当前产品项目为 `src/W.DamengProvider`，包与程序集名为 `W.DamengProvider`，公开命名空间为 `W.Dm`，当前源码目标框架为 .NET 8/9/10（已发布预览包仍仅 .NET 10）。驱动负责 ADO.NET、协议、传输、事务、类型、取消、容量管理与诊断；EF 模型、SQL 翻译和迁移由独立适配项目负责，驱动生产项目不引用 EF。
 
 ## 当前实现与发布
 
-仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，这些改动未包含在该包中。存储过程、输出参数和游标的源码契约见 [issue #9](../compatibility/I09-stored-procedures.md)，也尚未发布。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
+仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。源码还包含 PR #17、#18 合入的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)，以及 [issue #7/#8 数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)，这些改动未包含在该包中。存储过程、输出参数和游标的源码契约见 [issue #9](../compatibility/I09-stored-procedures.md)，也尚未发布。机器可读发布状态见 [progress.json](progress.json)，未实现的扩展见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
 
 | 内容 | 入口 |
 | --- | --- |
@@ -12,13 +12,14 @@
 | 配置、单位与别名 | [连接选项](../compatibility/T04-options.md)、[兼容变化](../compatibility/T04-breaking-changes.md) |
 | 会话与资源所有权 | [会话契约](../compatibility/T05-session-ownership.md) |
 | 传输与安全 | [帧与期限](../compatibility/T06-transport-boundaries.md)、[TLS](../compatibility/T07-security.md) |
-| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md) |
+| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、[存储过程与游标](../compatibility/I09-stored-procedures.md) |
 | 类型与时间精度 | [类型](../compatibility/T09-types.md)、[时间精度](../compatibility/TP-temporal-precision.md) |
 | 事务、隔离级别与保存点 | [事务](../compatibility/T10-transactions.md)、[隔离级别](../compatibility/T11-isolation.md) |
 | 异步与取消 | [异步契约](../compatibility/R2.md) |
 | 数据源、容量调度与流式 LOB | [数据源与 LOB](../compatibility/R3.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
+| .NET 8/9/10 多目标 | [源码、包消费与运行时验证；实库 pending](../compatibility/I12-multitarget.md) |
 | Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
 
 ## 开发与验证

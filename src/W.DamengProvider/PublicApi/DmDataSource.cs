@@ -39,6 +39,11 @@ public sealed class DmDataSource : DbDataSource
         ThrowIfDisposed();
         return new DmDataSourceCommand(this, commandText ?? string.Empty);
     }
+    protected override DbBatch CreateDbBatch()
+    {
+        ThrowIfDisposed();
+        return new DmDataSourceBatch(this);
+    }
     internal void ThrowIfDisposed()
     {
         if (Volatile.Read(ref disposed) != 0) throw new ObjectDisposedException(nameof(DmDataSource));

@@ -27,13 +27,14 @@ internal sealed class DmResultCursor
         if (info.GetHasResultSet())
         {
             if (info.GetRetStmtType() is DmConst.RET_DML_CALL or DmConst.RET_DML_INSERT
-                or DmConst.RET_DML_DELETE or DmConst.RET_DML_UPDATE)
+                or DmConst.RET_DML_DELETE or DmConst.RET_DML_UPDATE or DmConst.RET_DML_MERGE)
                 hasUnknownCount = true; // A rowset may hide a DML step or its count.
             return;
         }
 
         int resultType = info.GetRetStmtType();
-        if (resultType is DmConst.RET_DML_INSERT or DmConst.RET_DML_DELETE or DmConst.RET_DML_UPDATE)
+        if (resultType is DmConst.RET_DML_INSERT or DmConst.RET_DML_DELETE or DmConst.RET_DML_UPDATE
+            or DmConst.RET_DML_MERGE)
         {
             long count = info.GetRecordsAffected();
             if (count < 0) { hasUnknownCount = true; return; }

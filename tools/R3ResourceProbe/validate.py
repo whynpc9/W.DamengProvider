@@ -88,7 +88,7 @@ def main():
             result.get('mode') == mode and result.get('accepted') is True and result.get('exit_code') == 0 and
             result.get('production_release_accepted') is False and result.get('reference_kind') == 'exact_PackageReference' and
             result.get('package_version') == manifest['version'] and result.get('package_sha256') == manifest['package_sha256'] and
-            result.get('loaded_assembly_sha256') == hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest() == manifest['assets']['lib/net10.0/W.DamengProvider.dll'] and
+            result.get('loaded_assembly_sha256') == hashlib.sha256(Path(sys.argv[3]).read_bytes()).hexdigest() == manifest['assets'][f"lib/{result.get('target_framework', 'net10.0')}/W.DamengProvider.dll"] and
             result.get('upstream_pending') == ['T17_shared_large_value', 'shared_cleanup_recovery', 'complete_R3_matrix'])
     uuid.UUID(result['loaded_assembly_mvid'])
     budget = result.get('resource_budget', {})

@@ -1,6 +1,6 @@
 # W.DamengProvider
 
-面向达梦（Dameng）数据库的 .NET 10 ADO.NET 数据提供程序，提供异步数据库操作、参数绑定、本地事务、`DmDataSource`、流式 BLOB/CLOB 和标准 .NET 诊断接口。
+面向达梦（Dameng）数据库的 .NET 8/9/10 ADO.NET 数据提供程序，提供异步数据库操作、参数绑定、本地事务、`DmDataSource`、流式 BLOB/CLOB 和标准 .NET 诊断接口。
 
 这是社区维护的预览项目。包名和程序集名为 **W.DamengProvider**，公开命名空间为 **W.Dm**。它与 `DM.DmProvider` 有不同的程序集身份，现有应用和 EF 适配层需要显式更新依赖并重新编译。
 
@@ -12,7 +12,9 @@
 dotnet add package W.DamengProvider --version 0.1.0-preview.1
 ```
 
-运行环境为 .NET 10；构建使用仓库 `global.json` 指定的 SDK。
+已发布的 `0.1.0-preview.1` 仅包含 `net10.0`。当前源码扩为 `net8.0;net9.0;net10.0`，尚未发布；构建仍使用 `global.json` 固定的 SDK 10.0.401，与应用运行时分开管理。各目标的实测结果与待补实库项目见[多目标兼容记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I12-multitarget.md)。
+
+仅 `net8.0` 依赖官方 `Microsoft.Bcl.Cryptography 10.0.12`（传递依赖 `System.Formats.Asn1 10.0.12`）；`net9.0` 和 `net10.0` 使用平台 API，无额外运行时 NuGet 依赖。按[微软生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)，.NET 8/9 支持期均到 2026-11-10；库兼容验证不延长运行时维护期。
 
 仓库源码另包含未随该包发布的 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。源码还支持 [存储过程、标量输出/返回值与受管输出游标](docs/compatibility/I09-stored-procedures.md)。阅读兼容文档时请区分源码行为与包版本。
 

@@ -996,7 +996,33 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 	// filters, the public mutation gate, or input type inference on this path.
 	internal void PublishOutputValue(object value) => m_value = value;
 
-	private DmParameter CloneCore(bool strictSnapshot)
+	/// <summary>Snapshots one array-bound row; the template's own value is the row array.</summary>
+	internal DmParameter CloneForArrayRow(object element)
+	{
+		if (element is Stream or TextReader or DmLobInput)
+			throw new NotSupportedException("Streaming inputs cannot be array-bound.");
+		element ??= DBNull.Value;
+		var clone = CloneCore(strictSnapshot: false, element);
+		clone.m_value = CopyMutableValue(element, strictSnapshot: true);
+		if (!clone.explicitDbType && !clone.explicitDmSqlType) clone.InferFromValue(clone.m_value);
+		return clone;
+	}
+
+	internal bool HasInferredType => !explicitDbType && !explicitDmSqlType && inferredTypeKnown;
+
+	internal bool SameInferredType(DmParameter other) =>
+		m_DbType == other.m_DbType && m_DmSqlType == other.m_DmSqlType && inferredTypeKnown == other.inferredTypeKnown;
+
+	/// <summary>A NULL array row takes the CLR mapping of the parameter's non-NULL rows.</summary>
+	internal void AdoptInferredType(DmParameter source)
+	{
+		if (explicitDbType || explicitDmSqlType || m_value is not DBNull) return;
+		m_DbType = source.m_DbType;
+		m_DmSqlType = source.m_DmSqlType;
+		inferredTypeKnown = source.inferredTypeKnown;
+	}
+
+	private DmParameter CloneCore(bool strictSnapshot, object valueOverride = null)
 	{
 		var clone = new DmParameter
 		{
@@ -1018,6 +1044,7 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 			m_DataRowVer = m_DataRowVer,
 			m_value = strictSnapshot && m_Direct is ParameterDirection.Output or ParameterDirection.ReturnValue
 				? DBNull.Value
+				: valueOverride != null ? null
 				: strictSnapshot && (m_value is Stream or TextReader) ? FreezeStreamingInput() : CopyMutableValue(m_value, strictSnapshot),
 			m_SourceColumnNullMapping = m_SourceColumnNullMapping,
 			m_refCursorStmt = null,

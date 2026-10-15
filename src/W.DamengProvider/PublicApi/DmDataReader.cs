@@ -163,8 +163,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		return new DmLobReadStream(ActivateLobCursor(ordinal, false));
-			}
+			return new DmLobReadStream(ActivateLobCursor(ordinal, false));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -173,8 +173,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		return new DmLobTextReader(ActivateLobCursor(ordinal, true));
-			}
+			return new DmLobTextReader(ActivateLobCursor(ordinal, true));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -361,16 +361,16 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		get
 		{
 			using var invocation = BeginReaderInvocation();
-		try
-		{
-			if (filterHead == null)
+			try
 			{
-				return CompleteReaderInvocationIfSent(invocation, do_this(number));
-			}
-			return filterHead.getThis(this, number);
+				if (filterHead == null)
+				{
+					return CompleteReaderInvocationIfSent(invocation, do_this(number));
 				}
-		catch { MarkProcedureFailure(); throw; }
-	}
+				return filterHead.getThis(this, number);
+			}
+			catch { MarkProcedureFailure(); throw; }
+		}
 	}
 
 	public override object this[string name]
@@ -378,16 +378,16 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		get
 		{
 			using var invocation = BeginReaderInvocation();
-		try
-		{
-			if (filterHead == null)
+			try
 			{
-				return CompleteReaderInvocationIfSent(invocation, do_this(name));
-			}
-			return filterHead.getThis(this, name);
+				if (filterHead == null)
+				{
+					return CompleteReaderInvocationIfSent(invocation, do_this(name));
 				}
-		catch { MarkProcedureFailure(); throw; }
-	}
+				return filterHead.getThis(this, name);
+			}
+			catch { MarkProcedureFailure(); throw; }
+		}
 	}
 
 	public override int Depth
@@ -647,14 +647,14 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		byte[] value = null;
-		checkClosed();
-		GetByteArrayValue(i, ref value);
-		int cType = m_ColInfo[i].GetCType();
-		int precision = m_ColInfo[i].GetPrecision();
-		int scale = m_ColInfo[i].GetScale();
-		return m_GetVal.GetByte(i, value, cType, precision, scale);
-			}
+			byte[] value = null;
+			checkClosed();
+			GetByteArrayValue(i, ref value);
+			int cType = m_ColInfo[i].GetCType();
+			int precision = m_ColInfo[i].GetPrecision();
+			int scale = m_ColInfo[i].GetScale();
+			return m_GetVal.GetByte(i, value, cType, precision, scale);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1057,18 +1057,18 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		CheckIndex(ordinal);
-		int cType = m_ColInfo[ordinal].GetCType();
-		if (cType is not (9 or 24)) return CompleteReaderInvocationIfSent(invocation, GetValueOwned(ordinal));
-		byte[] value = null;
-		GetByteArrayValue(ordinal, ref value);
-		if (value == null) return CompleteReaderInvocationIfSent(invocation, (object)DBNull.Value);
-		int precision = m_ColInfo[ordinal].GetPrecision();
-		int scale = m_ColInfo[ordinal].GetScale();
-		return CompleteReaderInvocationIfSent(invocation, cType == 9
-			? (object)DmNumericCodec.DecodeDecimal(value, precision > 0 && scale >= 0 ? scale : null)
-			: DmNumericCodec.DecodeScaledInt64(value, scale));
-			}
+			CheckIndex(ordinal);
+			int cType = m_ColInfo[ordinal].GetCType();
+			if (cType is not (9 or 24)) return CompleteReaderInvocationIfSent(invocation, GetValueOwned(ordinal));
+			byte[] value = null;
+			GetByteArrayValue(ordinal, ref value);
+			if (value == null) return CompleteReaderInvocationIfSent(invocation, (object)DBNull.Value);
+			int precision = m_ColInfo[ordinal].GetPrecision();
+			int scale = m_ColInfo[ordinal].GetScale();
+			return CompleteReaderInvocationIfSent(invocation, cType == 9
+				? (object)DmNumericCodec.DecodeDecimal(value, precision > 0 && scale >= 0 ? scale : null)
+				: DmNumericCodec.DecodeScaledInt64(value, scale));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1077,12 +1077,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		checkClosed();
-		if (values == null) return 0;
-		int count = Math.Min(values.Length, m_DbInfo.GetColumnCount());
-		for (int i = 0; i < count; i++) values[i] = do_GetProviderSpecificValue(i);
-		return CompleteReaderInvocationIfSent(invocation, count);
-			}
+			checkClosed();
+			if (values == null) return 0;
+			int count = Math.Min(values.Length, m_DbInfo.GetColumnCount());
+			for (int i = 0; i < count; i++) values[i] = do_GetProviderSpecificValue(i);
+			return CompleteReaderInvocationIfSent(invocation, count);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1091,8 +1091,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		return GetSchemaTableOwned();
-			}
+			return GetSchemaTableOwned();
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1115,12 +1115,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "do_GetDataTable()");
-		checkClosed();
-		DataTable dataTable = new DataTable();
-		new DmDataAdapter().do_Fill(dataTable, this);
-		return dataTable;
-			}
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "do_GetDataTable()");
+			checkClosed();
+			DataTable dataTable = new DataTable();
+			new DmDataAdapter().do_Fill(dataTable, this);
+			return dataTable;
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1129,19 +1129,19 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		byte[] value = null;
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetString(int i)");
-		checkClosed();
-		GetByteArrayValue(i, ref value);
-		int cType = m_ColInfo[i].GetCType();
-		int precision = m_ColInfo[i].GetPrecision();
-		int scale = m_ColInfo[i].GetScale();
-		if (value == null)
-		{
-			DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
-		}
-		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetString(i, value, cType, precision, scale));
+			byte[] value = null;
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetString(int i)");
+			checkClosed();
+			GetByteArrayValue(i, ref value);
+			int cType = m_ColInfo[i].GetCType();
+			int precision = m_ColInfo[i].GetPrecision();
+			int scale = m_ColInfo[i].GetScale();
+			if (value == null)
+			{
+				DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
 			}
+			return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetString(i, value, cType, precision, scale));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1150,8 +1150,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		return CompleteReaderInvocationIfSent(invocation, GetValueOwned(i));
-			}
+			return CompleteReaderInvocationIfSent(invocation, GetValueOwned(i));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1200,23 +1200,23 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetValues(object[] values)");
-		checkClosed();
-		if (values == null)
-		{
-			return 0;
-		}
-		int num = m_DbInfo.GetColumnCount();
-		if (values.Length < num)
-		{
-			num = values.Length;
-		}
-		for (int i = 0; i < num; i++)
-		{
-			values[i] = do_GetValue(i);
-		}
-		return CompleteReaderInvocationIfSent(invocation, num);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetValues(object[] values)");
+			checkClosed();
+			if (values == null)
+			{
+				return 0;
 			}
+			int num = m_DbInfo.GetColumnCount();
+			if (values.Length < num)
+			{
+				num = values.Length;
+			}
+			for (int i = 0; i < num; i++)
+			{
+				values[i] = do_GetValue(i);
+			}
+			return CompleteReaderInvocationIfSent(invocation, num);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1225,16 +1225,16 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "IsDBNull(int i)");
-		checkClosed();
-		byte[] value = null;
-		GetByteArrayValue(i, ref value);
-		if (value == null)
-		{
-			return true;
-		}
-		return false;
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "IsDBNull(int i)");
+			checkClosed();
+			byte[] value = null;
+			GetByteArrayValue(i, ref value);
+			if (value == null)
+			{
+				return true;
 			}
+			return false;
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1243,8 +1243,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		return NextResultOwned();
-			}
+			return NextResultOwned();
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1312,8 +1312,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginInternalInvocation();
 		try
 		{
-		return CompleteReaderInvocationIfSent(invocation, ReadOwned());
-			}
+			return CompleteReaderInvocationIfSent(invocation, ReadOwned());
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1615,12 +1615,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetBoolean(i));
-		}
-		return filterHead.GetBoolean(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetBoolean(i));
 			}
+			return filterHead.GetBoolean(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1629,12 +1629,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetByte(i));
-		}
-		return filterHead.GetByte(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetByte(i));
 			}
+			return filterHead.GetByte(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1643,12 +1643,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetBytes(i, fieldOffset, buffer, bufferoffset, length));
-		}
-		return filterHead.GetBytes(this, i, fieldOffset, buffer, bufferoffset, length);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetBytes(i, fieldOffset, buffer, bufferoffset, length));
 			}
+			return filterHead.GetBytes(this, i, fieldOffset, buffer, bufferoffset, length);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1657,12 +1657,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetChar(i));
-		}
-		return filterHead.GetChar(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetChar(i));
 			}
+			return filterHead.GetChar(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1671,12 +1671,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetChars(i, fieldoffset, buffer, bufferoffset, length));
-		}
-		return filterHead.GetChars(this, i, fieldoffset, buffer, bufferoffset, length);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetChars(i, fieldoffset, buffer, bufferoffset, length));
 			}
+			return filterHead.GetChars(this, i, fieldoffset, buffer, bufferoffset, length);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1685,12 +1685,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetDataTypeName(i);
-		}
-		return filterHead.GetDataTypeName(this, i);
+			if (filterHead == null)
+			{
+				return do_GetDataTypeName(i);
 			}
+			return filterHead.GetDataTypeName(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1699,12 +1699,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetDateTime(i));
-		}
-		return filterHead.GetDateTime(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetDateTime(i));
 			}
+			return filterHead.GetDateTime(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1713,12 +1713,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetDecimal(i));
-		}
-		return filterHead.GetDecimal(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetDecimal(i));
 			}
+			return filterHead.GetDecimal(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1727,12 +1727,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetDouble(i));
-		}
-		return filterHead.GetDouble(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetDouble(i));
 			}
+			return filterHead.GetDouble(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1741,12 +1741,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetEnumerator();
-		}
-		return filterHead.GetEnumerator(this);
+			if (filterHead == null)
+			{
+				return do_GetEnumerator();
 			}
+			return filterHead.GetEnumerator(this);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1755,12 +1755,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetFieldType(i);
-		}
-		return filterHead.GetFieldType(this, i);
+			if (filterHead == null)
+			{
+				return do_GetFieldType(i);
 			}
+			return filterHead.GetFieldType(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1769,12 +1769,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetFloat(i));
-		}
-		return filterHead.GetFloat(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetFloat(i));
 			}
+			return filterHead.GetFloat(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1783,12 +1783,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetGuid(i));
-		}
-		return filterHead.GetGuid(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetGuid(i));
 			}
+			return filterHead.GetGuid(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1797,12 +1797,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetInt16(i));
-		}
-		return filterHead.GetInt16(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetInt16(i));
 			}
+			return filterHead.GetInt16(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1811,12 +1811,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetInt32(i));
-		}
-		return filterHead.GetInt32(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetInt32(i));
 			}
+			return filterHead.GetInt32(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1825,12 +1825,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetInt64(i));
-		}
-		return filterHead.GetInt64(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetInt64(i));
 			}
+			return filterHead.GetInt64(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1839,12 +1839,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetName(i);
-		}
-		return filterHead.GetName(this, i);
+			if (filterHead == null)
+			{
+				return do_GetName(i);
 			}
+			return filterHead.GetName(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1853,12 +1853,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetOrdinal(name);
-		}
-		return filterHead.GetOrdinal(this, name);
+			if (filterHead == null)
+			{
+				return do_GetOrdinal(name);
 			}
+			return filterHead.GetOrdinal(this, name);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1867,12 +1867,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_GetProviderSpecificFieldType(ordinal);
-		}
-		return filterHead.GetProviderSpecificFieldType(this, ordinal);
+			if (filterHead == null)
+			{
+				return do_GetProviderSpecificFieldType(ordinal);
 			}
+			return filterHead.GetProviderSpecificFieldType(this, ordinal);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1881,12 +1881,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValue(ordinal));
-		}
-		return filterHead.GetProviderSpecificValue(this, ordinal);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValue(ordinal));
 			}
+			return filterHead.GetProviderSpecificValue(this, ordinal);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1895,12 +1895,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValues(values));
-		}
-		return filterHead.GetProviderSpecificValues(this, values);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetProviderSpecificValues(values));
 			}
+			return filterHead.GetProviderSpecificValues(this, values);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1909,12 +1909,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return GetSchemaTableOwned();
-		}
-		return filterHead.GetSchemaTable(this);
+			if (filterHead == null)
+			{
+				return GetSchemaTableOwned();
 			}
+			return filterHead.GetSchemaTable(this);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1923,12 +1923,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetString(i));
-		}
-		return filterHead.GetString(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetString(i));
 			}
+			return filterHead.GetString(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -1937,12 +1937,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetValue(i));
-		}
-		return filterHead.GetValue(this, i);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetValue(i));
 			}
+			return filterHead.GetValue(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2028,12 +2028,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return CompleteReaderInvocationIfSent(invocation, do_GetValues(values));
-		}
-		return filterHead.GetValues(this, values);
+			if (filterHead == null)
+			{
+				return CompleteReaderInvocationIfSent(invocation, do_GetValues(values));
 			}
+			return filterHead.GetValues(this, values);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2042,12 +2042,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		if (filterHead == null)
-		{
-			return do_IsDBNull(i);
-		}
-		return filterHead.IsDBNull(this, i);
+			if (filterHead == null)
+			{
+				return do_IsDBNull(i);
 			}
+			return filterHead.IsDBNull(this, i);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2192,17 +2192,17 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Previous()");
-		checkClosed();
-		ClearClobs();
-		if (!do_HasRows)
-		{
-			return false;
-		}
-		bool result = m_RsCache.do_previous();
-		m_CurrentRow = m_RsCache.currentPos;
-		return CompleteReaderInvocationIfSent(invocation, result);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Previous()");
+			checkClosed();
+			ClearClobs();
+			if (!do_HasRows)
+			{
+				return false;
 			}
+			bool result = m_RsCache.do_previous();
+			m_CurrentRow = m_RsCache.currentPos;
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2211,17 +2211,17 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "First()");
-		checkClosed();
-		ClearClobs();
-		if (!do_HasRows)
-		{
-			return false;
-		}
-		bool result = m_RsCache.do_first();
-		m_CurrentRow = m_RsCache.currentPos;
-		return CompleteReaderInvocationIfSent(invocation, result);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "First()");
+			checkClosed();
+			ClearClobs();
+			if (!do_HasRows)
+			{
+				return false;
 			}
+			bool result = m_RsCache.do_first();
+			m_CurrentRow = m_RsCache.currentPos;
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2230,17 +2230,17 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Last()");
-		checkClosed();
-		ClearClobs();
-		if (!do_HasRows)
-		{
-			return false;
-		}
-		bool result = m_RsCache.do_last();
-		m_CurrentRow = m_RsCache.currentPos;
-		return CompleteReaderInvocationIfSent(invocation, result);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Last()");
+			checkClosed();
+			ClearClobs();
+			if (!do_HasRows)
+			{
+				return false;
 			}
+			bool result = m_RsCache.do_last();
+			m_CurrentRow = m_RsCache.currentPos;
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2249,17 +2249,17 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Absolute()");
-		checkClosed();
-		ClearClobs();
-		if (!do_HasRows)
-		{
-			return false;
-		}
-		bool result = m_RsCache.do_absolute(pos);
-		m_CurrentRow = m_RsCache.currentPos;
-		return CompleteReaderInvocationIfSent(invocation, result);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Absolute()");
+			checkClosed();
+			ClearClobs();
+			if (!do_HasRows)
+			{
+				return false;
 			}
+			bool result = m_RsCache.do_absolute(pos);
+			m_CurrentRow = m_RsCache.currentPos;
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2268,17 +2268,17 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Relative()");
-		checkClosed();
-		ClearClobs();
-		if (!do_HasRows)
-		{
-			return false;
-		}
-		bool result = m_RsCache.do_relative(pos);
-		m_CurrentRow = m_RsCache.currentPos;
-		return CompleteReaderInvocationIfSent(invocation, result);
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "Relative()");
+			checkClosed();
+			ClearClobs();
+			if (!do_HasRows)
+			{
+				return false;
 			}
+			bool result = m_RsCache.do_relative(pos);
+			m_CurrentRow = m_RsCache.currentPos;
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2287,11 +2287,11 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetData(int i)");
-		checkClosed();
-		DmError.ThrowUnsupportedException();
-		return null;
-			}
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetData(int i)");
+			checkClosed();
+			DmError.ThrowUnsupportedException();
+			return null;
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2300,15 +2300,15 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		byte[] value = null;
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDateTime(int i)");
-		checkClosed();
-		GetByteArrayValue(i, ref value);
-		int cType = m_ColInfo[i].GetCType();
-		int precision = m_ColInfo[i].GetPrecision();
-		int scale = m_ColInfo[i].GetScale();
-		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetTimestampTZ(i, value, cType, precision, scale));
-			}
+			byte[] value = null;
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDateTime(int i)");
+			checkClosed();
+			GetByteArrayValue(i, ref value);
+			int cType = m_ColInfo[i].GetCType();
+			int precision = m_ColInfo[i].GetPrecision();
+			int scale = m_ColInfo[i].GetScale();
+			return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetTimestampTZ(i, value, cType, precision, scale));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2317,15 +2317,15 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		byte[] value = null;
-		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDecimal(int i)");
-		checkClosed();
-		GetByteArrayValue(i, ref value);
-		int cType = m_ColInfo[i].GetCType();
-		int precision = m_ColInfo[i].GetPrecision();
-		int scale = m_ColInfo[i].GetScale();
-		return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetDmDecimal(i, value, cType, precision, scale));
-			}
+			byte[] value = null;
+			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "GetDecimal(int i)");
+			checkClosed();
+			GetByteArrayValue(i, ref value);
+			int cType = m_ColInfo[i].GetCType();
+			int precision = m_ColInfo[i].GetPrecision();
+			int scale = m_ColInfo[i].GetScale();
+			return CompleteReaderInvocationIfSent(invocation, m_GetVal.GetDmDecimal(i, value, cType, precision, scale));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2341,8 +2341,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		return CompleteReaderInvocationIfSent(invocation, GetBlobOwned(i));
-			}
+			return CompleteReaderInvocationIfSent(invocation, GetBlobOwned(i));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
@@ -2357,8 +2357,8 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		using var invocation = BeginReaderInvocation();
 		try
 		{
-		return CompleteReaderInvocationIfSent(invocation, GetClobOwned(i));
-			}
+			return CompleteReaderInvocationIfSent(invocation, GetClobOwned(i));
+		}
 		catch { MarkProcedureFailure(); throw; }
 	}
 
