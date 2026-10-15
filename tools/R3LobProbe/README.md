@@ -1,8 +1,8 @@
 # T17 public streaming 独立包 consumer
 
-仅精确 PackageReference 消费 root 冻结的新候选；校验包/version/DLL hash/MVID/deps，旧 ACK/profile工具保持只读。High 写源码后停写，root整体review/freeze，Low独占 build/test/真实库窗口。
+仅精确 PackageReference 消费 root 冻结的新候选；校验包/version/DLL hash/MVID/deps，旧 ACK/profile工具保持只读。实现者写源码后停写，root整体review/freeze，验证者独占 build/test/真实库窗口。
 
-预固定输入与预算写入每轮 manifest：Blob **67109888 bytes（64MiB+1024）**，byte_cycle_v1 seed17/stride131，unknown/nonseek/async-only generator，Length/Position/CanSeek/Seek及同步Read若被产品访问即抛。独立reference增量SHA256只一块32KiB缓冲，不存完整Blob。Clob与声明NCLOB各 **1158260 UTF16 chars**：Luna独立large Unicode值十个周期加不同cycle marker，包含emoji/BMP/NUL/组合字符，unknownlength async-only TextReader产生正短读并切开代理对；产品不得Dispose或rewind。固定 command总300秒、connect15秒、过程1800秒，失败后不提高预算或降低值大小。64MiB完整API限额拒绝与同字段public流完整读取都必须通过，不能据此推断服务器最大LOB。
+预固定输入与预算写入每轮 manifest：Blob **67109888 bytes（64MiB+1024）**，byte_cycle_v1 seed17/stride131，unknown/nonseek/async-only generator，Length/Position/CanSeek/Seek及同步Read若被产品访问即抛。独立reference增量SHA256只一块32KiB缓冲，不存完整Blob。Clob与声明NCLOB各 **1158260 UTF16 chars**：合成数据独立large Unicode值十个周期加不同cycle marker，包含emoji/BMP/NUL/组合字符，unknownlength async-only TextReader产生正短读并切开代理对；产品不得Dispose或rewind。固定 command总300秒、connect15秒、过程1800秒，失败后不提高预算或降低值大小。64MiB完整API限额拒绝与同字段public流完整读取都必须通过，不能据此推断服务器最大LOB。
 
 只调用公开 GetStream/GetTextReader 和 Value=Stream/Blob、TextReader/Clob。构造无GET_LOB_LEN/DATA；firstRead记录实际opcode32请求差额1–2与实际reply body累计小于1MiB，分别返回最多1031bytes/17chars，不能背后先扫全值再仅返回小buffer而通过。small buffers逐段独立内容/hash/UTF16/rune对照，不物化大字符值。64MiB cap必须精确匹配NotSupportedException的固定安全limit消息（仅内部比较，JSON不打印原异常文本），且GetValue无GETDATA、reader仍Open、同reader同字段GetStream可读正确前缀，随后独立完整大值hash门。测GetBytes/GetChars forward和向后拒绝、null-buffer长度独立扫描不消耗main flow、合法zeroLen无IO、第二activeflow拒绝、row/result/reader-close/reopened physical lease下旧flow在I/O前失效。同步公共GetValue/GetBytes/GetChars明确隔离网络计数，不冒充async；其余实际async入口sync0。
 

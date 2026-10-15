@@ -12,4 +12,4 @@ TLS预声明budget固定：warmup60秒，measurement600秒且≥500完成create/
 
 累计count采用ObservableCounter读取process原子值，export queue只span/hist；collector保存每固定tag桶最新累计数，不累加重复poll，quiet桶sum必须等core truth。late-listener/overflow恢复也不能丢created/closed总数；显式RecordObservableInstruments的用户callback异常属于调用方，不能要求Core替外部SDK调用万能catch。固定15个实际instrument由源码集合严格验证，未知动态名称/tag拒绝且不写原值。
 
-命令与退出码、源码/包前后hash、依赖、safe stdout/stderr/checkpoint保留。High准备源码后整体冻结，Low单窗口执行；没有执行前不预填pass。超900秒需按checkpoint的本轮精确名字恢复，旧失败不覆盖。
+命令与退出码、源码/包前后hash、依赖、safe stdout/stderr/checkpoint保留。实现者准备源码后整体冻结，验证者单窗口执行；没有执行前不预填pass。超900秒需按checkpoint的本轮精确名字恢复，旧失败不覆盖。

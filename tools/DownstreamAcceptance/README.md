@@ -1,8 +1,10 @@
 # T11 隔离 EF 消费者
 
+> 历史样本重现入口：固定候选、manifest、approval 字段和下游提交属于工具输入契约。文中的旧窗口与角色不约束当前模型或 harness，也不授予新的运行权限。当前开发遵循 [AGENTS.md](../../AGENTS.md)，当前支持范围见实现文档索引。
+
 只从 EF clean commit `113014cc74dd1f751ef97226a78d2ec855b32c8c` 导出 O/W 两份；原 EF 仓库只读。本入口不读取其秘密文件、不运行 EF launcher、all/admin、dotnet ef 或管理员迁移测试。当前只覆盖 T11 SaveChanges 矩阵，完整 EF suite 和 R1 nupkg 交接仍属 T12。
 
-`prepare.py snapshot` / `bind` 不执行 dotnet/DB。所有 build/run 由 verify_61 在唯一窗口执行，owner 源码 ready 后冻结。每次新候选使用新 output 目录；不覆盖同版本包或旧验收记录。
+`prepare.py snapshot` / `bind` 不执行 dotnet/DB。所有 build/run 由验证者在唯一窗口执行，owner 源码 ready 后冻结。每次新候选使用新 output 目录；不覆盖同版本包或旧验收记录。
 
 ```sh
 python3 tools/DownstreamAcceptance/prepare.py snapshot --output .local/t11/ef/<run>
@@ -13,7 +15,7 @@ python3 tools/DownstreamAcceptance/prepare.py bind --output .local/t11/ef/<run> 
 
 PackageId 固定 `W.DamengProvider`、TFM `net10.0`；bind 校验 nuspec identity、nupkg hash 与包内 DLL hash，拷贝候选到 isolated local feed，记录确定性补丁。生产 EF src 的 `using Dm` / XML cref / PackageReference 和 central package 切到 W；EF 固定 `10.0.12`。SQL generator、SingleModificationCommandBatch、类型行为保持原输入；日期时间/TimeSpan GetString 路径保留。上游 tests/launcher 未切换，不能把原 tests 当 W suite 执行。
 
-Low 的受控命令：
+验证者的受控命令：
 
 ```sh
 python3 tools/DownstreamAcceptance/run.py build --output .local/t11/ef/<run> --lane O
@@ -47,7 +49,7 @@ EF路径也可用非秘密环境`DAMENG_T12_EF_REPO`；.NET host用`DAMENG_T12_D
 
 R1 W重试guard只信`DmException.IsTransient==true`且非CommitUnknown；当前普通错误与CommitUnknown均false，不推荐重放。非空additionalErrorNumbers在builder和strategy构造明确NotSupportedException，null/empty保留；O旧number策略在原archive，未伪称兼容。
 
-Low唯一实际窗口。首段可先build小audit与unit，立即反馈真实catalog/lock权限和离线正确性，再build完整普通functional/spec4slice：
+验证者唯一实际窗口。首段可先build小audit与unit，立即反馈真实catalog/lock权限和离线正确性，再build完整普通functional/spec4slice：
 
 ```sh
 python3 -B tools/DownstreamAcceptance/t12_run.py build --output .local/t12/ef/<run> --lane audit

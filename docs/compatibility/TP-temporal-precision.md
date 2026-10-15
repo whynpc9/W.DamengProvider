@@ -2,7 +2,7 @@
 
 当前已发布 `0.1.0-preview.1`；本页描述产品行为及历史阶段证据，正式发布范围见[发布记录](../release-0.1.0-preview.1.md)。
 
-本页记录时间精度行为和已表征 profile；历史验证结果不代表该发布版本已验收。设计见 [v2 计划](../implementation/temporal-dotnet-precision-plan.v2.md)，驱动验收见 [TP06 最终接受](../implementation/temporal-native/TP06-acceptance.md)，EF 收口见 [TP07/TP08 收口报告](../implementation/temporal-native/TP07-TP08-closure.md)。
+本页记录当前时间精度行为和已表征 profile；历史验证结果仅归属原受测版本。EF 适配和迁移属于独立下游项目。
 
 ## 行为变化
 
@@ -19,7 +19,7 @@
 | typed NULL，Scale 超过 profile 上限 | 声明降为 extended 7 | 声明降为 legacy 6 |
 
 - 可靠 fixed describe 始终优先：显式 DateTime2 写入六位列时仍受该列六位约束。
-- typed NULL 不携带小数位：有 fixed describe 时沿用服务器声明（含 8/9 位列），否则按上表降级声明；非 NULL 值的限制不变（[issue #16 修订](I16-ef-integration-feedback.md#3-89-位时间列的-typed-null)，未随 0.1.0-preview.1 发布）。
+- typed NULL 不携带小数位：在已验证七位 profile 下，有可靠 fixed describe 时可沿用服务器声明（含 8/9 位列）；其他 profile 仍执行原声明校验，无 fixed describe 时按上表降级声明；非 NULL 值的限制不变（[issue #16 修订](I16-ef-integration-feedback.md#3-89-位时间列的-typed-null)，未随 0.1.0-preview.1 发布）。
 - Reader：`GetString` 从原始纳秒字段返回精确文本；8/9 位列中不能整除 100ns 的值，CLR getter 抛 `OverflowException`。schema `NumericScale` 报真实小数位数。TZ 列 `GetValue` 返回 `DateTimeOffset`（官方驱动为 `DateTime`）。
 - 公开旧 helper（`DmDateTime`、`DmTime`、`DmIntervalDT` 等）先前舍入的超精度输入现在拒绝；签名不变。
 - 保守关闭：TIME/INTERVAL 七位写、非 NULL 八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
@@ -49,7 +49,7 @@ BEGIN
 END;
 ```
 
-- 服务器错误后的会话保留受 profile、严格回执、错误号白名单和执行上下文限制（见 [错误恢复说明](../implementation/ef-functional-compat-gaps.md) §2.1）。无法确认会话可用时需新连接；迁移 guard 拒绝后先检查事务和连接状态，不自动重试或继续清理。
+- 服务器错误后的会话保留受 profile、严格回执、错误号白名单和执行上下文限制（见 [错误恢复说明](server-error-recovery.md)）。无法确认会话可用时需新连接；迁移 guard 拒绝后先检查事务和连接状态，不自动重试或继续清理。
 
 ## 回退
 

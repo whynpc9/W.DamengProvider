@@ -1,6 +1,6 @@
 # TP07/TP08 收口：EF 七位精度实库验收与交付
 
-2026-10-12。本报告接替 [HANDOFF](HANDOFF-2026-10-12.md) 第 7 节待办。按用户对本轮的授权，不再沿用交接中的恢复 adapter/进程回收夹具与多层审批链；下述验证直接以产品行为和实库结果为门。旧 D guarded 失败、恢复工具 v1–v5 及其证据原样保留，不改写成通过。
+2026-10-12。本报告接替 [HANDOFF（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/temporal-native/HANDOFF-2026-10-12.md) 第 7 节待办。按用户对本轮的授权，不再沿用交接中的恢复 adapter/进程回收夹具与多层审批链；下述验证直接以产品行为和实库结果为门。旧 D guarded 失败、恢复工具 v1–v5 及其证据原样保留，不改写成通过。
 
 ## 1. 候选身份
 

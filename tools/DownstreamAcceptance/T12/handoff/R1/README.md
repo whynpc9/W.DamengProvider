@@ -21,7 +21,7 @@ EF基线 `113014cc74dd1f751ef97226a78d2ec855b32c8c`，archive SHA256 `9dead07c1d
 
 在固定commit的**新隔离副本**先 `git apply --check <combined.patch>` 再 `git apply <combined.patch>`。原用户工作区不能直接替换。实际重现使用仓库 `tools/DownstreamAcceptance/t12_prepare.py`：传上述真实nupkg四identity和两个owner patch，固定commit/hash不跟HEAD；EF checkout可由非秘密 `DAMENG_T12_EF_REPO` 指定，.401 host由 `DAMENG_T12_DOTNET_HOST` 指定。root目录、SDK/feed/cache/加载DLL与锁都会记录，候选版本不能复用覆盖。
 
-Low实际入口 `t12_run.py build|run --output <fresh .local/t12/ef/run> --lane audit|unit|functional|specification|scripts|cli`；scripts/cli共享functional build。每次dotnet设可写DOTNET_CLI_HOME、禁首次体验/telemetry，single-node/no-reuse/no-shared-compilation/disable-build-servers。DB仅由TEST wrapper注入唯一DAMENG_TEST_CONNECTION_STRING，认证前核typed User、连接后核USER/currentSchema；W测试显式PlaintextAllowed，生产RequireTls默认保留。CLI fixed host目录prepend子PATH，SDK pin不放宽；scaffold no-onconfiguring/named内存配置、不落连接串；所有子进程有界期限和安全输出。
+验证者实际入口 `t12_run.py build|run --output <fresh .local/t12/ef/run> --lane audit|unit|functional|specification|scripts|cli`；scripts/cli共享functional build。每次dotnet设可写DOTNET_CLI_HOME、禁首次体验/telemetry，single-node/no-reuse/no-shared-compilation/disable-build-servers。DB仅由TEST wrapper注入唯一DAMENG_TEST_CONNECTION_STRING，认证前核typed User、连接后核USER/currentSchema；W测试显式PlaintextAllowed，生产RequireTls默认保留。CLI fixed host目录prepend子PATH，SDK pin不放宽；scaffold no-onconfiguring/named内存配置、不落连接串；所有子进程有界期限和安全输出。
 
 R1重试只允许driver IsTransient=true且非CommitUnknown；当前普通和Unknown错误都不推荐重放。非空additionalErrorNumbers在builder/strategy明确NotSupportedException，null/empty仍保留。保留SQL/单修改命令batch、SQL%ROWCOUNT、生成键、GetString时间映射和自动保存点语义；官方失败断言和raw表示characterization不混作W成功。
 

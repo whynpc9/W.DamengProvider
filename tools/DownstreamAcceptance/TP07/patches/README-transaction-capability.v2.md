@@ -8,4 +8,4 @@ v2 从冻结批准的 v1 全部178项逐文件核hash后复制到新隔离 `TP07
 
 `transaction-capability.v2.patch` 仍相对原批准175源生成，包含相同DI/两个产品类型及修订unit。manifest.v2固定完整178 map、新aggregate/patch identity，并记录v1 manifest/patch/sourcefreeze/旧source-only批准与实际build triage父refs。v1原manifest `932f8f41…`、patch `1752dc64…`、source approval `ac8ff44f…`只作历史父证据，不能作为v2源批准、compiled identity或新单位接受；旧失败exit1/8 errors及snapshot永远保留。
 
-作者仅静态核复制/差异/hash、patch适用性、源码声明/pragma范围及清单关系，未执行SDK、build、tests、validator、DB、wrapper或secret。停止写入后依次等待Astra v2源审查、Low独立完整178/patch snapshot、root新七字段source-only批准，再以独立pin-only准备revision重新source→实际native→locked build→固定target25 TRX→同build full units。旧cache/locks只提供固定比较基线，不能代替新源实际restore/build证据；SDK10.0.401与原执行界限不变。新的准备脚本、probe/运行输入与事务服务器门另行授权，不在本修订中实施。
+作者仅静态核复制/差异/hash、patch适用性、源码声明/pragma范围及清单关系，未执行SDK、build、tests、validator、DB、wrapper或secret。停止写入后依次等待独立审查者 v2源审查、验证者独立完整178/patch snapshot、root新七字段source-only批准，再以独立pin-only准备revision重新source→实际native→locked build→固定target25 TRX→同build full units。旧cache/locks只提供固定比较基线，不能代替新源实际restore/build证据；SDK10.0.401与原执行界限不变。新的准备脚本、probe/运行输入与事务服务器门另行授权，不在本修订中实施。

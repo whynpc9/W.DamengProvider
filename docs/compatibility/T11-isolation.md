@@ -15,4 +15,4 @@
 
 活动事务内的用户 Command 必须显式绑定对应 Transaction。已验证的 EF 单条 `ROLLBACK TO "name"` 与带 `SAVEPOINT` 关键字形式均可使用；名称支持双引号转义。包含额外语句、缺失名称或完整事务 ROLLBACK 的 SQL 仍拒绝，应使用标准事务 API。SQL 原文不被驱动改写。
 
-此范围不表示所有达梦版本、所有 EF 10.0.x、完整规范套件或真异步均已通过。T11 的固定下游为 EF Core 10.0.12；完整 R1 下游门属于 T12。
+上述能力仅对相应服务器 profile 开放，不表示所有达梦版本或 EF 版本兼容。异步事务与保存点入口已实现，见 [R2](R2.md)；具体测试结果仍归属各自受测版本。源码提供的 ServerCapabilities 快照见 [issue #16 修订](I16-ef-integration-feedback.md)，该 API 未随 0.1.0-preview.1 发布。

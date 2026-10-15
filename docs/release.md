@@ -54,6 +54,6 @@ git push origin v0.1.0-preview.2
 
 版本发布后不可覆盖，也不要移动 tag；发布失败应先查看具体失败步骤。上传成功后，从公开源下载该版本，核对 ID/版本/仓库 commit，并在隔离 consumer 中验证安装。NuGet 返回 404 或列表尚未更新时先检查传播情况，不盲目重复上传。
 
-首次改名与发布准备已由 PR #5 合入；`v0.1.0-preview.1` 已完成发布。历史本地检查见[发布前检查报告](release-preflight.md)，最终发布包的验证见[发布记录](release-0.1.0-preview.1.md)。
+首次改名与发布准备已由 PR #5 合入；`v0.1.0-preview.1` 已完成发布。最终发布包的验证见[发布记录](release-0.1.0-preview.1.md)。
 
 配置依据：[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。

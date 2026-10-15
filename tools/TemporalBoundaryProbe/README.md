@@ -1,6 +1,6 @@
 # TP-01 temporal boundary characterization
 
-New independent tool; it does not change the old TemporalPrecisionProbe or the provider. All dotnet and DB commands belong to the Low verification window after source freeze and review.
+New independent tool; it does not change the old TemporalPrecisionProbe or the provider. All dotnet and DB commands belong to the verifier verification window after source freeze and review.
 
 `TemporalBoundaryProbe.csproj` uses exact PackageReference for official O and one W version. O selects the fixed net9 asset; W selects net10. One process loads O and one W assembly; baseline and candidate W use separate runs/build directories. A manifest pins nupkg SHA, package asset SHA, loaded DLL SHA/MVID, and package version. Both NuGet assets and runtime deps must identify the real package asset. An existing loose DLL or ProjectReference cannot substitute for a package.
 
@@ -35,13 +35,13 @@ Before any DDL, every connection confirms configured TEST identity, actual USER/
 
 Python's shared contracts loader and the executable recursively reject duplicate JSON keys. Authoritative schema/count/code/scale/ticks fields exclude bool-as-integer and unknown profiles/lanes. Open/identity/profile/timeout/transport failures terminate the lane and trigger exact cleanup; safe failure records distinguish user rejection, verified server response, unverified driver error and CLR constructor preconditions. No exception message is used as server-capability evidence.
 
-Low runs portable executor/validator contracts with no SDK or DB first:
+verifier runs portable executor/validator contracts with no SDK or DB first:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/TemporalBoundaryProbe -p 'test_*_contracts.py'
 ```
 
-The required local archived-source/scheduler suite is a separate explicit gate. Its public inputs are supplied by Low; absence fails rather than skipping. Portable discovery makes no claim to have verified the real archive:
+The required local archived-source/scheduler suite is a separate explicit gate. Its public inputs are supplied by verifier; absence fails rather than skipping. Portable discovery makes no claim to have verified the real archive:
 
 ```sh
 TP01_V23_SOURCE_MANIFEST=/absolute/frozen/v23-source-manifest.json \
@@ -49,14 +49,14 @@ TP01_VERIFIED_FEED=/absolute/verified-package-feed \
 PYTHONDONTWRITEBYTECODE=1 python3 tools/TemporalBoundaryProbe/test_runner_contracts.py --local-required
 ```
 
-These tests use injected process adapters and expected-only temporary files. They verify scheduling, exact manifest checks, primary/cleanup stop behavior and source/capability mutants; they do not claim SDK, actual DLL loading, DB ownership, profiles or wire acceptance. Real loaded assembly, CREATE marker, cleanup and layout observations require Low's subsequent frozen executable runs.
+These tests use injected process adapters and expected-only temporary files. They verify scheduling, exact manifest checks, primary/cleanup stop behavior and source/capability mutants; they do not claim SDK, actual DLL loading, DB ownership, profiles or wire acceptance. Real loaded assembly, CREATE marker, cleanup and layout observations require verifier's subsequent frozen executable runs.
 
 Reports contain only case/stage IDs, types, numeric diagnostics/metadata and public synthetic temporal values. No connection strings, environment dumps, original exception messages, raw authentication, SQL payloads, private keys or credentials are emitted. No source/build/DB verification has been claimed by the coding agent.
 
 
-TP01-v3 adds a real C# offline entry before Configure/Open/DAMENG environment access. Low runs `dotnet <frozen-consumer.dll> offline <new-offline-report.json> <new-producer-shape.json>`. It calls the live CreateWithLifecycle/ValidateOwnership/MarkerMatches/CleanupWithOwnership functions through a fake DB interface, records CREATE/marker/DROP/fresh verification branches, tests the actual TemporalSample CLR types, and samples the actual command/Reader ownership selector. Its serialized shape has `synthetic: true`, `expected_only: true`, `database_accessed: false`; it cannot stand in for a DB profile report. Python consumes the real C# output separately with `test_producer_shape_contracts.py --shape <actual-CSharp-shape.json> --output <new-shape-validation.json>` and independent handwritten numeric/type expectations.
+TP01-v3 adds a real C# offline entry before Configure/Open/DAMENG environment access. verifier runs `dotnet <frozen-consumer.dll> offline <new-offline-report.json> <new-producer-shape.json>`. It calls the live CreateWithLifecycle/ValidateOwnership/MarkerMatches/CleanupWithOwnership functions through a fake DB interface, records CREATE/marker/DROP/fresh verification branches, tests the actual TemporalSample CLR types, and samples the actual command/Reader ownership selector. Its serialized shape has `synthetic: true`, `expected_only: true`, `database_accessed: false`; it cannot stand in for a DB profile report. Python consumes the real C# output separately with `test_producer_shape_contracts.py --shape <actual-CSharp-shape.json> --output <new-shape-validation.json>` and independent handwritten numeric/type expectations.
 
-The runner always runs this real C# gate after each private consumer build and before any TEST wrapper. `--offline-only` ends there with `offline_complete_no_database`, allowing the Low offline window to finish before root opens the DB window. Subsequent approved full runs use a new directory and rerun the selftest for the actual newly built tool. Offline reports/shapes have separate hashes in runner.json; successful synthetic shape checks never set candidate/profile acceptance.
+The runner always runs this real C# gate after each private consumer build and before any TEST wrapper. `--offline-only` ends there with `offline_complete_no_database`, allowing the verifier offline window to finish before root opens the DB window. Subsequent approved full runs use a new directory and rerun the selftest for the actual newly built tool. Offline reports/shapes have separate hashes in runner.json; successful synthetic shape checks never set candidate/profile acceptance.
 
 Parameter phase persistence is a fact: `not_executed` with null count before an unexecuted setter/prepare; `advisory_no_dml` for the known SELECT path; `fresh_connection_row_count` for allocated fixed row IDs. Rejections are validated against the initial phase rather than an invented top-level aggregate. ResultColumn metadata has its own role/flag0; parameter describe uses fixed1/advisory2. Each phase explicitly prepares a real observable statement; after ExecuteReader the statement and EncodedScale are sampled from the live Reader before getter completion or Dispose. Actual owner IDs distinguish newly prepared statements. A binding rejection selects a new connection/command for the six-digit recovery phase, with `recovery_source: fresh_connection_after_rejection`; it does not require R3 to keep a failed session reusable.
 
@@ -73,7 +73,7 @@ Only metadata fixed DML now uses public ExecuteReader to retain a live observati
 
 The independent `diagnose-components` mode is read-only CAST/EXTRACT characterization, not a profile gate. It reuses exact source/package/loaded assembly and TEST/profile checks, then branches before Reserve/CREATE. It runs offset0/+480/-300/+330 with 1tick/.1234567/.1234560, plus UTC Max/Max-1/Max-9 and a leap-day last tick. Q0a proves the original TZ7 server text/local fraction/offset; Q0b independently proves CAST(TIMESTAMP9) preserves the same local fields/fraction. Q1 original EXTRACT and Q2 CAST-after EXTRACT run separately, retaining each failure. Actual scalar CLR/GetDecimal, numeric metadata, cached length/hash and at most 64-byte synthetic numeric hex are recorded. A Q2 oracle is marked usable only when both Q0 proofs and all six independently expected numeric components match. No DDL, DML, old table reference or session setting is executed; no ownership object exists.
 
-After Low's new private `--offline-only` build/selftest, its existing frozen-input manifest supplies the exact consumer inputs. The explicit diagnostic command is:
+After verifier's new private `--offline-only` build/selftest, its existing frozen-input manifest supplies the exact consumer inputs. The explicit diagnostic command is:
 
 ```sh
 <original-repo>/scripts/with-dameng-test.sh dotnet <new-offline-dir>/build/bin/Debug/net10.0/TemporalBoundaryProbe.dll \
@@ -96,4 +96,4 @@ TP01-v11 corrects profile evidence to the actual opened physical `GetConnInstanc
 
 Live preflight, report profiles and W cleanup profiles all use that shared capture path. Shared O is physically captured in the run; the cleanup process continues to use only W and records O as not used. The validator requires the physical origin and complete normalized schema wherever an actual profile is required. All existing precision expectations, package/source/identity, writer/getter/raw/NULL/metadata and ownership/cleanup gates remain unchanged. Correcting an old logical GB label to an observed physical UTF-8 label does not itself approve an encoding capability or alter the product's compiled profile.
 
-The actual C# offline entry calls the same helper with divergent logical and physical fake objects. Its `physical_profile_capture` shape records the physical result, zero logical reads, and required fail-closed missing-physical/override/encoding/version/numeric branches. The independent handwritten Python shape and full-artifact fixtures use the same schema; mutants reject logical provenance, fallback, nonempty overrides or conflicting encodings. Low reruns all affected portable contracts, the existing required archive suite and the actual C# offline shape gate from a new frozen v11 tool build, then uses the original fixed v23 provider package for new complete shared and TLS baseline runs. Preserve earlier frozen tool bundles/reports as historical evidence; do not relabel them or use this source correction as new candidate acceptance.
+The actual C# offline entry calls the same helper with divergent logical and physical fake objects. Its `physical_profile_capture` shape records the physical result, zero logical reads, and required fail-closed missing-physical/override/encoding/version/numeric branches. The independent handwritten Python shape and full-artifact fixtures use the same schema; mutants reject logical provenance, fallback, nonempty overrides or conflicting encodings. verifier reruns all affected portable contracts, the existing required archive suite and the actual C# offline shape gate from a new frozen v11 tool build, then uses the original fixed v23 provider package for new complete shared and TLS baseline runs. Preserve earlier frozen tool bundles/reports as historical evidence; do not relabel them or use this source correction as new candidate acceptance.

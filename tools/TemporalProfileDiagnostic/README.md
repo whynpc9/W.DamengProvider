@@ -4,15 +4,15 @@ This one-off diagnostic consumes only `W.DamengProvider 0.1.0-tp03.2026100805324
 
 The only two SQL statements are `SELECT USER FROM DUAL` and `SELECT SF_GET_SCHEMA_NAME_BY_ID(CURRENT_SCHID()) FROM DUAL`, immediately after opening one shared TEST connection. Both must equal `WDM_PROVIDER_TEST` before profile observations. Configuration follows the existing shared TP01 probe: typed W builder, explicit `PlaintextAllowed`, TEST schema, logging off, pooling off, bounded connect/command timeout, and no encoding override added by this tool. The original TEST wrapper supplies the sole connection variable; no secrets are copied into the diagnostic folder or build snapshot.
 
-The executable takes five positional inputs: identities JSON, product-source manifest, product-source archive, existing feed directory, and a **new** output JSON. It hard-pins the current TP03-v5 source head, source manifest/archive SHA, package ID/version/asset/SHA, packaged and loaded DLL SHA/MVID. It also requires its own `.deps.json` to identify that exact runtime asset as a NuGet package. Project references and loose DLL substitutions are not accepted. Low's existing frozen contracts preflight remains mandatory and is run separately before build/connection.
+The executable takes five positional inputs: identities JSON, product-source manifest, product-source archive, existing feed directory, and a **new** output JSON. It hard-pins the current TP03-v5 source head, source manifest/archive SHA, package ID/version/asset/SHA, packaged and loaded DLL SHA/MVID. It also requires its own `.deps.json` to identify that exact runtime asset as a NuGet package. Project references and loose DLL substitutions are not accepted. verifier's existing frozen contracts preflight remains mandatory and is run separately before build/connection.
 
 Reports contain only source/package receipts, TEST identity receipts, safe public version, and logical/physical `ServerVersion`, `msgVersion`, effective `ServerEncoding`, private negotiated `serverEncoding`, timezone and a boolean indicating whether the single encoding override is empty. The dictionary is never enumerated. Version/encoding values are validated before output; unexpected values produce fixed safe failure codes. Adapter reflection reports only its `Identity`, `State` and `EvidenceId`. A single clearly synthetic `(26, Timestamp9, OrdinaryPacked, 7, 7, 7, true, 0)` target is passed to that actual profile's `ValidateWriteTarget`; its allowed/rejected result does not establish server support.
 
 Exception output contains only safe exception type, fixed error code, and declaring-class/method-name stack frames. It excludes Message, ToString, arguments, filenames and line numbers. The output uses `CreateNew`, and the one connection is disposed in `finally`. All profile/candidate/temporal acceptance flags remain false, including when the diagnostic exits zero.
 
-## Independent Low window
+## Independent verifier window
 
-High did not run builds, tests or DB. After Astra/root review and hash freeze, Low creates a new ignored directory, preserves the source/input manifest and builds a private copy of these four files. Use the original TP03-v5 package directory and frozen contracts module; do not rebuild or relabel that provider.
+implementer did not run builds, tests or DB. After independent reviewer/root review and hash freeze, verifier creates a new ignored directory, preserves the source/input manifest and builds a private copy of these four files. Use the original TP03-v5 package directory and frozen contracts module; do not rebuild or relabel that provider.
 
 The following is an execution outline from the original worktree. Substitute a new, never-used run suffix. Do not run beside another build/DB window.
 

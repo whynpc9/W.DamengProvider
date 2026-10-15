@@ -10,9 +10,9 @@
 
 官方说明：SOI 具有非审计/安全系统表的查询权限，并非 DBA；它的范围比仅 SYS.SYSOBJECTS 单对象更广。参见[自主访问控制](https://eco.dameng.com/document/dm/zh-cn/pm/discretionary-access-control.html)。本实例对单系统表直接 GRANT 的可行性未验证，不能宣称某个更窄 GRANT 已证明可用。
 
-## 拟批准操作
+## 已执行的限定维护（历史记录）
 
-仅在明确批准后，以本机现有管理员 secret 建立一次限定维护连接，执行：
+2026-09-30 的单次授权维护执行了以下语句；本页不授权重复执行，后续权限变更仍需明确限定：
 
 ```sql
 GRANT SOI TO "WDM_PROVIDER_TEST";
@@ -28,7 +28,7 @@ GRANT SOI TO "WDM_PROVIDER_TEST";
 REVOKE SOI FROM "WDM_PROVIDER_TEST";
 ```
 
-依据 AGENTS.md：普通开发/测试/agent 任务不得加载 SA，新增用户或变更授权需另行明确限定操作。因此本步骤独立于测试代码。用户已对上述明确范围授权，Low 仅能执行固定维护工具；普通测试仍不得读取管理员 secret。原七项 CREATE 权限与新增 SOI 角色将在实际读回成功后分别记录。
+依据 AGENTS.md：普通开发/测试/agent 任务不得加载 SA，新增用户或变更授权需另行明确限定操作。因此本步骤独立于测试代码。用户已对上述明确范围授权，当时的维护执行者仅能执行固定维护工具；普通测试仍不得读取管理员 secret。原直接权限与 SOI 角色已分别记录并以 TEST 新连接核实。
 
 ## 实际执行与独立复核
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-13",
+  "updated_at": "2026-10-15",
   "product": "W.DamengProvider",
   "state": "published_and_public_install_verified",
   "release_accepted": true,
@@ -18,5 +18,14 @@
   "tag": "v0.1.0-preview.1",
   "release_commit": "a67a9298daaa42b18203a9b405ec05a3357ed4b0",
   "release_report": "../release-0.1.0-preview.1.md",
-  "roadmap": "../roadmap.md"
+  "roadmap": "../roadmap.md",
+  "source_state": "contains_unreleased_changes",
+  "unreleased_changes": [
+    {
+      "issue": 16,
+      "pull_request": 17,
+      "merged_commit": "3091108",
+      "report": "../compatibility/I16-ef-integration-feedback.md"
+    }
+  ]
 }

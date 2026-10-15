@@ -1,12 +1,12 @@
-# 当前窗口：issue #16 EF 接入反馈修订（2026-10-14）
+# 协作与并发约定
 
-用户授权：解决 [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16)，开 PR、处理审阅后合并。其余开放 issue（#6–#13）为独立功能，本窗口不处理。
+本页是跨工具、模型和 harness 通用的协作规则。文件名保留供现有引用使用，不记录长期有效的“当前窗口”、固定 owner 或一次性执行授权。
 
-| owner | 角色与范围 |
-| --- | --- |
-| root | 设计、产品与测试代码、文档、实库探针、PR 与审阅处理 |
-| review（独立 agent） | 只读代码审查；不运行实库、不加载 secrets |
+- 开始修改前检查工作区状态，确认本次任务边界；保留其他未提交工作。
+- 多人或多代理共享工作区时，在当前任务中明确各自负责的文件和只读范围，避免交叉修改。同一文件需要交接时先停止原写入者。
+- 共享 bin/obj 的构建、会相互干扰的数据库测试串行安排；可隔离的只读审查可并行。
+- 实现、代码审查和行为验证分别记录。工具支持时由独立执行者承担审查和验证；工具受限时明确限制，不把自身复查写成独立审查。
+- 验证期间保持受测源码稳定；修改后告知验证者并重跑受影响检查。
+- 历史交接、模型名称、角色名称和工具中的 approval 字段仅解释原记录，不授予当前任务操作权限，也不新增审批步骤。数据库与凭据边界仍按 [AGENTS.md](../../AGENTS.md) 执行。
 
-本窗口 Codex（Sol/Astra）子任务不可用（provider 状态检查超时），按 AGENTS.md 工具阻塞规则由 root 直接实现，独立审查改由另一 agent 承担。实库只使用 `WDM_PROVIDER_TEST`，探针为 [tools/Issue16Probe](../../tools/Issue16Probe/Program.cs)；结果与行为说明见 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)。
-
-当前发布仍为 `0.1.0-preview.1`；本窗口修订合入 main 后未随该包发布。发布与公开安装验证见[发布记录](../release-0.1.0-preview.1.md)，机器状态见 [progress.json](progress.json)，后续工作见[路线图](../roadmap.md)。
+当前产品行为见[实现文档索引](README.md)，发布状态见 [progress.json](progress.json)，后续工作见[路线图](../roadmap.md)。

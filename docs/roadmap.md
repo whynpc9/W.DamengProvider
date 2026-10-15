@@ -1,6 +1,6 @@
 # 后续工作
 
-2026-10-13 整理。当前已发布 [面向 .NET 10 的驱动预览版 0.1.0-preview.1](release-0.1.0-preview.1.md)；本页列出的扩展均为待办，不是当前包支持声明。GitHub issue 是后续进展入口；本轮已完成文档与发布状态同步，没有为已完成事项创建开放待办。
+按当前源码整理。当前已发布 [面向 .NET 10 的驱动预览版 0.1.0-preview.1](release-0.1.0-preview.1.md)；本页列出的扩展均为待办，不是当前包支持声明。GitHub issue 是后续进展入口；源码中已合入但尚未发布的改动单列于下方。
 
 | 方向 | Issue | 当前缺口与推进方式 |
 | --- | --- | --- |
@@ -19,13 +19,11 @@
 
 - [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) EF 接入反馈：传输失败的 `FailureInfo`、事务内 DML 匿名块、8/9 位 typed NULL、Broken 提示、公开 `ServerCapabilities` 及若干消息改进，见[修订说明](compatibility/I16-ef-integration-feedback.md)。非 NULL 八九位写入、准备阶段失败的会话恢复及新 profile 证据仍随 #11 推进。
 
-## .NET 扩展调研边界
+## .NET 扩展边界
 
-基线 `a67a929` 的隔离编译中，net9 原源码通过；net8/C#12 初始仅有证书加载与格式化重载四个错误。net8 研究副本使用条件 `Microsoft.Bcl.Cryptography 10.0.12`（传递依赖 `System.Formats.Asn1`）并替换两处空 Span 参数后，C# 错误消除，但 build/pack 因四套语言资源程序集缺失报 MSB3030，原因尚未确定。同一副本覆盖 net9 构建通过。此结果不代表 net8 完整构建、旧运行时执行或实库通过。
+当前产品仅构建 `net10.0`。扩展到 .NET 8/9/6 时，需要分别完成完整构建/打包、资源程序集、对应运行时、包消费者及 TLS/实库验证；编译探测或 SDK roll-forward 不代表目标运行时已支持。.NET 6 另需处理 DbDataSource 基类、TLS 证书验证与部分时间 API 的兼容，不能通过放宽证书验证通过。
 
-net6 首轮19个编译错误不是完整兼容工作量：还需处理不存在的 DbDataSource 基类、CertificateChainPolicy、TimeProvider、部分 Span/Stopwatch API 与语法。其数据源标准基类差异和 TLS 等价验证必须明确。调研日志保存在本机 ignored `.local/framework-research-20261013/logs/`；实施时保留失败记录并重新验证实际候选。
-
-微软 .NET 8/9 支持期均到 2026-11-10，.NET 6 已于 2024-11-12 结束支持；.NET 10 支持至 2028-11-14。驱动兼容范围与微软运行时支持周期分别说明，见[官方政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)。
+运行时支持周期另见[微软官方政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)，与本驱动的已验证兼容范围分别判断。
 
 ## 项目边界
 

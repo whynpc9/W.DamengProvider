@@ -18,7 +18,7 @@ TP-03-v5 候选的同包 shared core 完成 260 个场景并清理成功，但�
 
 诊断原报告 SHA256：5b84c738838a9603796566b145f0bd6a40345ae42c81971ca1e7bd664d81af50；独立验证摘要 SHA256：86703b901aea85112d0968bb3dbc13d0a8d8c002015f4660dd65eb7344268e68。原候选实库失败摘要 SHA256：fb6bcd6aa5f5254528a3e1681c8d6b69d886bc162013aa5c9f0522ec462c9461。
 
-本说明修正此前 [TP01 接受记录](TP01-acceptance.md) 和 [profile 交接](TP01-profile-handoff.final.md) 的物理编码来源判断。旧报告、通过的数值观察、失败和哈希均原样保留；gb18030 标签不得继续作为已验证物理能力的依据。TP-01 的 profile 交接重新取证，TP-03 保持未接受，TP-04/05 不激活。
+本说明修正此前 [TP01 接受记录（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/temporal-native/TP01-acceptance.md) 和 [profile 交接（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/temporal-native/TP01-profile-handoff.final.md) 的物理编码来源判断。旧报告、通过的数值观察、失败和哈希均原样保留；gb18030 标签不得继续作为已验证物理能力的依据。TP-01 的 profile 交接重新取证，TP-03 保持未接受，TP-04/05 不激活。
 
 v11 只修探针来源及对应合同：版本、message version、有效编码和时区来自同一个已打开 physical 对象；协商编码另标为其内部字段来源，不冒称原始 STARTUP 字节。编码覆盖必须为空，有效与协商编码仅大小写归一后相等；缺信息、不一致或 logical fallback 必须失败。先以旧 v23 原包重新完成 shared/TLS 基线，再按实际结果批准精确 scope、修正产品表并生成新候选，不能先扩大编码白名单。
 

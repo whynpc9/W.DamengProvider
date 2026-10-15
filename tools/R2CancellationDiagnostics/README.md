@@ -1,8 +1,8 @@
 # T14 old/new/old 只读健康诊断
 
-独立 consumer 仅 exact PackageReference，锁定旧 T13 accepted DLL 3eaa6a45... 和当前 T14 DLL fdea777d...。不引用或修改产品源码、原 T14Probe、tests、Low 的 ignored helper 或历史失败。只加载共享 TEST wrapper，PlaintextAllowed/mode 0；每 case 都 fresh TEST connection 并先核验 identity/Schema。Connect20、Command15 不变；30 秒工具等待护栏与 300 秒进程上限仅限制失控执行，不改变产品预算。
+独立 consumer 仅 exact PackageReference，锁定旧 T13 accepted DLL 3eaa6a45... 和当前 T14 DLL fdea777d...。不引用或修改产品源码、原 T14Probe、tests、验证者的 ignored helper 或历史失败。只加载共享 TEST wrapper，PlaintextAllowed/mode 0；每 case 都 fresh TEST connection 并先核验 identity/Schema。Connect20、Command15 不变；30 秒工具等待护栏与 300 秒进程上限仅限制失控执行，不改变产品预算。
 
-Low 串行运行三个独立 lane：
+验证者串行运行三个独立 lane：
 
     eng/t14-diagnostics.sh health <old-exact-version> <old-feed> old-before
     eng/t14-diagnostics.sh health <new-exact-version> <new-feed> new

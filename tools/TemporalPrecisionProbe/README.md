@@ -22,9 +22,9 @@
 
 每次连接在任何 DDL 前严格核对目标 `ServerVersion == 8.1.5.60`，安全报告记录版本，validator要求 O/W同时匹配该固定profile。建表前写入 `<safe-report.json>.ownership.json`，仅保留本次唯一表名、已验证身份/profile与包哈希，供宿主超时后精确定位本次对象。finally只清理该唯一表，清理连接再次验证身份/profile，随后另一新连接核实对象不存在。DDL按隐式提交处理。任何创建、写入、读取或清理失败报告安全 stage、异常类型及 Number，不输出 message、SQL、连接、环境内容或 inner异常文本。没有EnsureDeleted/admin/cross-schema DDL。
 
-## Low 独占执行模板
+## 验证者独占执行模板
 
-以下是准备模板，不是已执行证据。Low先冻结工具源码、两包、manifest哈希，设置独立且可写 DOTNET_CLI_HOME/NUGET_PACKAGES/NUGET_HTTP_CACHE_PATH、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1。从 `tools/TemporalPrecisionProbe` 工作目录，以能解析10.0.401的固定host顺序构建两项目，并记录 `--version`、实际资产/锁/DLL身份。
+以下是准备模板，不是已执行证据。验证者先冻结工具源码、两包、manifest哈希，设置独立且可写 DOTNET_CLI_HOME/NUGET_PACKAGES/NUGET_HTTP_CACHE_PATH、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1。从 `tools/TemporalPrecisionProbe` 工作目录，以能解析10.0.401的固定host顺序构建两项目，并记录 `--version`、实际资产/锁/DLL身份。
 
 ```sh
 dotnet restore Official.csproj --disable-parallel -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers
@@ -33,7 +33,7 @@ dotnet restore Candidate.csproj --disable-parallel -m:1 /nodeReuse:false /p:UseS
 dotnet build Candidate.csproj --no-restore -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers
 ```
 
-首次 restore 产生锁，后续使用 `--locked-mode`。执行时使用本仓库 TEST wrapper，每个 probe独立输出目录、有限宿主超时、退出码和最终对象状态。入口 DLL通常为 `bin/Official/net10.0/TemporalPrecisionProbe.Official.dll` 和 `bin/Candidate/net10.0/TemporalPrecisionProbe.Candidate.dll`；Low以实际 build output确认，不能混读旧输出。命令参数只有 mode、包路径与安全输出路径；不传连接到 argv。不能并行重建共享工具、同时运行依赖同一 Schema清理的probe。
+首次 restore 产生锁，后续使用 `--locked-mode`。执行时使用本仓库 TEST wrapper，每个 probe独立输出目录、有限宿主超时、退出码和最终对象状态。入口 DLL通常为 `bin/Official/net10.0/TemporalPrecisionProbe.Official.dll` 和 `bin/Candidate/net10.0/TemporalPrecisionProbe.Candidate.dll`；验证者以实际 build output确认，不能混读旧输出。命令参数只有 mode、包路径与安全输出路径；不传连接到 argv。不能并行重建共享工具、同时运行依赖同一 Schema清理的probe。
 
 validator成功只表示 O 公共七位写入与 frozen W literal decode通过，以及可用时 W/O合成 helper一致。下一步产品 family guard 与七位activation gate修改必须等 root审阅这些证据后另行派发，产生新候选并验证公共W写读；当前冻结R1包和旧失败证据保持原样。
 
@@ -47,13 +47,13 @@ Round 1 的 W CAST 字面量读回实际存库 oracle为零小数，不能据此
 - **W read** 只接受状态`ready_for_W_read`、nonce/name/身份/profile与官方固定包身份匹配的manifest，只读O typed ID1–4，核 typed/generic DateTime、DTO原tick/offset与GetString+EF Parse，不执行参数写入或去除gate。读取期间row count保持一致。
 - **O cleanup** 使用同一 manifest的精确表名；仅在TEST和8.1.5.60上存在时DROP该表，另开新连接确认absence，再保存`cleanup_verified`状态。接受 seed_started以收尾宿主中断，以及已清理状态以重核；禁止任意表名/通配DROP。
 
-Low必须在外层 finally 串行执行cleanup，即使seed/read命令失败或超时也执行；manifest未产生则不推测对象。成功seed不是长期fixture，必须在同一窗口结束前清理。seed/read记录相同ready manifest哈希，Low保存该哈希后交W，并验证源和包冻结没有漂移；cleanup后的manifest是本次生命周期收尾记录，旧round1所有制品保持原样。
+验证者必须在外层 finally 串行执行cleanup，即使seed/read命令失败或超时也执行；manifest未产生则不推测对象。成功seed不是长期fixture，必须在同一窗口结束前清理。seed/read记录相同ready manifest哈希，验证者保存该哈希后交W，并验证源和包冻结没有漂移；cleanup后的manifest是本次生命周期收尾记录，旧round1所有制品保持原样。
 
 ```sh
-# Low以固定10.0.401 host、同一TEST wrapper执行；路径为本次全新的safe artifact路径。
+# 验证者以固定10.0.401 host、同一TEST wrapper执行；路径为本次全新的safe artifact路径。
 dotnet bin/Official/net10.0/TemporalPrecisionProbe.Official.dll seed <O-package> <ownership.json> <O-seed.json>
 dotnet bin/Candidate/net10.0/TemporalPrecisionProbe.Candidate.dll read <W-package> <ownership.json> <W-read.json>
-# 上述两步均须包在Low外层try/finally，finally必跑这一步。
+# 上述两步均须包在验证者外层try/finally，finally必跑这一步。
 dotnet bin/Official/net10.0/TemporalPrecisionProbe.Official.dll cleanup <O-package> <ownership.json> <O-cleanup.json>
 python3 validate-handoff.py <O-seed.json> <W-read.json> <O-cleanup.json> <ownership.json> --output <handoff-validation.json>
 ```
@@ -62,10 +62,10 @@ python3 validate-handoff.py <O-seed.json> <W-read.json> <O-cleanup.json> <owners
 
 ## Round 2 实际证据与限定候选修复
 
-Low曾运行完整 O seed → W cross-read → O cleanup，目标8.1.5.60、TEST身份均通过；历史本机安全聚合结果 `.local/verification/t12/temporal-round2/validation.json` 为 `cross_decode_verified`、issues=[]。原始 O typed写入与CAST表征 `.local/verification/t12/temporal-round2/seed.json`、frozen W读取 `.local/verification/t12/temporal-round2/read.json`、独立连接清理 `.local/verification/t12/temporal-round2/cleanup.json` 保留原样。这些历史本机制品未随仓库分发。
+验证者曾运行完整 O seed → W cross-read → O cleanup，目标8.1.5.60、TEST身份均通过；历史本机安全聚合结果 `.local/verification/t12/temporal-round2/validation.json` 为 `cross_decode_verified`、issues=[]。原始 O typed写入与CAST表征 `.local/verification/t12/temporal-round2/seed.json`、frozen W读取 `.local/verification/t12/temporal-round2/read.json`、独立连接清理 `.local/verification/t12/temporal-round2/cleanup.json` 保留原样。这些历史本机制品未随仓库分发。
 
 四个偏移的O公开参数七位写入、server FF7/offset、W typed/generic getter与EF GetString Parse均保存一tick及原偏移；O/W 9/11-byte helper输出相同且nanoseconds=100。相同CAST字面量在O也被服务器转换成零小数，此行为保留为literal characterization，不将它误归因于 W decoder，也不通过放宽原profile断言改写round1失败。
 
 据此root仅批准新的产品候选：fixed绑定承认16/26、23/27同语义家族，且仅在可靠服务器版本精确为8.1.5.60时允许扩展26/27的scale7。null/未知/其他服务器版本仍拒绝七位；16/23与TIME的六位wire仍拒绝第七位，8/9位输入仍拒绝。原已证 encoder/reader不重写。
 
-这些证据证明旧冻结W decoder和编码布局，**尚未证明新候选公共W七位参数写入通过**。修复后须Low冻结新源、完整驱动测试、唯一新包，再由新的EF suite验证公开路径。当前round2的`public_W_seven_digit_acceptance=false`与旧包/旧失败证据不回写。
+这些证据证明旧冻结W decoder和编码布局，**尚未证明新候选公共W七位参数写入通过**。修复后须验证者冻结新源、完整驱动测试、唯一新包，再由新的EF suite验证公开路径。当前round2的`public_W_seven_digit_acceptance=false`与旧包/旧失败证据不回写。

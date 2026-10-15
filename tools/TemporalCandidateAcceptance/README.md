@@ -10,7 +10,7 @@ G1 covers caller-direct synchronous INSERT, PrepareAsync UPDATE with CommitAsync
 
 Reviewed safety functions copied from v11 are identified in `Safety.cs`. Every opened connection verifies TEST user/schema and physical profile. One new 32-hex nonce table has a nonce default marker. CREATE acknowledgement state is persisted before CREATE; cleanup validates exact identity/profile/package/nonce and actual marker. It never drops a present foreign/unconfirmed/known-failure table. Primary finally cleanup and a separate bounded cleanup process independently record fresh actual catalog COUNT0 and TEST identities. Primary failure or cleanup failure blocks success and retains the recovery ownership manifest. DDL is outside transaction tests and has no rollback claim.
 
-Only Low runs these commands, after the new tool is frozen and reviewed. Python contract tests are expected-only; they cannot establish DB/package-runtime acceptance:
+Only verifier runs these commands, after the new tool is frozen and reviewed. Python contract tests are expected-only; they cannot establish DB/package-runtime acceptance:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/TemporalCandidateAcceptance -p 'test_*_contracts.py'
@@ -28,7 +28,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/TemporalCandidateAcceptance/run.py \
 
 This first restores/builds with SDK10.0.401, a writable DOTNET_CLI_HOME, telemetry/first-run disabled, single-node/no servers/no shared compilation. Then actual C# offline safety contracts run before any DAMENG environment access. A later approved DB window uses a different output directory, omits `--offline-only`, and runs shared then TLS serially. The native executable CLI is `run|cleanup identities feed profile supplemental originalRepo ownership report manifest`; it is not an arbitrary-table cleanup interface. Deadline is60..1800 seconds, default1200; independent cleanup is90 seconds. Child stdout/stderr are discarded. Safe reports contain only allowlisted types/numbers, synthetic temporal values, safe fixed IDs and public SHA/MVID; raw exception messages, SQL, credentials and driver objects are never serialized.
 
-After a complete run, Low invokes the independently frozen validator on the same output directory:
+After a complete run, verifier invokes the independently frozen validator on the same output directory:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 <new-private-output>/frozen-input/validate.py <new-private-output> --output <new-private-output>/validation.json
@@ -36,7 +36,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 <new-private-output>/frozen-input/validate.py 
 
 Missing/duplicate case, wrong package/source/tool/profile, impossible receipt, skipped operation, unknown error, nonordinary cache, missing actual FETCH/more-result proof, altered clone, any timeout, or nonzero cleanup state fails closed. `supplemental.json`, `.cleanup.json`, `.ownership.json`, runner/assets/lock/deps/runtime/source/archive and policy/dependency hashes are all retained separately. The initial implementation has not been built, tested or run against the database by its coding agent.
 
-The first version intentionally hard-pins this candidate identity/source/archive and root-approved capability bytes. A future candidate requires an explicit new freeze and Astra/root review; changing those pins silently is not a migration or acceptance procedure.
+The first version intentionally hard-pins this candidate identity/source/archive and root-approved capability bytes. A future candidate requires an explicit new freeze and independent reviewer/root review; changing those pins silently is not a migration or acceptance procedure.
 
 The v2 targeted repair records actual IsDBNull/IsDBNullAsync access to the separate server projection for ordinary NULL rows (ordinal1); sequential NULL rows use ordinal6 once. A temporal NULL conflicting with the server projection fails before a server observation can be emitted. The v2 offline entries call the same projection helper with getter counters and conflict controls, and the same live protocol collection/classification helpers. They remain expected-only. The current total and exact-ID gate are documented in the v4 section below.
 

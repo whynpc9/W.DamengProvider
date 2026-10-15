@@ -6,7 +6,7 @@ It does not close TP04 binding, TP05 getter coverage or full temporal acceptance
 
 ## Production inputs
 
-After independent offline gates and root's source/package freeze, Low uses the existing runner with a unique package, its exact producer source manifest/archive, identities and root-approved capability manifest:
+After independent offline gates and root's source/package freeze, verifier uses the existing runner with a unique package, its exact producer source manifest/archive, identities and root-approved capability manifest:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 eng/temporal-precision.py \
@@ -31,7 +31,7 @@ All independently enumerated W core specs are required: exact success, exact Ove
 
 ## Pure contracts
 
-Low runs after source freeze:
+verifier runs after source freeze:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
@@ -40,6 +40,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
 
 The fixtures independently enumerate core inputs and consume saved integer packed literals. Their v11 C# shape and physical UTF-8 profile are handwritten expected data. Dummy archive/package/DLL bytes are explicitly marked synthetic. Every negative test first verifies a normal synthetic control, then changes one constraint; ordinary transport hashes are rebound where needed to reach the intended semantic check. The updated physical-source tests cover W run, W cleanup and O run plus the v11 capture shape. They do not expand the existing core-only writer/reader or TLS scope.
 
-The internal `_package_inspector` seam covers synthetic package/loaded-DLL inspection only. Injection is detected from the Python argument, independently of artifact fields; every injected result has `synthetic_expected_only=true` and `tp03_wiring_accepted=false`. It never produces the production `tp03_wiring_accepted` status. CLI has no seam option, and its default path rejects dummy packages. Passing these contracts proves expected policy control flow only; Low must separately pass the default entry against the real candidate package and real shared TEST run.
+The internal `_package_inspector` seam covers synthetic package/loaded-DLL inspection only. Injection is detected from the Python argument, independently of artifact fields; every injected result has `synthetic_expected_only=true` and `tp03_wiring_accepted=false`. It never produces the production `tp03_wiring_accepted` status. CLI has no seam option, and its default path rejects dummy packages. Passing these contracts proves expected policy control flow only; verifier must separately pass the default entry against the real candidate package and real shared TEST run.
 
 The CLI refuses to overwrite an existing output, returns nonzero on any rejected or incomplete run, and emits safe issue codes rather than raw package, database or exception details. No connection strings, credentials or raw authentication belong in input/output artifacts.

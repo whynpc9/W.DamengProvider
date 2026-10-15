@@ -1,6 +1,6 @@
 # T16 独立精确包连接池探测
 
-本工具只通过精确 `PackageReference` 消费冻结 nupkg，不引用产品项目，不使用官方驱动。版本、包/DLL SHA256、实际加载位置、MVID 与 deps 中的 package 来源必须一致。High 只编写源码；root 审阅并冻结后，Low 独占编译及真实库窗口。
+本工具只通过精确 `PackageReference` 消费冻结 nupkg，不引用产品项目，不使用官方驱动。版本、包/DLL SHA256、实际加载位置、MVID 与 deps 中的 package 来源必须一致。实现者只编写源码；root 审阅并冻结后，验证者独占编译及真实库窗口。
 
 入口为 `eng/t16.sh offline|tls|shared <exact-version> <absolute-local-feed>`。runner 保存安全命令、退出码、前后包 manifest、consumer build、checkpoint 和独立 validator 结果；runtime 最长 900 秒，超时必须依 checkpoint 精确恢复本轮对象，不能视为通过。
 

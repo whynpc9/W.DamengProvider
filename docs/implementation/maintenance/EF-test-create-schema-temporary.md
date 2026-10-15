@@ -1,6 +1,6 @@
 # EF 功能套件临时 CREATE SCHEMA 授权
 
-状态：用户于 2026-10-12 在本任务中明确选择“临时授权”：仅为一次 EF 功能套件运行授予 TEST，运行后立即撤销。本页不含口令或连接串。实际执行与核验结果见下方“执行记录”。
+状态：用户于 2026-10-12 在本任务中明确选择“临时授权”：仅为一次 EF 功能套件运行授予 TEST，运行后立即撤销。本页不含口令或连接串。授权已执行并撤销，TEST 新连接核对权限行与自有临时 Schema 均为 0；本页不授权后续测试重复授予该权限。
 
 ## 原因
 
@@ -21,7 +21,9 @@ REVOKE CREATE SCHEMA FROM "WDM_PROVIDER_TEST"; -- revoke（管理员连接）
 
 ## 执行记录
 
-见 [EF 功能兼容缺口报告](../ef-functional-compat-gaps.md) §4，包含 grant 前后计数、测试运行、revoke 前后计数和 TEST 新连接复查。
+2026-10-12 的单次运行：TEST 初查 CREATE SCHEMA 权限行 0；限定 grant 后新连接读回权限行 1、ADMIN OPTION 行 0；功能套件通过 230/234。之后限定 revoke，并在清理该轮精确登记的两个自有空 Schema 后，以 TEST 新连接确认权限行 0、自有 EF10_ Schema 0。
+
+这是该历史样本的结果，不证明当前实例状态或当前源码全套通过。剩余 CREATE MATERIALIZED VIEW 权限不在当次授权中，未授予。完整逐轮报告可从 Git 历史查询。
 
 ## 回滚
 

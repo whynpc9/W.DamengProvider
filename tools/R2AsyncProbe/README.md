@@ -2,7 +2,7 @@
 
 此项目只有精确 `PackageReference`，无产品 `ProjectReference`、官方驱动引用或 DLL HintPath。必须传 `R2PackageVersion` 和本地 `R2PackageSource`。运行先匹配 nupkg/loaded DLL SHA、assembly version/MVID 和 deps 的 package 类型，再检查公开异步 API 的 provider override，避免继承 ADO.NET 默认同步 fallback。
 
-由唯一 Low 验证负责人执行 [eng/t13.sh](../../eng/t13.sh)。输入为冻结的实际 nupkg，输出落在新的 ignored run 目录，consumer 的 bin/obj/cache 均独立。该 runner 不打包产品、不运行其他 tests。完整 T13 门槛还需 owner 的 async-only fake transport barrier 测试和 root 调用链审计，实际数据库完成结果不单独证明所有等待均不占同步 worker。
+由独立验证者执行 [eng/t13.sh](../../eng/t13.sh)。输入为冻结的实际 nupkg，输出落在新的 ignored run 目录，consumer 的 bin/obj/cache 均独立。该 runner 不打包产品、不运行其他 tests。完整 T13 门槛还需 owner 的 async-only fake transport barrier 测试和 root 调用链审计，实际数据库完成结果不单独证明所有等待均不占同步 worker。
 
 `offline` 不加载连接变量。`shared` 只通过 TEST wrapper，显式 `PlaintextAllowed` 并验证 STARTUP mode 0。`tls` 只通过独立本机 TLS wrapper，锁定 127.0.0.1:15236、`RequireTls`，固定现有本机 CA/client cert、显式本机无 CRL 的 `NoCheck` 并验证 mode 1。不关闭证书校验，不读取 admin/DEV/bootstrap secret，不改容器或服务器设置。
 

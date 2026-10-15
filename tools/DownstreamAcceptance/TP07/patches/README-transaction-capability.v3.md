@@ -10,7 +10,7 @@
 
 新完整patch `transaction-capability.v3.patch` 相对原批准175 base的完整五路径diff，静态内存hunk重建精确178：173原base不变、2修改（DI/retry unit）、3新增（adapter/factory/transaction unit）。相对v2仅retry unit变化，不能拿该单文件父差异代替交付patch。manifest v3记录完整map/aggregate、新patch、v2父refs、旧full失败和本triage。新的source-only批准须由root另签scope `transaction_capability_and_w_retry_contract_tests_only`，旧d6cff只作父证据；作者未签任何批准。
 
-静态源码声明/InlineData清单（非C# compiler AST、SDK discovery或运行结果）：21方法/49 retry场，其中原20场逐一保留或适配、新增29场。manifest中的original20/original12映射、new29名单以及原795 TRX-row ref与完整824 planned名单供Low核验。`planned_unit_cases=25`与planned_transaction_unit_cases仍专指原事务能力类，不改成49或824。
+静态源码声明/InlineData清单（非C# compiler AST、SDK discovery或运行结果）：21方法/49 retry场，其中原20场逐一保留或适配、新增29场。manifest中的original20/original12映射、new29名单以及原795 TRX-row ref与完整824 planned名单供验证者核验。`planned_unit_cases=25`与planned_transaction_unit_cases仍专指原事务能力类，不改成49或824。
 
 | retry 测试方法 | 静态planned场数 |
 | --- | --- |
@@ -53,6 +53,6 @@
 | StrategyRecognizesOnlyExplicitDefaultTransientDamengCodes(errorNumber: -6004) | StrategyDoesNotRetryUnclassifiedWServerNumbers(errorNumber: -6004) |
 | StrategyRecognizesOnlyExplicitDefaultTransientDamengCodes(errorNumber: 6123) | StrategyDoesNotRetryUnclassifiedWServerNumbers(errorNumber: 6123) |
 
-源码冻结后等待Astra完整review、Low新178/完整patch独立snapshot、root新七字段source-only批准。新准备工具还需新pins及严格scope守卫修订，不能称纯pin-only/算法AST完全一致；原五阶段/12refs/3folders/178/51record50archive49nonW/raw4全字段pruning272/锁/300执行与2秒reap边界不变。Low新source→native→locked build后先完整retry49、再transaction25、同一已审构建无filter full824，正式TRX exact case-set、自然exit0、零skip/failure/abort/timeout，失败保留即停止。
+源码冻结后等待独立审查者完整review、验证者新178/完整patch独立snapshot、root新七字段source-only批准。新准备工具还需新pins及严格scope守卫修订，不能称纯pin-only/算法AST完全一致；原五阶段/12refs/3folders/178/51record50archive49nonW/raw4全字段pruning272/锁/300执行与2秒reap边界不变。验证者新source→native→locked build后先完整retry49、再transaction25、同一已审构建无filter full824，正式TRX exact case-set、自然exit0、零skip/failure/abort/timeout，失败保留即停止。
 
 旧target25通过与旧full783/795不能拼接为新接受。之后才能按另行审阅/授权推进新probe兼容工具、source/native/build/compiled28/readiness及四例runtime；L0/E/D均要改绑新178。作者只做文件/hash/diff与静态声明整理，未执行SDK、tests、import项目工具、validator、wrapper、DB或secret，未写运行/验收报告。三handOff与新178完成后冻结停写。

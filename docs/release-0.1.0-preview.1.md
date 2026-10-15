@@ -1,6 +1,6 @@
 # W.DamengProvider 0.1.0-preview.1
 
-2026-10-13 发布。状态：`published_and_public_install_verified`。这是面向 .NET 10 的驱动预览版本，支持边界见 [README](../README.md) 与 [R3 兼容说明](compatibility/R3.md)。
+2026-10-13 发布。状态：`published_and_public_install_verified`。这是面向 .NET 10 的驱动预览版本，支持边界见 [发布时 README](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/README.md) 与 [发布时 R3 兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/docs/compatibility/R3.md)。
 
 ## 发布身份
 
@@ -21,7 +21,7 @@
 - 公开 NuGet 包：唯一公开源、全新缓存、精确 PackageReference 安装及离线 smoke 通过，签名验证退出 0。NuGet 新增 `.signature.p7s`；其余 ZIP 项与 Actions 原包逐项相同，实际加载 DLL 哈希一致。公开安装阶段没有重复连接数据库，实库结论属于上述 Actions 同载荷验证。
 - 2026-10-13 文档同步时再次从公开源读取 nupkg，核对 ID、版本、repository commit、五个程序集资产和公开包 SHA-256，均与发布回执一致。
 
-Actions 上传前 nupkg SHA-256 为 `71371d9de32a788950c0463f9ba511069bcde6fae21afbccc6e8006b5d015400`，与公开签名后 ZIP 的哈希不同是已核实的签名差异。发布前本地 v1/v2/v3 样本另见[历史检查](release-preflight.md)，其哈希不作为正式包身份。
+Actions 上传前 nupkg SHA-256 为 `71371d9de32a788950c0463f9ba511069bcde6fae21afbccc6e8006b5d015400`，与公开签名后 ZIP 的哈希不同是已核实的签名差异。发布前本地 v1/v2/v3 样本另见[历史检查（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/release-preflight.md)，其哈希不作为正式包身份。
 
 本机脱敏回执保存在 ignored `.local/release-prep-20261013/published-verification/` 的 `release-receipt.json`、`actions-consumer/report.json`、`public/readback.json` 和 `public-consumer/report.json`；这些是本机证据定位，不是公开仓库下载链接。
 

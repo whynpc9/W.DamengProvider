@@ -1,6 +1,6 @@
 # T14 实际包取消 consumer
 
-独立 net10.0 精确 PackageReference consumer，不引用产品 ProjectReference、官方驱动或 mutable DLL。每个候选版本、nupkg/net10 asset/实际加载 DLL SHA、MVID、deps package 类型都核对；runner 前后检查 nupkg 不变。仅指定 Low 执行 `eng/t14.sh shared|tls <exact-version> <absolute-package-feed>`，其它 owner 不运行 dotnet/数据库。
+独立 net10.0 精确 PackageReference consumer，不引用产品 ProjectReference、官方驱动或 mutable DLL。每个候选版本、nupkg/net10 asset/实际加载 DLL SHA、MVID、deps package 类型都核对；runner 前后检查 nupkg 不变。仅指定验证者执行 `eng/t14.sh shared|tls <exact-version> <absolute-package-feed>`，其它 owner 不运行 dotnet/数据库。
 
 共享 `8.1.5.60` 是主验收，显式 PlaintextAllowed/mode 0；独立 `127.0.0.1:15236` 的 TLS `8.1.4.6` 是相同取消边界验收，显式 RequireTls/mode 1、既有本机 CA/client cert 与无 CRL 的 NoCheck。所有连接先核验 WDM_PROVIDER_TEST 和同名 Schema。TEST wrapper 才加载相应 secret，不读取 DEV/admin/bootstrap，不改容器模式、服务器设置或系统信任。
 
@@ -14,4 +14,4 @@ PER-01 只在 shared profile 测量独立 8/16 waiter 连接，各自等待不�
 
 报告只含固定安全分类、CLR 类型、数字 opcode/count、受控指标和 FailureInfo 的枚举/符号码。绝不输出 SQL、message/stack/inner、连接串、认证帧、环境变量或私钥。cleanup 使用新有效 TEST 连接并最终 fresh absence；所有异步等待有公开 command 期限及工具 30 秒等待护栏，整个 probe 进程有 1200 秒安全上限（包含多连接准备/独立回读，单次调用预算不变；旧300秒失败记录保留）。无连接或任何缺失均不作 pass。真实包证明需与独立 barrier/虚拟时钟/first-cause 单元测试及 root review 一起评估。
 
-在 DDL 前先写 safe checkpoint 保存本轮精确表名。若整个进程被安全上限终止，不能声称 finally 已完成；Low 必须依据该 checkpoint 用 fresh TEST 身份确认并清理唯一对象，再记录最终 absence，禁止全 Schema 清理。
+在 DDL 前先写 safe checkpoint 保存本轮精确表名。若整个进程被安全上限终止，不能声称 finally 已完成；验证者必须依据该 checkpoint 用 fresh TEST 身份确认并清理唯一对象，再记录最终 absence，禁止全 Schema 清理。

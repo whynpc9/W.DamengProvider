@@ -1,6 +1,6 @@
 # 限定 TEST 目录查询角色维护工具
 
-当前状态：用户已批准一次固定授权，Low 已确认 GRANT ACK、角色存在及管理员连接关闭；原工具只认 NO，因本数据库实际返回字符串 N 而拒绝后置条件。随后普通 TEST 只读 inspect 确认 USER/schema、恰好一个 SOI 角色记录、ADMIN_OPTION=N 和关闭连接；root 已接受固定 GRANT 无 ADMIN OPTION 子句及此读回证据。原失败后置证据保留，**不得重复管理员连接、GRANT 或 REVOKE**。工具现仅按已证表示识别 N 和原有 NO，YES/Y 及未知值仍拒绝。`--approval-granted` 是原维护执行选择器，不能代替新授权；原 execute 模式本次不可重跑。
+当前状态：用户已批准一次固定授权，验证者已确认 GRANT ACK、角色存在及管理员连接关闭；原工具只认 NO，因本数据库实际返回字符串 N 而拒绝后置条件。随后普通 TEST 只读 inspect 确认 USER/schema、恰好一个 SOI 角色记录、ADMIN_OPTION=N 和关闭连接；root 已接受固定 GRANT 无 ADMIN OPTION 子句及此读回证据。原失败后置证据保留，**不得重复管理员连接、GRANT 或 REVOKE**。工具现仅按已证表示识别 N 和原有 NO，YES/Y 及未知值仍拒绝。`--approval-granted` 是原维护执行选择器，不能代替新授权；原 execute 模式本次不可重跑。
 
 唯一写操作固定为：
 
@@ -16,7 +16,7 @@ GRANT SOI TO "WDM_PROVIDER_TEST"
 python3 tools/LocalTestPermissions/run.py build
 ```
 
-项目使用仓库 W.DamengProvider 的 ProjectReference。构建输入必须处于 Low 控制的冻结窗口；构建 .NET 10 使用临时可写 DOTNET_CLI_HOME、关闭首次体验/遥测、单节点及禁用 build servers。输出在 ignored `.local/maintenance/LocalTestPermissions/`；manifest 保存四个工具源文件与工具/驱动 DLL、deps/runtimeconfig 的 SHA256。没有构建即不能执行，输入/制品变化后必须重新构建。
+项目使用仓库 W.DamengProvider 的 ProjectReference。构建输入必须处于验证者控制的冻结窗口；构建 .NET 10 使用临时可写 DOTNET_CLI_HOME、关闭首次体验/遥测、单节点及禁用 build servers。输出在 ignored `.local/maintenance/LocalTestPermissions/`；manifest 保存四个工具源文件与工具/驱动 DLL、deps/runtimeconfig 的 SHA256。没有构建即不能执行，输入/制品变化后必须重新构建。
 
 build 不读取或检查 `.local/secrets/dameng-admin.env`，不将任何 DAMENG 环境变量传给 build 子进程。工具尚未由本轮编码 agent 构建或执行。
 
@@ -42,7 +42,7 @@ C# 用 typed builder 确认配置用户 SA，再用实际 `SELECT USER FROM DUAL
 
 ## 普通 TEST 只读 inspect
 
-先由 Low 在统一构建窗口重建工具及 manifest，再只执行：
+先由验证者在统一构建窗口重建工具及 manifest，再只执行：
 
 ```text
 scripts/with-dameng-test.sh python3 tools/LocalTestPermissions/run.py inspect

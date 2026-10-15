@@ -1,8 +1,6 @@
 # .NET 原生时间精度改造计划
 
-日期：2026-10-07。版本：v2，已根据 Kimi Code 对 v1 的 8 项意见完成一轮主审阅修订。状态：design_review_revised / implementation_not_started；未构建、未连接数据库、未改变现有验收状态。Kimi 没有二次审阅 v2，本版本不标记为 Kimi 复审通过。
-
-代码基线：`ed0c8a19d2a3d275eb469960ae56778e6280b5b0`，本工作树初始干净。本文是 T09/T12 时间契约的后续专项设计，不修改 v1 原始规范、历史 evidence 或 T01–T25 进度。实施前须重新核对目标分支、当前文件归属和未提交工作；不能将其他分支的 R3 状态套用到本基线。
+历史设计日期：2026-10-07。保留供 temporal-native fixture 解释原设计来源；当前实现已完成后续改造，行为见[时间精度说明](../compatibility/TP-temporal-precision.md)。本页中的缺口与断言属于设计基线，不是当前待办或新任务授权。
 
 ## 1. 目标和完成定义
 
@@ -126,27 +124,9 @@ GetDate/GetTime 在当前基线是内部 DmGetValue helper，不是 DmDataReader
 
 能力表替代散落的版本判断，但初始仅承接已有明确验证的 profile；键至少包含服务器版本、wire 类型/模式、支持 scale、偏移与范围限制及证据 ID。建连不新增有副作用的探测，也不靠静默重试业务写入侦测能力。新增 profile 必须以独立探测工具完成读写和 metadata 验证。
 
-## 6. 实施任务 DAG 和文件归属
+## 6. 实施分层
 
-下列为新专项 TP-00…TP-08；它们不是原 v1 T 编号，不改变历史任务状态。每个任务在根审阅和独立验证后关闭，依赖未关闭的任务不能进入实施。共享文件实行单一 owner、分阶段交接；High 不运行 dotnet/DB。
-
-| 任务 | 依赖与 activation gate | owner / 唯一文件范围 | 交付与退出条件 |
-| --- | --- | --- | --- |
-| TP-00 冻结契约与入口清单 | 用户激活实施；重核 branch/head/所有权 | root：专项 docs、证据 manifest；High 只读源代码协助 | 完成 §4.5 每格及兼容 helper 调用点/单位清单，原始/语义 metadata 分离；基线 source/evidence 哈希；未知项有明确验证任务 |
-| TP-01 profile 与独立 oracle | TP-00 | Sol High：新 `tools/TemporalBoundaryProbe/`、`eng/temporal-precision.*`；Sol Low 独占运行 | 分 O/旧W；6/7/8/9 列 CType/scale、Precision 表征、极值、offset/local/UTC 域、历法；TLTZ 标志/异会话时区；TIME 24:00 与 >6 精度存在性；不支持的 profile 明确关闭 |
-| TP-02 纯整数核心 | TP-00；wire 布局沿用已证格式，新能力等待 TP-01 | Sol High codec owner：`Internal/Types/DmTemporal*` 新核心、TypeTests 新 pure codec tests；Luna Max 仅 `tests/fixtures/temporal-native/` | 正反转换、精度/范围、负 interval、边界随机性质测试；独立 golden 非仅自编自解；Low 离线验证 |
-| TP-03 writer 与兼容入口 | TP-01、TP-02 | Sol High codec owner：DmDateTime/DmTime/DmIntervalDT、DmSetValue、N2DB/OracleDateFormat 必要路径及对应测试 | CLR、provider helper、显式文本入口无数值精度绕过；旧函数的可达入口有处置；保持公开签名 |
-| TP-04 绑定与 metadata | TP-03 | Sol High binding owner：DmParameter/DmCommand/DmSqlType、DmParameterBinding、DmCommandPlan 必要冻结 metadata、FixedTemporalBindingTests | 原始 DbType/Precision/Scale 来源与 TLTZ 标志保留；稳定选择表及 NULL/clone/reset/prepare 矩阵通过；双约束 scale 和无 Execute 发送断言 |
-| TP-05 reader 与格式兼容 | TP-03；共享 helper 写入已释放 | Sol High reader owner：DmGetValue/DB2N/DmDataReader、DateUtil 必要精确格式投影、结果格式适配及测试；DmDateTime 修改交回 codec owner | §4.5 矩阵、TLTZ、TIME 两模式整数路径、8/9 位精确 GetString/CLR拒绝、schema、错误恢复和多行读取通过 |
-| TP-06 ADO.NET 同包验收 | TP-04、TP-05；整体 source freeze | Sol Low：仅新 ignored 运行输出；root：新公开摘要 | 七位极值实库、六位拒绝、服务器实际值、事务回滚、对象清理；Type/Command/Async 回归；源/包/DLL 哈希一致 |
-| TP-07 EF 与迁移 | TP-06；独立 EF checkout 和目标版本已固定 | Sol High EF owner：独立 EF worktree 时间 mapping/literal/migrations/scaffolding tests；本仓库仅新交接目录 | 真实候选包 SaveChanges/查询/并发谓词/默认值/更新/回滚、旧六位与新七位模型、迁移和 scaffold 通过 |
-| TP-08 文档与交付门 | TP-06、TP-07，review findings 关闭 | root：compatibility、专项报告/状态和发布说明 | A/B/C 证据可追溯；无修改旧失败；发行门独立检查；不由本计划自动授权发布 |
-
-主线 TP-00 → TP-01/02 → TP-03 → TP-04/05 → TP-06 → TP-07 → TP-08。TP-01/02 可并行编写；所有构建/实库由同一 Sol Low 串行窗口执行。每轮失败先释放窗口，High 定点修复后新 freeze，禁止在已接受输入上追加修改。
-
-必需 profile 集合在 TP-00 固定：主 profile 8.1.5.60 的普通 26/27 七位、同环境六位回归，以及当前已声明支持且受影响的 TLS/legacy profile。8/9 位、TLTZ 新格式和其他服务器版本是分别门控的扩展项；必须完成存在性/支持性分类，但未开放项可保持明确拒绝，不因它们尚未支持就伪称已支持，也不将扩展研究无限加入主线。TLTZ 旧路径若已对外开放，则其回归或明确兼容变更必须关闭，不能直接以“扩展项”跳过。
-
-TP-07 若发现驱动缺陷，释放 Low 窗口并回到对应 TP-03/04/05 owner；重新冻结、生成新唯一包、重跑受影响的 TP-06 门，再用同一新包重跑 TP-07。任何接受版本变化都更新 A/B/C 证据，不把不同产品哈希拼接为同包验收。
+实现按整数 codec、writer/helper、参数绑定/metadata、Reader、ADO.NET 与下游 EF 分层。协作角色和执行顺序按当前任务安排，遵循 [AGENTS.md](../../AGENTS.md)，不继承历史窗口或模型分工。
 
 ## 7. 具体验收矩阵
 
@@ -174,7 +154,7 @@ TP-07 若发现驱动缺陷，释放 Low 窗口并回到对应 TP-03/04/05 owner
 
 实库先通过 TEST wrapper 验证 `WDM_PROVIDER_TEST` 和目标 profile，再建立 nonce 唯一对象与 ownership manifest。只用当前 schema，DDL 按可能隐式提交处理；事务回滚验证用 DML，不声称回滚能够清除 DDL。finally 精确清理并新连接验证最终状态；失败/超时保留本次对象精确恢复清单，禁止全 schema 清理。
 
-SDK 采用实施时仓库锁定版本（当前 driver 为 10.0.203）；每次设置可写 DOTNET_CLI_HOME、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1，使用 `-m:1 /nodeReuse:false /p:UseSharedCompilation=false` 和 SDK 支持的 `--disable-build-servers`。EF SDK 以独立 checkout 锁定版本为准。Low 记录完整脱敏命令、退出码、计数、profile、source/package/DLL 哈希和最终数据库状态；不输出 secrets、原始认证报文或含凭据异常。
+SDK 采用实施时仓库锁定版本（以当前 global.json 为准）；每次设置可写 DOTNET_CLI_HOME、DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1、DOTNET_CLI_TELEMETRY_OPTOUT=1，使用 `-m:1 /nodeReuse:false /p:UseSharedCompilation=false` 和 SDK 支持的 `--disable-build-servers`。EF SDK 以独立 checkout 锁定版本为准。验证者记录完整脱敏命令、退出码、计数、profile、source/package/DLL 哈希和最终数据库状态；不输出 secrets、原始认证报文或含凭据异常。
 
 无显式测试连接时只跑离线，状态 `integration_pending`；不同 profile 分别验收。现有 shared 环境 Fetch 超时背景不算本专项通过或失败的自动归因，必须保留当前候选和对照结果。TLS 使用既有严格策略；PlaintextAllowed 仅通过批准的 typed 配置，不能改 O/W 共用 secret。
 
@@ -198,26 +178,12 @@ EF 的模型 `HasPrecision(7)` 与 ADO.NET 的 `DmParameter.Precision=7` 不是�
 - GetString、GetValue、schema 类型及 interval 格式由下游依赖，不能为了统一 ticks 任意变更；新 codec 与公开投影解耦。
 - 七位声明不等于全日期范围、所有偏移、TIME 或 INTERVAL 都支持七位；能力按类型/profile 记录。
 - 回退采用已固定的前一驱动/EF 包组合；如已写入七位数据，旧驱动读取能力和六位 schema 回退必须先验证。无法无损降级时保留七位 schema/数据并停止回退，不自动截断。
-- 线上发布、业务迁移和扩大服务器支持范围分别过门；本计划及 Kimi review 都不等于运行验收或发布许可。
-
-## 11. 交付物与接受清单
-
-实施交付包括：入口与语义清单、profile 能力证据、codec/绑定/reader 实现及测试、合成 fixture、独立边界探测工具、唯一版本候选包、EF 接入提交/交接文件、迁移与回退说明、新 source/evidence manifests、review 处置记录和兼容矩阵。
-
-- [ ] TP-00…08 逐项关闭，A/B/C 结论分开。
-- [ ] 最大日期三向量七位正例和六位正负例经真实库及 EF 通过。
-- [ ] 所有可达数值时间入口不再做隐式舍入或浮点/字符串数值中转；文本功能保留受控解析。
-- [ ] 没有按数值截断掩盖未知能力，未开放入口没有绕过守卫。
-- [ ] 受影响现有测试和包消费门通过，所有失败历史保留。
-- [ ] 同一冻结候选的代码、DLL、包、EF 消费者身份一致，数据库最终状态确认。
-- [ ] 兼容变化、未验证范围、存量迁移和回退前提写入发行说明。
+- 线上发布、业务迁移和扩大服务器支持范围分别过门；本计划及设计审阅 都不等于运行验收或发布许可。
 
 ## 12. 参考与审阅状态
 
-本仓库依据：[T09 设计](T09-design.md)、T09 报告（历史记录已归档）、T12 报告（历史记录已归档）、[七位精度探测说明](../../tools/TemporalPrecisionProbe/README.md)、[当前进度](progress.json)、[文件与窗口规则](active-ownership.md)。
+本仓库依据：[T09 设计（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/T09-design.md)、T09 报告（历史记录已归档）、T12 报告（历史记录已归档）、[七位精度探测说明](../../tools/TemporalPrecisionProbe/README.md)、[当前进度](progress.json)、[文件与窗口规则](active-ownership.md)。
 
 官方 SQL 文档在 2026-10-07 查询时将 TIMESTAMP 列精度列为 0–9、默认 6；这里只用作产品能力研究入口，不替代本地服务器和协议 profile 证据：[日期时间类型](https://eco.dameng.com/document/dm/zh-cn/pm/dm_sql-introduction.html)。
 
-Kimi Code 2.1.1 已对 [冻结 v1](temporal-dotnet-precision-plan.v1.md) 完成独立只读 review，退出码 0，结论为“修订后可进入实施”，提出 8 项意见。主审阅者完成一轮修订；[原始意见](reviews/temporal-kimi-review-r1.txt)、[逐项处置与证据校正](reviews/temporal-kimi-review-disposition.md) 保留审计链。无版本入口仅指向 v2，v1 不作为实施依据。
-
-修订次数：1；Kimi 复审次数：0。修订后的接口策略是 root 的设计决策，不冒称 Kimi 已逐项认可。本文的验收断言仍是实施目标，不是通过结果。TP-00 激活时重新核对源码和 profile，不能将本次静态审阅计为产品 gate。
+独立设计审阅的有效决策见[逐项处置](reviews/temporal-kimi-review-disposition.md)。旧草稿和原始审阅过程可从 Git 历史查询；设计审阅不代表运行验收。

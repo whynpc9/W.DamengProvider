@@ -1,6 +1,6 @@
 # T04 不可变配置、默认值与能力守卫
 
-日期：2026-09-29。状态：已按本设计验收，见 T04 报告（历史记录已归档）。前置 T03 已验收。依据 S02（历史记录已归档）。
+保留配置解析与快照的设计背景。当前选项及支持范围以[配置说明](../compatibility/T04-options.md)为准，历史阶段状态不作为当前任务队列。
 
 ## 配置边界
 
@@ -18,9 +18,8 @@
 
 Host/User/Password 无默认值，认证不完整在任何 LOGIN 前拒绝；缺少 host 也不得偷偷连接 localhost。标准 `DmConnection.ConnectionTimeout` 返回秒，旧 Builder `ConnectionTimeout` 及 connect/pool/socket 字符串键维持毫秒。新 typed TimeSpan 属性按文档精确换算，负值/超出旧层可表示范围/无法保持单位的值拒绝。命令默认 30 秒，显式 0 为无限；无连接的新命令也使用 30。
 
-默认 TransportSecurity=RequireTls。T07 尚未提供完整 TLS 路径，本轮默认策略在 socket 前明确拒绝；调用方必须显式选择 PlaintextAllowed 才能使用已授权测试实例。服务器要求 TLS 时同样拒绝，不能落到旧的恒真证书回调或静默降级；未验证的本机加密库模式不可悄悄激活。这些检查是能力守卫，不是 T07 已完成的声明。
+默认 TransportSecurity=RequireTls，当前已提供完整 TLS。共享明文测试显式选择 PlaintextAllowed，不关闭证书验证或静默降级；安全边界见 [TLS 说明](../compatibility/T07-security.md)。容量调度与流式 LOB 已实现，物理会话复用仍未开放，见 [R3](../compatibility/R3.md)。固定 frame/物化 LOB/chunk 限额与旧选项拒绝规则见配置说明。
 
-Pooling、statement cache、自动重连、读写分离、ambient/distributed enlistment、HA、压缩、SkyWalking、服务文件与旧日志等未验收功能不得被非默认选项启用。公开高级入口（包括 Bulk/FLDR/native）也要有直接守卫，不能仅检查连接字符串。默认池参数可以保留供配置模型描述，池操作本身仍不支持。其他尚未接入执行层的限额（frame、物化 LOB、chunk 等）记录为固定默认/后续阶段项，非默认值拒绝，不能声称已实现资源限制。收包限额属于 S04/T06，TLS 属于 S04/T07，超时预算与真正异步属于 S08/T13–T14，池化属于 S09/T15–T16，LOB 属于 S10/T17。
 
 ## 会话接入与输出
 
@@ -30,15 +29,6 @@ Pooling、statement cache、自动重连、读写分离、ambient/distributed en
 
 停止加载环境服务文件、连接级配置写进程全局字段、对含口令连接串做稳定 hash，以及共享 `filter.next` 链。保留兼容类型时不允许把非空 filterHead 注入当前 ADO 路径；旧日志不再作为活动输出路径。握手与错误处理需保留结构化代码但不输出凭据。
 
-## 验证与分工
+## 验证
 
-- Sol High settings：Builder、内部配置表/解析器/不可变设置、TransportSecurity enum、旧默认值来源。提供选项支持/弃用/拒绝表。
-- Sol High integration：Connection/Command 接入、Legacy session adapter、过滤器和高级入口守卫、握手安全守卫。记录破坏性变更和禁用入口。
-- Sol High tests：自动化配置测试、真实库 probe、独立 T04 构建/运行脚本与新 API 差异记录，不修改实现或 fixture。
-- Luna Max：合成解析、单位、冲突、异常脱敏 canary 和能力开关数据，不连接数据库。
-- Sol Low：稳定版后的独立测试/真实库验证，负例与证据；缺陷交编码者修复。
-- 主 agent：设计裁决、review、T04 报告/进度。
-
-离线覆盖所有入口、等价/冲突别名、quoted values、IPv6、Unicode、单位上下界、Clear/Remove/失败恢复、默认安全策略、未实现开关及直接入口拒绝、配置不互相影响和脱敏。真实库仅由新 T04 probe 显式采用 PlaintextAllowed；验证基本查询/事务、打开期间禁止设置、关闭重开保留认证、公开配置脱敏与无测试对象残留。不改变 local secret 或历史 O/R/T03 消费者以迁就新默认。
-
-T01/T02 原实现及来源保持只读。T03 的产品文件开始有意演进，其历史 hash 应对照验收时 Git 基线 `8e42481`，不重写历史证据或初次导入清单；T04 新增 API/行为差异单独记录。此阶段不发布包，不默认提交或推送。
+离线覆盖解析入口、别名等价与冲突、quoted values、IPv6、Unicode、单位边界、Clear/Remove/失败恢复、安全默认值、能力守卫与脱敏。真实库通过 TEST wrapper 显式选择对应安全模式，验证 CRUD/事务、配置状态、Clone/重开及精确对象清理。分工遵循当前 [AGENTS.md](../../AGENTS.md)。

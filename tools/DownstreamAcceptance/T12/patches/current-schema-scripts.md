@@ -1,6 +1,6 @@
 # T12 current-schema migration-script 补丁
 
-状态：implementation_ready / revalidation_pending。作者没有运行 dotnet、数据库连接或脚本；四项测试是契约数量，不是通过数。Low 的原 R1 scripts 轮次为 1/4 通过，3项失败集中于 named migration ID 解析；原失败证据保留，14位 ID 修复后的 fresh snapshot 待重验。
+状态：implementation_ready / revalidation_pending。作者没有运行 dotnet、数据库连接或脚本；四项测试是契约数量，不是通过数。验证者的原 R1 scripts 轮次为 1/4 通过，3项失败集中于 named migration ID 解析；原失败证据保留，14位 ID 修复后的 fresh snapshot 待重验。
 
 ## 固定输入与应用顺序
 
@@ -44,14 +44,14 @@ Patch SHA-256：`6603ae6481c9683e50b7cf5db648206da35107fff8ed8afae31269bd3aca939
 - collection fixture 的 Dispose 逐组重试所有尚未完成的已登记对象；每组失败独立累计安全类型/可用数字code，全部尝试后仍有失败则抛出摘要，不吞错当pass。管理账号、授权和实例设置不参与。
 - xUnit 输出仅含本次 synthetic owned names 和 fresh cleanup 状态；异常为类型/数字code/安全方法行号摘要，无 inner exception/raw message。既有 executor 的 redactor 返回固定摘要，避免它输出整个 SQL + Exception.ToString。
 
-Low 需运行 main 合并后的新 snapshot，用 `Category=CurrentSchemaScripts` 选择本类，并保存 test count/exit/TRX/零skip、实际命令、candidate DLL/package hash、身份以及 finally/fresh final-state 输出。不要运行旧 `DamengMigrationScriptFunctionalTests` admin collection。
+验证者需运行 main 合并后的新 snapshot，用 `Category=CurrentSchemaScripts` 选择本类，并保存 test count/exit/TRX/零skip、实际命令、candidate DLL/package hash、身份以及 finally/fresh final-state 输出。不要运行旧 `DamengMigrationScriptFunctionalTests` admin collection。
 
 ## 明确未覆盖
 
 原 admin 创建/删除 user、tablespace、grant、物理文件路径、新 schema 和跨 schema lookup 场景不执行。新的模型/迁移仅移除这些管理边界（EnsureSchema/new-schema table mapping）；其余原对象 SQL/seed 契约沿用，provider 的生产生成器不改。
 
-静态 analyzer 修复：固定摘要 Redact 与无实例依赖的 ExecuteScriptAsync 使用 static，方法 group 引用类型，不抑制 CA1822 或放宽断言。旧 integrated-v3 snapshot 未改，下一 fresh snapshot 待 Low 构建验收。
+静态 analyzer 修复：固定摘要 Redact 与无实例依赖的 ExecuteScriptAsync 使用 static，方法 group 引用类型，不抑制 CA1822 或放宽断言。旧 integrated-v3 snapshot 未改，下一 fresh snapshot 待验证者构建验收。
 
 本脚本 lane 不替代 Database.Migrate/DBMS_LOCK、CLI migration/scaffold、schema scaffolding 或所有上游 migration conformance；这些由 T12 各自 gate 验证。原 descending catalog 辅助断言只有在服务器目录提供 DESCEND 列时才核该目录字段，脚本 DESC 形态和实际 index 存在性始终断言；任何目录权限错误仍真实失败。
 
-依据 archive 的 `skills/dameng-sql/SKILL.md`、`references/dmsql.md` 和 `skills/dameng-ef-migrations/SKILL.md`。其中管理员初始化示例未执行。本补丁不提交或发布包；应用和验收由 main/Low 统一安排。
+依据 archive 的 `skills/dameng-sql/SKILL.md`、`references/dmsql.md` 和 `skills/dameng-ef-migrations/SKILL.md`。其中管理员初始化示例未执行。本补丁不提交或发布包；应用和验收由 main/验证者统一安排。
