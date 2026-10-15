@@ -15,20 +15,22 @@
 | 推断 CLR DateTime / DateTimeOffset | TIMESTAMP 26/7、TZ 27/7 | 16/6、23/6，非整微秒拒绝 |
 | 显式 DbType.DateTime / DateTimeOffset | 保持兼容默认 16/6、23/6 | 同左 |
 | 显式 DbType.DateTime2 | 26/7 | NotSupportedException |
-| 显式 Scale 0…6 / 7 / 8…9 | legacy 同精度 / extended 七位 / 拒绝 | 0…6 legacy；7…9 拒绝 |
-| typed NULL，Scale 超过 profile 上限 | 声明降为 extended 7 | 声明降为 legacy 6 |
+| 显式 Scale 0…6 / 7 / 8…9 | legacy 同精度 / extended 七位 / extended 八九位（CLR 值） | 0…6 legacy；7…9 拒绝 |
+| typed NULL，Scale 超过 profile 上限 | extended 声明最高 9 | 声明降为 legacy 6 |
 
 - 可靠 fixed describe 始终优先：显式 DateTime2 写入六位列时仍受该列六位约束。
-- typed NULL 不携带小数位：在已验证七位 profile 下，有可靠 fixed describe 时可沿用服务器声明（含 8/9 位列）；其他 profile 仍执行原声明校验，无 fixed describe 时按上表降级声明；非 NULL 值的限制不变（[issue #16 修订](I16-ef-integration-feedback.md#3-89-位时间列的-typed-null)，未随 0.1.0-preview.1 发布）。
+- typed NULL 不携带小数位：在已验证七位 profile 下，有可靠 fixed describe 时可沿用服务器声明（含 8/9 位列）；其他 profile 仍执行原声明校验，无 fixed describe 时按上表降级声明（未随 0.1.0-preview.1 发布）。
+- 已验证 extended profile 支持非 NULL `DateTime` / `DateTimeOffset` 以 `Scale=8/9` 写入 TIMESTAMP / TIMESTAMP WITH TIME ZONE。CLR 值仍只有七位小数精度：例如 `.1234567` 无损写为 `.123456700`；默认推断声明仍为七位。文本与旧 helper 不新增八九位写能力。fixed 列精度与参数 Scale 分别检查，写入六位列不会因参数声明为九位而截断数据。
+- 参数绑定在成功描述后、本次业务 Execute 之前失败时，只有确认绑定期间没有 wire 往返、会话及调用所有权一致、且无取消/超时，才允许保留会话并关闭本次句柄。清理失败或协议状态不确定仍使会话 Broken。
 - Reader：`GetString` 从原始纳秒字段返回精确文本；8/9 位列中不能整除 100ns 的值，CLR getter 抛 `OverflowException`。schema `NumericScale` 报真实小数位数。TZ 列 `GetValue` 返回 `DateTimeOffset`（官方驱动为 `DateTime`）。
 - 公开旧 helper（`DmDateTime`、`DmTime`、`DmIntervalDT` 等）先前舍入的超精度输入现在拒绝；签名不变。
-- 保守关闭：TIME/INTERVAL 七位写、非 NULL 八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
+- 保守关闭：TIME/INTERVAL 七位写、文本/旧 helper 的八九位写、非 NULL 的 TIMESTAMP WITH LOCAL TIME ZONE 写、1582-10-05…14 写、BCE 写、TIME hour=24 投影。
 
 ## 历史验证与产品 profile 限制
 
 | profile | 七位写 | 证据 |
 | --- | --- | --- |
-| DM 8.1.5.60 / message 21 / UTF-8（shared，显式 PlaintextAllowed） | 开放 | TP06 A/B 同包；2026-10-12 EF 七位迁移实库 |
+| DM 8.1.5.60 / message 21 / UTF-8（shared，显式 PlaintextAllowed） | 七位值及 Scale 8/9 声明开放 | TP06 A/B 同包；2026-10-12 EF 七位迁移；2026-10-15 [CLR 高精度写入 36 项](I16-ef-integration-feedback.md#2026-10-15-后续修订) |
 | DM 8.1.4.6 / message 11 / GB18030（隔离 TLS） | 关闭，六位已验证 | TP06 |
 | 其他版本/编码 | 关闭，按 legacy 六位兼容路径 | 未表征 |
 

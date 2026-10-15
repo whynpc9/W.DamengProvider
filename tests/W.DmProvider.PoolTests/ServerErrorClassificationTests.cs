@@ -187,22 +187,184 @@ public sealed class ServerErrorClassificationTests
     }
 
     [Theory]
-    [InlineData(-2106)]
-    [InlineData(-6804)]
-    public void PrepareErrorIsStrictlyClassifiedWithoutAddingSessionPreservation(int number)
+    [InlineData(false, -2007)]
+    [InlineData(true, -2007)]
+    [InlineData(false, -2106)]
+    [InlineData(true, -2106)]
+    [InlineData(false, -4015)]
+    [InlineData(true, -4015)]
+    public void MeasuredPrepareErrorKeepsOwnedSessionAndTransaction(bool transaction, int number)
     {
-        using var fixture = new ErrorFixture("8.1.5.60", true);
+        using var fixture = new ErrorFixture("8.1.5.60", transaction);
+        var activeTransaction = fixture.Session.ActiveTransaction;
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        invocation.Phase = DmFailurePhase.Receive;
+        var wire = fixture.Session.BeginWireExchange();
+        var response = Response(number, Body("", "", "", "prepare"));
+        var error = Assert.Throws<DmException>(() => c.A(response, fixture.Statement));
+        wire.Dispose();
+        Assert.Same(error, invocation.TranslateFailure(error));
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.True(error.CanPreserveSessionAfterServerError);
+        Assert.True(invocation.Completed);
+        Assert.False(invocation.ShouldAbortAfterFailure(error));
+        Assert.Equal(number, error.Number);
+        Assert.Equal(number, error.FailureInfo.ServerErrorNumber);
+        Assert.Equal(DmErrorKind.Server, error.FailureInfo.ErrorKind);
+        Assert.Equal(DmOperationOutcome.ServerReported, error.FailureInfo.OperationOutcome);
+        Assert.Equal(DmFailurePhase.Receive, error.FailureInfo.Phase);
+        Assert.True(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(DmPhysicalSessionState.Busy, fixture.Session.State);
+        Assert.False(fixture.Handshake.Channels.Single().IsClosed);
+        Assert.Same(activeTransaction, fixture.Session.ActiveTransaction);
+        if (transaction) Assert.Equal(DmTransactionOutcome.Active, error.FailureInfo.TransactionOutcome);
+        else Assert.Null(error.FailureInfo.TransactionOutcome);
+        Assert.Equal(0, response.a(false));
+    }
+
+    [Theory]
+    [InlineData("8.1.4.6", -2007, false)]
+    [InlineData("8.1.4.6", -2106, true)]
+    [InlineData("8.1.4.6", -4015, false)]
+    [InlineData("8.1.5.60.1", -4015, true)]
+    [InlineData("8.1.5.60", -6804, false)]
+    [InlineData("8.1.5.60", -6804, true)]
+    [InlineData("8.1.5.60", -6602, false)]
+    [InlineData("8.1.5.60", -20000, true)]
+    [InlineData("8.1.5.60", -6001, false)]
+    [InlineData("8.1.5.60", -1, true)]
+    public void UnmeasuredPrepareProfileOrNumberKeepsReceiptButBreaksSession(string version, int number, bool transaction)
+    {
+        using var fixture = new ErrorFixture(version, transaction);
         using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
         using var invocation = lease.BeginInvocation();
         invocation.SendAttempted = lease.SendAttempted = true;
         var wire = fixture.Session.BeginWireExchange();
-        var error = Assert.Throws<DmException>(() => c.A(Response(number, Body("", "", "", "statement")), fixture.Statement));
+        var error = Assert.Throws<DmException>(() => c.A(Response(number, Body("", "", "", "prepare")), fixture.Statement));
         wire.Dispose();
         invocation.TranslateFailure(error);
         Assert.True(error.HasVerifiedServerResponse);
         Assert.False(error.CanPreserveSessionAfterServerError);
+        Assert.True(invocation.Completed);
+        Assert.True(invocation.ShouldAbortAfterFailure(error));
         Assert.Equal(DmErrorKind.Server, error.FailureInfo.ErrorKind);
+        Assert.Equal(DmOperationOutcome.ServerReported, error.FailureInfo.OperationOutcome);
         Assert.False(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
+        Assert.True(fixture.Handshake.Channels.Single().IsClosed);
+        if (transaction) Assert.Equal(DmTransactionOutcome.OutcomeUnknown, error.FailureInfo.TransactionOutcome);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void SessionAcceptanceRechecksPhaseSpecificErrorNumber(bool prepare, bool executeOnlyNumber)
+    {
+        using var fixture = new ErrorFixture("8.1.5.60", false);
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        int number = executeOnlyNumber ? -6602 : -4015;
+        var error = new DmException(c.ReadCompleteErrorBody(Response(number, new byte[16]), "UTF-8"));
+        fixture.Session.AcceptServerError(invocation, wire, error, preserveSession: true, prepare: prepare);
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        bool expected = prepare != executeOnlyNumber;
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.Equal(expected, error.CanPreserveSessionAfterServerError);
+        Assert.Equal(expected, error.FailureInfo.ConnectionReusable);
+        Assert.Equal(expected ? DmPhysicalSessionState.Busy : DmPhysicalSessionState.Broken, fixture.Session.State);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InvalidFunctionDuringExecuteDoesNotUsePrepareWhitelist(bool asynchronous)
+    {
+        using var fixture = new ErrorFixture("8.1.5.60", false);
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        var error = await CaptureAsync(asynchronous, Response(-4015, Body("", "", "", "invalid function")), fixture);
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.False(error.CanPreserveSessionAfterServerError);
+        Assert.False(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
+        Assert.True(fixture.Handshake.Channels.Single().IsClosed);
+    }
+
+    [Theory]
+    [InlineData("manual_commit")]
+    [InlineData("transaction_in_flight")]
+    [InlineData("changed_transaction_owner")]
+    [InlineData("inactive_transaction")]
+    [InlineData("non_query_operation")]
+    public void PrepareRecoveryRequiresExistingTransactionAndOperationOwnership(string rejection)
+    {
+        bool transaction = rejection is "changed_transaction_owner" or "inactive_transaction";
+        using var fixture = new ErrorFixture("8.1.5.60", transaction);
+        if (rejection == "manual_commit") fixture.Instance.ConnProperty.AutoCommit = false;
+        if (rejection == "transaction_in_flight") fixture.Session.SetTransactionState(DmLocalTransactionState.OutcomeUnknown);
+        if (rejection == "changed_transaction_owner") fixture.Instance.Transaction = null;
+        if (rejection == "inactive_transaction") fixture.Session.ActiveTransaction!.SetOutcomeFromSession(DmTransactionOutcome.OutcomeUnknown);
+        using var lease = fixture.Session.BeginExecution(rejection == "non_query_operation" ? DmOperationPurpose.Metadata : DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        var error = Assert.Throws<DmException>(() => c.A(Response(-4015, new byte[16]), fixture.Statement));
+        wire.Dispose();
+        invocation.TranslateFailure(error);
+        Assert.True(error.HasVerifiedServerResponse);
+        Assert.False(error.CanPreserveSessionAfterServerError);
+        Assert.False(error.FailureInfo.ConnectionReusable);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
+        Assert.True(fixture.Handshake.Channels.Single().IsClosed);
+    }
+
+    [Theory]
+    [InlineData("negative_length")]
+    [InlineData("truncated_string")]
+    [InlineData("overlong_string")]
+    [InlineData("missing_fourth_length")]
+    [InlineData("trailing")]
+    [InlineData("bad_boundary")]
+    [InlineData("invalid_utf8")]
+    public void MalformedPrepareDiagnosticCannotBecomeVerifiedReceipt(string kind)
+    {
+        using var fixture = new ErrorFixture("8.1.5.60", false);
+        using var lease = fixture.Session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        invocation.SendAttempted = lease.SendAttempted = true;
+        var wire = fixture.Session.BeginWireExchange();
+        byte[] body = kind switch
+        {
+            "negative_length" => BitConverter.GetBytes(-1),
+            "truncated_string" => [6, 0, 0, 0, 65],
+            "overlong_string" => BitConverter.GetBytes(int.MaxValue),
+            "missing_fourth_length" => new byte[12],
+            "trailing" => new byte[17],
+            "invalid_utf8" => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0xc3],
+            _ => new byte[16]
+        };
+        var response = Response(-4015, body);
+        if (kind == "bad_boundary") response.G(63);
+        Exception error = Record.Exception(() => c.A(response, fixture.Statement))!;
+        if (kind == "invalid_utf8") Assert.IsType<DecoderFallbackException>(error);
+        else Assert.IsType<InvalidDataException>(error);
+        wire.Dispose();
+        Assert.False(invocation.ServerErrorAccepted);
+        Assert.False(invocation.Completed);
+        Assert.Equal(DmErrorKind.Transport, invocation.CreateFailureInfo(error).ErrorKind);
+        Assert.Equal(DmPhysicalSessionState.Broken, fixture.Session.State);
+        Assert.True(fixture.Handshake.Channels.Single().IsClosed);
     }
 
     [Theory]
@@ -478,6 +640,37 @@ public sealed class ServerErrorClassificationTests
     }
 
     [Theory]
+    [InlineData(0, false)] [InlineData(1, false)] [InlineData(2, false)]
+    [InlineData(0, true)] [InlineData(1, true)] [InlineData(2, true)]
+    public async Task PublicPreparePreservesServerMetadataAndReportsConnectionLostWhenCleanupFails(int entry, bool failClose)
+    {
+        using var hook = new SyntheticPoolHandshake();
+        using var source = new DmDataSource(PoolApiSettings.Text);
+        var channel = new StatementErrorChannel(-2007, failCloseSend: failClose);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        {
+            hook.Install(candidate, channel);
+            candidate.m_ConnInst.ConnProperty.ServerVersion = "8.1.5.60";
+            candidate.m_ConnInst.ConnProperty.ServerEncoding = "UTF-8";
+            return ValueTask.CompletedTask;
+        };
+        using var connection = source.OpenConnection();
+        using var command = new DmCommand("SELECT SYNTHETIC_INVALID FROM DUAL", connection);
+        DmException error = entry == 2 ? await Assert.ThrowsAsync<DmException>(() => command.PrepareAsync()) :
+            Assert.Throws<DmException>(() => { if (entry == 0) command.Prepare(); else command.PrepareInternal(false); });
+        Assert.NotNull(error.FailureInfo);
+        Assert.Equal(-2007, error.Number);
+        Assert.Equal(-2007, error.FailureInfo.ServerErrorNumber);
+        Assert.Equal(DmErrorKind.Server, error.FailureInfo.ErrorKind);
+        Assert.Equal(DmOperationOutcome.ServerReported, error.FailureInfo.OperationOutcome);
+        Assert.Equal(DmFailurePhase.Receive, error.FailureInfo.Phase);
+        Assert.Equal(!failClose, error.FailureInfo.ConnectionReusable);
+        Assert.Equal(failClose, channel.IsClosed);
+        Assert.Equal(!failClose ? ConnectionState.Open : entry == 2 ? ConnectionState.Broken : ConnectionState.Closed, connection.State);
+        Assert.Equal(new short[] { 3, 5, 4 }, channel.Opcodes);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task ActualDataSourceShortcutKeepsServerFailureAndClosesTransportBeforeReturningPermit(bool asynchronous)
@@ -623,7 +816,7 @@ public sealed class ServerErrorClassificationTests
         { Command.Dispose(); Connection.Dispose(); Source.Dispose(); Handshake.Dispose(); }
     }
 
-    private sealed class StatementErrorChannel(int number, bool failExecutionSend = false) : IDmByteChannel
+    private sealed class StatementErrorChannel(int number, bool failExecutionSend = false, bool failCloseSend = false) : IDmByteChannel
     {
         private byte[] reply = [];
         private int position;
@@ -639,9 +832,9 @@ public sealed class ServerErrorClassificationTests
             if (opcode != 3)
             {
                 ExecutionInvocation = DmInvocation.Current;
-                if (failExecutionSend) throw SendFailure;
+                if (failExecutionSend || opcode == 4 && failCloseSend) throw SendFailure;
             }
-            reply = Frame(opcode, opcode == 3 ? 0 : number, opcode == 3 ? [] : new byte[16]);
+            reply = Frame(opcode, opcode is 3 or 4 ? 0 : number, opcode is 3 or 4 ? [] : new byte[16]);
             position = 0;
             return count;
         }

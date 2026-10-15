@@ -51,13 +51,23 @@ internal readonly record struct DmTemporalCapabilityProfile(DmTemporalProfileIde
             return;
         }
         bool extended = target.CType is 26 or 27;
-        if (demand > (extended ? 7 : 6) || (target.ReliableFixed && column > (extended ? 7 : 6)))
+        if (demand > (extended ? 9 : 6) || (target.ReliableFixed && column > (extended ? 9 : 6)))
             throw new NotSupportedException("Temporal write precision is unsupported by this layout.");
-        if (demand == 7 && State != DmTemporalCapabilityState.VerifiedSeven)
-            throw new NotSupportedException("Seven-digit temporal writes are not verified for this negotiated profile.");
+        if ((demand > 6 || target.ReliableFixed && column > 6) && State != DmTemporalCapabilityState.VerifiedSeven)
+            throw new NotSupportedException("Extended temporal precision is not verified for this negotiated profile.");
         if (extended && State != DmTemporalCapabilityState.VerifiedSeven
             && !(target.ReliableFixed && column <= 6 && demand <= 6))
             throw new NotSupportedException("Extended temporal writes require a verified profile or existing fixed six-digit metadata.");
+    }
+
+    internal void ValidateSemanticWriteTarget(DmTemporalWriteTarget target)
+    {
+        ValidateWriteTarget(target);
+        // Scales 8/9 are opened only for exact CLR tick inputs. Semantic text and
+        // legacy helper values retain their independently verified seven-digit gate.
+        if (target.CType is 26 or 27 && (target.EncodedScale > 7 || target.RequestedScale > 7 ||
+            target.ReliableFixed && target.ColumnScale > 7))
+            throw new NotSupportedException("High-scale timestamp writes require CLR DateTime or DateTimeOffset input.");
     }
 
     // NULL encodes no fraction, so a reliable server-described declaration may exceed

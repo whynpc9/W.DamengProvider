@@ -42,6 +42,8 @@ try
     }
     output["anonymous_blocks"] = await AnonymousBlocks();
     output["temporal_null"] = await TemporalNull();
+    output["temporal_values"] = await TemporalValues();
+    output["prepare_recovery"] = await PrepareRecovery();
     output["transport"] = await Transport();
     output["broken_message"] = BrokenMessage();
 }
@@ -167,20 +169,141 @@ async Task<object> TemporalNull()
         int updated = asynchronous ? await update.ExecuteNonQueryAsync() : update.ExecuteNonQuery();
         string nulls = ScalarFresh($"SELECT COUNT(*) FROM \"{t}\" WHERE ID={id} AND TS IS NULL AND TS8 IS NULL AND TZ IS NULL AND T6 IS NOT NULL")!;
         string t6 = ScalarFresh($"SELECT TO_CHAR(T6, 'YYYY-MM-DD HH24:MI:SS.FF6') FROM \"{t}\" WHERE ID={id}")!;
-        // A non-NULL value at Scale 9 is still rejected before any send.
         using var nonNull = connection.CreateCommand();
         nonNull.CommandText = $"UPDATE \"{t}\" SET TS = :ts WHERE ID = :id";
-        nonNull.Parameters.Add(new DmParameter("ts", new DateTime(2026, 10, 14)) { DbType = DbType.DateTime2, Scale = 9 });
+        nonNull.Parameters.Add(new DmParameter("ts", new DateTime(2026, 10, 14).AddTicks(1234567)) { DbType = DbType.DateTime2, Scale = 9 });
         nonNull.Parameters.Add(new DmParameter("id", id));
-        bool nonNullRejected = false;
-        try { if (asynchronous) await nonNull.ExecuteNonQueryAsync(); else nonNull.ExecuteNonQuery(); }
-        catch (NotSupportedException) { nonNullRejected = true; }
-        // Recorded only: this rejection happens after the server describe, on the unchanged non-NULL path.
-        string stateAfterRejection = connection.State.ToString();
-        string unchanged = ScalarFresh($"SELECT COUNT(*) FROM \"{t}\" WHERE ID={id} AND TS IS NULL")!;
-        result[mode] = new { inserted, updated, nulls, t6, nonNullRejected, stateAfterRejection, unchanged };
+        if (prepared) { if (asynchronous) await nonNull.PrepareAsync(); else nonNull.Prepare(); }
+        int nonNullUpdated = asynchronous ? await nonNull.ExecuteNonQueryAsync() : nonNull.ExecuteNonQuery();
+        string exact = ScalarFresh($"SELECT TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS.FF9') FROM \"{t}\" WHERE ID={id}")!;
+        result[mode] = new { inserted, updated, nulls, t6, nonNullUpdated, exact };
         Check("temporal_null_" + mode, inserted == 1 && updated == 1 && nulls == "1" && t6 == "2026-10-14 01:02:03.012345" &&
-            nonNullRejected && unchanged == "1");
+            nonNullUpdated == 1 && exact == "2026-10-14 00:00:00.123456700");
+    }
+    return result;
+}
+
+async Task<object> TemporalValues()
+{
+    string t = T("VALUE");
+    ExecFresh($"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, TS8 TIMESTAMP(8), TS9 TIMESTAMP(9), TZ8 TIMESTAMP(8) WITH TIME ZONE, TZ9 TIMESTAMP(9) WITH TIME ZONE, T6 TIMESTAMP(6))");
+    var result = new List<object>();
+    int id = 0;
+    foreach (bool prepared in new[] { false, true })
+    foreach (bool asynchronous in new[] { false, true })
+    foreach (bool transaction in new[] { false, true })
+    foreach (bool commit in transaction ? new[] { false, true } : new[] { true })
+    foreach (DateTime value in new[] { new DateTime(2026, 10, 15, 12, 34, 56).AddTicks(1234567), DateTime.MinValue, DateTime.MaxValue })
+    {
+        id++;
+        using var connection = Open();
+        string sid = Scalar(connection, "SELECT SESSID() FROM DUAL")!;
+        using var tx = transaction ? (DmTransaction)connection.BeginTransaction() : null;
+        var offset = new DateTimeOffset(value, value == DateTime.MinValue || value == DateTime.MaxValue ? TimeSpan.Zero : TimeSpan.FromMinutes(id % 2 == 0 ? 345 : -210));
+        using var command = connection.CreateCommand();
+        command.Transaction = tx;
+        command.CommandText = $"INSERT INTO \"{t}\" (ID, TS8, TS9, TZ8, TZ9) VALUES (:id,:ts8,:ts9,:tz8,:tz9)";
+        command.Parameters.Add(new DmParameter("id", id));
+        command.Parameters.Add(new DmParameter("ts8", value) { DbType = DbType.DateTime2, Scale = 8 });
+        command.Parameters.Add(new DmParameter("ts9", value) { DbType = DbType.DateTime2, Scale = 9 });
+        command.Parameters.Add(new DmParameter("tz8", offset) { DbType = DbType.DateTimeOffset, Scale = 8 });
+        command.Parameters.Add(new DmParameter("tz9", offset) { DbType = DbType.DateTimeOffset, Scale = 9 });
+        if (prepared) { if (asynchronous) await command.PrepareAsync(); else command.Prepare(); }
+        int affected = asynchronous ? await command.ExecuteNonQueryAsync() : command.ExecuteNonQuery();
+        bool exact;
+        using (var read = connection.CreateCommand())
+        {
+            read.Transaction = tx;
+            read.CommandText = $"SELECT TS8,TS9,TZ8,TZ9,TO_CHAR(TS8,'YYYY-MM-DD HH24:MI:SS.FF9'),TO_CHAR(TS9,'YYYY-MM-DD HH24:MI:SS.FF9') FROM \"{t}\" WHERE ID={id}";
+            using var reader = asynchronous ? await read.ExecuteReaderAsync() : read.ExecuteReader();
+            bool row = asynchronous ? await reader.ReadAsync() : reader.Read();
+            string expected = value.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture) + "00";
+            exact = row && reader.GetDateTime(0).Ticks == value.Ticks && reader.GetDateTime(1).Ticks == value.Ticks &&
+                reader.GetFieldValue<DateTimeOffset>(2).EqualsExact(offset) && reader.GetFieldValue<DateTimeOffset>(3).EqualsExact(offset) &&
+                reader.GetString(4) == expected && reader.GetString(5) == expected;
+        }
+        // Descriptor-dependent failure after successful prepare: no business Execute may be sent.
+        using var reject = connection.CreateCommand();
+        reject.Transaction = tx;
+        reject.CommandText = $"UPDATE \"{t}\" SET T6=:p WHERE ID={id}";
+        reject.Parameters.Add(new DmParameter("p", new DateTime(2026, 10, 15).AddTicks(1)) { DbType = DbType.DateTime2, Scale = 9 });
+        if (prepared) { if (asynchronous) await reject.PrepareAsync(); else reject.Prepare(); }
+        bool rejected = false;
+        try { if (asynchronous) await reject.ExecuteNonQueryAsync(); else reject.ExecuteNonQuery(); }
+        catch (NotSupportedException) { rejected = true; }
+        catch (OverflowException) { rejected = true; }
+        bool usable = connection.State == ConnectionState.Open && (tx == null || tx.Outcome == DmTransactionOutcome.Active);
+        bool sameSession = usable && Scalar(connection, "SELECT SESSID() FROM DUAL", tx) == sid;
+        string? unchanged = usable ? Scalar(connection, $"SELECT COUNT(*) FROM \"{t}\" WHERE ID={id} AND T6 IS NULL", tx) : null;
+        // Correct the rejected parameter on the same command and retry explicitly.
+        int corrected = 0;
+        if (usable)
+        {
+            reject.Parameters[0].Value = new DateTime(2026, 10, 15).AddTicks(123450);
+            reject.Parameters[0].Scale = 6;
+            corrected = asynchronous ? await reject.ExecuteNonQueryAsync() : reject.ExecuteNonQuery();
+            if (tx != null) { if (commit) tx.Commit(); else tx.Rollback(); }
+        }
+        string fresh = ScalarFresh($"SELECT COUNT(*) FROM \"{t}\" WHERE ID={id}")!;
+        bool ok = affected == 1 && exact && rejected && sameSession && unchanged == "1" && corrected == 1 && fresh == (commit ? "1" : "0");
+        Check("temporal_values_" + id, ok);
+        result.Add(new { id, prepared, asynchronous, transaction, commit, value_ticks = value.Ticks, offset_minutes = offset.Offset.TotalMinutes,
+            affected, exact, rejected, usable, sameSession, unchanged, corrected, fresh, accepted = ok });
+    }
+    return result;
+}
+
+async Task<object> PrepareRecovery()
+{
+    string t = T("PREP");
+    ExecFresh($"CREATE TABLE \"{t}\" (ID INT PRIMARY KEY, V INT)");
+    var result = new List<object>();
+    int id = 0;
+    foreach (bool prepared in new[] { false, true })
+    foreach (bool asynchronous in new[] { false, true })
+    foreach (bool transaction in new[] { false, true })
+    foreach (bool commit in transaction ? new[] { false, true } : new[] { true })
+    foreach (string kind in new[] { "syntax", "table", "function" })
+    {
+        id++;
+        using var connection = Open();
+        string sid = Scalar(connection, "SELECT SESSID() FROM DUAL")!;
+        using var tx = transaction ? (DmTransaction)connection.BeginTransaction() : null;
+        await Run(connection, tx, $"INSERT INTO \"{t}\" VALUES ({id},10)", asynchronous);
+        using var command = connection.CreateCommand();
+        command.Transaction = tx;
+        command.CommandText = kind switch
+        {
+            "syntax" => "SELECT :p + FROM DUAL",
+            "table" => $"SELECT :p FROM \"{t}_MISSING\"",
+            _ => "SELECT SLEEP(:p) FROM DUAL"
+        };
+        command.Parameters.Add(new DmParameter("p", 1));
+        DmException? error = null;
+        try
+        {
+            if (prepared) { if (asynchronous) await command.PrepareAsync(); else command.Prepare(); }
+            else { if (asynchronous) await command.ExecuteScalarAsync(); else command.ExecuteScalar(); }
+        }
+        catch (DmException e) { error = e; }
+        bool usable = connection.State == ConnectionState.Open && (tx == null || tx.Outcome == DmTransactionOutcome.Active);
+        bool sameSession = usable && Scalar(connection, "SELECT SESSID() FROM DUAL", tx) == sid;
+        string? before = usable ? Scalar(connection, $"SELECT V FROM \"{t}\" WHERE ID={id}", tx) : null;
+        string? corrected = null;
+        if (usable)
+        {
+            command.CommandText = "SELECT :p + 1 FROM DUAL";
+            corrected = Convert.ToString(asynchronous ? await command.ExecuteScalarAsync() : command.ExecuteScalar(), CultureInfo.InvariantCulture);
+            await Run(connection, tx, $"UPDATE \"{t}\" SET V=20 WHERE ID={id}", asynchronous);
+            if (tx != null) { if (commit) tx.Commit(); else tx.Rollback(); }
+        }
+        string fresh = ScalarFresh($"SELECT COUNT(*) FROM \"{t}\" WHERE ID={id} AND V=20")!;
+        int expectedNumber = kind == "syntax" ? -2007 : kind == "table" ? -2106 : -4015;
+        bool ok = error?.Number == expectedNumber && error.FailureInfo?.ConnectionReusable == true &&
+            error.FailureInfo.OperationOutcome == DmOperationOutcome.ServerReported && sameSession && before == "10" && corrected == "2" && fresh == (commit ? "1" : "0");
+        Check("prepare_recovery_" + id, ok);
+        result.Add(new { id, prepared, asynchronous, transaction, commit, kind, number = error?.Number,
+            reusable = error?.FailureInfo?.ConnectionReusable, phase = error?.FailureInfo?.Phase.ToString(), usable, sameSession, before, corrected, fresh, accepted = ok });
     }
     return result;
 }
@@ -265,7 +388,7 @@ object BrokenMessage()
     string? next = null;
     if (connection.State == ConnectionState.Broken)
         try { Scalar(connection, "SELECT 1 FROM DUAL"); } catch (InvalidOperationException e) { next = e.Message; }
-    // A prepare-stage syntax error leaves the session Broken; the follow-up must explain why.
+    // Parameterless direct execution uses the execute whitelist; -4015 stays fatal there.
     Check("broken_message", number != null && state == "Broken" &&
         next?.Contains("earlier operation failed", StringComparison.Ordinal) == true);
     return new { number, state, next_message_mentions_earlier_failure = next?.Contains("earlier operation failed", StringComparison.Ordinal) };

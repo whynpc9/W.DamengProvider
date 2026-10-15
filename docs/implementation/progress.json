@@ -26,6 +26,13 @@
       "pull_request": 17,
       "merged_commit": "3091108",
       "report": "../compatibility/I16-ef-integration-feedback.md"
+    },
+    {
+      "issue": 16,
+      "status": "working_tree",
+      "branch": "fix/temporal-write-and-prepare-recovery",
+      "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
+      "report": "../compatibility/I16-ef-integration-feedback.md"
     }
   ]
 }

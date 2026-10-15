@@ -37,6 +37,10 @@ internal static class DmServerErrorRecovery
         _ => false
     };
 
+    // Prepare has its own measured set. In particular, invalid function (-4015)
+    // was measured during prepare and must not widen execute recovery.
+    internal static bool IsPrepareScoped(int number) => number is -2007 or -2106 or -4015;
+
     internal static bool IsMeasuredProfile(string serverVersion) =>
         string.Equals(serverVersion, MeasuredServerVersion, StringComparison.Ordinal);
 

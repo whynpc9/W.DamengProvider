@@ -57,6 +57,111 @@ public sealed class WireOwnershipTests
             p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null).ToArray();
 
     [Fact]
+    public void ExactLocalBindingRejectionAfterPreparePreservesSessionAndCannotBeReused()
+    {
+        var session = new DmSession(); session.CompleteHandshakeForTests();
+        var failure = new OverflowException("Value exceeds the fixed parameter scale.");
+        DmInvocation prior;
+        using (var lease = session.BeginExecution(DmOperationPurpose.Query))
+        {
+            using (var invocation = lease.BeginInvocation())
+            {
+                prior = invocation;
+                using (var prepare = session.BeginWireExchange())
+                {
+                    session.TryBeginSendAttempt(invocation);
+                    prepare.Complete();
+                }
+                using (var binding = session.BeginLocalParameterBinding(invocation))
+                    Assert.True(session.TryAcceptParameterBindingFailure(binding, failure));
+                Assert.True(invocation.SendAttempted);
+                Assert.False(invocation.ShouldAbortAfterFailure(failure));
+                Assert.True(invocation.ShouldAbortAfterFailure(new OverflowException("Different exception.")));
+                Assert.Equal(DmPhysicalSessionState.Busy, session.State);
+            }
+            Assert.True(prior.DiagnosticLocalInputFailure);
+            Assert.Null(prior.ParameterBindingFailureException);
+            // Cleanup is a distinct invocation, and cannot inherit the receipt.
+            using var cleanup = lease.BeginCleanupInvocation(TimeSpan.FromSeconds(1));
+            Assert.True(cleanup.ShouldAbortAfterFailure(failure));
+            using var close = session.BeginWireExchange(); close.Complete();
+        }
+        Assert.Equal(DmPhysicalSessionState.Ready, session.State);
+        using var nextLease = session.BeginExecution(DmOperationPurpose.Query);
+        using var next = nextLease.BeginInvocation();
+        Assert.False(session.IsRecoverableParameterBindingFailure(prior, failure));
+        Assert.True(next.ShouldAbortAfterFailure(failure));
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void BindingReceiptRejectsAnyExchangeStartedInsideBinding(bool complete)
+    {
+        var session = new DmSession(); session.CompleteHandshakeForTests();
+        using var lease = session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        using var binding = session.BeginLocalParameterBinding(invocation);
+        using (var exchange = session.BeginWireExchange())
+        {
+            Assert.False(session.TryAcceptParameterBindingFailure(binding, new OverflowException()));
+            if (complete) exchange.Complete();
+        }
+        var failure = new OverflowException();
+        Assert.False(session.TryAcceptParameterBindingFailure(binding, failure));
+        Assert.True(invocation.ShouldAbortAfterFailure(failure));
+        if (!complete) Assert.Equal(DmPhysicalSessionState.Broken, session.State);
+    }
+
+    [Fact]
+    public async Task BindingReceiptRejectsForeignSessionThreadAndDisposedScope()
+    {
+        var session = new DmSession(); session.CompleteHandshakeForTests();
+        var foreign = new DmSession(); foreign.CompleteHandshakeForTests();
+        using var lease = session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        var failure = new OverflowException();
+        var binding = session.BeginLocalParameterBinding(invocation);
+        Assert.False(foreign.TryAcceptParameterBindingFailure(binding, failure));
+        Assert.False(await Task.Run(() => session.TryAcceptParameterBindingFailure(binding, failure)));
+        // A synchronous scope cannot be resumed on an arbitrary continuation thread.
+        binding.Dispose();
+        Assert.False(session.TryAcceptParameterBindingFailure(binding, failure));
+    }
+
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
+    public void BindingReceiptDoesNotPreserveCancellationOrUnknownIo(int kind)
+    {
+        var session = new DmSession(); session.CompleteHandshakeForTests();
+        using var lease = session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        using (var prepare = session.BeginWireExchange()) { session.TryBeginSendAttempt(invocation); prepare.Complete(); }
+        using var binding = session.BeginLocalParameterBinding(invocation);
+        Exception failure = kind switch
+        {
+            0 => new OperationCanceledException(), 1 => new TimeoutException(),
+            2 => new IOException("Unknown I/O."), _ => new InvalidOperationException("Wrapped I/O.", new IOException())
+        };
+        Assert.False(session.TryAcceptParameterBindingFailure(binding, failure));
+        Assert.True(invocation.ShouldAbortAfterFailure(failure));
+    }
+
+    [Fact]
+    public void BindingReceiptCannotOverrideCancellationAfterAcceptance()
+    {
+        var session = new DmSession(); session.CompleteHandshakeForTests();
+        using var lease = session.BeginExecution(DmOperationPurpose.Query);
+        using var invocation = lease.BeginInvocation();
+        using (var prepare = session.BeginWireExchange()) { session.TryBeginSendAttempt(invocation); prepare.Complete(); }
+        var failure = new OverflowException();
+        using (var binding = session.BeginLocalParameterBinding(invocation))
+            Assert.True(session.TryAcceptParameterBindingFailure(binding, failure));
+        session.TerminateInvocation(invocation, DmCancelSource.User);
+        Assert.True(invocation.ShouldAbortAfterFailure(failure));
+        Assert.Equal(DmPhysicalSessionState.Broken, session.State);
+    }
+
+    [Fact]
     public void EveryLegacyAndGenericMessageEntryRejectsMissingInvocationBeforeEncoding()
     {
         var session = new DmSession();

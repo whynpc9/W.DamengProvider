@@ -327,7 +327,7 @@ public class DmDateTime
 
 	internal byte[] EncodeWithTarget(DmTemporalCapabilityProfile profile, DmTemporalWriteTarget target)
 	{
-		profile.ValidateWriteTarget(target);
+		profile.ValidateSemanticWriteTarget(target);
 		var fields = DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale);
 		if (target.CType is 15 or 22 && dtype is not (15 or 22))
 			throw new OverflowException("TIME cannot represent calendar fields from temporal text.");

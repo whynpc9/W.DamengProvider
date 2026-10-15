@@ -583,17 +583,17 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					completed = true;
 					return affected;
 				}
-				catch (DmException error) when (reader == null && IsOwnedVerifiedServerError(error, lease))
+				catch (Exception error) when (reader == null && IsOwnedRecoverableExecutionFailure(error, lease))
 				{
 					verifiedServerError = true;
-					throw;
+					throw TranslateCurrentFailure(error);
 				}
 				catch (Exception error) { throw invocation.TranslateFailure(error); }
 			}
 		}
-		catch (DmException) when (verifiedServerError)
+		catch (Exception error) when (verifiedServerError)
 		{
-			CleanupAfterVerifiedServerError(lease, plan);
+			CleanupAfterRecoverableExecutionFailure(lease, plan, error);
 			throw;
 		}
 		finally
@@ -672,7 +672,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			else
 			{
 				PrepareInternalCore(checkCommandText: true);
-				if (BindParameters(ref rowCount, null, CommandBehavior.Default))
+				if (BindParametersLocally(ref rowCount, null, CommandBehavior.Default))
 				{
 					rowCount = ExecutePreparedUpdate();
 				}
@@ -698,10 +698,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				using (var invocation = lease.BeginInvocation())
 				{
 					try { reader = ExecuteReaderOwned(CommandBehavior.Default, userExecution: true); }
-					catch (DmException error) when (IsOwnedVerifiedServerError(error, lease))
+					catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
 					{
 						verifiedServerError = true;
-						throw;
+						throw TranslateCurrentFailure(error);
 					}
 					catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 					if (reader == null)
@@ -719,9 +719,9 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 					return scalar;
 				}
 			}
-			catch (DmException) when (verifiedServerError)
+			catch (Exception error) when (verifiedServerError)
 			{
-				CleanupAfterVerifiedServerError(lease, plan);
+				CleanupAfterRecoverableExecutionFailure(lease, plan, error);
 				throw;
 			}
 			finally
@@ -742,10 +742,21 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		try
 		{
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
-			using var invocation = lease.BeginInvocation();
-			invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
-			try { PrepareInternalCore(checkCommandText: false); invocation.Complete(); }
-			catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
+			bool recoverable = false;
+			try
+			{
+				using var invocation = lease.BeginInvocation();
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { PrepareInternalCore(checkCommandText: false); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ recoverable = true; throw TranslateCurrentFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
+			}
+			catch (Exception error) when (recoverable)
+			{
+				CleanupAfterRecoverableExecutionFailure(lease, plan, error);
+				throw;
+			}
 		}
 		finally { ReleasePlan(plan); }
 	}
@@ -769,10 +780,10 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			using (var invocation = lease.BeginInvocation())
 			{
 				try { reader = ExecuteReaderOwned(behavior, userExecution: true); }
-				catch (DmException error) when (IsOwnedVerifiedServerError(error, lease))
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
 				{
 					verifiedServerError = true;
-					throw;
+					throw TranslateCurrentFailure(error);
 				}
 				catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 				if (reader == null)
@@ -787,9 +798,9 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			transferred = true;
 			return reader;
 		}
-		catch
+		catch (Exception error)
 		{
-			if (verifiedServerError) CleanupAfterVerifiedServerError(lease, plan);
+			if (verifiedServerError) CleanupAfterRecoverableExecutionFailure(lease, plan, error);
 			if (reader != null && !transferred)
 			{
 				try { m_Conn?.CloseExpectedSession(lease?.Session); } catch { }
@@ -915,7 +926,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			{
 				PrepareInternalCore(checkCommandText: true);
 				int rowCount = 0;
-				if (BindParameters(ref rowCount, rd, behavior))
+				if (BindParametersLocally(ref rowCount, rd, behavior))
 				{
 					rd = ExecutePreparedQuery(behavior);
 				}
@@ -975,8 +986,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				try
 				{
 					try { reader = await ExecuteReaderOwnedAsync(CommandBehavior.Default, true, cancellationToken).ConfigureAwait(false); }
-					catch (DmException error) when (IsOwnedVerifiedServerError(error, lease))
-					{ verifiedServerError = true; throw; }
+					catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+					{ verifiedServerError = true; throw TranslateCurrentFailure(error); }
 					reader.AttachExecutionLease(lease, ownsLease: false);
 					object result;
 					if (scalar)
@@ -993,9 +1004,9 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				}
 				catch (Exception error) { throw invocation.TranslateFailure(error); }
 			}
-			catch (DmException) when (verifiedServerError)
+			catch (Exception error) when (verifiedServerError)
 			{
-				await CleanupAfterVerifiedServerErrorAsync(lease, plan).ConfigureAwait(false);
+				await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -1032,8 +1043,8 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			using (var invocation = lease.BeginInvocation(cancellationToken))
 			{
 				try { reader = await ExecuteReaderOwnedAsync(behavior, true, cancellationToken).ConfigureAwait(false); }
-				catch (DmException error) when (IsOwnedVerifiedServerError(error, lease))
-				{ verifiedServerError = true; throw; }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ verifiedServerError = true; throw TranslateCurrentFailure(error); }
 				invocation.Complete();
 			}
 			reader.AttachExecutionLease(lease);
@@ -1041,9 +1052,9 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			transferred = true;
 			return reader;
 		}
-		catch
+		catch (Exception error)
 		{
-			if (verifiedServerError) await CleanupAfterVerifiedServerErrorAsync(lease, plan).ConfigureAwait(false);
+			if (verifiedServerError) await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
 			if (reader != null && !transferred)
 			{
 				lease?.Session.Detach(lease.Identity)?.AbortTransport();
@@ -1075,13 +1086,13 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				using var invocation = lease.BeginInvocation(cancellationToken);
 				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
 				try { await PrepareInternalCoreAsync(false, cancellationToken).ConfigureAwait(false); invocation.Complete(); }
-				catch (DmException error) when (IsOwnedVerifiedServerError(error, lease))
-				{ verifiedServerError = true; throw; }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ verifiedServerError = true; throw TranslateCurrentFailure(error); }
 				catch (Exception error) { AbortStatementAfterFailedExecutionAsync(error); throw TranslateCurrentFailure(error); }
 			}
-			catch (DmException) when (verifiedServerError)
+			catch (Exception error) when (verifiedServerError)
 			{
-				await CleanupAfterVerifiedServerErrorAsync(lease, plan).ConfigureAwait(false);
+				await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -1152,7 +1163,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			{
 				await PrepareInternalCoreAsync(true, cancellationToken).ConfigureAwait(false);
 				int rowCount = 0;
-				if (!BindParameters(ref rowCount, rd, behavior)) throw new InvalidOperationException("Parameter binding failed.");
+				if (!BindParametersLocally(ref rowCount, rd, behavior)) throw new InvalidOperationException("Parameter binding failed.");
 				rd = await m_Stmt.ExecutePreparedReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
 			}
 			if (rd == null) throw new InvalidOperationException("Execution did not return a reader.");
@@ -1216,7 +1227,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		catch { lease.Dispose(); throw; }
 	}
 
-	private async Task<bool> CleanupCurrentStatementAsync(bool suppressFailure, CancellationToken token)
+	private async Task<bool> CleanupCurrentStatementAsync(bool suppressFailure, CancellationToken token, bool pool = true)
 	{
 		var statement = m_Stmt;
 		m_Stmt = null;
@@ -1230,7 +1241,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (owner != null && ReferenceEquals(DmInvocation.Current?.Lease.Session, owner))
 			{
 				executeId = statement.H()?.Execid ?? -1L;
-				await statement.CloseAsync(token).ConfigureAwait(false);
+				await statement.CloseAsync(true, pool, token).ConfigureAwait(false);
 				return true;
 			}
 			else statement.o();
@@ -1261,17 +1272,21 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		AfterExecute();
 	}
 
-	private async Task CleanupAfterVerifiedServerErrorAsync(DmExecutionLease lease, DmCommandPlan plan)
+	private async Task CleanupAfterRecoverableExecutionFailureAsync(DmExecutionLease lease, DmCommandPlan plan, Exception originalError)
 	{
 		try
 		{
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
-				throw new InvalidOperationException("Verified server error has no current statement to close.");
+				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
-			if (await CleanupCurrentStatementAsync(false, CancellationToken.None).ConfigureAwait(false))
+			if (await CleanupCurrentStatementAsync(false, CancellationToken.None, pool: false).ConfigureAwait(false))
 				cleanup.RecordDiagnosticCleanupSuccess();
 		}
-		catch { lease?.Session.Detach(lease.Identity)?.AbortTransport(); }
+		catch
+		{
+			try { lease?.Session.Detach(lease.Identity)?.AbortTransport(); } catch { }
+			MarkRecoveryConnectionLost(originalError);
+		}
 	}
 
 	private async Task ReleasePlanAsync(DmCommandPlan plan)
@@ -1406,7 +1421,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 	{
 	}
 
-	private bool CleanupCurrentStatement(bool suppressFailure)
+	private bool CleanupCurrentStatement(bool suppressFailure, bool pool = true)
 	{
 		var statement = m_Stmt;
 		m_Stmt = null;
@@ -1421,7 +1436,7 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			if (owner != null && ReferenceEquals(DmInvocation.Current?.Lease.Session, owner))
 			{
 				executeId = statement.H()?.Execid ?? -1L;
-				statement.p();
+				statement.__t02_method_060008BE(true, pool);
 				return true;
 			}
 			else statement.o();
@@ -1606,10 +1621,21 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		try
 		{
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
-			using var invocation = lease.BeginInvocation();
-			invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
-			try { PrepareInternalCore(checkCommandText); invocation.Complete(); }
-			catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
+			bool recoverable = false;
+			try
+			{
+				using var invocation = lease.BeginInvocation();
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { PrepareInternalCore(checkCommandText); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ recoverable = true; throw TranslateCurrentFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
+			}
+			catch (Exception error) when (recoverable)
+			{
+				CleanupAfterRecoverableExecutionFailure(lease, plan, error);
+				throw;
+			}
 		}
 		finally { ReleasePlan(plan); }
 	}
@@ -1685,6 +1711,21 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 			throw new InvalidOperationException();
 		}
 		return m_Stmt.M();
+	}
+
+	private bool BindParametersLocally(ref int rowCount, DmDataReader reader, CommandBehavior behavior)
+	{
+		DmInvocation invocation = DmInvocation.Current ?? throw new InvalidOperationException("Parameter binding has no invocation.");
+		ValidateStatementOwnership();
+		if (!ReferenceEquals(statementSession, invocation.Lease.Session) || !ReferenceEquals(m_Conn?.Session, statementSession))
+			throw new InvalidOperationException("Parameter binding does not own its prepared session.");
+		using var binding = invocation.Lease.Session.BeginLocalParameterBinding(invocation);
+		try { return BindParameters(ref rowCount, reader, behavior); }
+		catch (Exception error)
+		{
+			invocation.Lease.Session.TryAcceptParameterBindingFailure(binding, error);
+			throw;
+		}
 	}
 
 	private bool BindParameters(ref int rowCount, DmDataReader rd, CommandBehavior behavior)
@@ -1941,6 +1982,15 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 		}
 	}
 
+	private bool IsOwnedRecoverableExecutionFailure(Exception error, DmExecutionLease lease)
+	{
+		DmInvocation invocation = DmInvocation.Current;
+		return IsOwnedVerifiedServerError(error as DmException, lease) ||
+			lease != null && invocation != null && ReferenceEquals(invocation.Lease, lease) &&
+			ReferenceEquals(statementSession, lease.Session) && ReferenceEquals(m_Conn?.Session, lease.Session) &&
+			lease.Session.IsRecoverableParameterBindingFailure(invocation, error);
+	}
+
 	private bool IsOwnedVerifiedServerError(DmException error, DmExecutionLease lease)
 	{
 		DmInvocation invocation = DmInvocation.Current;
@@ -1957,20 +2007,28 @@ public class DmCommand : DbCommand, ICloneable, IFilterInfo
 				lease.Session.ActiveTransaction == null && DmServerErrorRecovery.IsIdleTransactionState(transactionState));
 	}
 
-	private void CleanupAfterVerifiedServerError(DmExecutionLease lease, DmCommandPlan plan)
+	private void CleanupAfterRecoverableExecutionFailure(DmExecutionLease lease, DmCommandPlan plan, Exception originalError)
 	{
 		try
 		{
 			if (lease == null || m_Stmt == null || m_Stmt.P() || !ReferenceEquals(statementSession, lease.Session))
-				throw new InvalidOperationException("Verified server error has no current statement to close.");
+				throw new InvalidOperationException("Recoverable execution failure has no current statement to close.");
 			using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
 			// STMT_CLOSE response must be fully verified before recording cleanup success.
-			if (CleanupCurrentStatement(suppressFailure: false)) cleanup.RecordDiagnosticCleanupSuccess();
+			if (CleanupCurrentStatement(suppressFailure: false, pool: false)) cleanup.RecordDiagnosticCleanupSuccess();
 		}
 		catch
 		{
-			// The original verified server error remains the caller-visible failure.
+			// Preserve the original server number and response outcome, while reporting
+			// that failed cleanup retired the connection and any active transaction.
 			try { m_Conn?.CloseExpectedSession(lease?.Session); } catch { }
+			MarkRecoveryConnectionLost(originalError);
 		}
+	}
+
+	private static void MarkRecoveryConnectionLost(Exception originalError)
+	{
+		if (originalError is DmException { FailureInfo: { } info } error)
+			error.SetFailureInfo(info.WithConnectionLost());
 	}
 }
