@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -84,11 +85,16 @@ internal static partial class Program
     private static void VerifyPackage(string path)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(path)); var manifest = document.RootElement;
+        var target = Version.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>()!.FrameworkName.Split("Version=v")[1]);
+        string tfm = $"net{target.Major}.{target.Minor}";
+        Require(Environment.Version.Major == target.Major, "runtime_major_mismatch");
+        Report["target_framework"] = tfm; Report["runtime_major"] = Environment.Version.Major;
+        Report["selected_product_asset"] = $"lib/{tfm}/W.DamengProvider.dll";
         Assembly assembly = typeof(DmConnection).Assembly;
         string expected = Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>().Single(a => a.Key == "R3PackageVersion").Value ?? "";
         string actual = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "";
-        string hash = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly.Location)));
-        Require(expected == actual && expected == manifest.GetProperty("version").GetString() && hash == manifest.GetProperty("assets").GetProperty("lib/net10.0/W.DamengProvider.dll").GetString(), "exact_package_identity_mismatch");
+        string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location))).ToLowerInvariant();
+        Require(expected == actual && expected == manifest.GetProperty("version").GetString() && hash == manifest.GetProperty("assets").GetProperty($"lib/{tfm}/W.DamengProvider.dll").GetString(), "exact_package_identity_mismatch");
         Require(Path.GetFullPath(assembly.Location) == Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "W.DamengProvider.dll")), "loaded_package_location_mismatch");
         using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "R3ResourceProbe.deps.json")));
         Require(deps.RootElement.GetProperty("libraries").GetProperty("W.DamengProvider/" + expected).GetProperty("type").GetString() == "package", "exact_package_reference_required");

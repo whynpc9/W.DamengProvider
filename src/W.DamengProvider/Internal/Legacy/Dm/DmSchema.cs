@@ -92,7 +92,7 @@ internal class DmSchema
 		dataTable.Columns.Add("PROCEDURE_NAME", typeof(string));
 		dataTable.Columns.Add("PROCEDURE_TYPE", typeof(string));
 		StringBuilder stringBuilder = new StringBuilder();
-		stringBuilder.AppendFormat(DmConst.invariantCulture, "/*DMPROVIDER*/ SELECT  SF_GET_SCHEMA_NAME_BY_ID(SCHID), NAME, CASE INFO1 & 0x01 WHEN 1 THEN 'PROCEDURE' ELSE 'FUNCTION' END  FROM SYS.SYSOBJECTS WHERE SUBTYPE$='PROC' ", default(ReadOnlySpan<object>));
+		stringBuilder.AppendFormat(DmConst.invariantCulture, "/*DMPROVIDER*/ SELECT  SF_GET_SCHEMA_NAME_BY_ID(SCHID), NAME, CASE INFO1 & 0x01 WHEN 1 THEN 'PROCEDURE' ELSE 'FUNCTION' END  FROM SYS.SYSOBJECTS WHERE SUBTYPE$='PROC' ", Array.Empty<object>());
 		if (restrictions != null && restrictions.Length >= 1 && restrictions[0] != null)
 		{
 			string value = $" AND SF_GET_SCHEMA_NAME_BY_ID(SCHID) LIKE '{dup_chr_QUOTATION_MARK(restrictions[0])}'";
@@ -539,7 +539,7 @@ internal class DmSchema
 		}
 		else
 		{
-			stringBuilder.AppendFormat(DmConst.invariantCulture, " where ID in (SELECT PID FROM sys.sysobjects WHERE TYPE$ = 'SCH')", default(ReadOnlySpan<object>));
+			stringBuilder.AppendFormat(DmConst.invariantCulture, " where ID in (SELECT PID FROM sys.sysobjects WHERE TYPE$ = 'SCH')", Array.Empty<object>());
 		}
 		DmDataAdapter dmDataAdapter = new DmDataAdapter(stringBuilder.ToString(), m_Conn);
 		DataTable dataTable = new DataTable();

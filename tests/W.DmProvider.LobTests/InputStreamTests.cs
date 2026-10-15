@@ -120,7 +120,7 @@ public sealed class InputStreamTests
         Assert.Equal(length, total);
         Assert.Equal(length, cursor.ConsumedBytes);
         Assert.Equal(vector.GetProperty("expected_incremental_hash").GetProperty("expected_sha256_hex").GetString(),
-            Convert.ToHexStringLower(hash.GetHashAndReset()));
+            Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant());
         Assert.False(source.Disposed);
         Assert.Equal(0, source.SyncReads);
     }

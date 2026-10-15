@@ -34,6 +34,12 @@
       "branch": "fix/temporal-write-and-prepare-recovery",
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
       "report": "../compatibility/I16-ef-integration-feedback.md"
+    },
+    {
+      "issue": 12,
+      "status": "offline_verified_integration_pending",
+      "summary": "net8.0/net9.0/net10.0 source, tests and package/release consumers; 6471 offline tests and 21 first-init cases passed on actual runtimes; shared/TLS TEST pending missing configuration",
+      "report": "../compatibility/I12-multitarget.md"
     }
   ]
 }
