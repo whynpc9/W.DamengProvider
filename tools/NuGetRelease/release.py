@@ -20,9 +20,12 @@ PROJECT = ROOT / "src/W.DamengProvider/W.DamengProvider.csproj"
 FLAGS = ["-m:1", "/nodeReuse:false", "/p:UseSharedCompilation=false", "--disable-build-servers"]
 SUITES = ("Configuration", "Session", "Transport", "Security", "Command", "Type",
           "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics")
+TFMS = ("net8.0", "net9.0", "net10.0")
+COMPATIBILITY_VERSION = "10.0.12"
+APPROVED_TRANSITIVE = ("Microsoft.Bcl.Cryptography", "System.Formats.Asn1")
 RESOURCE_CULTURES = ("en", "zh-CN", "zh-HK", "zh-TW")
-ASSETS = {f"lib/net10.0/{PACKAGE}.dll"} | {
-    f"lib/net10.0/{culture}/{PACKAGE}.resources.dll" for culture in RESOURCE_CULTURES}
+ASSETS = {f"lib/{tfm}/{PACKAGE}.dll" for tfm in TFMS} | {
+    f"lib/{tfm}/{culture}/{PACKAGE}.resources.dll" for tfm in TFMS for culture in RESOURCE_CULTURES}
 # SemVer 2.0.0: numeric prerelease identifiers cannot have leading zeroes.
 NUM = r"(?:0|[1-9][0-9]*)"
 PRE = rf"(?:{NUM}|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
@@ -78,9 +81,15 @@ def inspect_package(package, version, commit, root=ROOT):
         repository = fields.get("repository")
         need(repository is not None and repository.attrib == {"type": "git", "url": REPOSITORY, "commit": commit}, "repository_commit_mismatch")
         dependencies = fields.get("dependencies")
-        need(dependencies is not None and len(dependencies) == 1 and
-             dependencies[0].tag.rsplit("}", 1)[-1] == "group" and
-             dependencies[0].get("targetFramework") == "net10.0" and not len(dependencies[0]), "unexpected_package_dependency")
+        need(dependencies is not None and len(dependencies) == len(TFMS), "unexpected_package_dependency")
+        groups = {group.get("targetFramework"): group for group in dependencies}
+        need(set(groups) == set(TFMS) and all(g.tag.rsplit("}", 1)[-1] == "group" for g in dependencies),
+             "unexpected_package_dependency_group")
+        for tfm, group in groups.items():
+            expected = {"Microsoft.Bcl.Cryptography": COMPATIBILITY_VERSION} if tfm == "net8.0" else {}
+            actual = {d.get("id"): d.get("version") for d in group}
+            need(len(group) == len(expected) and actual == expected and
+                 all(d.tag.rsplit("}", 1)[-1] == "dependency" for d in group), "unexpected_package_dependency")
         for name in ("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md"):
             need(archive.read(name) == (root / name).read_bytes(), "embedded_document_mismatch_" + name)
         assets = {name: sha(archive.read(name)) for name in sorted(ASSETS)}
@@ -121,22 +130,72 @@ def environment(results):
     env = {k: v for k, v in os.environ.items() if not k.upper().startswith(("DAMENG", "NUGET_API_KEY"))}
     cli_home = results / "cli-home"
     cli_home.mkdir()
-    env.update(DOTNET_CLI_HOME=str(cli_home), DOTNET_SKIP_FIRST_TIME_EXPERIENCE="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
+    env.update(DOTNET_ROLL_FORWARD="Minor", DOTNET_CLI_HOME=str(cli_home), DOTNET_SKIP_FIRST_TIME_EXPERIENCE="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
     return env
 
 
-def build_consumer(dotnet, source, name, identity, version, feed, results, env, include_fixture=False):
-    consumer = results / name
-    consumer.mkdir()
+def inspect_consumer(assets, deps, tfm, identity):
+    """Validate the resolved graph, direct reference and compile/runtime product asset."""
+    key = f"{PACKAGE}/{identity}"
+    expected = {key} | ({f"{name}/{COMPATIBILITY_VERSION}" for name in APPROVED_TRANSITIVE} if tfm == "net8.0" else set())
+    need(set(assets["libraries"]) == expected and all(v["type"] == "package" for v in assets["libraries"].values()),
+         "consumer_dependency_closure_mismatch")
+    framework = assets["project"]["frameworks"][tfm]
+    need(set(framework.get("dependencies", {})) == {PACKAGE}, "consumer_requires_sole_direct_PackageReference")
+    need(set(assets["targets"]) == {tfm}, "consumer_target_mismatch")
+    target = assets["targets"][tfm]
+    need(set(target) == expected, "consumer_target_dependency_closure_mismatch")
+    selected = f"lib/{tfm}/{PACKAGE}.dll"
+    for kind in ("compile", "runtime"):
+        need(set(target[key].get(kind, {})) == {selected}, "consumer_product_asset_mismatch")
+    expected_edges = {"Microsoft.Bcl.Cryptography": COMPATIBILITY_VERSION} if tfm == "net8.0" else {}
+    need(target[key].get("dependencies", {}) == expected_edges, "consumer_product_dependency_mismatch")
+    if tfm == "net8.0":
+        need(target[f"Microsoft.Bcl.Cryptography/{COMPATIBILITY_VERSION}"].get("dependencies", {}) ==
+             {"System.Formats.Asn1": COMPATIBILITY_VERSION} and
+             not target[f"System.Formats.Asn1/{COMPATIBILITY_VERSION}"].get("dependencies"),
+             "consumer_transitive_dependency_mismatch")
+    runtime_packages = {k for k, v in deps["libraries"].items() if v.get("type") == "package"}
+    need(runtime_packages == expected, "consumer_runtime_dependency_closure_mismatch")
+    runtime_targets = list(deps["targets"].values())
+    need(len(runtime_targets) == 1 and set(runtime_targets[0].get(key, {}).get("runtime", {})) == {selected},
+         "consumer_runtime_asset_mismatch")
+    return {"tfm": tfm, "product_asset": selected, "dependencies": sorted(expected)}
+
+
+def cached_product_package(package_root, identity):
+    # NuGet's global-package paths use normalized lowercase IDs and versions.
+    normalized = identity.lower()
+    return package_root / PACKAGE.lower() / normalized / f"{PACKAGE.lower()}.{normalized}.nupkg"
+
+
+def consumer_sources(feed, destination):
+    config = ET.Element("configuration")
+    sources = ET.SubElement(config, "packageSources")
+    ET.SubElement(sources, "clear")
+    ET.SubElement(sources, "add", key="candidate", value=str(feed))
+    ET.SubElement(sources, "add", key="approved", value="https://api.nuget.org/v3/index.json")
+    mapping = ET.SubElement(config, "packageSourceMapping")
+    ET.SubElement(mapping, "clear")
+    local = ET.SubElement(mapping, "packageSource", key="candidate")
+    ET.SubElement(local, "package", pattern=PACKAGE)
+    approved = ET.SubElement(mapping, "packageSource", key="approved")
+    for name in (*APPROVED_TRANSITIVE, "Microsoft.NETCore.App.Ref", "Microsoft.AspNetCore.App.Ref"):
+        ET.SubElement(approved, "package", pattern=name)
+    ET.ElementTree(config).write(destination, encoding="utf-8", xml_declaration=True)
+
+
+def build_consumer(dotnet, source, name, identity, version, tfm, feed, results, env, include_fixture=False):
+    consumer = results / tfm / name
+    consumer.mkdir(parents=True)
     for path in source:
         shutil.copyfile(path, consumer / path.name)
     if include_fixture:
         shutil.copyfile(ROOT / "tests/W.DmProvider.DiagnosticsTests/ScriptedTransactionFixture.cs", consumer / "ScriptedTransactionFixture.cs")
-    # The copied consumer has no ProjectReference: it restores only the packed
-    # NuGet asset from the local feed into its own new package cache.
     document = ET.Element("Project", Sdk="Microsoft.NET.Sdk")
     props = ET.SubElement(document, "PropertyGroup")
-    for key, value in {"OutputType": "Exe", "TargetFramework": "net10.0", "AssemblyName": name,
+    for key, value in {"OutputType": "Exe", "TargetFramework": tfm, "AssemblyName": name,
+                       "LangVersion": "12.0", "RollForward": "Minor", "UseAppHost": "false", "CheckEolTargetFramework": "false",
                        "Nullable": "enable", "ImplicitUsings": "enable", "NuGetAudit": "false"}.items():
         ET.SubElement(props, key).text = value
     items = ET.SubElement(document, "ItemGroup")
@@ -144,16 +203,20 @@ def build_consumer(dotnet, source, name, identity, version, feed, results, env, 
     ET.SubElement(items, "AssemblyMetadata", Include="R3PackageVersion", Value=identity)
     project = consumer / (name + ".csproj")
     ET.ElementTree(document).write(project, encoding="utf-8", xml_declaration=True)
-    # A fresh package cache and a sole local feed prove this exact package is used.
+    config = consumer / "NuGet.Config"
+    consumer_sources(feed, config)
+    # No inherited cache or alternate product source may satisfy this reference.
     consumer_env = {**env, "NUGET_PACKAGES": str(consumer / "packages")}
-    run([dotnet, "restore", project, "--source", feed, *FLAGS], consumer, consumer_env, results, name + "_restore")
+    stage = tfm + "_" + name
+    run([dotnet, "restore", project, "--configfile", config, "--no-cache", *FLAGS], consumer, consumer_env, results, stage + "_restore")
     app = consumer / "app"
-    run([dotnet, "build", project, "--no-restore", "-c", "Release", "--output", app, *FLAGS], consumer, consumer_env, results, name + "_build")
+    run([dotnet, "build", project, "--no-restore", "-c", "Release", "--output", app, *FLAGS], consumer, consumer_env, results, stage + "_build")
     assets = json.loads((consumer / "obj/project.assets.json").read_text())
-    key = f"{PACKAGE}/{identity}"
-    need(set(assets["libraries"]) == {key} and assets["libraries"][key]["type"] == "package", "consumer_requires_sole_PackageReference")
     deps = json.loads((app / (name + ".deps.json")).read_text())
-    need(deps["libraries"].get(key, {}).get("type") == "package", "consumer_runtime_package_reference_missing")
+    evidence = inspect_consumer(assets, deps, tfm, identity)
+    cached = cached_product_package(consumer / "packages", identity)
+    need(sha(cached.read_bytes()) == sha((feed / f"{PACKAGE}.{identity}.nupkg").read_bytes()), "consumer_product_source_mismatch")
+    (results / (stage + "_assets.json")).write_text(json.dumps(evidence, indent=2) + "\n")
     return app
 
 
@@ -173,11 +236,13 @@ def prepare(args):
     run([dotnet, "--version"], ROOT, env, results, "sdk")
     need((results / "sdk.log").read_text().strip() == sdk["version"], "sdk_version_mismatch")
     if args.command == "prepare":
-        for name in SUITES:
-            project = ROOT / f"tests/W.DmProvider.{name}Tests/W.DmProvider.{name}Tests.csproj"
-            run([dotnet, "test", project, "-c", "Release", "--logger", "trx;LogFileName=" + name + ".trx",
-                 "--results-directory", results, *FLAGS], ROOT, env, results, "test_" + name)
-            inspect_trx(results / (name + ".trx"))
+        for tfm in TFMS:
+            for name in SUITES:
+                project = ROOT / f"tests/W.DmProvider.{name}Tests/W.DmProvider.{name}Tests.csproj"
+                result = f"{tfm}_{name}"
+                run([dotnet, "test", project, "-f", tfm, "-c", "Release", "--logger", "trx;LogFileName=" + result + ".trx",
+                     "--results-directory", results, *FLAGS], ROOT, env, results, "test_" + result)
+                inspect_trx(results / (result + ".trx"))
     feed = results / "feed"
     feed.mkdir()
     identity = package_version(version)
@@ -188,23 +253,32 @@ def prepare(args):
     manifest = inspect_package(package, version, args.commit)
     manifest_path = results / "package-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    smoke = build_consumer(dotnet, [ROOT / "tools/NuGetRelease/Smoke.cs"], "NuGetSmoke", identity, version, feed, results, env)
-    run([dotnet, smoke / "NuGetSmoke.dll", "offline", manifest_path], ROOT, env, results, "package_smoke")
-    resource_sources = list((ROOT / "tools/R3ResourceProbe").glob("*.cs"))
-    resource = build_consumer(dotnet, resource_sources, "R3ResourceProbe", identity, version, feed, results, env, include_fixture=True)
-    run([dotnet, resource / "R3ResourceProbe.dll", "offline", ROOT, manifest_path, results / "first-init.json"],
-        ROOT, env, results, "first_init")
-    first_init = json.loads((results / "first-init.json").read_text())
-    need(first_init.get("accepted") is True and first_init.get("status") == "offline_verified" and
-         {case.get("point") for case in first_init.get("first_init_cases", [])} ==
-         {"normal", "should_listen", "instrument_published", "sample", "started", "stopped", "measurement"},
-         "first_initialization_matrix_incomplete")
+    consumers = []
+    for tfm in TFMS:
+        smoke = build_consumer(dotnet, [ROOT / "tools/NuGetRelease/Smoke.cs"], "NuGetSmoke", identity, version, tfm, feed, results, env)
+        run([dotnet, smoke / "NuGetSmoke.dll", "offline", manifest_path], ROOT, env, results, tfm + "_package_smoke")
+        resource_sources = list((ROOT / "tools/R3ResourceProbe").glob("*.cs"))
+        resource = build_consumer(dotnet, resource_sources, "R3ResourceProbe", identity, version, tfm, feed, results, env, include_fixture=True)
+        init_path = results / ("first-init-" + tfm + ".json")
+        run([dotnet, resource / "R3ResourceProbe.dll", "offline", ROOT, manifest_path, init_path],
+            ROOT, env, results, tfm + "_first_init")
+        first_init = json.loads(init_path.read_text())
+        need(first_init.get("accepted") is True and first_init.get("status") == "offline_verified" and
+             first_init.get("target_framework") == tfm and first_init.get("runtime_major") == int(tfm[3:].split(".")[0]) and
+             {case.get("point") for case in first_init.get("first_init_cases", [])} ==
+             {"normal", "should_listen", "instrument_published", "sample", "started", "stopped", "measurement"},
+             "first_initialization_matrix_incomplete")
+        consumers.append({"tfm": tfm, "smoke": str(smoke / "NuGetSmoke.dll"), "resource_probe": str(resource / "R3ResourceProbe.dll"),
+                          "runtime_major": first_init["runtime_major"]})
     need(inspect_package(package, version, args.commit) == manifest, "package_changed_during_verification")
     (output / "package-path.txt").write_text(str(package) + "\n")
-    (output / "smoke-path.txt").write_text(str(smoke / "NuGetSmoke.dll") + "\n")
+    (output / "smoke-path.txt").write_text(consumers[-1]["smoke"] + "\n")
+    for consumer in consumers:
+        (output / ("smoke-path-" + consumer["tfm"] + ".txt")).write_text(consumer["smoke"] + "\n")
+    (output / "consumers.json").write_text(json.dumps(consumers, indent=2) + "\n")
     (output / "manifest-path.txt").write_text(str(manifest_path) + "\n")
     print(json.dumps({"status": "prepared", "package": str(package), "results": str(results),
-                      "offline_suites": len(SUITES) if args.command == "prepare" else 0,
+                      "target_frameworks": list(TFMS), "offline_suites": len(SUITES) * len(TFMS) if args.command == "prepare" else 0,
                       "integration": "integration_pending"}))
 
 

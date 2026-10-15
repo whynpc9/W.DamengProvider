@@ -43,6 +43,13 @@
       "branch": "feat/array-binding-and-dbbatch",
       "summary": "ArrayBindCount multi-row DML in one EXECUTE, sequential DbBatch with per-command results and failure attribution, MERGE affected-row counts",
       "report": "../compatibility/I07-I08-array-binding-dbbatch.md"
+    },
+    {
+      "issue": 12,
+      "status": "offline_verified_integration_pending",
+      "summary": "net8.0/net9.0/net10.0 source, tests and package/release consumers; after main integration 6528 offline tests and 21 first-init cases passed on actual runtimes; shared/TLS TEST pending missing configuration",
+      "report": "../compatibility/I12-multitarget.md",
+      "pull_request": 21
     }
   ]
 }

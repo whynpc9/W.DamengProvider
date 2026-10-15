@@ -8,10 +8,10 @@
 | 存储过程与输出/游标参数 | [#9](https://github.com/whynpc9/W.DamengProvider/issues/9) | 当前仅 Text/Input；扩展前明确输出读取时机及游标生命周期。 |
 | 元数据 API | [#10](https://github.com/whynpc9/W.DamengProvider/issues/10) | GetSchemaAsync、SchemaOnly、KeyInfo 尚未开放，按最小权限语义补齐。 |
 | OS 与服务器兼容覆盖 | [#11](https://github.com/whynpc9/W.DamengProvider/issues/11) | [Windows / win-x64 / DM 8.1.5.60 明文](compatibility/I11-windows.md)与 [Ubuntu WSL2 / linux-x64 离线及包消费](compatibility/I11-linux-validation.md)已有记录；Linux 实库及长时资源、额外服务器 profile 和远程 TLS 等继续按实际环境推进。 |
-| .NET 8/9/10 多目标 | [#12](https://github.com/whynpc9/W.DamengProvider/issues/12) | 优先扩展8/9；包括运行测试、包依赖与资源、消费者和发布设施。 |
+| .NET 8/9/10 多目标 | [#12](https://github.com/whynpc9/W.DamengProvider/issues/12) | 源码、测试和发布矩阵已扩为三目标；[验证记录](compatibility/I12-multitarget.md)区分离线结果与待补 shared/严格 TLS 实库，尚未发布。 |
 | .NET 6 兼容层 | [#13](https://github.com/whynpc9/W.DamengProvider/issues/13) | 在 #12 基础上处理数据源 API 差异、TLS、时间 API 和 C#10 语法。 |
 
-建议先推进 .NET 8/9/10；.NET 6 单独完成兼容设计及验证。性能方向优先连接复用；存储过程和元数据可按实际业务需要独立安排。所有实施均遵循 [AGENTS.md](../AGENTS.md) 的分工与 TEST 边界。
+继续补齐 .NET 8/9/10 实库验收；.NET 6 单独完成兼容设计及验证。性能方向优先连接复用；存储过程和元数据可按实际业务需要独立安排。所有实施均遵循 [AGENTS.md](../AGENTS.md) 的分工与 TEST 边界。
 
 ## 已合入、未发布
 
@@ -20,7 +20,7 @@
 
 ## .NET 扩展边界
 
-当前产品仅构建 `net10.0`。扩展到 .NET 8/9/6 时，需要分别完成完整构建/打包、资源程序集、对应运行时、包消费者及 TLS/实库验证；编译探测或 SDK roll-forward 不代表目标运行时已支持。.NET 6 另需处理 DbDataSource 基类、TLS 证书验证与部分时间 API 的兼容，不能通过放宽证书验证通过。
+当前源码构建 `net8.0;net9.0;net10.0`，共用 C#12 与固定 SDK 10.0.401。三目标分别验证完整构建/打包、资源程序集、实际运行时和包消费者；TLS/实库尚待授权测试配置。编译探测或跨主版本 runtime roll-forward 不代表目标运行时已支持。.NET 6 另需处理 DbDataSource 基类、TLS 证书验证与部分时间 API 的兼容，不能通过放宽证书验证通过。
 
 运行时支持周期另见[微软官方政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)，与本驱动的已验证兼容范围分别判断。
 
