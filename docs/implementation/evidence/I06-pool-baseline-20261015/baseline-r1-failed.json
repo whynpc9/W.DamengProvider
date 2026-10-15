@@ -1,0 +1,46 @@
+{
+  "issue": 6,
+  "implementation": "W-project-reference",
+  "session_reset_verified": false,
+  "reuse_policy": "discard",
+  "performance_improvement_claimed": false,
+  "workload": "open_identity_select_close",
+  "database_objects_created": 0,
+  "final_database_state": "unverified",
+  "mode": "shared",
+  "samples_per_scenario": 100,
+  "parallel_workers": 4,
+  "warmup_leases_per_scenario": 5,
+  "runtime": ".NET 10.0.12",
+  "loaded_dll": "/home/air/.t3/worktrees/W.DamengProvider/t3-8625c2eb/tools/Issue6PoolBaseline/bin/Release/net10.0/W.DamengProvider.dll",
+  "loaded_mvid": "d5eb99a2-89c1-49dc-aa99-06af7b8f368a",
+  "results": [],
+  "offline_contract": "closed_construction_and_direct_explicit_certificate_rejection",
+  "transport_policy": "PlaintextAllowed",
+  "max_pool_size": 4,
+  "connect_command_acquire_timeout_seconds": 15,
+  "server_identity": "WDM_PROVIDER_TEST",
+  "server_schema": "WDM_PROVIDER_TEST",
+  "server_version": "8.1.5.60",
+  "status": "failed",
+  "baseline_measured": false,
+  "error": {
+    "type": "W.Dm.DmException",
+    "classification": null,
+    "phase": "Receive",
+    "kind": "Server",
+    "outcome": "ServerReported",
+    "server_number": -5730,
+    "driver_error_code": "WDM_SERVER"
+  },
+  "total_physical_connections": {
+    "Created": 1,
+    "Disposed": 1,
+    "Connected": 1
+  },
+  "negotiated_encrypt_modes": [
+    0
+  ],
+  "successful_tls_upgrades": 0,
+  "exit_code": 1
+}

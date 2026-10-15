@@ -17,6 +17,7 @@
 | 事务、隔离级别与保存点 | [事务](../compatibility/T10-transactions.md)、[隔离级别](../compatibility/T11-isolation.md) |
 | 异步与取消 | [异步契约](../compatibility/R2.md) |
 | 数据源、容量调度与流式 LOB | [数据源与 LOB](../compatibility/R3.md) |
+| 物理连接复用前置调查 | [issue #6 性能基线与复位阻塞（8.1.5.60 无完整复位，维持销毁）](../compatibility/I06-pool-reuse-baseline.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
 | .NET 8/9/10 多目标 | [源码、包消费与运行时验证；实库 pending](../compatibility/I12-multitarget.md) |

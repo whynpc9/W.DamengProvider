@@ -1,0 +1,93 @@
+[
+  {
+    "command": [
+      "dotnet",
+      "tools/Issue6PoolBaseline/bin/Release/net10.0/Issue6PoolBaseline.dll",
+      "offline"
+    ],
+    "case": "offline",
+    "exit_code": 0,
+    "expected_exit": 0,
+    "status": "integration_pending",
+    "error": null,
+    "total": {
+      "Created": 0,
+      "Disposed": 0,
+      "Connected": 0
+    }
+  },
+  {
+    "command": [
+      "dotnet",
+      "tools/Issue6PoolBaseline/bin/Release/net10.0/Issue6PoolBaseline.dll",
+      "shared"
+    ],
+    "case": "missing-env",
+    "exit_code": 3,
+    "expected_exit": 3,
+    "status": "integration_pending",
+    "error": {
+      "type": "Program+ProbeFailure",
+      "classification": "integration_pending",
+      "phase": null,
+      "kind": null,
+      "outcome": null,
+      "server_number": null,
+      "driver_error_code": null
+    },
+    "total": {
+      "Created": 0,
+      "Disposed": 0,
+      "Connected": 0
+    }
+  },
+  {
+    "command": [
+      "dotnet",
+      "tools/Issue6PoolBaseline/bin/Release/net10.0/Issue6PoolBaseline.dll",
+      "shared"
+    ],
+    "case": "wrong-identity",
+    "exit_code": 1,
+    "expected_exit": 1,
+    "status": "failed",
+    "error": {
+      "type": "Program+ProbeFailure",
+      "classification": "test_identity_required_before_authentication",
+      "phase": null,
+      "kind": null,
+      "outcome": null,
+      "server_number": null,
+      "driver_error_code": null
+    },
+    "total": {
+      "Created": 0,
+      "Disposed": 0,
+      "Connected": 0
+    }
+  },
+  {
+    "command": [
+      "dotnet",
+      "tools/Issue6PoolBaseline/bin/Release/net10.0/Issue6PoolBaseline.dll",
+      "shared",
+      "1",
+      "4",
+      "5"
+    ],
+    "case": "bounds",
+    "exit_code": 1,
+    "expected_exit": 1,
+    "status": "failed",
+    "error": {
+      "type": "Program+ProbeFailure",
+      "classification": "argument_out_of_range",
+      "phase": null,
+      "kind": null,
+      "outcome": null,
+      "server_number": null,
+      "driver_error_code": null
+    },
+    "total": null
+  }
+]
