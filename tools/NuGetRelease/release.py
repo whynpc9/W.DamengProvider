@@ -20,9 +20,18 @@ PROJECT = ROOT / "src/W.DamengProvider/W.DamengProvider.csproj"
 FLAGS = ["-m:1", "/nodeReuse:false", "/p:UseSharedCompilation=false", "--disable-build-servers"]
 SUITES = ("Configuration", "Session", "Transport", "Security", "Command", "Type",
           "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics", "Schema")
-TFMS = ("net8.0", "net9.0", "net10.0")
-COMPATIBILITY_VERSION = "10.0.12"
-APPROVED_TRANSITIVE = ("Microsoft.Bcl.Cryptography", "System.Formats.Asn1")
+TFMS = ("net6.0", "net8.0", "net9.0", "net10.0")
+# Official compatibility packages per target: the product's direct dependency and the
+# exact resolved closure, each package mapped to the dependencies it must declare.
+COMPATIBILITY = {
+    "net6.0": {"direct": {"Microsoft.Bcl.TimeProvider": "8.0.1"},
+               "closure": {"Microsoft.Bcl.TimeProvider/8.0.1": {"Microsoft.Bcl.AsyncInterfaces": "8.0.0"},
+                           "Microsoft.Bcl.AsyncInterfaces/8.0.0": {}}},
+    "net8.0": {"direct": {"Microsoft.Bcl.Cryptography": "10.0.12"},
+               "closure": {"Microsoft.Bcl.Cryptography/10.0.12": {"System.Formats.Asn1": "10.0.12"},
+                           "System.Formats.Asn1/10.0.12": {}}},
+}
+APPROVED_TRANSITIVE = tuple(sorted({key.split("/", 1)[0] for entry in COMPATIBILITY.values() for key in entry["closure"]}))
 RESOURCE_CULTURES = ("en", "zh-CN", "zh-HK", "zh-TW")
 ASSETS = {f"lib/{tfm}/{PACKAGE}.dll" for tfm in TFMS} | {
     f"lib/{tfm}/{culture}/{PACKAGE}.resources.dll" for tfm in TFMS for culture in RESOURCE_CULTURES}
@@ -86,7 +95,7 @@ def inspect_package(package, version, commit, root=ROOT):
         need(set(groups) == set(TFMS) and all(g.tag.rsplit("}", 1)[-1] == "group" for g in dependencies),
              "unexpected_package_dependency_group")
         for tfm, group in groups.items():
-            expected = {"Microsoft.Bcl.Cryptography": COMPATIBILITY_VERSION} if tfm == "net8.0" else {}
+            expected = direct_dependencies(tfm)
             actual = {d.get("id"): d.get("version") for d in group}
             need(len(group) == len(expected) and actual == expected and
                  all(d.tag.rsplit("}", 1)[-1] == "dependency" for d in group), "unexpected_package_dependency")
@@ -134,10 +143,18 @@ def environment(results):
     return env
 
 
+def direct_dependencies(tfm):
+    return COMPATIBILITY.get(tfm, {}).get("direct", {})
+
+
+def dependency_closure(tfm):
+    return COMPATIBILITY.get(tfm, {}).get("closure", {})
+
+
 def inspect_consumer(assets, deps, tfm, identity):
     """Validate the resolved graph, direct reference and compile/runtime product asset."""
     key = f"{PACKAGE}/{identity}"
-    expected = {key} | ({f"{name}/{COMPATIBILITY_VERSION}" for name in APPROVED_TRANSITIVE} if tfm == "net8.0" else set())
+    expected = {key} | set(dependency_closure(tfm))
     need(set(assets["libraries"]) == expected and all(v["type"] == "package" for v in assets["libraries"].values()),
          "consumer_dependency_closure_mismatch")
     framework = assets["project"]["frameworks"][tfm]
@@ -148,13 +165,9 @@ def inspect_consumer(assets, deps, tfm, identity):
     selected = f"lib/{tfm}/{PACKAGE}.dll"
     for kind in ("compile", "runtime"):
         need(set(target[key].get(kind, {})) == {selected}, "consumer_product_asset_mismatch")
-    expected_edges = {"Microsoft.Bcl.Cryptography": COMPATIBILITY_VERSION} if tfm == "net8.0" else {}
-    need(target[key].get("dependencies", {}) == expected_edges, "consumer_product_dependency_mismatch")
-    if tfm == "net8.0":
-        need(target[f"Microsoft.Bcl.Cryptography/{COMPATIBILITY_VERSION}"].get("dependencies", {}) ==
-             {"System.Formats.Asn1": COMPATIBILITY_VERSION} and
-             not target[f"System.Formats.Asn1/{COMPATIBILITY_VERSION}"].get("dependencies"),
-             "consumer_transitive_dependency_mismatch")
+    need(target[key].get("dependencies", {}) == direct_dependencies(tfm), "consumer_product_dependency_mismatch")
+    need(all(target[name].get("dependencies", {}) == edges for name, edges in dependency_closure(tfm).items()),
+         "consumer_transitive_dependency_mismatch")
     runtime_packages = {k for k, v in deps["libraries"].items() if v.get("type") == "package"}
     need(runtime_packages == expected, "consumer_runtime_dependency_closure_mismatch")
     runtime_targets = list(deps["targets"].values())

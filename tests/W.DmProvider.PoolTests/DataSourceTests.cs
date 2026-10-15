@@ -50,6 +50,34 @@ public sealed class DataSourceTests
         Assert.Equal(0, source.Snapshot.PhysicalCount);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task FailedDataSourceOpenDisposesUndeliveredConnectionAndReturnsCapacity(bool asynchronous)
+    {
+        // .NET 6 has no DbDataSource; its typed OpenConnection must keep the base class cleanup contract.
+        using var hook = new SyntheticPoolHandshake();
+        using var source = new DmDataSource(PoolApiSettings.Text);
+        var failure = new InvalidOperationException("synthetic handshake failure");
+        DmConnection? undelivered = null;
+        DmPendingOpenTestHooks.AfterInstalled = connection => undelivered = connection;
+        DmPendingOpenTestHooks.Handshake = (_, _, _) => throw failure;
+        Exception error = asynchronous
+            ? await Assert.ThrowsAnyAsync<Exception>(async () => await source.OpenConnectionAsync())
+            : Assert.ThrowsAny<Exception>(() => source.OpenConnection());
+        Assert.Same(failure, error);
+        // The connection the caller never received was disposed, not merely closed.
+        Assert.NotNull(undelivered);
+        Assert.Throws<ObjectDisposedException>(() => undelivered!.Open());
+        DmPendingOpenTestHooks.AfterInstalled = null;
+        Assert.Equal(0, source.Snapshot.PhysicalCount);
+        // MaxPoolSize=1: the next open succeeds only if the failed attempt released its permit.
+        DmPendingOpenTestHooks.Handshake = (connection, _, _) => { hook.Install(connection); return ValueTask.CompletedTask; };
+        using var next = asynchronous ? await source.OpenConnectionAsync() : source.OpenConnection();
+        Assert.Equal(ConnectionState.Open, next.State);
+        Assert.Equal(1, source.Snapshot.Leased);
+    }
+
     [Fact]
     public async Task DisposeRejectsCreatingConnectionBeforePublishAndAbortsCandidate()
     {

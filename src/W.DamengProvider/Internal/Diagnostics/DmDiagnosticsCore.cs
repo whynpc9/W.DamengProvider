@@ -107,7 +107,7 @@ internal static class DmDiagnosticsCore
 
     private static void Complete(RecordKind kind, DmDiagnosticOperation operation, DmDiagnosticResult result, DmDiagnosticStamp start, bool flag)
     {
-        double milliseconds = Math.Max(0, Stopwatch.GetElapsedTime(start.Timestamp).TotalMilliseconds);
+        double milliseconds = Math.Max(0, TimeProvider.System.GetElapsedTime(start.Timestamp).TotalMilliseconds);
         Write(new(kind, operation, result, start, DateTime.UtcNow.Ticks, milliseconds, flag));
     }
     private static DmDiagnosticOperation NormalizeOperation(DmDiagnosticOperation operation) =>
@@ -317,7 +317,7 @@ internal static class DmDiagnosticsCore
         while (Interlocked.Read(ref processed) < target)
         {
             token.ThrowIfCancellationRequested();
-            if (Stopwatch.GetElapsedTime(start) >= timeout) return false;
+            if (TimeProvider.System.GetElapsedTime(start) >= timeout) return false;
             await Task.Delay(1, token).ConfigureAwait(false);
         }
         return true;

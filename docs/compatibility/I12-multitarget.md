@@ -91,6 +91,8 @@ bash eng/release.sh prepare --tag v0.1.0-preview.2 \
 
 ## 实库与未覆盖范围
 
+> 后续：[issue #13 记录](I13-net6.md#实库)用同一 smoke 在 8.0.32/9.0.21/10.0.12（及 6.0.36）上完成 shared TEST 验证；严格 TLS TEST 仍为 pending。以下为本 issue 原记录。
+
 三个 runtime 的 shared TEST 与严格 TLS TEST 均为 **integration_pending**。本工作树没有 `.local/secrets/dameng-test.env`、`dameng-tls-test.env`，也没有显式测试连接变量；未读取 SA/DEV 配置，未连接数据库、未创建对象。历史 .NET 10 实库结果不代替本候选的 8/9/10 实库验收。
 
 当前包 smoke 已按目标提供相同入口，覆盖身份检查、显式预取消和后续可用性、提交/回滚结果、时间值及 BLOB/CLOB 回读、Reader/连接释放与精确唯一表清理。预取消不等于发送后取消；本轮发送后取消与未知事务结果仅由离线协议测试覆盖。取得当前主机可访问的授权 TEST 配置后，须按[发布指南](../release.md#本地实库检查)串行补验三目标 shared/严格 TLS；先确认 TEST 身份，记录命令、退出码、真实服务器最终状态。不能因离线通过而宣称 Issue #12 的实库验收完成。

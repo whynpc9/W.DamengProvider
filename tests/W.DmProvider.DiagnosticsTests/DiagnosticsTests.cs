@@ -402,7 +402,7 @@ internal sealed class PublicListener : IDisposable
             MeasurementCount++; Names.Add(instrument.Name); if (!AllowedInstruments.Contains(instrument.Name)) InvalidTag = true;
             foreach (var tag in tags) CheckTag(tag.Key, tag.Value);
             if (instrument is ObservableCounter<long> && value.HasValue)
-                cumulative[instrument.Name + "|" + string.Join(";", tags.ToArray().Select(t => t.Key + "=" + t.Value).Order(StringComparer.Ordinal))] = value.Value;
+                cumulative[instrument.Name + "|" + string.Join(";", tags.ToArray().Select(t => t.Key + "=" + t.Value).OrderBy(value => value, StringComparer.Ordinal))] = value.Value;
         }
     }
     private void CheckTag(string name, object? value)

@@ -270,9 +270,16 @@ public sealed class DmBatchCommand : DbBatchCommand
 
 	protected override DbParameterCollection DbParameterCollection => parameters;
 
+#if NET8_0_OR_GREATER
 	public override bool CanCreateParameter => true;
 
 	public override DbParameter CreateParameter() => new DmParameter();
+#else
+	// DbBatchCommand gained these virtual members in .NET 8.
+	public bool CanCreateParameter => true;
+
+	public DbParameter CreateParameter() => new DmParameter();
+#endif
 
 	internal void SetRecordsAffected(int value) => Volatile.Write(ref recordsAffected, value);
 

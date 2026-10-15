@@ -45,7 +45,7 @@ internal class ConnPoolCache
 			text += "->{TryDequeue() failed}";
 			lock (newConnLock)
 			{
-				if (Interlocked.Read(in totalCount) < conn.ConnProperty.ConnPoolSize)
+				if (Interlocked.Read(ref totalCount) < conn.ConnProperty.ConnPoolSize)
 				{
 					text += "->{TotalCount + 1 <= ConnPoolSize}";
 					if (filter.next != null)
@@ -72,7 +72,7 @@ internal class ConnPoolCache
 				return item;
 			}
 			text += "->{DequeueTimeout(timeout) failed}";
-			text = text + "->{totalCount=" + Interlocked.Read(in totalCount) + "}";
+			text = text + "->{totalCount=" + Interlocked.Read(ref totalCount) + "}";
 			text = text + "->{limit=" + limit + "}";
 			text = text + "->{ConnPoolSize=" + conn.ConnProperty.ConnPoolSize + "}";
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_CONNPOOL_TIMEOUT, text);

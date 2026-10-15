@@ -77,7 +77,7 @@ internal sealed class DiagnosticListenerCapture : IDisposable
             if (!AllowedNames.Contains(instrument.Name)) InvalidTag = true;
             foreach (var tag in tags) CheckTag(tag.Key, tag.Value);
             if (instrument is ObservableCounter<long> && value.HasValue && AllowedNames.Contains(instrument.Name) && !InvalidTag)
-                cumulative[instrument.Name + "|" + string.Join(";", tags.ToArray().Select(t => t.Key + "=" + t.Value).Order(StringComparer.Ordinal))] = value.Value;
+                cumulative[instrument.Name + "|" + string.Join(";", tags.ToArray().Select(t => t.Key + "=" + t.Value).OrderBy(value => value, StringComparer.Ordinal))] = value.Value;
         }
     }
     private void CheckTag(string key, object? value)
@@ -88,7 +88,7 @@ internal sealed class DiagnosticListenerCapture : IDisposable
         tagCombinations.Add(key + "=" + text);
     }
     internal void ReadObservableInstruments() => meter.RecordObservableInstruments();
-    internal object Snapshot { get { lock (gate) return new { activities, measurements, instruments = names.Order(StringComparer.Ordinal).ToArray(),
+    internal object Snapshot { get { lock (gate) return new { activities, measurements, instruments = names.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
         finite_tag_combinations = tagCombinations.Count, invalid_tag = InvalidTag, caller_context_leaked = ContextLeaked,
         cumulative_counts = new Dictionary<string, long>(cumulative) }; } }
     internal long Total(string instrument, string? tag = null)

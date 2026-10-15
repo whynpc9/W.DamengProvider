@@ -79,8 +79,19 @@ public sealed class TemporalNativeReadTextRegressionTests
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
-            DateTime expected = Convert.ToDateTime(exactText);
             using var fixture = new ReaderFixture(1, 0, Encoding.UTF8.GetBytes(text));
+#if !NET7_0_OR_GREATER
+            if (text.Contains('\u200F'))
+            {
+                // .NET 6 DateTime parsing rejects RLM inside the clock. The driver keeps
+                // the runtime's culture verdict after its own fraction normalization.
+                Assert.Throws<FormatException>(() => Convert.ToDateTime(exactText));
+                Assert.Throws<FormatException>(() => fixture.Reader.GetDateTime(0));
+                Assert.Throws<FormatException>(() => DmDateTime.GetTimestampByString(text));
+                return;
+            }
+#endif
+            DateTime expected = Convert.ToDateTime(exactText);
             DateTime actual = fixture.Reader.GetDateTime(0);
             Assert.Equal(expected.Ticks, actual.Ticks); Assert.Equal(expected.Kind, actual.Kind);
             // The generic getter retains its typed value contract; character-to-date conversion uses GetDateTime.

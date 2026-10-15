@@ -236,8 +236,14 @@ public sealed class ArrayBindingAndBatchTests
         Assert.IsType<DmBatch>(factory.CreateBatch());
         DbBatchCommand command = factory.CreateBatchCommand();
         Assert.IsType<DmBatchCommand>(command);
+#if NET8_0_OR_GREATER
         Assert.True(command.CanCreateParameter);
         Assert.IsType<DmParameter>(command.CreateParameter());
+#else
+        // DbBatchCommand has no parameter factory before .NET 8; the typed command still does.
+        Assert.True(((DmBatchCommand)command).CanCreateParameter);
+        Assert.IsType<DmParameter>(((DmBatchCommand)command).CreateParameter());
+#endif
         using var connection = new DmConnection();
         Assert.True(connection.CanCreateBatch);
         DbBatch batch = ((DbConnection)connection).CreateBatch();

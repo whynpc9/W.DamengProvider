@@ -17,11 +17,11 @@ public sealed class ReaderTypeCompatibilityTests
     {
         var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "r3-reader-types", "vectors.json")));
         Assert.Equal(new[] { 8, 12 }, document.RootElement.GetProperty("rowid_vectors").EnumerateArray()
-            .Select(value => Convert.FromHexString(value.GetProperty("raw_hex").GetString()!).Length).Order().ToArray());
+            .Select(value => Convert.FromHexString(value.GetProperty("raw_hex").GetString()!).Length).OrderBy(value => value).ToArray());
         Assert.Equal(new[] { "0:GB18030", "0:UTF-8", "54:GB18030", "54:UTF-8" }, document.RootElement.GetProperty("text_vectors").EnumerateArray()
-            .Select(value => value.GetProperty("ctype").GetInt32() + ":" + value.GetProperty("encoding").GetString()).Order(StringComparer.Ordinal).ToArray());
+            .Select(value => value.GetProperty("ctype").GetInt32() + ":" + value.GetProperty("encoding").GetString()).OrderBy(value => value, StringComparer.Ordinal).ToArray());
         Assert.Equal(new[] { 0, 1, 2 }, document.RootElement.GetProperty("getbytes_rejection_controls").EnumerateArray()
-            .Select(value => value.GetProperty("ctype").GetInt32()).Order().ToArray());
+            .Select(value => value.GetProperty("ctype").GetInt32()).OrderBy(value => value).ToArray());
         return document;
     }
 

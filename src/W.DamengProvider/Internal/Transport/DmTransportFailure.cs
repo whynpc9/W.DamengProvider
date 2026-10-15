@@ -20,7 +20,7 @@ internal static class DmTransportFailure
     // original exception and stack continue unchanged to the existing cleanup paths.
     internal static bool Observe(Exception error)
     {
-        if (error is SocketException or IOException) observed.TryAdd(error, Marker);
+        if (error is SocketException or IOException) observed.AddOrUpdate(error, Marker);
         return false;
     }
 
