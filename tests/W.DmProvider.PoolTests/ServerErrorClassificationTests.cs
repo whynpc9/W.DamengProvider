@@ -673,6 +673,120 @@ public sealed class ServerErrorClassificationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task DiscardedPreparedHandleIsEvictedWithoutLosingHealthyCachedStatements(bool asynchronous)
+    {
+        using var hook = new SyntheticPoolHandshake();
+        using var source = new DmDataSource(PoolApiSettings.Text);
+        var channel = new StatementErrorChannel(0);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        {
+            hook.Install(candidate, channel);
+            candidate.m_ConnInst.ConnProperty.ServerEncoding = "UTF-8";
+            return ValueTask.CompletedTask;
+        };
+        using var connection = source.OpenConnection();
+        var instance = connection.m_ConnInst;
+        // Public statement pooling remains unsupported. Exercise the retained
+        // legacy cache through its real lookup/return and wire-close paths.
+        instance.ConnProperty.property[DmConst.PROP_KEY_PSTMT_POOLING] = true;
+        instance.ConnProperty.property[DmConst.PROP_KEY_STMT_POOLING] = true;
+        instance.ConnProperty.property[DmConst.PROP_KEY_STMT_POOL_SIZE] = 8;
+        var cache = new W.Dm.util.LRUCache<string, Statement>(8);
+        SetField(instance, "pstmtCache", cache);
+        using var failedCommand = new DmCommand("SELECT ? FROM SYNTHETIC_FAILED", connection);
+        using var healthyCommand = new DmCommand("SELECT ? FROM SYNTHETIC_HEALTHY", connection);
+        using var queuedCommand = new DmCommand("SELECT ? FROM SYNTHETIC_QUEUE", connection);
+        using var lease = connection.BeginExecution(DmOperationPurpose.Query);
+
+        async Task<Statement> Lookup(DmCommand command) => asynchronous
+            ? await instance.GetStmtFromPoolAsync(command) : instance.GetStmtFromPool(command);
+        async Task Prepare(Statement statement, DmCommand command)
+        {
+            using var invocation = lease.BeginInvocation();
+            if (asynchronous) await statement.PrepareAsync(command.CommandText);
+            else statement.D(command.CommandText);
+            invocation.Complete();
+        }
+        async Task Close(Statement statement, bool pool)
+        {
+            using var cleanup = lease.BeginCleanupInvocation(TimeSpan.FromSeconds(5));
+            if (asynchronous) await statement.CloseAsync(true, pool);
+            else statement.__t02_method_060008BE(true, pool);
+            cleanup.RecordDiagnosticCleanupSuccess();
+        }
+
+        Statement failed, healthy, queued;
+        using (var invocation = lease.BeginInvocation())
+        {
+            failed = await Lookup(failedCommand);
+            healthy = await Lookup(healthyCommand);
+            queued = await Lookup(queuedCommand);
+            invocation.Complete();
+        }
+        await Prepare(failed, failedCommand);
+        await Prepare(healthy, healthyCommand);
+        await Close(failed, pool: true);
+        await Close(healthy, pool: true);
+        await Close(queued, pool: true);
+        using (var invocation = lease.BeginInvocation())
+        {
+            Assert.Same(failed, await Lookup(failedCommand));
+            Assert.Same(healthy, await Lookup(healthyCommand));
+            invocation.Complete();
+        }
+        // Also cover aliases and queue references to the same discarded object;
+        // unrelated queue order and cache entries must survive.
+        cache.Add("old SQL alias", failed);
+        var queue = (System.Collections.Queue)typeof(DmConnInstance)
+            .GetField("stmt_queue", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(instance)!;
+        queue.Enqueue(failed);
+        using (var invocation = lease.BeginInvocation())
+        {
+            var rejection = new InvalidOperationException("Synthetic local parameter binding rejection.");
+            using (var binding = connection.Session.BeginLocalParameterBinding(invocation))
+                Assert.True(connection.Session.TryAcceptParameterBindingFailure(binding, rejection));
+            Assert.True(connection.Session.IsRecoverableParameterBindingFailure(invocation, rejection));
+        }
+        await Close(failed, pool: false);
+        Assert.True(failed.P());
+        Assert.Null(cache.FindValue(failedCommand.CommandText));
+        Assert.Null(cache.FindValue("old SQL alias"));
+        Assert.Same(healthy, cache.FindValue(healthyCommand.CommandText));
+        Assert.Equal(new object[] { queued }, queue.ToArray());
+        Assert.DoesNotContain(failed, instance.Stmts);
+        Assert.Single(channel.Opcodes, opcode => opcode == 4);
+
+        Statement replacement;
+        using (var invocation = lease.BeginInvocation())
+        {
+            Assert.Same(queued, await Lookup(queuedCommand));
+            replacement = await Lookup(failedCommand);
+            Assert.NotSame(failed, replacement);
+            Assert.Same(healthy, await Lookup(healthyCommand));
+            invocation.Complete();
+        }
+        await Prepare(replacement, failedCommand);
+        Assert.False(replacement.P());
+        Assert.Equal(4, channel.Opcodes.Count(opcode => opcode == 3));
+        Assert.Equal(3, channel.Opcodes.Count(opcode => opcode == 5));
+        Assert.False(channel.IsClosed);
+        Assert.Equal(ConnectionState.Open, connection.State);
+        Assert.Equal(0, asynchronous ? channel.SyncSends : channel.AsyncSends);
+        using (var cleanup = lease.BeginCleanupInvocation(TimeSpan.FromSeconds(5)))
+        {
+            // Bulk close must tolerate discarding several active statements.
+            instance.CloseAllStmts(keep_tcp: false);
+            cleanup.RecordDiagnosticCleanupSuccess();
+        }
+        Assert.Empty(instance.Stmts);
+        Assert.True(healthy.P());
+        Assert.True(queued.P());
+        Assert.True(replacement.P());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task ActualDataSourceShortcutKeepsServerFailureAndClosesTransportBeforeReturningPermit(bool asynchronous)
     {
         using var hook = new SyntheticPoolHandshake();

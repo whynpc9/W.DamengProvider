@@ -84,6 +84,7 @@ Active 本地事务中，以下形状不再被发送前拒绝：一个 `BEGIN �
 - Type 首轮 4 项失败来自新增测试中 C# 条件表达式将 DateTime 隐式转换为 DateTimeOffset；只修正两处输入装箱，断言不变，重跑 958/958 通过。此前 Pool 及实库结果对应相同产品源码；原失败日志保留。
 - 本机 ignored 证据保存在 `.local/temporal-prepare-fix/`，含构建日志、各套 TRX、`probe-real-first.json`、`probe-real-final.json` 及受测 diff；最终源码核对一致。构建为 0 错误、76 个警告。
 - 本轮未运行官方/恢复版驱动、TLS 实库或下游 EF 套件，不将本次 shared 结果扩展到其他 profile 或已发布包。
+- [PR #18](https://github.com/whynpc9/W.DamengProvider/pull/18) 首轮 CI 的十二套离线、打包、独立消费者与首次初始化检查通过。后续 Codex review 指出：内部 prepare 缓存持有的失败句柄关闭前还必须从缓存中逐出，否则相同 SQL 会再次取得已关闭句柄；该问题独立修订并补相关回归。公开 `PreparePooling=true` 仍明确拒绝，本次修订不开放该配置。修订按句柄身份移除 prepare 缓存、普通语句队列及活动列表中的引用，批量关闭先快照活动列表再关闭。新增同步/异步内部缓存回归通过，覆盖缓存复用、失败句柄别名逐出、健康项保留、相同 SQL 新建句柄及多句柄批量清理。独立审查复核通过；受影响 Pool/Session/Type/Async/Command 共 1433 项通过（Pool 304、Session 21、Type 958、Async 134、Command 16），无失败或跳过；实库探针重建、重跑退出码均 0，36 个时间及 36 个 Prepare 场景仍通过，五张本轮表清理后新连接残留为 0。证据文件使用 `.local/temporal-prepare-fix/` 下 cache-review 后缀，未覆盖先前记录。
 
 ### 首次修订历史验证
 

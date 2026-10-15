@@ -29,7 +29,8 @@
     },
     {
       "issue": 16,
-      "status": "working_tree",
+      "pull_request": 18,
+      "status": "in_review",
       "branch": "fix/temporal-write-and-prepare-recovery",
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
       "report": "../compatibility/I16-ef-integration-feedback.md"

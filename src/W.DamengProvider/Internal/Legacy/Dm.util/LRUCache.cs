@@ -40,6 +40,21 @@ internal class LRUCache<TKey, TValue>
 		return linkedListNode.Value.Value;
 	}
 
+	internal void RemoveValue(TValue value)
+	{
+		var node = _linkedList.First;
+		while (node != null)
+		{
+			var next = node.Next;
+			if (object.ReferenceEquals(node.Value.Value, value))
+			{
+				_map.Remove(node.Value.Key);
+				_linkedList.Remove(node);
+			}
+			node = next;
+		}
+	}
+
 	internal TValue FindValue(TKey key)
 	{
 		if (!_map.TryGetValue(key, out var value))

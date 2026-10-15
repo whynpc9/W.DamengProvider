@@ -101,7 +101,8 @@ internal partial class A
 			if(remove) G().RemoveStmt(this);
 			if(!G().ReUsedStmt(this)) return;
 		}
-		if(remove) G()?.RemoveStmt(this);
+		if(!pool) G()?.DiscardStmt(this);
+		else if(remove) G()?.RemoveStmt(this);
 		try
 		{
 			K();
