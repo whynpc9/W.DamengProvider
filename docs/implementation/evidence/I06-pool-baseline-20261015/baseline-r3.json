@@ -1,0 +1,218 @@
+{
+  "issue": 6,
+  "implementation": "W-project-reference",
+  "session_reset_verified": false,
+  "reuse_policy": "discard",
+  "performance_improvement_claimed": false,
+  "workload": "open_identity_select_close",
+  "database_objects_created": 0,
+  "final_database_state": "read_only_no_objects_created",
+  "mode": "shared",
+  "samples_per_scenario": 100,
+  "parallel_workers": 4,
+  "warmup_leases_per_scenario": 5,
+  "runtime": ".NET 10.0.12",
+  "loaded_dll": "/home/air/.t3/worktrees/W.DamengProvider/t3-8625c2eb/tools/Issue6PoolBaseline/bin/Release/net10.0/W.DamengProvider.dll",
+  "loaded_mvid": "d5eb99a2-89c1-49dc-aa99-06af7b8f368a",
+  "results": [
+    {
+      "owner": "datasource",
+      "workers": 1,
+      "samples": 100,
+      "status": "measured",
+      "warmup_physical_connections": {
+        "Created": 5,
+        "Disposed": 5,
+        "Connected": 5
+      },
+      "open_async_ms": {
+        "p50": 22.0439,
+        "p95": 27.5088,
+        "p99": 30.7873
+      },
+      "lease_elapsed_seconds": 2.8584896,
+      "leases_per_second": 34.98351017264502,
+      "measured_physical_connections": {
+        "Created": 100,
+        "Disposed": 100,
+        "Connected": 100
+      },
+      "completed_measurement_leases": 100,
+      "final_physical_connections_including_warmup": {
+        "Created": 105,
+        "Disposed": 105,
+        "Connected": 105
+      },
+      "final_pool_states": [
+        {
+          "Creating": 0,
+          "Leased": 0,
+          "Closing": 0,
+          "Waiting": 0,
+          "Idle": 0,
+          "Resetting": 0
+        }
+      ],
+      "final_drained": true
+    },
+    {
+      "owner": "datasource",
+      "workers": 4,
+      "samples": 100,
+      "status": "measured",
+      "warmup_physical_connections": {
+        "Created": 5,
+        "Disposed": 5,
+        "Connected": 5
+      },
+      "open_async_ms": {
+        "p50": 37.34,
+        "p95": 50.2452,
+        "p99": 51.9162
+      },
+      "lease_elapsed_seconds": 1.2784724,
+      "leases_per_second": 78.21834871053923,
+      "measured_physical_connections": {
+        "Created": 100,
+        "Disposed": 100,
+        "Connected": 100
+      },
+      "completed_measurement_leases": 100,
+      "final_physical_connections_including_warmup": {
+        "Created": 105,
+        "Disposed": 105,
+        "Connected": 105
+      },
+      "final_pool_states": [
+        {
+          "Creating": 0,
+          "Leased": 0,
+          "Closing": 0,
+          "Waiting": 0,
+          "Idle": 0,
+          "Resetting": 0
+        }
+      ],
+      "final_drained": true
+    },
+    {
+      "owner": "direct_pooling",
+      "workers": 1,
+      "samples": 100,
+      "status": "measured",
+      "warmup_physical_connections": {
+        "Created": 5,
+        "Disposed": 5,
+        "Connected": 5
+      },
+      "open_async_ms": {
+        "p50": 23.4026,
+        "p95": 32.5598,
+        "p99": 37.4239
+      },
+      "lease_elapsed_seconds": 3.0916284,
+      "leases_per_second": 32.345413827871425,
+      "measured_physical_connections": {
+        "Created": 100,
+        "Disposed": 100,
+        "Connected": 100
+      },
+      "completed_measurement_leases": 100,
+      "final_physical_connections_including_warmup": {
+        "Created": 105,
+        "Disposed": 105,
+        "Connected": 105
+      },
+      "final_pool_states": [
+        {
+          "Creating": 0,
+          "Leased": 0,
+          "Closing": 0,
+          "Waiting": 0,
+          "Idle": 0,
+          "Resetting": 0
+        }
+      ],
+      "final_drained": true
+    },
+    {
+      "owner": "direct_pooling",
+      "workers": 4,
+      "samples": 100,
+      "status": "measured",
+      "warmup_physical_connections": {
+        "Created": 5,
+        "Disposed": 5,
+        "Connected": 5
+      },
+      "open_async_ms": {
+        "p50": 34.2317,
+        "p95": 46.0298,
+        "p99": 768.8125
+      },
+      "lease_elapsed_seconds": 1.8366935,
+      "leases_per_second": 54.44566553973213,
+      "measured_physical_connections": {
+        "Created": 100,
+        "Disposed": 100,
+        "Connected": 100
+      },
+      "completed_measurement_leases": 100,
+      "final_physical_connections_including_warmup": {
+        "Created": 105,
+        "Disposed": 105,
+        "Connected": 105
+      },
+      "final_pool_states": [
+        {
+          "Creating": 0,
+          "Leased": 0,
+          "Closing": 0,
+          "Waiting": 0,
+          "Idle": 0,
+          "Resetting": 0
+        }
+      ],
+      "final_drained": true
+    }
+  ],
+  "offline_contract": "closed_construction_and_direct_explicit_certificate_rejection",
+  "transport_policy": "PlaintextAllowed",
+  "max_pool_size": 4,
+  "connect_command_acquire_timeout_seconds": 15,
+  "server_identity": "WDM_PROVIDER_TEST",
+  "server_schema": "WDM_PROVIDER_TEST",
+  "server_version": "8.1.5.60",
+  "compatible_mode": null,
+  "compatible_mode_unavailable": {
+    "type": "W.Dm.DmException",
+    "classification": null,
+    "phase": "Receive",
+    "kind": "Server",
+    "outcome": "ServerReported",
+    "server_number": -5504,
+    "driver_error_code": "WDM_SERVER",
+    "exception_chain": [
+      {
+        "type": "W.Dm.DmException",
+        "socket_error": null,
+        "native_error_code": null,
+        "io_hresult": null
+      }
+    ]
+  },
+  "final_server_identity": "WDM_PROVIDER_TEST",
+  "final_server_schema": "WDM_PROVIDER_TEST",
+  "status": "baseline_measured",
+  "baseline_measured": true,
+  "total_physical_connections": {
+    "Created": 422,
+    "Disposed": 422,
+    "Connected": 422
+  },
+  "negotiated_encrypt_modes": [
+    0
+  ],
+  "successful_tls_upgrades": 0,
+  "exit_code": 0
+}

@@ -17,6 +17,7 @@
 | 事务、隔离级别与保存点 | [事务](../compatibility/T10-transactions.md)、[隔离级别](../compatibility/T11-isolation.md) |
 | 异步与取消 | [异步契约](../compatibility/R2.md) |
 | 数据源、容量调度与流式 LOB | [数据源与 LOB](../compatibility/R3.md) |
+| 物理连接复用前置调查 | [issue #6 性能基线与完整复位缺口（尚未实现复用）](../compatibility/I06-pool-reuse-baseline.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
 | Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
