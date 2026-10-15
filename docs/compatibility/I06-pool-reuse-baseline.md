@@ -68,3 +68,14 @@ scripts/with-dameng-test.sh dotnet tools/Issue6PoolBaseline/bin/Release/net10.0/
 离线 smoke 退出 0 且 socket 0；缺 TEST 配置退出 3；合成错误身份在认证前拒绝、退出 1 且 socket 0；样本数越界退出 1。TLS TEST 配置与证书本机缺失，TLS 为 `integration_pending`。
 
 完整复位入口、状态覆盖、同物理会话复用正控制、复位失败拒绝矩阵和复用前后性能比较仍待完成。取得有明确状态范围及适用版本的 reset 能力后，需在 TEST 上逐项污染并验证，才可启用复用；当前基线不能作为缩减验收范围的依据。
+
+## 复位能力核查与阻塞结论（2026-10-15）
+
+合并 main `57cefaf` 后，用临时只读/自建对象探针（未入库，W 驱动 ProjectReference，typed builder 显式 `PlaintextAllowed`）经 `scripts/with-dameng-test.sh` 在 TEST 上核查。每次连接先确认 `USER` 与当前 Schema 均为 `WDM_PROVIDER_TEST`。
+
+- **协议**：恢复版命令表 `Internal/Legacy/Dm/T02_0200008D.cs` 只有登录/登出、语句、事务、LOB、FLDR、订阅、心跳等命令，没有会话复位命令。
+- **服务器过程**：`SYS.DBMS_SESSION` 包规范含 `RESET_PACKAGE`、`CLEAR_ALL_CONTEXT`、`SET_IDENTIFIER`、`CLOSE_DATABASE_LINK`，但 TEST 调用 `RESET_PACKAGE` 被服务器以 `-5505 没有执行[SYS.DBMS_SESSION]对象权限` 拒绝。授予该权限需 SA 维护；用户决定不为此扩大非 SA 账号权限。按现有错误恢复白名单，该失败还会使连接进入 Broken，组合式复位的任一步失败都只能销毁会话。
+- **不可复位的会话状态**：同一会话中 `NEXTVAL` 返回 41，执行 `ROLLBACK` 后 `CURRVAL` 仍为 41；fresh 会话读取 `CURRVAL` 得到 `-7147 序列当前值尚未在此会话中定义`。即序列 `CURRVAL` 属于会话状态，且未找到任何客户端或服务器操作可将其恢复。identity 类会话值（如 `SCOPE_IDENTITY`）未单独测试。
+- **对象清理**：本轮创建的唯一序列 `I06_SEQ_44F9FEB3EA97`、`I06_SEQ_9FD82E435623`、`I06_SEQ_769AAC68149E` 均已删除，并经 fresh 连接确认 `ALL_SEQUENCES` 计数为 0。第一次运行在 `-5505` 后连接 Broken，序列遗留至随后单独的清理连接删除。
+
+**结论**：在服务器 `8.1.5.60` 上，没有可供 TEST 使用的完整复位入口，且至少序列 `CURRVAL` 无法恢复，Issue #6 “前租约状态不泄漏到后租约”的验收条件无法满足。依 Issue 范围“无法证明可恢复的会话仍销毁”，该 profile 维持归还即销毁；不实现部分复位后的 opt-in 复用，也不预先实现默认关闭的复用状态机。Issue #6 保持开放并标记为阻塞，待出现有明确状态范围（含序列等会话值）及适用版本的服务器复位能力后再继续。

@@ -4,7 +4,7 @@
 
 | 方向 | Issue | 当前缺口与推进方式 |
 | --- | --- | --- |
-| 物理连接复用 | [#6](https://github.com/whynpc9/W.DamengProvider/issues/6) | 当前每租约新建、归还销毁。先取得性能基线与完整 reset 证据，再开放安全复用。 |
+| 物理连接复用 | [#6](https://github.com/whynpc9/W.DamengProvider/issues/6) | 阻塞：已取得性能基线；8.1.5.60 上 TEST 无完整 reset 入口，序列 `CURRVAL` 等会话值不可恢复（[记录](compatibility/I06-pool-reuse-baseline.md)）。维持每租约新建、归还销毁，待服务器提供完整复位能力。 |
 | 存储过程与输出/游标参数 | [#9](https://github.com/whynpc9/W.DamengProvider/issues/9) | 源码已实现严格过程调用、标量 OUT/INOUT、函数返回和受管 OUT 游标；显式事务组合、游标输入及过程批调用拒绝。见[源码契约](compatibility/I09-stored-procedures.md)，尚未发布。 |
 | 元数据 API | [#10](https://github.com/whynpc9/W.DamengProvider/issues/10) | 当前源码补齐异步发现及单条 SELECT 的 SchemaOnly/KeyInfo；权限与支持范围见 [I10](compatibility/I10-metadata.md)，尚未发布。 |
 | OS 与服务器兼容覆盖 | [#11](https://github.com/whynpc9/W.DamengProvider/issues/11) | [Windows / win-x64 / DM 8.1.5.60 明文](compatibility/I11-windows.md)与 [Ubuntu WSL2 / linux-x64 离线及包消费](compatibility/I11-linux-validation.md)已有记录；Linux 实库及长时资源、额外服务器 profile 和远程 TLS 等继续按实际环境推进。 |
