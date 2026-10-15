@@ -160,3 +160,18 @@ i09_tfm=net8.0
 ```
 
 构建/还原日志使用 `/tmp/wdm-i09-candidate-merged-net{8,9,10}-{build,restore}.log`。三个构建均0错误，20条既有探针 nullable 警告。首次直接 `build -p:TargetFramework=net8.0` 因已有 assets 只有 net10 目标报 NETSDK1005（未执行数据库操作）；随后显式 restore 同时指定 TargetFramework 与 TargetFrameworks，三目标均成功。没有清理全局 NuGet 缓存。三目标验证没有扩大前述未实库覆盖范围。
+
+
+## 元数据主线合并后的最终复跑
+
+主线 PR22 元数据能力合入后，受测 commit 为 `04ffa82`（合并 `origin/main` 的 `1dec19e`）。未修改探针或放宽任何断言，按前节相同环境与 restore/build/run 命令串行复跑59例×3个目标；仅报告和日志名替换为 `candidate-metadata-merged-net{8,9,10}`。三个 restore/build/run 均退出0，构建均0错误、20条既有探针 nullable 警告；产品与测试源码在运行期间没有修改。
+
+| 目标 | 实际 runtime | 结果 | 产品 MVID | 独立报告 |
+| --- | --- | --- | --- | --- |
+| net8.0 | 8.0.32 | 59/59，exit0 | `67a77912-6668-44e6-9716-0c918f2357be` | `/tmp/wdm-i09-candidate-metadata-merged-net8.json` |
+| net9.0 | 9.0.21 | 59/59，exit0 | `99e134bd-be17-4f6a-abce-64b71c36add2` | `/tmp/wdm-i09-candidate-metadata-merged-net9.json` |
+| net10.0 | 10.0.12 | 59/59，exit0 | `280ac022-ca5d-4f77-8c44-12cf950cd8f5` | `/tmp/wdm-i09-candidate-metadata-merged-net10.json` |
+
+最终177例再次覆盖全部既有过程、函数、输出、精度、LOB、游标、取消/超时以及 batch/array 预检断言。新增元数据行为 `SchemaOnly`/`KeyInfo` 与 StoredProcedure 的组合由另一个验证者的6个离线拒绝用例覆盖，不计入本次59例实库数。
+
+三轮身份均为 `WDM_PROVIDER_TEST`，服务器8.1.5.60；新连接核查业务最终状态与前轮一致。每轮12个对象的完整精确清单记录在独立报告中，对应前缀分别为 `I09W_9C42A44EE6904096`、`I09W_0B34679F3C6D43B4`、`I09W_1C837B68B018403B`。全部逐名删除并由 W 新连接逐名确认不存在，无官方恢复清理。前一合并的177例及更早失败报告均保留；本次没有新增失败，也没有扩大已声明支持或实库覆盖范围。

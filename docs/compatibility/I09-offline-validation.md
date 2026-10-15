@@ -82,3 +82,29 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 ```
 
 首次 `Command-merged-r1` 构建三目标成功、net8/net10 各 131 项通过，但系统 host 缺少 .NET 9 runtime，net9 testhost 无法启动，命令退出 1。完整原日志及中止 TRX 保留。随后改为复用上述已有本地 SDK/runtime，并从 Command 开始重跑完整矩阵；没有修改产品或测试来规避该环境问题。多目标回归仍属于离线验证，真实数据库的各目标结果另见实库兼容性记录。
+
+## 同步 PR #22 元数据实现后的补验
+
+合并 `origin/main@1dec19e` 后，候选为 `04ffa82`。独立复核后，仅对相交的 Command / Type / Async / Diagnostics 及新增 Schema 套件执行三目标补验；其余八套的产品行为路径没有实质变化，沿用上述三目标结果，不重复计入本轮实际执行数。
+
+新增 6 个 `StoredProcedure` 元数据模式用例，覆盖 `SchemaOnly`、`KeyInfo` 及组合的同步和异步入口：全部本地拒绝、协议发送数为 0、会话保持 Ready、旧输出不变，命令及参数可修改，下一次执行 lease 可取得。全仓检索 Reader 绕过构造函数与 prepared 状态夹具后，既有默认字段初始化完整；新 `ReaderMetadataTests` 原来以 `SELECT 1 FROM DUAL` 作为过程名称构造 plan，改为合法名称 `P`，仍断言 metadata 层拒绝。产品规则与测试断言均未放宽。
+
+| 套件 | net8.0 | net9.0 | net10.0 | 命令退出码 |
+| --- | ---: | ---: | ---: | ---: |
+| Command | 172 | 172 | 172 | 0 |
+| Type | 965 | 965 | 965 | 0 |
+| Async | 157 | 157 | 157 | 0 |
+| Diagnostics | 85 | 85 | 85 | 0 |
+| Schema | 23 | 23 | 23 | 0 |
+| 合计 | **1402** | **1402** | **1402** | **0** |
+
+15 份 TRX 共 **4206 / 4206 通过**，失败、跳过、中止均为 0。实际 SDK/runtime 及命令参数与上一节相同，仅项目按本表选择、结果目录改为 `.local/issue9/validation/<Project>-metadata-r1`。每个目录保留精确 `command.json`、`test.log`、`result.json` 与三个框架的 TRX，汇总为 `metadata-summary.json`。例如：
+
+```sh
+"$DOTNET_ROOT/dotnet" test tests/W.DmProvider.SchemaTests/W.DmProvider.SchemaTests.csproj \
+  --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false \
+  --logger 'trx;LogFilePrefix=results' \
+  --results-directory "$PWD/.local/issue9/validation/Schema-metadata-r1" --verbosity minimal
+```
+
+本轮首次运行五个项目即全部通过。构建 / 测试期间受测产品与测试源码未改；真实数据库补验由独立验证者另行运行，不计入离线 TRX 数。
