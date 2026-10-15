@@ -1,6 +1,6 @@
 # 语句级服务器错误恢复
 
-本页描述当前源码的会话保留条件。该能力已包含在 `0.1.0-preview.1`；后续传输失败包装与能力快照见 [issue #16 修订](I16-ef-integration-feedback.md)，未随该包发布。
+本页描述会话保留条件。基础能力已包含在 `0.1.0-preview.1`；后续传输失败包装、Prepare 恢复与能力快照已随 [0.2.0](../release-0.2.0.md) 发布，见 [issue #16 修订](I16-ef-integration-feedback.md)。
 
 ## 保留会话的条件
 

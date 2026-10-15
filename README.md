@@ -2,11 +2,11 @@
 
 面向达梦（Dameng）数据库的 .NET 6/8/9/10 ADO.NET 数据提供程序，提供异步数据库操作、参数绑定、本地事务、`DmDataSource`、流式 BLOB/CLOB 和标准 .NET 诊断接口。
 
-这是社区维护的预览项目。包名和程序集名为 **W.DamengProvider**，公开命名空间为 **W.Dm**。它与 `DM.DmProvider` 有不同的程序集身份，现有应用和 EF 适配层需要显式更新依赖并重新编译。
+这是社区维护的 ADO.NET 项目。包名和程序集名为 **W.DamengProvider**，公开命名空间为 **W.Dm**。它与 `DM.DmProvider` 有不同的程序集身份，现有应用和 EF 适配层需要显式更新依赖并重新编译。
 
 ## 安装
 
-版本 [`0.2.0`](https://www.nuget.org/packages/W.DamengProvider/0.2.0)；发布状态、身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.2.0.md)。
+当前已发布版本为 [`0.2.0`](https://www.nuget.org/packages/W.DamengProvider/0.2.0)；发布状态、身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.2.0.md)。
 
 ```sh
 dotnet add package W.DamengProvider --version 0.2.0

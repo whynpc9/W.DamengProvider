@@ -1,6 +1,6 @@
 # 数组绑定与 DbBatch（issue #7、#8）
 
-本页记录 [issue #7](https://github.com/whynpc9/W.DamengProvider/issues/7) 与 [issue #8](https://github.com/whynpc9/W.DamengProvider/issues/8) 的实现。改动在 `0.1.0-preview.1` 之后，尚未随已发布包提供。实库证据只覆盖 shared DM 8.1.5.60 / UTF-8 / 显式 `PlaintextAllowed` 的 `WDM_PROVIDER_TEST`。
+本页记录 [issue #7](https://github.com/whynpc9/W.DamengProvider/issues/7) 与 [issue #8](https://github.com/whynpc9/W.DamengProvider/issues/8) 的实现。改动在 `0.1.0-preview.1` 之后，已随 [0.2.0](../release-0.2.0.md) 发布。实库证据只覆盖 shared DM 8.1.5.60 / UTF-8 / 显式 `PlaintextAllowed` 的 `WDM_PROVIDER_TEST`。
 
 ## 1. 协议表征
 

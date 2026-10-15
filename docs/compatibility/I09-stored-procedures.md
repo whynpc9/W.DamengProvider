@@ -1,6 +1,6 @@
 # 存储过程、函数返回值与输出游标
 
-本页描述 issue #9 的源码契约，不属于已发布的 `0.1.0-preview.1` 包。协议表征以 DM 8.1.5.60、UTF-8、message version 21 为依据；官方驱动观察与 W 候选验证分别记录在 [表征记录](I09-characterization.md)。
+本页描述 issue #9 的实现契约，已随 [0.2.0](../release-0.2.0.md) 发布，不属于旧 `0.1.0-preview.1` 包。协议表征以 DM 8.1.5.60、UTF-8、message version 21 为依据；官方驱动观察与 W 候选验证分别记录在 [表征记录](I09-characterization.md)。
 
 ## 调用和参数
 

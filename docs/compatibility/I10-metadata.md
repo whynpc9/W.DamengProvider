@@ -1,5 +1,7 @@
 # I10：ADO.NET 元数据发现与描述
 
+本页能力已随 [0.2.0](../release-0.2.0.md) 发布；下方专项验证保留原候选与权限边界。
+
 ## GetSchema / GetSchemaAsync 集合契约
 
 同步与异步使用同一 `DmSchema.Definitions` 集合表、SQL、列类型及投影。异步执行、逐页读取、LOB 默认值物化及 Reader/Command 清理均使用异步 API；内部 Reader 借用顶层 Metadata lease，不另开连接或申请并发顶层 lease。旧同步 filter 不提供异步回退。纯内存集合可直接返回完成任务，仍遵守连接打开与独占会话要求。

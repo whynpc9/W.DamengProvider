@@ -1,6 +1,6 @@
 # 时间精度历史输入与验收记录
 
-当前实现以[时间精度兼容说明](../../compatibility/TP-temporal-precision.md)和[issue #16 修订](../../compatibility/I16-ef-integration-feedback.md)为入口，当前发布见[发布记录](../../release-0.1.0-preview.1.md)。
+当前实现以[时间精度兼容说明](../../compatibility/TP-temporal-precision.md)和[issue #16 修订](../../compatibility/I16-ef-integration-feedback.md)为入口，当前发布见[发布记录](../../release-0.2.0.md)。
 
 本目录仅保留以下材料：
 

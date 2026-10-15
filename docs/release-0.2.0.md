@@ -1,6 +1,6 @@
-# 0.2.0 发布准备
+# W.DamengProvider 0.2.0
 
-状态：本地发布前检查已通过，等待提交及正式发布；未创建 tag、未上传 NuGet。当前公开版本仍是 [0.1.0-preview.1](release-0.1.0-preview.1.md)。
+2026-10-15 发布，状态：`published_and_public_install_verified`。NuGet 公开安装、签名及四运行时包消费验证已通过。前一版本为 [0.1.0-preview.1](release-0.1.0-preview.1.md)。
 
 ## 变更范围
 
@@ -11,7 +11,7 @@
 
 连接归还仍销毁物理会话，不声明物理复用性能收益。存储过程显式事务、游标输入及过程批调用仍拒绝。运行时版本兼容不等于对应 EF Core 版本已适配；下游 EF 验证由下游管理。
 
-## 本轮检查
+## 发布前候选检查（历史）
 
 2026-10-15，以 `main@c415be4883075fb707e32f2d5918d3a54960b4aa` 加本次发布准备 diff 为候选。默认开发版本调整为 `0.2.0`，文件版本为 `0.2.0.0`，程序集版本继续为 `0.1.0.0`。最终发布版本仍由 tag 决定。
 
@@ -38,10 +38,26 @@ bash eng/release.sh prepare --tag v0.2.0 \
 
 独立验证者通过现有 TEST wrapper 对同一个包的四个消费者串行执行 shared `plaintext` 与隔离实例 `tls`，**8/8 退出 0**，没有重试。每次均确认服务器用户与当前 Schema 为 `WDM_PROVIDER_TEST`，参数化 Unicode、Reader、时间值、BLOB/CLOB、提交/回滚、预取消后的会话可用性及 Reader/连接释放通过。每轮仅删除本次成功创建的精确 GUID 表，并由新连接确认 `final_database_state=owned_table_absent`；最终事务完成、连接关闭。TLS 显式 `RequireTls`，验证本机 CA 和客户端证书；本机无 CRL 场景显式 `NoCheck`，产品默认 Online 不变。各命令、退出码和安全 JSON 报告保存在 `.local/release-0.2.0/integration/commands.jsonl` 及 `net<版本>_<plaintext|tls>.json`。
 
-独立审查与验证已复核当前 diff、52 份 TRX、实际包与 manifest、八个消费者依赖/资产、28 个首次初始化场景和八份实库报告，未留下阻断问题。旧候选结果见各兼容文档，不合并为本轮验收。原 preview.2 准备在离线阶段因用户改定版本主动中断（退出 130，记录在 `.local/release-preparation/`），本轮从 0.2.0 完整重跑，不是产品失败。
+独立审查与验证已复核当时候选 diff、52 份 TRX、实际包与 manifest、八个消费者依赖/资产、28 个首次初始化场景和八份实库报告，未留下阻断问题。旧候选结果见各兼容文档，不合并为本轮验收。原 preview.2 准备在离线阶段因用户改定版本主动中断（退出 130，记录在 `.local/release-preparation/`），本轮从 0.2.0 完整重跑，不是产品失败。
 
 本轮实库范围是 shared 与隔离 TLS 的包 smoke，不代表完整存储过程/元数据实库矩阵、下游 EF、长时压力或其他 OS/服务器 profile 的新验收。已有专项结果继续按各自候选和环境解释。
 
-## 正式发布剩余操作
+## 发布身份与最终提交验证
 
-完成候选检查、审查并提交合入后，按[发布指南](release.md)在最终提交重跑准备及相关实库检查，创建并推送新 tag，等待 Actions 上传。随后从公开 NuGet 源独立安装并核对包身份和支持范围，再将本页及 [progress.json](implementation/progress.json) 更新为实际发布状态。
+- GitHub Release：[W.DamengProvider 0.2.0](https://github.com/whynpc9/W.DamengProvider/releases/tag/v0.2.0)，非草稿、非预发布。
+- tag：[v0.2.0](https://github.com/whynpc9/W.DamengProvider/tree/v0.2.0)，commit：`aef142f05af67d2ce300f0a9f3a9fbd198f304cc`。
+- [普通 CI 38748216928](https://github.com/whynpc9/W.DamengProvider/actions/runs/38748216928)及[tag 发布 38749310165](https://github.com/whynpc9/W.DamengProvider/actions/runs/38749310165)均成功；tag 工作流重新执行 52 份 TRX，9634 通过、零失败/跳过，之后上传同一已验证包。
+- 最终干净提交另完整执行 `prepare --tag v0.2.0 --commit <上述提交> --output .local/release-0.2.0-final`，退出 0；9634 离线测试、八个消费者和 28 次首次初始化通过。独立验证者对该最终包执行四运行时 shared/严格 TLS **8/8**，每次核 TEST 用户及 Schema，精确 GUID 表均由新连接确认不存在。结果在 `.local/release-0.2.0-final/nuget-8v9bgzpz/` 及 `integration/`。
+
+## 公开 NuGet 安装
+
+[W.DamengProvider 0.2.0](https://www.nuget.org/packages/W.DamengProvider/0.2.0) 已从唯一公开 nuget.org 源安装验证。每个消费者使用全新包缓存，精确 `PackageReference [0.2.0]`，没有本地 feed；四运行时共八个独立消费者的依赖/实际资产、公开 API、语言资源及回退通过，四目标首次初始化 **28/28**。实际 runtime 为 .NET 6.0.36、8.0.20、9.0.9、10.0.12。
+
+`dotnet nuget verify --all` 退出 0，为有效的 NuGet.org 仓库签名。公开包唯一新增 `.signature.p7s`，所有非签名 ZIP 项与 Actions 实际上传原包逐字节一致。ID、版本和 repository commit 为 `W.DamengProvider` / `0.2.0` / `aef142f05af67d2ce300f0a9f3a9fbd198f304cc`。
+
+| 包 | SHA-256 |
+| --- | --- |
+| Actions 上传原包 | `f6be1b02a0b6d3fc8ddc06e20732d1f723c0d21ea3662111151a0f83eb4e1126` |
+| NuGet 公开签名包 | `6db5972551506f9510f563239b360afabd2b6ef31f99b678599d6e9d9733d848` |
+
+公开安装命令/退出码、依赖资产、实际 runtime、签名和首次初始化记录在 ignored `.local/release-0.2.0-final/public/`，回执为 `readback.json`。公开源实际安装的签名载荷又由独立验证者串行执行四运行时 shared/严格 TLS **8/8 退出 0**，无重试、stderr 为空。每次均核实 `WDM_PROVIDER_TEST` 用户及当前 Schema；参数、Reader、时间值、BLOB/CLOB、提交/回滚、预取消后可用性及资源释放通过。八个本次确切 GUID 表均已删除，新连接确认 `owned_table_absent`，事务完成且连接关闭。所有报告包 SHA 均为上述公开签名包，证据是正式发布载荷，不依赖本机预包外推；命令与安全报告在 `.local/release-0.2.0-final/public/integration/`。

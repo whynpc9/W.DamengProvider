@@ -6,95 +6,106 @@
   "release_accepted": true,
   "published": true,
   "notes": [
-    "2026-10-13 已发布到 NuGet；普通 CI 与 tag 发布工作流成功。",
-    "release_accepted 仅指发布记录所列预览范围，不是全环境生产接受。",
-    "十二套离线2050项、七项首次初始化、实际上传包 shared/TLS TEST smoke，以及公开源独立安装和签名验证通过。",
-    "公开包与 Actions 原包的非签名 ZIP 项一致；公开安装阶段未重复实库，原实库证据归属已验证的同载荷。",
-    "完整下游 EF、长时压力、额外 OS/RID、服务器及旧 .NET 版本未扩大接受；EF 接入由下游管理。"
+    "2026-10-15：v0.2.0 已发布到NuGet；普通CI/tag工作流及四运行时公开安装、签名验证通过。",
+    "tag工作流四运行时52份TRX共9634通过；公开源八个独立包消费者和28次首次初始化、公开正式签名载荷shared/严格TLS TEST smoke 8/8通过，精确对象全部清理。",
+    "公开包仅新增NuGet.org仓库签名，非签名ZIP项与Actions上传原包逐字节相同；已直接对公开正式载荷执行实库，不将本机预包结果代作正式包证据。",
+    "完整下游EF、长时压力、其他OS/RID与服务器profile仍按各自兼容记录解释，不扩大验收范围。"
   ],
   "local_release_preflight_passed": true,
-  "release_scope": "preview_offline_and_shared_tls_smoke",
-  "version": "0.1.0-preview.1",
-  "tag": "v0.1.0-preview.1",
-  "release_commit": "a67a9298daaa42b18203a9b405ec05a3357ed4b0",
-  "release_report": "../release-0.1.0-preview.1.md",
+  "release_scope": "four_runtime_offline_and_shared_tls_smoke",
+  "version": "0.2.0",
+  "tag": "v0.2.0",
+  "release_commit": "aef142f05af67d2ce300f0a9f3a9fbd198f304cc",
+  "release_report": "../release-0.2.0.md",
   "roadmap": "../roadmap.md",
-  "source_state": "contains_unreleased_changes",
-  "unreleased_changes": [
+  "source_state": "released_product_with_post_release_documentation",
+  "previous_release": {
+    "version": "0.1.0-preview.1",
+    "tag": "v0.1.0-preview.1",
+    "release_commit": "a67a9298daaa42b18203a9b405ec05a3357ed4b0",
+    "release_report": "../release-0.1.0-preview.1.md"
+  },
+  "target_frameworks": [
+    "net6.0",
+    "net8.0",
+    "net9.0",
+    "net10.0"
+  ],
+  "public_install_verified": true,
+  "released_changes": [
     {
       "issue": 16,
       "pull_request": 17,
       "merged_commit": "3091108",
-      "report": "../compatibility/I16-ef-integration-feedback.md"
+      "report": "../compatibility/I16-ef-integration-feedback.md",
+      "status": "released",
+      "released_in": "0.2.0",
+      "summary": "EF integration feedback fixes"
     },
     {
       "issue": 16,
       "pull_request": 18,
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
       "report": "../compatibility/I16-ef-integration-feedback.md",
-      "merged_commit": "24e792d"
+      "merged_commit": "24e792d",
+      "status": "released",
+      "released_in": "0.2.0"
     },
     {
       "issues": [
         7,
         8
       ],
-      "status": "merged_unreleased",
+      "status": "released",
       "branch": "feat/array-binding-and-dbbatch",
       "summary": "ArrayBindCount multi-row DML in one EXECUTE, sequential DbBatch with per-command results and failure attribution, MERGE affected-row counts",
       "report": "../compatibility/I07-I08-array-binding-dbbatch.md",
       "pull_request": 19,
-      "merged_commit": "5bcb69e"
+      "merged_commit": "5bcb69e",
+      "released_in": "0.2.0"
     },
     {
       "issue": 12,
-      "status": "merged_unreleased",
-      "summary": "net8.0/net9.0/net10.0 targets, tests and package consumers; historical validation in I12, current four-target release checks in the next release report",
+      "status": "released",
+      "summary": "net8.0/net9.0/net10.0 targets, tests and package consumers; historical validation in I12, current four-target release checks in the release report",
       "report": "../compatibility/I12-multitarget.md",
       "pull_request": 21,
-      "merged_commit": "83c492e"
+      "merged_commit": "83c492e",
+      "released_in": "0.2.0"
     },
     {
       "issue": 9,
-      "status": "merged_unreleased",
+      "status": "released",
       "branch": "t3/handle-issue-9",
       "summary": "Stored procedures, scalar OUT/INOUT and function returns, managed output cursors, atomic output publication and explicit transaction guard",
       "report": "../compatibility/I09-stored-procedures.md",
       "pull_request": 23,
-      "merged_commit": "57cefaf"
+      "merged_commit": "57cefaf",
+      "released_in": "0.2.0"
     },
     {
       "issue": 10,
-      "status": "merged_unreleased",
+      "status": "released",
       "summary": "Unified synchronous/asynchronous schema discovery and verified SELECT SchemaOnly/KeyInfo; ReservedWords remains permission-limited under TEST",
       "report": "../compatibility/I10-metadata.md",
       "branch": "t3/handle-issue-10",
       "pull_request": 22,
-      "merged_commit": "1dec19e"
+      "merged_commit": "1dec19e",
+      "released_in": "0.2.0"
     },
     {
       "issue": 13,
-      "status": "merged_unreleased",
-      "summary": "net6.0 typed DmDataSource, equivalent TLS chain policy and TimeProvider compatibility; historical Linux validation in I13, current four-target release checks in the next release report",
+      "status": "released",
+      "summary": "net6.0 typed DmDataSource, equivalent TLS chain policy and TimeProvider compatibility; historical Linux validation in I13, current four-target release checks in the release report",
       "report": "../compatibility/I13-net6.md",
       "branch": "t3/issue-13-net-compatibility",
       "pull_request": 25,
-      "merged_commit": "c415be4"
+      "merged_commit": "c415be4",
+      "released_in": "0.2.0"
     }
   ],
-  "next_release": {
-    "version": "0.2.0",
-    "state": "local_preflight_passed_pending_commit_and_publish",
-    "published": false,
-    "target_frameworks": [
-      "net6.0",
-      "net8.0",
-      "net9.0",
-      "net10.0"
-    ],
-    "report": "../release-0.2.0.md",
-    "source_commit": "c415be4883075fb707e32f2d5918d3a54960b4aa",
-    "source_has_preparation_diff": true,
+  "unreleased_changes": [],
+  "validation": {
     "local_preflight_passed": true,
     "offline_tests_passed": 9634,
     "offline_tests_failed": 0,
@@ -103,6 +114,21 @@
     "shared_test_smoke": "verified_on_all_four_runtimes",
     "isolated_tls_test_smoke": "verified_on_all_four_runtimes",
     "independent_review": "passed",
-    "independent_validation": "passed"
-  }
+    "independent_validation": "passed",
+    "source_commit": "aef142f05af67d2ce300f0a9f3a9fbd198f304cc",
+    "source_has_preparation_diff": false,
+    "ci_run": "https://github.com/whynpc9/W.DamengProvider/actions/runs/38748216928",
+    "publish_run": "https://github.com/whynpc9/W.DamengProvider/actions/runs/38749310165",
+    "public_package_sha256": "6db5972551506f9510f563239b360afabd2b6ef31f99b678599d6e9d9733d848",
+    "public_install": "verified_on_all_four_runtimes",
+    "public_package_consumers": 8,
+    "public_first_initialization_passed": 28,
+    "signature_verified": true,
+    "non_signature_payload_equals_actions_package": true,
+    "public_shared_test_smoke": "verified_on_all_four_runtimes",
+    "public_isolated_tls_test_smoke": "verified_on_all_four_runtimes",
+    "public_integration_commands_passed": 8,
+    "public_final_database_state": "all_exact_owned_tables_absent"
+  },
+  "github_release": "https://github.com/whynpc9/W.DamengProvider/releases/tag/v0.2.0"
 }

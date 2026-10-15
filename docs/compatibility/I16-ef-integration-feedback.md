@@ -1,6 +1,6 @@
 # EF Core 接入反馈的驱动修订（issue #16）
 
-本页记录 [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) 的处理结果。修订在 `0.1.0-preview.1` 之后，尚未随已发布包提供。实库证据只覆盖 shared DM 8.1.5.60 / UTF-8 / 显式 `PlaintextAllowed` 的 `WDM_PROVIDER_TEST`；其他 profile 维持原保守行为。
+本页记录 [issue #16](https://github.com/whynpc9/W.DamengProvider/issues/16) 的处理结果。修订在 `0.1.0-preview.1` 之后，已随 [0.2.0](../release-0.2.0.md) 发布。实库证据只覆盖 shared DM 8.1.5.60 / UTF-8 / 显式 `PlaintextAllowed` 的 `WDM_PROVIDER_TEST`；其他 profile 维持原保守行为。
 
 ## 1. 传输失败统一为 `DmException`
 

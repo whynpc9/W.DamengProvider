@@ -2,10 +2,10 @@
 
 ## 版本与身份
 
-- 当前已发布 `0.1.0-preview.1`；发布 commit、验证与公开包哈希见[发布记录](release-0.1.0-preview.1.md)。以下流程用于后续新版本，不要重新创建已存在的 tag。
+- 当前已发布 `0.2.0`，四运行时公开安装及签名验证通过；发布 commit 和覆盖范围见[发布记录](release-0.2.0.md)。以下流程用于后续新版本，不要重新创建已存在的 tag。
 - NuGet 包、产品项目和程序集：`W.DamengProvider`；公开命名空间：`W.Dm`。
 - 产品源码：`src/W.DamengProvider/W.DamengProvider.csproj`。旧 `W.DmProvider` 包依赖和程序集引用必须更新并重新编译；测试项目及诊断源名称保留原标识。
-- 下一版本为 `0.2.0`（准备中，未发布），也是默认开发版本。发布版本由 `v` 开头的合法 SemVer tag 决定，例如 `v0.2.0`；不能将其他分支推送或 PR 当成发布操作。变更范围与本轮检查见[发布准备记录](release-0.2.0.md)。
+- 默认开发版本为 `0.2.0`。后续发布由新的 `v` 开头合法 SemVer tag 决定；以下以 `v0.2.1` 举例，不代表已确定下一版本。不能将普通分支推送或 PR 当成发布操作。
 - SDK 按 `global.json` 固定为 10.0.401，运行目标为 .NET 6/8/9/10，产品和测试统一 C#12；必须另行安装四个主版本的运行时。
 
 ## 发布前检查
@@ -14,7 +14,7 @@
 
 ```sh
 python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
-bash eng/release.sh prepare --tag v0.2.0 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
+bash eng/release.sh prepare --tag v0.2.1 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
 ```
 
 `dotnet` 不在 PATH 时设置 `DOTNET_COMMAND` 为实际可执行文件路径。入口配置任务专用 `DOTNET_CLI_HOME`，关闭首次初始化与遥测，并使用单节点、禁用 build server 和共享编译参数。
@@ -52,14 +52,14 @@ done
 
 ```sh
 # 示例：仅在决定发布这个新版本且完成检查后执行。
-git tag -a v0.2.0 -m 'W.DamengProvider 0.2.0'
-git push origin v0.2.0
+git tag -a v0.2.1 -m 'W.DamengProvider 0.2.1'
+git push origin v0.2.1
 ```
 
 `.github/workflows/publish-nuget.yml` 仅由 `v*` tag push 触发，严格解析版本，在 tag 指向的源码上重新运行发布准备，成功后才使用仓库 secret `NUGET_API_KEY` 上传本次已审计包到 nuget.org。该 secret 仅交给上传步骤；不写入源码、制品或本地配置。普通 CI 不上传包。
 
 版本发布后不可覆盖，也不要移动 tag；发布失败应先查看具体失败步骤。上传成功后，从公开源下载该版本，核对 ID/版本/仓库 commit，并在隔离 consumer 中验证安装。NuGet 返回 404 或列表尚未更新时先检查传播情况，不盲目重复上传。
 
-首次改名与发布准备已由 PR #5 合入；`v0.1.0-preview.1` 已完成发布。最终发布包的验证见[发布记录](release-0.1.0-preview.1.md)。
+首次改名与预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)；当前版本验证见 [0.2.0](release-0.2.0.md)。
 
 配置依据：[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。

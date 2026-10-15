@@ -1,6 +1,6 @@
 # Windows 兼容验证（issue #11）
 
-2026-10-15 在用户指定的远程实例执行，范围来自 [issue #11](https://github.com/whynpc9/W.DamengProvider/issues/11)。本页记录当前源码及本地测试包，尚未发布，不追溯修改 `0.1.0-preview.1` 的发布验收。
+2026-10-15 在用户指定的远程实例执行，范围来自 [issue #11](https://github.com/whynpc9/W.DamengProvider/issues/11)。本页记录当时的源码及本地测试包；实现已随 [0.2.0](../release-0.2.0.md) 发布，但该发布包未在本页 Windows 环境重新验收，不追溯修改 `0.1.0-preview.1` 的发布验收。
 
 ## 环境与隔离
 

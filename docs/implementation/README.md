@@ -1,10 +1,10 @@
 # 实现与测试文档
 
-当前产品项目为 `src/W.DamengProvider`，包与程序集名为 `W.DamengProvider`，公开命名空间为 `W.Dm`，当前源码目标框架为 .NET 6/8/9/10（已发布预览包仍仅 .NET 10）。驱动负责 ADO.NET、协议、传输、事务、类型、取消、容量管理与诊断；EF 模型、SQL 翻译和迁移由独立适配项目负责，驱动生产项目不引用 EF。
+当前产品项目为 `src/W.DamengProvider`，包与程序集名为 `W.DamengProvider`，公开命名空间为 `W.Dm`，当前源码目标框架为 .NET 6/8/9/10（0.2.0 同包四目标）。驱动负责 ADO.NET、协议、传输、事务、类型、取消、容量管理与诊断；EF 模型、SQL 翻译和迁移由独立适配项目负责，驱动生产项目不引用 EF。
 
 ## 当前实现与发布
 
-仓库的已发布记录为 [0.1.0-preview.1](../release-0.1.0-preview.1.md)。下一版 [0.2.0 正在准备](../release-0.2.0.md)：四目标、PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)均已合入，尚未发布。机器可读状态见 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。历史测试计数只证明各自受测版本，不作为当前源码的新验收结果。
+当前版本为 [0.2.0](../release-0.2.0.md)，提供四目标、PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)。公开安装与实际发布状态见发布记录及 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。前一版本 [0.1.0-preview.1](../release-0.1.0-preview.1.md) 的历史验收不扩大到新版本；历史测试计数只证明各自受测版本。
 
 | 内容 | 入口 |
 | --- | --- |
@@ -20,7 +20,7 @@
 | 物理连接复用前置调查 | [issue #6 性能基线与复位阻塞（8.1.5.60 无完整复位，维持销毁）](../compatibility/I06-pool-reuse-baseline.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
-| .NET 8/9/10 多目标 | [原三目标验证记录](../compatibility/I12-multitarget.md)、[当前四目标发布准备](../release-0.2.0.md) |
+| .NET 8/9/10 多目标 | [原三目标验证记录](../compatibility/I12-multitarget.md)、[四目标发布记录](../release-0.2.0.md) |
 | .NET 6 兼容层 | [数据源 API 差异、TLS 等价验证、时间 API；验证记录](../compatibility/I13-net6.md) |
 | Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
 
