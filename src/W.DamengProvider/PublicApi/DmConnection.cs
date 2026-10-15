@@ -1202,6 +1202,12 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 		return filterHead.CreateDbCommand(this);
 	}
 
+	public override bool CanCreateBatch => true;
+
+	public new DmBatch CreateBatch() => new(this);
+
+	protected override DbBatch CreateDbBatch() => CreateBatch();
+
 	public DmCommand CreateCommand(string cmdText)
 	{
 		DmCommand dmCommand = do_CreateDbCommand();

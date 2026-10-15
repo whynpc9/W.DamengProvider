@@ -30,10 +30,19 @@
     {
       "issue": 16,
       "pull_request": 18,
-      "status": "in_review",
-      "branch": "fix/temporal-write-and-prepare-recovery",
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
-      "report": "../compatibility/I16-ef-integration-feedback.md"
+      "report": "../compatibility/I16-ef-integration-feedback.md",
+      "merged_commit": "24e792d"
+    },
+    {
+      "issues": [
+        7,
+        8
+      ],
+      "status": "in_review",
+      "branch": "feat/array-binding-and-dbbatch",
+      "summary": "ArrayBindCount multi-row DML in one EXECUTE, sequential DbBatch with per-command results and failure attribution, MERGE affected-row counts",
+      "report": "../compatibility/I07-I08-array-binding-dbbatch.md"
     },
     {
       "issue": 12,
