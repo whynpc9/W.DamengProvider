@@ -43,16 +43,13 @@ public sealed class ConnectionAsyncTests
     }
 
     [Fact]
-    public async Task MetadataAndDatabaseSwitchingExplicitlyRejectAsyncFallback()
+    public async Task DatabaseSwitchingExplicitlyRejectsAsyncFallback()
     {
         await using var fixture = new TransactionAsyncFixture();
         int acquired = 0;
         DmSessionTestHooks.AfterExecutionAcquired = _ => acquired++;
         try
         {
-            await Assert.ThrowsAsync<NotSupportedException>(() => fixture.Connection.GetSchemaAsync());
-            await Assert.ThrowsAsync<NotSupportedException>(() => fixture.Connection.GetSchemaAsync("Tables"));
-            await Assert.ThrowsAsync<NotSupportedException>(() => fixture.Connection.GetSchemaAsync("Tables", []));
             await Assert.ThrowsAsync<NotSupportedException>(() => fixture.Connection.ChangeDatabaseAsync("synthetic"));
         }
         finally { DmSessionTestHooks.AfterExecutionAcquired = null; }

@@ -839,8 +839,10 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		bool verifiedServerError = false;
 		try
 		{
+			if (RequiresReaderMetadata(behavior)) DmReaderMetadata.Validate(plan);
 			if (batchLease == null) lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Reader);
 			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
+			var metadata = RequiresReaderMetadata(behavior) ? PrepareReaderMetadata(plan, lease, behavior) : default;
 			using (var invocation = lease.BeginInvocation())
 			{
 				try { reader = ExecuteReaderOwned(behavior, userExecution: true); }
@@ -857,6 +859,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 				}
 				invocation.Complete();
 			}
+			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
 			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
 			plan.PublishCursorOutputs();
@@ -866,7 +869,8 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		}
 		catch (Exception error)
 		{
-			if (verifiedServerError) CleanupAfterRecoverableExecutionFailure(lease, plan, error);
+			if (verifiedServerError || (RequiresReaderMetadata(behavior) && lease != null && m_Stmt != null))
+				CleanupAfterRecoverableExecutionFailure(lease, plan, error);
 			if (reader != null && !transferred)
 			{
 				try { m_Conn?.CloseExpectedSession(lease?.Session); } catch { }
@@ -885,10 +889,13 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		CheckCommandBehavior(behavior);
 		DmCommandPlan plan = EnterPlan();
 		DmDataReader reader = null;
+		bool verifiedServerError = false;
 		try
 		{
 			using var invocation = borrowed.BeginInvocation();
 			try { reader = ExecuteReaderOwned(behavior); }
+			catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, borrowed))
+			{ verifiedServerError = true; throw invocation.TranslateFailure(error); }
 			catch (Exception error) { AbortStatementAfterFailedExecution(error); throw TranslateCurrentFailure(error); }
 			if (reader == null)
 			{
@@ -900,8 +907,9 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 			invocation.Complete();
 			return reader;
 		}
-		catch
+		catch (Exception error)
 		{
+			if (verifiedServerError) CleanupAfterRecoverableExecutionFailure(borrowed, plan, error);
 			if (reader != null)
 			{
 				try { m_Conn?.CloseExpectedSession(borrowed.Session); } catch { }
@@ -912,8 +920,138 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		}
 	}
 
+	internal async Task<DmDataReader> ExecuteInternalReaderAsync(DmExecutionLease borrowed,
+		CommandBehavior behavior, CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		if (borrowed == null || m_Conn == null || !ReferenceEquals(borrowed.Session, m_Conn.Session))
+			throw new InvalidOperationException("Internal reader lease does not belong to this command.");
+		CheckCommandBehavior(behavior);
+		DmCommandPlan plan = EnterPlan();
+		DmDataReader reader = null;
+		bool transferred = false;
+		bool verifiedServerError = false;
+		try
+		{
+			using (var invocation = borrowed.BeginInvocation(cancellationToken))
+			{
+				try { reader = await ExecuteReaderOwnedAsync(behavior, false, cancellationToken).ConfigureAwait(false); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, borrowed))
+				{ verifiedServerError = true; throw invocation.TranslateFailure(error); }
+				reader.AttachExecutionLease(borrowed, ownsLease: false);
+				reader.AttachCommandPlan(plan, ReleasePlan);
+				invocation.Complete();
+			}
+			transferred = true;
+			return reader;
+		}
+		catch (Exception error)
+		{
+			if (verifiedServerError)
+				await CleanupAfterRecoverableExecutionFailureAsync(borrowed, plan, error).ConfigureAwait(false);
+			if (reader != null && !transferred)
+			{
+				try { m_Conn?.CloseExpectedSession(borrowed.Session); } catch { }
+				try { await reader.CloseAsync().ConfigureAwait(false); } catch { }
+			}
+			throw;
+		}
+		finally
+		{
+			if (!transferred) await ReleasePlanAsync(plan).ConfigureAwait(false);
+		}
+	}
+
+	private static bool RequiresReaderMetadata(CommandBehavior behavior)
+		=> (behavior & (CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo)) != 0;
+
+	private (DmColumn[] Columns, DmReaderColumnMetadata[] Keys) PrepareReaderMetadata(
+		DmCommandPlan plan, DmExecutionLease lease, CommandBehavior behavior)
+	{
+		try
+		{
+			using (var invocation = lease.BeginInvocation())
+			{
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { PrepareInternalCore(false); ValidateReaderDescription(plan); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ throw invocation.TranslateFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecution(error); throw invocation.TranslateFailure(error); }
+			}
+			DmColumn[] columns = m_Stmt.F().GetColumnsInfo();
+			var keys = (behavior & CommandBehavior.KeyInfo) != 0
+				? DmReaderMetadata.Load(plan.Connection, lease, columns, plan.Sql) : null;
+			return (columns, keys);
+		}
+		catch (Exception originalError)
+		{
+			// A catalog failure must also release the business statement prepared above.
+			try
+			{
+				using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+				if (CleanupCurrentStatement(false, pool: false)) cleanup.RecordDiagnosticCleanupSuccess();
+			}
+			catch { lease.Session.Detach(lease.Identity)?.AbortTransport(); MarkRecoveryConnectionLost(originalError); }
+			throw;
+		}
+	}
+
+	private async Task<(DmColumn[] Columns, DmReaderColumnMetadata[] Keys)> PrepareReaderMetadataAsync(
+		DmCommandPlan plan, DmExecutionLease lease, CommandBehavior behavior, CancellationToken token)
+	{
+		try
+		{
+			using (var invocation = lease.BeginInvocation(token))
+			{
+				invocation.DiagnosticOperation = DmDiagnosticOperation.Prepare;
+				try { await PrepareInternalCoreAsync(false, token).ConfigureAwait(false); ValidateReaderDescription(plan); invocation.Complete(); }
+				catch (Exception error) when (IsOwnedRecoverableExecutionFailure(error, lease))
+				{ throw invocation.TranslateFailure(error); }
+				catch (Exception error) { AbortStatementAfterFailedExecutionAsync(error); throw invocation.TranslateFailure(error); }
+			}
+			DmColumn[] columns = m_Stmt.F().GetColumnsInfo();
+			var keys = (behavior & CommandBehavior.KeyInfo) != 0
+				? await DmReaderMetadata.LoadAsync(plan.Connection, lease, columns, plan.Sql, token).ConfigureAwait(false) : null;
+			return (columns, keys);
+		}
+		catch (Exception originalError)
+		{
+			try
+			{
+				using var cleanup = lease.BeginCleanupInvocation(plan.CleanupTimeout);
+				if (await CleanupCurrentStatementAsync(false, CancellationToken.None, pool: false).ConfigureAwait(false))
+					cleanup.RecordDiagnosticCleanupSuccess();
+			}
+			catch { lease.Session.Detach(lease.Identity)?.AbortTransport(); MarkRecoveryConnectionLost(originalError); }
+			throw;
+		}
+	}
+
+	private void ValidateReaderDescription(DmCommandPlan plan)
+	{
+		var info = m_Stmt.F();
+		if (!info.GetHasResultSet() || info.GetColumnCount() == 0 || info.GetRetStmtType() != DmConst.RET_DML_SELECT)
+			throw new NotSupportedException("The server did not describe a query result.");
+		plan.Binding.ValidateServerCount(info.GetParameterCount());
+		for (int index = 0; index < info.GetParameterCount(); index++)
+			plan.Binding.ResolveServerParameter(index, info.GetParamsInfo()[index].GetName(), info.GetParameterCount());
+	}
+
+	private DmDataReader CreateDescribedReader(CommandBehavior behavior)
+	{
+		DmInvocation.Current?.ThrowIfTerminated();
+		if (m_Stmt == null) throw new InvalidOperationException("Query description is missing.");
+		rd = new DmDataReader(m_Stmt.F(), behavior, m_Stmt);
+		m_Stmt.__t02_field_04000929 = rd;
+		RetCmdType = m_Stmt.F().GetRetStmtType();
+		CurResultSetCache = null;
+		m_Stmt = null;
+		return rd;
+	}
+
 	private DmDataReader ExecuteReaderOwned(CommandBehavior behavior, bool userExecution = false)
 	{
+		if ((behavior & CommandBehavior.SchemaOnly) != 0) return CreateDescribedReader(behavior);
 		DmCommandPlan plan = userExecution ? Volatile.Read(ref activePlan) : null;
 		DmSqlSavepointControl? rawSavepoint = null;
 		if (plan?.Transaction != null &&
@@ -1135,8 +1273,11 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		try
 		{
 			cancellationToken.ThrowIfCancellationRequested();
+			if (RequiresReaderMetadata(behavior)) DmReaderMetadata.Validate(plan);
 			if (batchLease == null) lease = BeginValidatedUserExecutionAsync(plan, DmOperationPurpose.Reader, cancellationToken);
 			else { BeginBatchStep(plan, batchLease); lease = batchLease; }
+			var metadata = RequiresReaderMetadata(behavior)
+				? await PrepareReaderMetadataAsync(plan, lease, behavior, cancellationToken).ConfigureAwait(false) : default;
 			using (var invocation = lease.BeginInvocation(cancellationToken))
 			{
 				try { reader = await ExecuteReaderOwnedAsync(behavior, true, cancellationToken).ConfigureAwait(false); }
@@ -1144,6 +1285,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 				{ verifiedServerError = true; throw TranslateCurrentFailure(error); }
 				invocation.Complete();
 			}
+			reader.AttachColumnMetadata(metadata.Columns, metadata.Keys);
 			reader.AttachExecutionLease(lease, ownsLease: batchLease == null);
 			reader.AttachCommandPlan(plan, ReleasePlan);
 			plan.PublishCursorOutputs();
@@ -1153,7 +1295,8 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		}
 		catch (Exception error)
 		{
-			if (verifiedServerError) await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
+			if (verifiedServerError || (RequiresReaderMetadata(behavior) && lease != null && m_Stmt != null))
+				await CleanupAfterRecoverableExecutionFailureAsync(lease, plan, error).ConfigureAwait(false);
 			if (reader != null && !transferred)
 			{
 				lease?.Session.Detach(lease.Identity)?.AbortTransport();
@@ -1245,6 +1388,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		foreach (DmParameter parameter in ExecutionParameters)
 			if (parameter.do_Value is AbstractLob)
 				throw new NotSupportedException("Binding an existing LOB object asynchronously is not supported; use a byte array or string value.");
+		if ((behavior & CommandBehavior.SchemaOnly) != 0) return CreateDescribedReader(behavior);
 		DmCommandPlan plan = userExecution ? Volatile.Read(ref activePlan) : null;
 		DmSqlSavepointControl? rawSavepoint = null;
 		if (plan?.Transaction != null && ReferenceEquals(plan.Connection?.Session?.ActiveTransaction, plan.Transaction)
@@ -1688,10 +1832,8 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 
 	private void CheckCommandBehavior(CommandBehavior behavior)
 	{
-		if ((behavior & (CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo)) != 0)
-			throw new NotSupportedException("SchemaOnly and KeyInfo require a separately verified metadata path.");
 		const CommandBehavior supported = CommandBehavior.SingleResult | CommandBehavior.SingleRow |
-			CommandBehavior.SequentialAccess | CommandBehavior.CloseConnection;
+			CommandBehavior.SequentialAccess | CommandBehavior.CloseConnection | CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo;
 		if ((behavior & ~supported) != 0)
 			throw new ArgumentOutOfRangeException(nameof(behavior));
 	}

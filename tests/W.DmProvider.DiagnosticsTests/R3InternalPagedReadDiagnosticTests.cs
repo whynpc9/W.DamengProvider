@@ -66,28 +66,34 @@ public sealed class R3InternalPagedReadDiagnosticTests
         await observer.AssertResults(("fetch", "success", 1));
     }
 
-    [Fact]
-    public async Task PublicGetSchemaTablesPreservesMetadataPurposeAcrossRealPagedReadAndCleanup()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PublicGetSchemaTablesPreservesMetadataPurposeAcrossRealPagedReadAndCleanup(bool asynchronous)
     {
         await using var fixture = new PagedFixture(metadata: true);
         await fixture.Open();
         using var caller = Caller(); using var observer = new PagedObserver(caller);
         await observer.Baseline();
 
-        DataTable table = fixture.Connection.GetSchema("Tables");
+        DataTable table = asynchronous ? await fixture.Connection.GetSchemaAsync("Tables") : fixture.Connection.GetSchema("Tables");
         Assert.Equal(2, table.Rows.Count);
         Assert.Equal("SYNTHETIC_SCHEMA", table.Rows[0]["TABLE_SCHEMA"]);
         Assert.Equal("FIRST_TABLE", table.Rows[0]["TABLE_NAME"]);
         Assert.Equal("UTAB", table.Rows[0]["TABLE_TYPE"]);
         Assert.Equal("SECOND_VIEW", table.Rows[1]["TABLE_NAME"]);
         Assert.Equal("VIEW", table.Rows[1]["TABLE_TYPE"]);
+        foreach (DataRow row in table.Rows)
+            foreach (string column in new[] { "TABLE_CATALOG", "FILLFACTOR", "SPACE_LIMIT", "ROW_COUNT" })
+                Assert.Equal(DBNull.Value, row[column]);
         var fetch = Assert.Single(fixture.Channel.FetchInvocations);
         Assert.Equal(DmOperationPurpose.Metadata, fetch.Lease.Purpose);
         Assert.True(fetch.Completed); Assert.True(fetch.IsDisposed);
-        Assert.Equal(new short[] { 3, 91, 7, 4 }, fixture.Channel.Opcodes);
+        Assert.Equal(new short[] { 3, asynchronous ? (short)5 : (short)91, 7, 4 }, fixture.Channel.Opcodes);
         Assert.Equal(DmPhysicalSessionState.Ready, fixture.Connection.Session.State);
         await observer.AssertResults(("metadata", "success", 3));
-        Assert.Equal(0, fixture.Channel.AsyncCalls);
+        if (asynchronous) Assert.True(fixture.Channel.AsyncCalls > 0);
+        else Assert.Equal(0, fixture.Channel.AsyncCalls);
     }
 
     [Theory]
@@ -111,7 +117,7 @@ public sealed class R3InternalPagedReadDiagnosticTests
             Assert.True(outer.SendAttempted); Assert.False(outer.Completed); Assert.False(outer.IsDisposed);
             await observer.AssertResults();
             // The outer owner may still perform work after the nested read.
-            if (metadata) Assert.Equal("SECOND_VIEW", reader.do_GetString(1));
+            if (metadata) Assert.Equal("SECOND_VIEW", reader.do_GetString(2));
             else Assert.Equal(18, reader.do_GetInt32(0));
             Assert.False(outer.Completed);
             outer.ThrowIfTerminated(); outer.Complete();
@@ -312,14 +318,18 @@ public sealed class R3InternalPagedReadDiagnosticTests
 
         private byte[] Query(short operation)
         {
-            string[] names = metadata ? ["OWNER", "OBJECT_NAME", "OBJECT_TYPE"] : ["VALUE"];
-            byte[][] values = metadata ? Text("SYNTHETIC_SCHEMA", "FIRST_TABLE", "TABLE") : [BitConverter.GetBytes(17)];
+            string[] names = metadata
+                ? ["TABLE_CATALOG", "OWNER", "OBJECT_NAME", "OBJECT_TYPE", "FILLFACTOR", "SPACE_LIMIT", "ROW_COUNT"]
+                : ["VALUE"];
+            byte[][] values = metadata ? TableValues("FIRST_TABLE", "UTAB") : [BitConverter.GetBytes(17)];
             var body = new List<byte>();
-            foreach (string name in names)
+            for (int index = 0; index < names.Length; index++)
             {
+                string name = names[index];
+                int type = !metadata ? 7 : index < 4 ? 2 : index == 6 ? 8 : 7;
                 byte[] descriptor = new byte[32];
-                BinaryPrimitives.WriteInt32LittleEndian(descriptor, metadata ? 2 : 7);
-                BinaryPrimitives.WriteInt32LittleEndian(descriptor.AsSpan(4), metadata ? 128 : 4);
+                BinaryPrimitives.WriteInt32LittleEndian(descriptor, type);
+                BinaryPrimitives.WriteInt32LittleEndian(descriptor.AsSpan(4), type == 2 ? 128 : type == 8 ? 8 : 4);
                 BinaryPrimitives.WriteInt32LittleEndian(descriptor.AsSpan(12), 1);
                 BinaryPrimitives.WriteInt16LittleEndian(descriptor.AsSpan(24), (short)name.Length);
                 body.AddRange(descriptor); body.AddRange(Encoding.ASCII.GetBytes(name));
@@ -334,14 +344,15 @@ public sealed class R3InternalPagedReadDiagnosticTests
         }
         private byte[] Fetch()
         {
-            byte[] body = EmptyPage ? [] : metadata ? Row(Text("SYNTHETIC_SCHEMA", "SECOND_VIEW", "VIEW")) :
+            byte[] body = EmptyPage ? [] : metadata ? Row(TableValues("SECOND_VIEW", "VIEW")) :
                 Row([BitConverter.GetBytes(18)]).Concat(Row([BitConverter.GetBytes(19)])).ToArray();
             byte[] frame = Frame(7, body);
             BinaryPrimitives.WriteInt64LittleEndian(frame.AsSpan(20), EmptyPage ? 1 : metadata ? 2 : 3);
             BinaryPrimitives.WriteInt32LittleEndian(frame.AsSpan(28), EmptyPage ? 0 : metadata ? 1 : 2);
             Checksum(frame); return frame;
         }
-        private static byte[][] Text(params string[] values) => values.Select(Encoding.UTF8.GetBytes).ToArray();
+        private static byte[][] TableValues(string name, string type) =>
+            [null!, Encoding.UTF8.GetBytes("SYNTHETIC_SCHEMA"), Encoding.UTF8.GetBytes(name), Encoding.UTF8.GetBytes(type), null!, null!, null!];
         private static byte[] Row(byte[][] values)
         {
             // Plain row: two prefix bytes, 12-byte rowid, two ordinal bytes
@@ -349,8 +360,10 @@ public sealed class R3InternalPagedReadDiagnosticTests
             var row = new List<byte>(new byte[14 + 2 * values.Length]);
             foreach (byte[] value in values)
             {
-                byte[] length = new byte[2]; BinaryPrimitives.WriteUInt16LittleEndian(length, checked((ushort)value.Length));
-                row.AddRange(length); row.AddRange(value);
+                byte[] length = new byte[2];
+                BinaryPrimitives.WriteUInt16LittleEndian(length, value == null ? (ushort)65534 : checked((ushort)value.Length));
+                row.AddRange(length);
+                if (value != null) row.AddRange(value);
             }
             return row.ToArray();
         }

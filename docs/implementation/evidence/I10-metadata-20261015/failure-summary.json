@@ -1,0 +1,61 @@
+{
+  "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 /home/air/Projects/W.DamengProvider/scripts/with-dameng-test.sh dotnet tools/SchemaProbe/bin/net10.0/SchemaProbe.dll --full",
+  "runs": [
+    {
+      "run": "full1",
+      "exit_code": 1,
+      "identity": {
+        "user": "WDM_PROVIDER_TEST",
+        "schema": "WDM_PROVIDER_TEST",
+        "version": "8.1.5.60"
+      },
+      "failed_assertions": [
+        "collection_ReservedWords",
+        "collection_Tables",
+        "collection_Columns",
+        "collection_Users",
+        "collection_Schemas",
+        "collection_Databases",
+        "collection_Procedures",
+        "collection_Parameters",
+        "collection_Indexes",
+        "collection_PrimaryKeys",
+        "collection_IndexColumns",
+        "collection_ForeignKeys",
+        "full"
+      ],
+      "final_owned_objects_remaining": 0,
+      "raw_local_result": "/tmp/wdm-i10-full-1.json"
+    },
+    {
+      "run": "full2",
+      "exit_code": 1,
+      "identity": {
+        "user": "WDM_PROVIDER_TEST",
+        "schema": "WDM_PROVIDER_TEST",
+        "version": "8.1.5.60"
+      },
+      "failed_assertions": [
+        "collection_ReservedWords",
+        "collection_Tables",
+        "collection_Columns",
+        "collection_Users",
+        "collection_Schemas",
+        "collection_Databases",
+        "collection_Procedures",
+        "collection_Parameters",
+        "collection_Indexes",
+        "collection_PrimaryKeys",
+        "collection_IndexColumns",
+        "collection_ForeignKeys",
+        "full"
+      ],
+      "final_owned_objects_remaining": 0,
+      "raw_local_result": "/tmp/wdm-i10-full-2.json"
+    }
+  ],
+  "cause": "The Metadata lease purpose was excluded from local parameter-binding ownership, rejecting parameterized catalog readers. Separately, ReservedWords returned server permission error -5504 under the existing TEST grants.",
+  "resolution": "Allowed Metadata ownership in the existing parameter-binding and recoverable-server-error paths. Preserved the ReservedWords permission error and recorded it as a tested capability restriction without granting permissions.",
+  "probe_diagnostic_change": "Kept collection results incrementally so an outer failure no longer hides preceding diagnostics; emitted safe exception type, stack, and structured driver failure metadata only.",
+  "revalidation": "full3, full4, and final full5 exited 0 with all assertions satisfied and zero owned objects remaining. Final full5 includes the server-parameter-count validation correction."
+}

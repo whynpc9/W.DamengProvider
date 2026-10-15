@@ -82,7 +82,7 @@ while (await cursor.ReadAsync())
 
 普通 TIME 输出为 `DateTime`（日期基准沿用 1900-01-01），不会隐式转换为本地时区的 `DateTimeOffset`。本次服务器的纯 OUT YEAR(4) TO MONTH 描述附带无意义的默认小数位 6；仅对该已观察描述归一为 0，并保留原始描述供诊断。
 
-未知复杂类型、ROWID 输出、非单值输出数组及未表征的长度标记拒绝。旧 message version <12 的输出模式未开放。`CommandType.Text` 仍只接受 Input，过程能力不允许绕过 Text 的输出限制。
+未知复杂类型、ROWID 输出、非单值输出数组及未表征的长度标记拒绝。旧 message version <12 的输出模式未开放。`CommandType.Text` 仍只接受 Input，过程能力不允许绕过 Text 的输出限制。`SchemaOnly`/`KeyInfo` 仅支持独立元数据契约中的单条 SELECT；存储过程与这两个标志的组合在获取执行 lease 前拒绝。
 
 **存储过程与活动显式事务的组合在发送前拒绝。** 实测过程内部 COMMIT 后，官方事务对象仍可调用 Rollback，但业务数据已经提交；当前协议不能可靠反映这类过程事务状态。不要据取消、超时或异常推断过程已经回滚，不自动重试过程；有副作用时由新连接核查结果。没有活动显式事务时，过程内部事务控制由服务器执行。
 

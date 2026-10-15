@@ -35,7 +35,7 @@ jobs:
           bash "$RUNNER_TEMP/dotnet-install.sh" --runtime dotnet --channel 9.0 --install-dir "$DOTNET_ROOT" --no-path
       - name: Release script behavior contracts
         run: python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
-      - name: Three runtimes with twelve offline suites each, package consumers and first initialization
+      - name: Three runtimes with offline suites, package consumers and first initialization
         shell: bash
         run: bash eng/release.sh prepare --tag "v0.0.0-ci.${{ github.run_id }}.${{ github.run_attempt }}" --commit "$(git rev-parse HEAD)"
       - name: Preserve validation results

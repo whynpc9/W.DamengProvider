@@ -55,10 +55,20 @@
     },
     {
       "issue": 9,
-      "status": "implemented_unreleased",
+      "status": "in_review",
       "branch": "t3/handle-issue-9",
       "summary": "Stored procedures, scalar OUT/INOUT and function returns, managed output cursors, atomic output publication and explicit transaction guard",
-      "report": "../compatibility/I09-stored-procedures.md"
+      "report": "../compatibility/I09-stored-procedures.md",
+      "pull_request": 23
+    },
+    {
+      "issue": 10,
+      "status": "merged_unreleased",
+      "summary": "Unified synchronous/asynchronous schema discovery and verified SELECT SchemaOnly/KeyInfo; ReservedWords remains permission-limited under TEST",
+      "report": "../compatibility/I10-metadata.md",
+      "branch": "t3/handle-issue-10",
+      "pull_request": 22,
+      "merged_commit": "1dec19e"
     }
   ]
 }
