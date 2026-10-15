@@ -48,8 +48,13 @@ internal static class DmReaderMetadata
         using var command = CreateCommand(connection, schema, table);
         using var reader = command.ExecuteInternalReader(lease, CommandBehavior.Default);
         var constraints = new List<DmReaderConstraintColumn>();
-        while (reader.do_Read()) constraints.Add(ReadConstraint(reader));
-        return Project(columns, constraints);
+        string objectType = null;
+        while (reader.do_Read())
+        {
+            objectType = reader.GetString(0);
+            if (!reader.IsDBNull(1)) constraints.Add(ReadConstraint(reader));
+        }
+        return Project(columns, constraints, objectType);
     }
 
     internal static async Task<DmReaderColumnMetadata[]> LoadAsync(DmConnection connection, DmExecutionLease lease,
@@ -60,30 +65,38 @@ internal static class DmReaderMetadata
         await using var command = CreateCommand(connection, schema, table);
         await using var reader = await command.ExecuteInternalReaderAsync(lease, CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
         var constraints = new List<DmReaderConstraintColumn>();
-        while (await reader.ReadInternalAsync(cancellationToken).ConfigureAwait(false)) constraints.Add(ReadConstraint(reader));
-        return Project(columns, constraints);
+        string objectType = null;
+        while (await reader.ReadInternalAsync(cancellationToken).ConfigureAwait(false))
+        {
+            objectType = reader.GetString(0);
+            if (!reader.IsDBNull(1)) constraints.Add(ReadConstraint(reader));
+        }
+        return Project(columns, constraints, objectType);
     }
 
     private static DmCommand CreateCommand(DmConnection connection, string schema, string table)
     {
-        var command = connection.CreateCommand("SELECT C.CONSTRAINT_NAME,C.CONSTRAINT_TYPE,CC.COLUMN_NAME,CC.POSITION " +
-            "FROM ALL_CONSTRAINTS C JOIN ALL_CONS_COLUMNS CC ON CC.OWNER=C.OWNER " +
+        var command = connection.CreateCommand("SELECT O.OBJECT_TYPE,C.CONSTRAINT_NAME,C.CONSTRAINT_TYPE,CC.COLUMN_NAME,CC.POSITION " +
+            "FROM ALL_OBJECTS O LEFT JOIN ALL_CONSTRAINTS C ON C.OWNER=O.OWNER AND C.TABLE_NAME=O.OBJECT_NAME " +
+            "AND C.CONSTRAINT_TYPE IN ('P','U') AND C.STATUS='ENABLED' AND C.VALIDATED='VALIDATED' " +
+            "LEFT JOIN ALL_CONS_COLUMNS CC ON CC.OWNER=C.OWNER " +
             "AND CC.CONSTRAINT_NAME=C.CONSTRAINT_NAME AND CC.TABLE_NAME=C.TABLE_NAME " +
-            "WHERE C.OWNER=:schema AND C.TABLE_NAME=:table AND C.CONSTRAINT_TYPE IN ('P','U') " +
-            "AND C.STATUS='ENABLED' AND C.VALIDATED='VALIDATED' ORDER BY C.CONSTRAINT_NAME,CC.POSITION");
+            "WHERE O.OWNER=:schema AND O.OBJECT_NAME=:table AND O.OBJECT_TYPE IN ('TABLE','VIEW') " +
+            "ORDER BY C.CONSTRAINT_NAME,CC.POSITION");
         command.Parameters.Add(new DmParameter("schema", schema));
         command.Parameters.Add(new DmParameter("table", table));
         return command;
     }
 
     private static DmReaderConstraintColumn ReadConstraint(DmDataReader reader) =>
-        new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3));
+        new(reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetInt32(4));
 
     private static DmReaderColumnMetadata[] Unknown(DmColumn[] columns) => new DmReaderColumnMetadata[columns?.Length ?? 0];
 
-    // Called only after the query's single base-table origin has been established.
-    internal static DmReaderColumnMetadata[] Project(DmColumn[] columns, IEnumerable<DmReaderConstraintColumn> constraints)
+    // A matching describe name alone does not establish base-table key semantics.
+    internal static DmReaderColumnMetadata[] Project(DmColumn[] columns, IEnumerable<DmReaderConstraintColumn> constraints, string sourceObjectType)
     {
+        if (!string.Equals(sourceObjectType, "TABLE", StringComparison.Ordinal)) return Unknown(columns);
         var keys = new HashSet<string>(StringComparer.Ordinal);
         var unique = new HashSet<string>(StringComparer.Ordinal);
         foreach (var group in constraints.GroupBy(column => column.Constraint, StringComparer.Ordinal))

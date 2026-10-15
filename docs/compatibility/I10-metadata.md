@@ -57,9 +57,9 @@
 
 `KeyInfo` 在同一 lease 下串行执行描述、目录预取、业务执行。目录 Reader 在业务执行前关闭，不在活动业务 Reader 上追加查询。单独使用 KeyInfo 正常取数；与 SchemaOnly 组合只描述。
 
-键推断仅适用于可确认的简单单表直接列投影、别名、简单 WHERE / ORDER BY，且所有列具有相符的 schema/table/base-column 来源。已启用且已验证的 P/U 约束按完整成员分组：主键成员标为 IsKey；仅单列主键/唯一约束标为 IsUnique。复合唯一约束不赋予成员单列唯一性；选择主键的一部分也不保证结果行唯一。可空唯一列保持原 AllowDBNull，不被提升为主键或非空。
+键推断仅适用于可确认的简单单表直接列投影、别名、简单 WHERE / ORDER BY，且所有列具有相符的 schema/table/base-column 来源。目录查询先通过 `ALL_OBJECTS` 确认来源为 TABLE，再将已启用且已验证的 P/U 约束按完整成员分组：主键成员标为 IsKey；仅单列主键/唯一约束标为 IsUnique。复合唯一约束不赋予成员单列唯一性；选择主键的一部分也不保证结果行唯一。可空唯一列保持原 AllowDBNull，不被提升为主键或非空。
 
-别名只有在服务器提供真实 BaseColumnName 且目录确认约束时才继承键属性，显示名不会被当成基列名。JOIN、DISTINCT、集合查询、表达式、子查询和缺失来源不推断键，IsKey/IsUnique 保留 DBNull，查询仍可正常执行。GetSchemaTable/GetSchemaTableAsync 只读取已预取的结果，不执行目录 SQL。
+别名只有在服务器提供真实 BaseColumnName 且目录确认约束时才继承键属性，显示名不会被当成基列名。视图及无法确认是实体表的来源始终保留未知键属性；确认的实体表即使无约束，也可明确报告 IsKey/IsUnique=false。JOIN、DISTINCT、集合查询、表达式、子查询和缺失来源不推断键，IsKey/IsUnique 保留 DBNull，查询仍可正常执行。GetSchemaTable/GetSchemaTableAsync 只读取已预取的结果，不执行目录 SQL。
 
 所有 Reader 模式共用类型与 temporal descriptor；数值 precision/scale 继续来自同一列描述，时间 NumericScale 使用解释后的 fractional scale。LOB 的未知长度不伪造为 0；Base* 缺失为 DBNull；有完整来源时 IsAliased 比较显示名与基列原文、IsExpression=false，否则两者为 DBNull。切换结果集清空上一结果集的键附加信息。
 
@@ -87,3 +87,10 @@ Prepare 的 8 项表征请求均为 opcode 5 / execute=false；副作用函数�
 修复过程保留了失败原因：受限目录最初触发 Metadata lease 参数绑定守卫；现已允许该用途并保持所有权检查。原 Diagnostics 回归发现内部缓存行/结束读取多报两个网络操作，已恢复内部读取的条件诊断，并增加同步/异步断言。新 synthetic fixture 曾将列名长度放错偏移，已修为协议 offset 24；清理失败测试改为验证 Closed/Broken 均不可复用且传输关闭，匹配现有同步/异步清理契约。原记录没有被当作通过结果。
 
 未覆盖：其他服务器版本、TLS profile 的本项完整元数据矩阵，以及 EF scaffold。已有类型/TLS产品默认策略未改变。
+
+
+### PR #22 review 修正：视图的未知键属性
+
+原 PR `06269bb` 的目录查询仅取得约束，未区分视图与真实无约束表。新增实库回归在原产品 DLL 上复现同步/异步 KeyInfo 与 SchemaOnly|KeyInfo 的 4 项视图未知键断言失败。修复将对象类型与约束放在同一目录查询中：只有确认 TABLE 才投影已知键属性，VIEW 和不可确认来源保留 DBNull；LEFT JOIN 保留真实无约束表的目录行。这没有增加目录往返，也不改变可空性。
+
+新增离线覆盖 VIEW/SYNONYM/不可见来源，即使错误携带约束也不产生已知键声明；真实无约束表保持 false/false。独立代码审查与行为验证记录见 [view-review.json](../implementation/evidence/I10-metadata-20261015/view-review.json)。

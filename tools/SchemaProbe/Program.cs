@@ -250,9 +250,10 @@ async Task Full()
         catch (Exception error) { failures.Add(id); readers.Add(new { id, type = error.GetType().Name, location = error.TargetSite?.DeclaringType?.FullName + "." + error.TargetSite?.Name, stack = firstChance.TryGetValue(error, out var originalStack) ? originalStack : error.StackTrace, diagnostics = DmDiagnostics.FormatException(error) }); }
     }
     foreach (bool asynchronous in new[] { false, true })
-    foreach (string shape in new[] { "side_effect", "alias", "expression", "join", "missing" })
+    foreach (string shape in new[] { "side_effect", "alias", "expression", "join", "view", "unconstrained", "missing" })
+    foreach (bool describeOnly in shape is "view" or "unconstrained" ? new[] { false, true } : new[] { true })
     {
-        string id = (asynchronous ? "async_" : "sync_") + shape;
+        string id = (asynchronous ? "async_" : "sync_") + shape + (describeOnly ? "" : "_rows");
         try
         {
             using var connection = Open();
@@ -263,17 +264,24 @@ async Task Full()
                 "alias" => $"SELECT \"Pk A\" AS \"Alias\" FROM {Q(table)}",
                 "expression" => $"SELECT \"Pk A\"+1 AS \"Expression\" FROM {Q(table)}",
                 "join" => $"SELECT A.\"Pk A\" FROM {Q(table)} A JOIN {Q(table)} B ON A.\"Pk A\"=B.\"Pk A\"",
+                "view" => $"SELECT * FROM {Q(view)}",
+                "unconstrained" => $"SELECT N FROM {Q(counter)}",
                 _ => $"SELECT * FROM {Q("I10_MISSING_" + nonce)}"
             };
             string before = Count();
             try
             {
-                await using DbDataReader reader = asynchronous ? await command.ExecuteReaderAsync(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo) : command.ExecuteReader(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo);
+                CommandBehavior behavior = CommandBehavior.KeyInfo | (describeOnly ? CommandBehavior.SchemaOnly : CommandBehavior.Default);
+                await using DbDataReader reader = asynchronous ? await command.ExecuteReaderAsync(behavior) : command.ExecuteReader(behavior);
                 DataTable schema = reader.GetSchemaTable()!;
-                Check(id + "_empty", !(asynchronous ? await reader.ReadAsync() : reader.Read()));
+                bool read = asynchronous ? await reader.ReadAsync() : reader.Read();
+                Check(id + "_read", read == !describeOnly);
+                if (read) Check(id + "_value", reader.GetInt32(0) == 1);
                 if (shape == "alias") Check(id + "_alias", Equals(schema.Rows[0]["IsAliased"], true));
                 if (shape == "expression") Check(id + "_expression", !Equals(schema.Rows[0]["IsExpression"], false) && schema.Rows[0]["IsKey"] == DBNull.Value);
                 if (shape == "join") Check(id + "_key_unknown", schema.Rows[0]["IsKey"] == DBNull.Value);
+                if (shape == "view") Check(id + "_keys_unknown", schema.Rows.Cast<DataRow>().All(row => row["IsKey"] == DBNull.Value && row["IsUnique"] == DBNull.Value));
+                if (shape == "unconstrained") Check(id + "_known_nonkey", Equals(schema.Rows[0]["IsKey"], false) && Equals(schema.Rows[0]["IsUnique"], false));
                 if (shape == "missing") failures.Add(id + "_not_rejected");
                 readers.Add(new { id, schema = SchemaRows(schema) });
                 if (asynchronous) await reader.CloseAsync(); else reader.Close();

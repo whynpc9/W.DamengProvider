@@ -105,7 +105,7 @@ public sealed class ReaderMetadataTests
             new("PK", "P", "PK2", 2), new("PK", "P", "PK1", 1),
             new("U_COMPOSITE", "U", "U1", 1), new("U_COMPOSITE", "U", "U2", 2),
             new("U_SINGLE", "U", "NULLABLE_UNIQUE", 1)
-        ]);
+        ], "TABLE");
         Assert.Equal(new(true, false), result[0]); Assert.Equal(new(true, false), result[1]);
         Assert.Equal(new(false, false), result[2]); Assert.Equal(new(false, false), result[3]);
         Assert.Equal(new(false, true), result[4]); Assert.True(nullableUnique.GetNullable());
@@ -115,7 +115,7 @@ public sealed class ReaderMetadataTests
     [Fact]
     public void SinglePrimaryKeyIsUniqueAndCatalogNamesAreCaseSensitive()
     {
-        var result = DmReaderMetadata.Project([Column("Id"), Column("ID")], [new("PK", "P", "Id", 1)]);
+        var result = DmReaderMetadata.Project([Column("Id"), Column("ID")], [new("PK", "P", "Id", 1)], "TABLE");
         Assert.Equal(new(true, true), result[0]);
         Assert.Equal(new(false, false), result[1]);
     }
@@ -123,8 +123,8 @@ public sealed class ReaderMetadataTests
     [Fact]
     public void IncompleteCatalogMembershipCannotBecomeSingleColumnUnique()
     {
-        Assert.Throws<InvalidDataException>(() => DmReaderMetadata.Project([Column("ID")], [new("U", "U", "ID", 2)]));
-        Assert.Throws<InvalidDataException>(() => DmReaderMetadata.Project([Column("ID")], [new("U", "U", "ID", 1), new("U", "U", "OTHER", 1)]));
+        Assert.Throws<InvalidDataException>(() => DmReaderMetadata.Project([Column("ID")], [new("U", "U", "ID", 2)], "TABLE"));
+        Assert.Throws<InvalidDataException>(() => DmReaderMetadata.Project([Column("ID")], [new("U", "U", "ID", 1), new("U", "U", "OTHER", 1)], "TABLE"));
     }
 
     [Fact]
@@ -136,6 +136,24 @@ public sealed class ReaderMetadataTests
         Assert.Equal(default, Assert.Single(await DmReaderMetadata.LoadAsync(null!, null!, columns, query, default)));
         using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => DmReaderMetadata.LoadAsync(null!, null!, columns, query, cancellation.Token));
+    }
+
+    [Theory]
+    [InlineData("VIEW")]
+    [InlineData("SYNONYM")]
+    [InlineData(null)]
+    public void NonTableSourcesNeverAcquireKnownKeyClaims(string? sourceObjectType)
+    {
+        DmColumn[] columns = [Column("ID")];
+        Assert.True(DmReaderMetadata.TryGetSource(columns, "SELECT ID FROM S.T", out _, out _));
+        Assert.Equal(default, Assert.Single(DmReaderMetadata.Project(columns, [], sourceObjectType!)));
+        Assert.Equal(default, Assert.Single(DmReaderMetadata.Project(columns, [new("PK", "P", "ID", 1)], sourceObjectType!)));
+    }
+
+    [Fact]
+    public void ConfirmedBaseTableWithoutConstraintsHasKnownNegativeKeyMetadata()
+    {
+        Assert.Equal(new(false, false), Assert.Single(DmReaderMetadata.Project([Column("ID")], [], "TABLE")));
     }
 
     private static DmCommandPlan Plan(string sql, DmParameter? parameter = null, CommandType type = CommandType.Text)

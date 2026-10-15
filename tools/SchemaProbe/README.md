@@ -27,7 +27,8 @@ SQL, raw frames, or credentials.
 composite primary/foreign-key order, view discovery, decimal/time/LOB metadata,
 and synchronous/asynchronous reader behavior for `SchemaOnly` and `KeyInfo`.
 Schema-only reads and next-result checks must send no fetch messages. Alias,
-expression, join, missing-object, cancellation, and session-reuse cases are
+expression, join, view key-unknown semantics, unconstrained base-table key negatives,
+missing-object, cancellation, and session-reuse cases are
 included. Catalog failures are reported rather than accepted as empty collections.
 On the current TEST instance, `ReservedWords` requires access to
 `V$RESERVED_WORDS` that TEST does not have. The full probe separately checks that
