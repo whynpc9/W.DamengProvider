@@ -74,6 +74,14 @@ bash eng/release.sh prepare --tag v0.1.0-preview.2 \
 
 独立验证者另外执行三个 `R3ResourceProbe/validate.py` 离线报告核验，均退出 0；用 `dotnet exec --fx-version 10.0.12` 分别强制启动 net8/net9 smoke，均在 `package_identity` 阶段退出 1，证明不会将错误主版本运行计为通过。精确命令和预期结果保存在 `.local/issue12/independent-extra-checks.json`。独立代码审阅和最终行为验证均未留下待修代码问题。
 
+## PR 合并前同步 main 的补验
+
+创建 PR #21 前同步了 main 的数组绑定/DbBatch 改动（`main@5bcb69e`），受测合并候选为干净提交 `e1a0d2205a2379adfe9ffe0dd9965623dee424b4`。代码未发生合并冲突；文档冲突合并保留双方内容。独立验证者使用上述相同 SDK/runtime 和完整 `prepare` 入口，将输出目录改为 `.local/issue12/pr-validation`，再次执行全部三目标矩阵。
+
+结果 **退出 0**：每目标 **2176/2176**，三目标共 **6528/6528**，零失败、跳过、中止。其中 Command 增至 31 项、Pool 增至 308 项，其他套件计数不变。新增数组绑定和 DbBatch 的代码与测试在 net8/9/10 均通过；同一包的十五个程序集、精确依赖组、六个独立消费者、三个文化资源 smoke 和 **21/21** 首次初始化场景通过。实际 runtime 仍分别为 8.0.32、9.0.21、10.0.12。
+
+本次结果位于 `.local/issue12/pr-validation/nuget-ih9753sj/`，日志与退出码为 `prepare-pr.log` / `prepare-pr.exit`；候选 nupkg SHA-256 为 `b2052ab164a4a722369817fa06017f88dc695251b7e0a3e5c1d87fef717693d1`。此补验覆盖同步 main 后的代码；前述 6471 项结果继续归属原候选。shared/严格 TLS 实库仍为 `integration_pending`。
+
 ## 已处理的验证失败
 
 - 干净 net8 构建：四个 MSB3030，按上述 Culture 元数据根因修复；原始日志 `source/first-net8.log`、`source/first-net8-diag.log` 保留。
