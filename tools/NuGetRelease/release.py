@@ -19,7 +19,7 @@ REPOSITORY = "https://github.com/whynpc9/W.DamengProvider"
 PROJECT = ROOT / "src/W.DamengProvider/W.DamengProvider.csproj"
 FLAGS = ["-m:1", "/nodeReuse:false", "/p:UseSharedCompilation=false", "--disable-build-servers"]
 SUITES = ("Configuration", "Session", "Transport", "Security", "Command", "Type",
-          "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics")
+          "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics", "Schema")
 TFMS = ("net8.0", "net9.0", "net10.0")
 COMPATIBILITY_VERSION = "10.0.12"
 APPROVED_TRANSITIVE = ("Microsoft.Bcl.Cryptography", "System.Formats.Asn1")

@@ -211,6 +211,22 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	private DmCommandPlan commandPlan;
 	private Action<DmCommandPlan> releaseCommandPlan;
 	private bool ownsExecutionLease;
+	private DmReaderColumnMetadata[] columnMetadata;
+
+	internal void AttachColumnMetadata(DmColumn[] described, DmReaderColumnMetadata[] metadata)
+	{
+		if (metadata == null || described == null || m_ColInfo == null ||
+			metadata.Length != m_ColInfo.Length || described.Length != m_ColInfo.Length) return;
+		columnMetadata = new DmReaderColumnMetadata[metadata.Length];
+		for (int index = 0; index < metadata.Length; index++)
+		{
+			var actual = m_ColInfo[index];
+			var expected = described[index];
+			if (actual.GetName() == expected.GetName() && actual.GetSchema() == expected.GetSchema() &&
+				actual.GetTable() == expected.GetTable() && actual.GetBaseColumn() == expected.GetBaseColumn())
+				columnMetadata[index] = metadata[index];
+		}
+	}
 	private bool registeredReader;
 	private int closeStarted;
 	private readonly object asyncCloseGate = new();
@@ -318,6 +334,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	{
 		get
 		{
+			if ((m_Behavior & CommandBehavior.SchemaOnly) != 0) return false;
 			if (m_RowCount > 0)
 			{
 				return true;
@@ -1186,6 +1203,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		DmInvocation.Current?.ThrowIfTerminated();
 		DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "NextResult()");
 		checkClosed();
+		if ((m_Behavior & CommandBehavior.SchemaOnly) != 0) return false;
 		if ((!initialSeek && (m_Behavior & CommandBehavior.SingleResult) != 0) || resultCursor.IsTerminal)
 			return false;
 		global::W.Dm.Internal.Legacy.A.A statement = m_Statement;
@@ -1211,6 +1229,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 
 	private void ApplyResult(DmInfo info, global::W.Dm.Internal.Legacy.A.A statement)
 	{
+		columnMetadata = null;
 		m_DbInfo = info;
 		m_Statement = statement;
 		m_ColInfo = info.GetColumnsInfo();
@@ -1288,11 +1307,25 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		catch (Exception error) { throw invocation.TranslateFailure(error); }
 	}
 
+	// Internal discovery must not report cached rows or end-of-data as wire operations.
+	internal async Task<bool> ReadInternalAsync(CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
+		try
+		{
+			bool result = await ReadOwnedAsync(cancellationToken).ConfigureAwait(false);
+			return CompleteReaderInvocationIfSent(invocation, result);
+		}
+		catch (Exception error) { throw invocation.TranslateFailure(error); }
+	}
+
 	internal async Task<bool> ReadOwnedAsync(CancellationToken cancellationToken)
 	{
 		DmInvocation.Current?.ThrowIfTerminated();
 		cancellationToken.ThrowIfCancellationRequested();
 		checkClosed();
+		if ((m_Behavior & CommandBehavior.SchemaOnly) != 0) return false;
 		ClearClobs();
 		if (is_SequentialAccess) m_SequentialSeq = -1;
 		if ((m_Behavior & CommandBehavior.SingleRow) != 0 && m_CurrentRow != -1)
@@ -1330,6 +1363,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		DmInvocation.Current?.ThrowIfTerminated();
 		token.ThrowIfCancellationRequested();
 		checkClosed();
+		if ((m_Behavior & CommandBehavior.SchemaOnly) != 0) return false;
 		if ((!initialSeek && (m_Behavior & CommandBehavior.SingleResult) != 0) || resultCursor.IsTerminal) return false;
 		var statement = m_Statement;
 		if (statement?.f() == null) return false;
@@ -1949,13 +1983,13 @@ public class DmDataReader : DbDataReader, IFilterInfo
 	{
 		row["ColumnName"] = dmCol.GetName();
 		row["ColumnOrdinal"] = i;
-		row["ColumnSize"] = dmCol.GetSize();
-		row["NumericPrecision"] = dmCol.GetPrecision();
+		row["ColumnSize"] = dmCol.GetIsLob() && dmCol.GetSize() <= 0 ? DBNull.Value : dmCol.GetSize();
+		row["NumericPrecision"] = dmCol.GetPrecision() < 0 ? DBNull.Value : dmCol.GetPrecision();
 		row["NumericScale"] = DmTemporalMetadataSemantics.IsTemporal(dmCol.GetCType())
 			? dmCol.GetTemporalReadDescriptor(bdta ? DmTemporalResultFormat.Bdta : DmTemporalResultFormat.OrdinaryPacked).FractionalScale
 			: dmCol.GetScale();
-		row["IsUnique"] = DBNull.Value;
-		row["IsKey"] = DBNull.Value;
+		row["IsUnique"] = (object)columnMetadata?[i].IsUnique ?? DBNull.Value;
+		row["IsKey"] = (object)columnMetadata?[i].IsKey ?? DBNull.Value;
 		row["BaseServerName"] = DBNull.Value;
 		row["BaseCatalogName"] = DBNull.Value;
 		row["BaseSchemaName"] = string.IsNullOrEmpty(dmCol.GetSchema()) ? DBNull.Value : dmCol.GetSchema();
@@ -1964,8 +1998,10 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		row["DataType"] = DmSqlType.CTypeToSystemType(dmCol.GetCType(), dmCol.GetPrecision(), dmCol.GetScale(), m_Conn.ConnProperty);
 		row["AllowDBNull"] = dmCol.GetNullable();
 		row["ProviderType"] = dmCol.GetCType();
-		row["IsAliased"] = false;
-		row["IsExpression"] = false;
+		bool hasSource = !string.IsNullOrEmpty(dmCol.GetSchema()) && !string.IsNullOrEmpty(dmCol.GetTable()) &&
+			!string.IsNullOrEmpty(dmCol.GetBaseColumn());
+		row["IsAliased"] = hasSource ? dmCol.GetName() != dmCol.GetBaseColumn() : DBNull.Value;
+		row["IsExpression"] = hasSource ? false : DBNull.Value;
 		row["IsIdentity"] = dmCol.GetIdentity();
 		row["IsAutoIncrement"] = dmCol.GetIdentity();
 		row["IsRowVersion"] = false;
@@ -1980,7 +2016,7 @@ public class DmDataReader : DbDataReader, IFilterInfo
 		{
 			DataRow row = schTbl.NewRow();
 			FillSchemaColumn(row, m_ColInfo[i], i);
-			row["IsReadOnly"] = !m_DbInfo.GetUpdatable();
+			row["IsReadOnly"] = (m_Behavior & CommandBehavior.SchemaOnly) != 0 ? DBNull.Value : !m_DbInfo.GetUpdatable();
 			schTbl.Rows.Add(row);
 		}
 	}

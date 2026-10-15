@@ -1,0 +1,215 @@
+{
+  "source_candidate": {
+    "base_commit": "06269bb339fbf645f851765184f524aaced6ad1d",
+    "uncommitted_diff": [
+      "src/W.DamengProvider/Internal/Execution/DmReaderMetadata.cs",
+      "tests/W.DmProvider.CommandTests/ReaderMetadataTests.cs",
+      "tools/SchemaProbe/Program.cs"
+    ],
+    "implementation": "Visible catalog objects must positively identify a physical TABLE before absent constraints can imply IsKey=false or IsUnique=false. Views and unknown sources retain DBNull."
+  },
+  "commands": [
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test tests/W.DmProvider.CommandTests/W.DmProvider.CommandTests.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test tests/W.DmProvider.AsyncTests/W.DmProvider.AsyncTests.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "passed": 151,
+      "failed": 0
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet build tools/SchemaProbe/SchemaProbe.csproj --disable-build-servers -m:1 /nodeReuse:false /p:UseSharedCompilation=false --nologo -v:q",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "DOTNET_CLI_HOME=/tmp/wdm-i10-dotnet DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 /home/air/Projects/W.DamengProvider/scripts/with-dameng-test.sh dotnet tools/SchemaProbe/bin/net10.0/SchemaProbe.dll --full",
+      "exit_code": 0
+    }
+  ],
+  "baseline": {
+    "source": "06269bb driver binary with the new probe",
+    "raw_local_result": "/tmp/wdm-i10-view-baseline.json",
+    "execution": "Previously executed by coordinator; verifier inspected retained result without rerunning.",
+    "failed_assertions": [
+      "sync_view_rows_keys_unknown",
+      "sync_view_keys_unknown",
+      "async_view_rows_keys_unknown",
+      "async_view_keys_unknown"
+    ],
+    "identity": {
+      "user": "WDM_PROVIDER_TEST",
+      "schema": "WDM_PROVIDER_TEST",
+      "version": "8.1.5.60"
+    },
+    "side_effect_counter_final": "1",
+    "owned_objects_remaining": 0
+  },
+  "fixed_result": {
+    "raw_local_result": "/tmp/wdm-i10-view-final.json",
+    "identity": {
+      "user": "WDM_PROVIDER_TEST",
+      "schema": "WDM_PROVIDER_TEST",
+      "version": "8.1.5.60"
+    },
+    "accepted": true,
+    "failed_assertions": [],
+    "view_columns_unknown": [
+      {
+        "id": "sync_view_rows",
+        "behavior": "KeyInfo",
+        "column_count": 9,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "Pk A",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_VIEW_AFEF0BA9AE",
+          "BaseColumnName": "Pk A",
+          "IsKey": null,
+          "IsUnique": null
+        }
+      },
+      {
+        "id": "sync_view",
+        "behavior": "SchemaOnly | KeyInfo",
+        "column_count": 9,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "Pk A",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_VIEW_AFEF0BA9AE",
+          "BaseColumnName": "Pk A",
+          "IsKey": null,
+          "IsUnique": null
+        }
+      },
+      {
+        "id": "async_view_rows",
+        "behavior": "KeyInfo",
+        "column_count": 9,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "Pk A",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_VIEW_AFEF0BA9AE",
+          "BaseColumnName": "Pk A",
+          "IsKey": null,
+          "IsUnique": null
+        }
+      },
+      {
+        "id": "async_view",
+        "behavior": "SchemaOnly | KeyInfo",
+        "column_count": 9,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "Pk A",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_VIEW_AFEF0BA9AE",
+          "BaseColumnName": "Pk A",
+          "IsKey": null,
+          "IsUnique": null
+        }
+      }
+    ],
+    "unconstrained_table_columns_false": [
+      {
+        "id": "sync_unconstrained_rows",
+        "behavior": "KeyInfo",
+        "column_count": 1,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "N",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_COUNT_AFEF0BA9AE",
+          "BaseColumnName": "N",
+          "IsKey": false,
+          "IsUnique": false
+        }
+      },
+      {
+        "id": "sync_unconstrained",
+        "behavior": "SchemaOnly | KeyInfo",
+        "column_count": 1,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "N",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_COUNT_AFEF0BA9AE",
+          "BaseColumnName": "N",
+          "IsKey": false,
+          "IsUnique": false
+        }
+      },
+      {
+        "id": "async_unconstrained_rows",
+        "behavior": "KeyInfo",
+        "column_count": 1,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "N",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_COUNT_AFEF0BA9AE",
+          "BaseColumnName": "N",
+          "IsKey": false,
+          "IsUnique": false
+        }
+      },
+      {
+        "id": "async_unconstrained",
+        "behavior": "SchemaOnly | KeyInfo",
+        "column_count": 1,
+        "all_columns_match_expected_keys": true,
+        "sample_column": {
+          "ColumnName": "N",
+          "BaseSchemaName": "WDM_PROVIDER_TEST",
+          "BaseTableName": "I10_COUNT_AFEF0BA9AE",
+          "BaseColumnName": "N",
+          "IsKey": false,
+          "IsUnique": false
+        }
+      }
+    ],
+    "sync_async_schemas_equal": true,
+    "existing_primary_and_single_composite_unique_checks_passed": true,
+    "side_effect_counter_final": "1",
+    "cleanup": {
+      "created": [
+        {
+          "Item1": "TABLE",
+          "Item2": "I10_COUNT_AFEF0BA9AE"
+        },
+        {
+          "Item1": "TABLE",
+          "Item2": "I10_Mix'%_AFEF0BA9AE"
+        },
+        {
+          "Item1": "FUNCTION",
+          "Item2": "I10_FN_AFEF0BA9AE"
+        },
+        {
+          "Item1": "TABLE",
+          "Item2": "I10_CHILD_AFEF0BA9AE"
+        },
+        {
+          "Item1": "VIEW",
+          "Item2": "I10_VIEW_AFEF0BA9AE"
+        }
+      ],
+      "dropped": [
+        "I10_VIEW_AFEF0BA9AE",
+        "I10_CHILD_AFEF0BA9AE",
+        "I10_FN_AFEF0BA9AE",
+        "I10_Mix'%_AFEF0BA9AE",
+        "I10_COUNT_AFEF0BA9AE"
+      ],
+      "remaining": "0"
+    }
+  },
+  "independent_result_assertions": "Python verification of every view/unconstrained column and existing PK/unique assertions; exit 0."
+}
