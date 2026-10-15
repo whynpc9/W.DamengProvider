@@ -1,0 +1,101 @@
+{
+  "candidate": "27058bc plus issue #10 working-tree diff",
+  "environment": {
+    "DOTNET_CLI_HOME": "/tmp/wdm-i10-cli",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+  },
+  "runs": [
+    {
+      "suite": "Schema",
+      "command": "dotnet test tests/W.DmProvider.SchemaTests/W.DmProvider.SchemaTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 23,
+      "failed": 0,
+      "total": 23,
+      "trx": "/tmp/wdm-i10-results/i10-Schema.trx"
+    },
+    {
+      "suite": "Command",
+      "command": "dotnet test tests/W.DmProvider.CommandTests/W.DmProvider.CommandTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 53,
+      "failed": 0,
+      "total": 53,
+      "trx": "/tmp/wdm-i10-results/i10-Command.trx"
+    },
+    {
+      "suite": "Async",
+      "command": "dotnet test tests/W.DmProvider.AsyncTests/W.DmProvider.AsyncTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 151,
+      "failed": 0,
+      "total": 151,
+      "trx": "/tmp/wdm-i10-results/i10-Async-r6.trx"
+    },
+    {
+      "suite": "Diagnostics",
+      "command": "dotnet test tests/W.DmProvider.DiagnosticsTests/W.DmProvider.DiagnosticsTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 85,
+      "failed": 0,
+      "total": 85,
+      "trx": "/tmp/wdm-i10-results/i10-Diagnostics-r5.trx"
+    },
+    {
+      "suite": "Type",
+      "command": "dotnet test tests/W.DmProvider.TypeTests/W.DmProvider.TypeTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 958,
+      "failed": 0,
+      "total": 958,
+      "trx": "/tmp/wdm-i10-results/i10-Type-r5.trx"
+    },
+    {
+      "suite": "Session",
+      "command": "dotnet test tests/W.DmProvider.SessionTests/W.DmProvider.SessionTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 21,
+      "failed": 0,
+      "total": 21,
+      "trx": "/tmp/wdm-i10-results/i10-Session-r5.trx"
+    },
+    {
+      "suite": "Pool",
+      "command": "dotnet test tests/W.DmProvider.PoolTests/W.DmProvider.PoolTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 304,
+      "failed": 0,
+      "total": 304,
+      "trx": "/tmp/wdm-i10-results/i10-Pool-r5.trx"
+    },
+    {
+      "suite": "Transaction",
+      "command": "dotnet test tests/W.DmProvider.TransactionTests/W.DmProvider.TransactionTests.csproj -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers",
+      "exit_code": 0,
+      "passed": 135,
+      "failed": 0,
+      "total": 135,
+      "trx": "/tmp/wdm-i10-results/i10-Transaction-r5.trx"
+    }
+  ],
+  "total_passed": 1730,
+  "total_failed": 0,
+  "earlier_failures": [
+    {
+      "run": "i10-async.trx",
+      "failed": 2,
+      "reason": "New synthetic describe response used wrong column-name-length offset; corrected 20 to 24."
+    },
+    {
+      "run": "i10-Async-r3.trx",
+      "failed": 1,
+      "reason": "Test expected Broken only; existing synchronous failed cleanup closes the connection. Assert both terminal states, closed transport and non-reusable failure info."
+    },
+    {
+      "run": "i10-Diagnostics-final.trx",
+      "failed": 1,
+      "reason": "Public Read produced extra metadata diagnostics for cached/end rows. Restored conditional internal read diagnostics, with sync and async regression coverage."
+    }
+  ]
+}

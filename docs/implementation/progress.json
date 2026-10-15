@@ -34,6 +34,12 @@
       "branch": "fix/temporal-write-and-prepare-recovery",
       "summary": "CLR timestamp Scale 8/9 lossless writes, measured Prepare recovery and safe local binding rejection",
       "report": "../compatibility/I16-ef-integration-feedback.md"
+    },
+    {
+      "issue": 10,
+      "status": "implemented_in_working_tree",
+      "summary": "Unified synchronous/asynchronous schema discovery and verified SELECT SchemaOnly/KeyInfo; ReservedWords remains permission-limited under TEST",
+      "report": "../compatibility/I10-metadata.md"
     }
   ]
 }

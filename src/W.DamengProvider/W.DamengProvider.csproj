@@ -35,6 +35,7 @@
     <InternalsVisibleTo Include="W.DmProvider.SecurityTests" />
     <InternalsVisibleTo Include="W.DmProvider.CommandTests" />
     <InternalsVisibleTo Include="W.DmProvider.AsyncTests" />
+    <InternalsVisibleTo Include="W.DmProvider.SchemaTests" />
     <InternalsVisibleTo Include="W.DmProvider.PoolTests" />
     <InternalsVisibleTo Include="W.DmProvider.LobTests" />
     <InternalsVisibleTo Include="W.DmProvider.DiagnosticsTests" />

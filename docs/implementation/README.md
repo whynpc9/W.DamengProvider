@@ -12,7 +12,7 @@
 | 配置、单位与别名 | [连接选项](../compatibility/T04-options.md)、[兼容变化](../compatibility/T04-breaking-changes.md) |
 | 会话与资源所有权 | [会话契约](../compatibility/T05-session-ownership.md) |
 | 传输与安全 | [帧与期限](../compatibility/T06-transport-boundaries.md)、[TLS](../compatibility/T07-security.md) |
-| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md) |
+| 命令、Reader 与元数据 | [命令契约](../compatibility/T08-command-reader.md)、[异步发现与安全描述](../compatibility/I10-metadata.md) |
 | 类型与时间精度 | [类型](../compatibility/T09-types.md)、[时间精度](../compatibility/TP-temporal-precision.md) |
 | 事务、隔离级别与保存点 | [事务](../compatibility/T10-transactions.md)、[隔离级别](../compatibility/T11-isolation.md) |
 | 异步与取消 | [异步契约](../compatibility/R2.md) |

@@ -992,12 +992,9 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 
 	internal DataTable do_GetSchema(string collectionName, string[] restrictionValues)
 	{
+		var request = DmSchema.CreateRequest(collectionName, restrictionValues);
 		using var lease = BeginExecution(DmOperationPurpose.Metadata);
-		if (collectionName == null || collectionName.Equals(""))
-		{
-			collectionName = "METADATACOLLECTIONS";
-		}
-		return new DmSchema(this, lease).GetSchema(collectionName, restrictionValues);
+		return new DmSchema(this, lease).GetSchema(request);
 	}
 
 	internal void do_Open()
@@ -1175,18 +1172,21 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 			Task.FromException(new NotSupportedException("Physical database switching is unsupported."));
 
 	public override Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default)
-		=> UnsupportedSchemaAsync(cancellationToken);
+		=> GetSchemaAsync(null, null, cancellationToken);
 
 	public override Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default)
-		=> UnsupportedSchemaAsync(cancellationToken);
+		=> GetSchemaAsync(collectionName, null, cancellationToken);
 
-	public override Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictionValues,
+	public override async Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictionValues,
 		CancellationToken cancellationToken = default)
-		=> UnsupportedSchemaAsync(cancellationToken);
-
-	private static Task<DataTable> UnsupportedSchemaAsync(CancellationToken cancellationToken)
-		=> cancellationToken.IsCancellationRequested ? Task.FromCanceled<DataTable>(cancellationToken) :
-			Task.FromException<DataTable>(new NotSupportedException("Asynchronous schema discovery is unsupported."));
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		if (filterHead != null)
+			throw new NotSupportedException("Asynchronous schema discovery does not support synchronous connection filters.");
+		var request = DmSchema.CreateRequest(collectionName, restrictionValues);
+		using var lease = BeginExecution(DmOperationPurpose.Metadata);
+		return await new DmSchema(this, lease).GetSchemaAsync(request, cancellationToken).ConfigureAwait(false);
+	}
 
 	public void ForceClose()
 	{
