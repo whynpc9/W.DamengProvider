@@ -240,7 +240,7 @@ internal class DmConnInstance
 	// physical transport; never invoke transaction Dispose or statement close here.
 	internal void RunAfterPhysicalClosed(Action completion)
 	{
-		ArgumentNullException.ThrowIfNull(completion);
+		if (completion is null) throw new ArgumentNullException(nameof(completion));
 		// Keep the actual adapter even after AbortTransport takes m_Csi. The
 		// fallback supports synthetic instances whose constructor was bypassed.
 		D captured = physicalTransport ?? Volatile.Read(ref syntheticPhysicalTransport) ?? Volatile.Read(ref m_Csi)?.A();

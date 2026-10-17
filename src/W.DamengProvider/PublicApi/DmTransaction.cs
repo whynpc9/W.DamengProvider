@@ -66,7 +66,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 	private int disposeStarted;
 
 	public DmTransactionOutcome Outcome => (DmTransactionOutcome)Volatile.Read(ref outcome);
+#if NETSTANDARD2_1
+	public bool SupportsSavepoints => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
+#else
 	public override bool SupportsSavepoints => DmServerCapabilities.IsMeasured(connInst.ConnProperty.ServerVersion);
+#endif
 
 	/// <summary>A credential-free cleanup or protocol failure category, when one occurred.</summary>
 	public string FailureInfo => Volatile.Read(ref failureInfo);
@@ -526,7 +530,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public async Task SaveAsync(string savepointName, CancellationToken cancellationToken = default)
+#else
 	public override async Task SaveAsync(string savepointName, CancellationToken cancellationToken = default)
+#endif
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 		DmDeadline deadline = CreateControlDeadline();
@@ -555,7 +563,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public async Task RollbackAsync(string savepointName, CancellationToken cancellationToken = default)
+#else
 	public override async Task RollbackAsync(string savepointName, CancellationToken cancellationToken = default)
+#endif
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 		DmDeadline deadline = CreateControlDeadline();
@@ -575,7 +587,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public async Task ReleaseAsync(string savepointName, CancellationToken cancellationToken = default)
+#else
 	public override async Task ReleaseAsync(string savepointName, CancellationToken cancellationToken = default)
+#endif
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 		DmDeadline deadline = CreateControlDeadline();
@@ -654,7 +670,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public void Save(string savepointName)
+#else
 	public override void Save(string savepointName)
+#endif
 	{
 		if (filterHead == null)
 		{
@@ -666,7 +686,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public void Rollback(string savepointName)
+#else
 	public override void Rollback(string savepointName)
+#endif
 	{
 		if (filterHead == null)
 		{
@@ -678,7 +702,11 @@ public sealed class DmTransaction : DbTransaction, IFilterInfo
 		}
 	}
 
+#if NETSTANDARD2_1
+	public void Release(string savepointName)
+#else
 	public override void Release(string savepointName)
+#endif
 	{
 		if (filterHead == null)
 		{

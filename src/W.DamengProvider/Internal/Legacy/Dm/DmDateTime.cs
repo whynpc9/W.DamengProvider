@@ -121,14 +121,14 @@ public class DmDateTime
 	public static void DmTimeGetDateByNdaysFromZero(int ndays, ref int ret_year, ref int ret_month, ref int ret_day)
 	{
 		if (ndays <= 365 || ndays > 3652424) { ret_year = ret_month = ret_day = 99; return; }
-		DateOnly date = DateOnly.FromDayNumber(ndays - 366);
+		DateTime date = DateTime.MinValue.AddTicks((long)(ndays - 366) * TimeSpan.TicksPerDay);
 		ret_year = date.Year; ret_month = date.Month; ret_day = date.Day;
 	}
 
 	public static int DmtimeCalcNDaysFromZero(int year, int month, int day)
 	{
-		var date = DmTemporalInteger.ProjectDateOnly(new DmTemporalFields(year, month, day, 0, 0, 0, 0));
-		return checked(date.DayNumber + 366);
+		var date = DmTemporalInteger.ProjectDate(new DmTemporalFields(year, month, day, 0, 0, 0, 0));
+		return checked((int)(date.Ticks / TimeSpan.TicksPerDay) + 366);
 	}
 
 	public static void DmTimeDdateAdd(ref int year, ref int month, ref int day, int n)
@@ -382,7 +382,7 @@ public class DmDateTime
 
 	public DateTime GetDate()
 	{
-		return DmTemporalInteger.ProjectDateOnly(ReadByteFields()).ToDateTime(TimeOnly.MinValue);
+		return DmTemporalInteger.ProjectDate(ReadByteFields());
 	}
 
 	public DateTime GetTime()
@@ -869,7 +869,7 @@ public class DmDateTime
 
 	internal DateTime toDate(DmField column, DmConnection connection)
 	{
-		return DmTemporalInteger.ProjectDateOnly(DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale)).ToDateTime(TimeOnly.MinValue);
+		return DmTemporalInteger.ProjectDate(DmTemporalLegacyAdapter.FromSemantic(dt, dtype, scale));
 	}
 
 	internal DateTime toTime(DmField column, DmConnection connection)

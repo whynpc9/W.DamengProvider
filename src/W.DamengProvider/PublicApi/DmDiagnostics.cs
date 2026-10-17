@@ -12,7 +12,7 @@ public static class DmDiagnostics
     /// <summary>Formats only known failure metadata. Never reads Message, Data, stack or inner exceptions.</summary>
     public static string FormatException(Exception error)
     {
-        ArgumentNullException.ThrowIfNull(error);
+        if (error is null) throw new ArgumentNullException(nameof(error));
         DmFailureInfo info = error is DmException driver ? driver.FailureInfo :
             error is DmOperationCanceledException canceled ? canceled.FailureInfo : null;
         string type = error switch
@@ -34,7 +34,7 @@ public static class DmDiagnostics
     }
 
     private static string KnownEnum<T>(T? value) where T : struct, Enum =>
-        value.HasValue && Enum.IsDefined(value.Value) ? value.Value.ToString() : "Unknown";
+        value.HasValue && Enum.IsDefined(typeof(T), value.Value) ? value.Value.ToString() : "Unknown";
 
     private static string KnownCode(string code) => code switch
     {

@@ -32,7 +32,7 @@ public readonly struct DmDecimal
 
     public static DmDecimal Parse(string text)
     {
-        ArgumentNullException.ThrowIfNull(text);
+        if (text is null) throw new ArgumentNullException(nameof(text));
         ReadOnlySpan<char> value = text.AsSpan().Trim();
         if (value.IsEmpty || value.Length > 4096) throw new FormatException("Invalid decimal text.");
         int offset = 0;

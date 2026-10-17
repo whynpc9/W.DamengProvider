@@ -9,12 +9,14 @@ public class DmClientFactory : DbProviderFactory, IServiceProvider
 
 	public override bool CanCreateDataSourceEnumerator => false;
 
+#if !NETSTANDARD2_1
 	public override bool CanCreateBatch => true;
 
 	public override DbBatch CreateBatch() => new DmBatch();
 
 	public override DbBatchCommand CreateBatchCommand() => new DmBatchCommand();
 
+#endif
 	private DmClientFactory()
 	{
 	}

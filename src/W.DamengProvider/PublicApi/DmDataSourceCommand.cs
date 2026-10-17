@@ -315,7 +315,11 @@ internal sealed class DmDataSourceReader : DbDataReader
     public override object GetProviderSpecificValue(int ordinal) => reader.GetProviderSpecificValue(ordinal);
     public override int GetProviderSpecificValues(object[] values) => reader.GetProviderSpecificValues(values);
     public override DataTable GetSchemaTable() => reader.GetSchemaTable();
+#if NETSTANDARD2_1
+    public Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default) => ((DmDataReader)reader).GetSchemaTableAsync(cancellationToken);
+#else
     public override Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default) => reader.GetSchemaTableAsync(cancellationToken);
+#endif
     public override IEnumerator GetEnumerator() => new DbEnumerator(this, closeReader: false);
     public override void Close()
     {
@@ -349,6 +353,7 @@ internal sealed class DmDataSourceReader : DbDataReader
     }
 }
 
+#if !NETSTANDARD2_1
 /// <summary>A data source batch; each execution opens a pooled connection and returns it when the run or its reader ends.</summary>
 internal sealed class DmDataSourceBatch : DbBatch
 {
@@ -440,3 +445,5 @@ internal sealed class DmDataSourceBatch : DbBatch
 
     public override ValueTask DisposeAsync() => batch.DisposeAsync();
 }
+
+#endif

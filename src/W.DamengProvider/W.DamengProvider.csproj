@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>W.DamengProvider</AssemblyName>
     <PackageId>W.DamengProvider</PackageId>
     <RootNamespace>W.Dm</RootNamespace>
@@ -9,7 +9,7 @@
     <FileVersion>0.2.0.0</FileVersion>
     <Authors>W.DamengProvider contributors</Authors>
     <Company>W.DamengProvider contributors</Company>
-    <Description>Dameng ADO.NET provider for .NET 6, .NET 8, .NET 9, and .NET 10, with asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
+    <Description>Dameng ADO.NET provider for .NET 6, .NET 8, .NET 9, and .NET 10, with a reduced-feature .NET Standard 2.1 asset, asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
     <PackageTags>Dameng;ADO.NET;database</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -30,16 +30,24 @@
     <!-- Localized resources use culture folders, so preserve their explicit Culture metadata on every target. -->
     <RespectAlreadyAssignedItemCulture>true</RespectAlreadyAssignedItemCulture>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <!-- 8.0.x is the newest TimeProvider line tested with net6.0 (its netstandard2.0 asset);
-         10.0.x warns that net6.0 is unsupported. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'netstandard2.1'">
+    <!-- Preserve the existing net6.0 dependency. The legacy asset also uses its netstandard2.0 implementation;
+         selecting that asset is not a claim of upstream .NET Core 3.1 support. -->
     <PackageReference Include="Microsoft.Bcl.TimeProvider" Version="8.0.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <Compile Remove="PublicApi/DmBatch.cs;Internal/Execution/DmBatchExecution.cs;Internal/Execution/DmBatchDataReader.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageReference Include="Microsoft.Bcl.Cryptography" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="W.DmProvider.ConfigurationTests" />
+    <InternalsVisibleTo Include="W.DmProvider.LegacyCompatibilityProbe" />
     <InternalsVisibleTo Include="W.DmProvider.SessionTests" />
     <InternalsVisibleTo Include="W.DmProvider.TransportTests" />
     <InternalsVisibleTo Include="W.DmProvider.SecurityTests" />

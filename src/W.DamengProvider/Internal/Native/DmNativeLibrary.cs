@@ -88,7 +88,7 @@ internal sealed class DmNativeLibrary : IDisposable
     // the address after the callback would outlive the SafeHandle lease.
     internal TResult WithExport<TResult>(string name, Func<nint, TResult> callback)
     {
-        ArgumentNullException.ThrowIfNull(callback);
+        if (callback is null) throw new ArgumentNullException(nameof(callback));
         bool added = false;
         try
         {
@@ -123,8 +123,14 @@ internal sealed class DmNativeLibrary : IDisposable
     private sealed class SystemBackend : IDmNativeLibraryBackend
     {
         internal static readonly SystemBackend Instance = new();
+#if NETSTANDARD2_1
+        public nint Load(string absolutePath) => throw new PlatformNotSupportedException("Native extensions are unavailable in the netstandard2.1 provider asset.");
+        public bool TryGetExport(nint library, string name, out nint address) { address = 0; return false; }
+        public void Free(nint library) { }
+#else
         public nint Load(string absolutePath) => NativeLibrary.Load(absolutePath);
         public bool TryGetExport(nint library, string name, out nint address) => NativeLibrary.TryGetExport(library, name, out address);
         public void Free(nint library) => NativeLibrary.Free(library);
+#endif
     }
 }

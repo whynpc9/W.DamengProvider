@@ -42,7 +42,7 @@ class PackageContracts(unittest.TestCase):
         ET.SubElement(metadata, "license", type="expression").text = "Apache-2.0"
         ET.SubElement(metadata, "repository", type="git", url=release.REPOSITORY, commit=self.commit)
         dependencies = ET.SubElement(metadata, "dependencies")
-        for tfm in release.TFMS:
+        for tfm in release.PACKAGE_TFMS:
             group = ET.SubElement(dependencies, "group", targetFramework=tfm)
             for name, version in release.direct_dependencies(tfm).items():
                 ET.SubElement(group, "dependency", id=name, version=version)
@@ -95,18 +95,18 @@ class PackageContracts(unittest.TestCase):
                 self.check(lambda _, assets: assets.update({name: b"stale"}))
 
     def test_rejects_missing_target(self):
-        for tfm in release.TFMS:
+        for tfm in release.PACKAGE_TFMS:
             with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
                 self.check(lambda _, assets: assets.pop(f"lib/{tfm}/W.DamengProvider.dll"))
 
     def test_rejects_missing_satellite(self):
-        for tfm in release.TFMS:
+        for tfm in release.PACKAGE_TFMS:
             for culture in release.RESOURCE_CULTURES:
                 with self.subTest(tfm=tfm, culture=culture), self.assertRaises(release.Rejected):
                     self.check(lambda _, assets: assets.pop(f"lib/{tfm}/{culture}/W.DamengProvider.resources.dll"))
 
     def test_rejects_wrong_dependency_group(self):
-        for tfm in release.TFMS:
+        for tfm in release.PACKAGE_TFMS:
             with self.subTest(tfm=tfm), self.assertRaises(release.Rejected):
                 self.check(lambda metadata, _: metadata.find(f"dependencies/group[@targetFramework='{tfm}']").set("targetFramework", "net7.0"))
 

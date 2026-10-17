@@ -48,7 +48,7 @@ public sealed class DmDataSource : IDisposable, IAsyncDisposable
     protected override ValueTask DisposeAsyncCore()
     {
         Dispose(true);
-        return ValueTask.CompletedTask;
+        return default;
     }
 #else
     public string ConnectionString => settings.ToConnectionString(includeSecrets: false);
@@ -87,7 +87,9 @@ public sealed class DmDataSource : IDisposable, IAsyncDisposable
     }
 
     public DbCommand CreateCommand(string commandText = null) => CreateOwnedCommand(commandText);
+#if !NETSTANDARD2_1
     public DbBatch CreateBatch() => CreateOwnedBatch();
+#endif
     public void Dispose() => Stop();
     public ValueTask DisposeAsync()
     {
@@ -106,11 +108,13 @@ public sealed class DmDataSource : IDisposable, IAsyncDisposable
         ThrowIfDisposed();
         return new DmDataSourceCommand(this, commandText ?? string.Empty);
     }
+#if !NETSTANDARD2_1
     private DbBatch CreateOwnedBatch()
     {
         ThrowIfDisposed();
         return new DmDataSourceBatch(this);
     }
+#endif
     internal void ThrowIfDisposed()
     {
         if (Volatile.Read(ref disposed) != 0) throw new ObjectDisposedException(nameof(DmDataSource));

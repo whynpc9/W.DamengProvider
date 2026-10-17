@@ -14,10 +14,12 @@ public class DmException : DbException
 	public DmErrorKind ErrorKind => FailureInfo?.ErrorKind ?? DmErrorKind.Unknown;
 	public string DriverErrorCode => FailureInfo?.ErrorCode;
 	internal void SetFailureInfo(DmFailureInfo info) => FailureInfo = info;
+#if !NETSTANDARD2_1
 	private DbBatchCommand batchCommand;
 	/// <summary>The <see cref="DmBatch"/> command whose execution raised this exception.</summary>
 	protected override DbBatchCommand DbBatchCommand => batchCommand;
 	internal void SetBatchCommand(DbBatchCommand command) => batchCommand ??= command;
+#endif
 	internal bool HasVerifiedServerResponse { get; private set; }
 	internal bool CanPreserveSessionAfterServerError { get; private set; }
 	internal OperationIdentity VerifiedResponseIdentity { get; private set; }

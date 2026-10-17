@@ -1470,11 +1470,11 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 
 	private Task BeginAsyncClose(DmDeadline? deadline)
 	{
-		TaskCompletionSource completion;
+		TaskCompletionSource<bool> completion;
 		lock (asyncCloseGate)
 		{
 			if (asyncCloseTask != null) return asyncCloseTask;
-			completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+			completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 			asyncCloseTask = ObserveCloseCompletionAsync(completion.Task);
 		}
 		// Publish ownership before running hooks or touching the wire. Reentrant and
@@ -1486,12 +1486,12 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 	private static async Task ObserveCloseCompletionAsync(Task completion)
 		=> await completion.ConfigureAwait(false);
 
-	private async Task CompleteAsyncClose(TaskCompletionSource completion, DmDeadline? deadline)
+	private async Task CompleteAsyncClose(TaskCompletionSource<bool> completion, DmDeadline? deadline)
 	{
 		try
 		{
 			await CloseCoreAsync(deadline).ConfigureAwait(false);
-			completion.TrySetResult();
+			completion.TrySetResult(true);
 		}
 		catch (Exception error) { completion.TrySetException(error); }
 	}
@@ -1559,7 +1559,11 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		GC.SuppressFinalize(this);
 	}
 
+#if NETSTANDARD2_1
+	public Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
+#else
 	public override Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
+#endif
 	{
 		CheckProcedureCancellation(cancellationToken);
 		using var invocation = ReaderLease.BeginInvocation(cancellationToken);
@@ -2017,6 +2021,7 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		{
 			return (T)(object)interval.ToTimeSpanExact();
 		}
+#if !NETSTANDARD2_1
 		if (typeof(T) == typeof(DateOnly) && value is DateTime dateTime)
 		{
 			if (m_ColInfo[ordinal].GetCType() != 14 || dateTime.TimeOfDay != TimeSpan.Zero)
@@ -2035,6 +2040,7 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 				throw new InvalidCastException("TimeOnly requires a TIME column.");
 			return (T)(object)TimeOnly.FromTimeSpan(timeSpan);
 		}
+#endif
 		if (value is T exact) return exact;
 		throw new InvalidCastException("Column cannot be read as the requested CLR type.");
 	}

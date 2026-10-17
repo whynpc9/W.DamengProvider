@@ -587,7 +587,7 @@ internal class DB2N
 		case 22:
 		case 23:
 		case 27:
-			return DmTemporalInteger.ProjectDateOnly(ReadTemporal(bytes, column, actualFormat)).ToDateTime(TimeOnly.MinValue);
+			return DmTemporalInteger.ProjectDate(ReadTemporal(bytes, column, actualFormat));
 		case 0:
 		case 1:
 		case 2:
@@ -679,7 +679,7 @@ internal class DB2N
 			obj = ByteUtil.getDouble(bytes, 0);
 			break;
 		case 14:
-			obj = DmTemporalInteger.ProjectDateOnly(ReadTemporal(bytes, column, actualFormat)).ToDateTime(TimeOnly.MinValue);
+			obj = DmTemporalInteger.ProjectDate(ReadTemporal(bytes, column, actualFormat));
 			break;
 		case 15:
 			obj = DmTemporalInteger.ProjectTimeDateTime(ReadTemporal(bytes, column, actualFormat));

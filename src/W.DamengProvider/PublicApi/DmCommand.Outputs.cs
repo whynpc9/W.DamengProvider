@@ -175,7 +175,7 @@ public partial class DmCommand
 
     internal static object ValidateProcedureOutputValue(DmParameter parameter, object value)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
+        if (parameter is null) throw new ArgumentNullException(nameof(parameter));
         if (value is null or DBNull) return DBNull.Value;
         if (parameter.m_SetSizeFlag && parameter.do_Size > 0)
         {

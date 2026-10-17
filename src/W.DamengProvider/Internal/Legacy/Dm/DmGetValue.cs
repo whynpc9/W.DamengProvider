@@ -13,6 +13,15 @@ namespace W.Dm;
 
 internal class DmGetValue
 {
+    private static string ToHexString(byte[] bytes)
+    {
+#if NETSTANDARD2_1
+        return BitConverter.ToString(bytes).Replace("-", string.Empty);
+#else
+        return Convert.ToHexString(bytes);
+#endif
+    }
+
 	private string m_ServerEncoding;
 
 	internal global::W.Dm.Internal.Legacy.A.A m_Statement;
@@ -402,7 +411,7 @@ internal class DmGetValue
 			// Hex returns two UTF-16 chars per input byte; guard before fetching.
 			DmBlob blob = new DmBlob(val, m_Statement.G(), m_ColInfo[i], false, hexPayload: true);
 			int length = DmLobMaterialization.HexInput(blob.do_length());
-			return Convert.ToHexString(blob.GetBytes(0L, length));
+			return ToHexString(blob.GetBytes(0L, length));
 		}
 		case 19:
 			return new DmClob(val, m_Statement.G(), m_ColInfo[i], false).MaterializeStringUnderOwner();
@@ -625,7 +634,7 @@ internal class DmGetValue
 		if (val == null) DmError.ThrowDmException(DmErrorDefinition.ECNET_NULL_VALUE);
 		return CType switch
 		{
-			14 or 16 or 23 => DmTemporalInteger.ProjectDateOnly(ReadTemporal(i, val)).ToDateTime(TimeOnly.MinValue),
+			14 or 16 or 23 => DmTemporalInteger.ProjectDate(ReadTemporal(i, val)),
 			0 or 1 or 2 or 19 or 54 => DmDateTime.GetDateByString(GetString(i, val, CType, prec, scale).Trim()),
 			25 => DateTime.MinValue,
 			_ => throw new InvalidCastException()
@@ -737,7 +746,7 @@ internal class DmGetValue
 		{
 			var blob = new DmBlob(value, m_Statement.G(), m_ColInfo[i], false, hexPayload: true);
 			int length = DmLobMaterialization.HexInput(await blob.do_lengthAsync(token).ConfigureAwait(false));
-			return Convert.ToHexString(await blob.do_getBytesAsync(1L, length, token).ConfigureAwait(false));
+			return ToHexString(await blob.do_getBytesAsync(1L, length, token).ConfigureAwait(false));
 		}
 		if (type == 19)
 			return await new DmClob(value, m_Statement.G(), m_ColInfo[i], false).MaterializeStringUnderOwnerAsync(token).ConfigureAwait(false);

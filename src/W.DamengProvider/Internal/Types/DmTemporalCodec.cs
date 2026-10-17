@@ -18,6 +18,7 @@ internal static class DmTemporalCodec
         object normalized = value;
         switch (value)
         {
+#if !NETSTANDARD2_1
             case DateOnly date:
                 if (cType != 14) throw new NotSupportedException("DateOnly requires DATE.");
                 fields = DmTemporalInteger.FromDateOnly(date);
@@ -28,6 +29,7 @@ internal static class DmTemporalCodec
                 fields = DmTemporalInteger.FromTimeOnly(time);
                 normalized = DateTime.MinValue.AddTicks(time.Ticks);
                 break;
+#endif
             case DateTime dateTime:
                 if (cType is not (14 or 15 or 16 or 26)) throw new NotSupportedException("DateTime requires a non-timezone temporal type.");
                 fields = DmTemporalInteger.FromDateTime(dateTime);
@@ -63,8 +65,10 @@ internal static class DmTemporalCodec
         if (value == null || value is DBNull) return value;
         if (IsText(cType)) return value switch
         {
+#if !NETSTANDARD2_1
             DateOnly date => date.ToString("O", CultureInfo.InvariantCulture),
             TimeOnly time => time.ToString("O", CultureInfo.InvariantCulture),
+#endif
             DateTime dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
             DateTimeOffset offset => offset.ToString("O", CultureInfo.InvariantCulture),
             TimeSpan span => span.ToString("c", CultureInfo.InvariantCulture),
@@ -73,6 +77,7 @@ internal static class DmTemporalCodec
 
         switch (value)
         {
+#if !NETSTANDARD2_1
             case DateOnly date:
                 if (cType != 14) throw new NotSupportedException("DateOnly requires a DATE parameter.");
                 return date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
@@ -80,6 +85,7 @@ internal static class DmTemporalCodec
                 if (cType != 15) throw new NotSupportedException("TimeOnly requires a TIME parameter.");
                 ValidateFraction(time.Ticks, scale, 6);
                 return DateTime.MinValue.Date.AddTicks(time.Ticks);
+#endif
             case DateTime dateTime:
                 ValidateDateTime(dateTime, cType, scale, serverVersion);
                 return dateTime;

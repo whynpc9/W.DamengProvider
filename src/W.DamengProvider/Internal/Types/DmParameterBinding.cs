@@ -177,7 +177,7 @@ internal sealed class DmParameterBinding
 
     internal static DmParameterBinding CreateProcedure(DmParameterCollection parameters)
     {
-        ArgumentNullException.ThrowIfNull(parameters);
+        if (parameters is null) throw new ArgumentNullException(nameof(parameters));
         if (parameters.Count > MaxMarkers)
             throw new NotSupportedException("Too many procedure parameters.");
         var order = new List<int>(parameters.Count);
@@ -211,7 +211,7 @@ internal sealed class DmParameterBinding
     // partial name match must never silently combine named and positional binding.
     internal void ValidateServerParameters(DmParameterInternal[] descriptors)
     {
-        ArgumentNullException.ThrowIfNull(descriptors);
+        if (descriptors is null) throw new ArgumentNullException(nameof(descriptors));
         procedureServerIndexes = null;
         procedureServerNames = null;
         ValidateServerCount(descriptors.Length);
@@ -277,8 +277,8 @@ internal sealed class DmParameterBinding
 
     internal static DmParameterBinding Create(string sql, DmParameterCollection parameters)
     {
-        ArgumentNullException.ThrowIfNull(sql);
-        ArgumentNullException.ThrowIfNull(parameters);
+        if (sql is null) throw new ArgumentNullException(nameof(sql));
+        if (parameters is null) throw new ArgumentNullException(nameof(parameters));
         ScanResult scan = Scan(sql);
         // A command without parameters executes directly and is never bound, so its
         // marker-shaped text (e.g. :NEW/:OLD in a trigger body) is the server's to judge.
@@ -359,7 +359,7 @@ internal sealed class DmParameterBinding
     // execution; decoded identifiers are used solely for ownership and tracking.
     internal static bool TryParseSavepointControl(string sql, out DmSqlSavepointControl control)
     {
-        ArgumentNullException.ThrowIfNull(sql);
+        if (sql is null) throw new ArgumentNullException(nameof(sql));
         control = default;
         if (sql.IndexOf('\0') >= 0) return false;
         int index = 0;
@@ -434,7 +434,7 @@ internal sealed class DmParameterBinding
     /// <summary>Recognizes one complete savepoint rollback without rewriting its SQL.</summary>
     internal static bool IsStrictRollbackToSavepoint(string sql)
     {
-        ArgumentNullException.ThrowIfNull(sql);
+        if (sql is null) throw new ArgumentNullException(nameof(sql));
         if (sql.IndexOf('\0') >= 0) return false;
         int index = 0;
         if (!ReadRollbackKeyword(sql, ref index, "ROLLBACK") ||
@@ -539,7 +539,7 @@ internal sealed class DmParameterBinding
 
     private static ScanResult Scan(string sql)
     {
-        ArgumentNullException.ThrowIfNull(sql);
+        if (sql is null) throw new ArgumentNullException(nameof(sql));
         var result = new ScanResult();
         var words = new List<string>(3);
         int parentheses = 0;

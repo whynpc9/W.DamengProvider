@@ -14,7 +14,7 @@ internal sealed class DmPhysicalCloseCompletion
 
     internal void RunAfterClosed(Action callback)
     {
-        ArgumentNullException.ThrowIfNull(callback);
+        if (callback is null) throw new ArgumentNullException(nameof(callback));
         lock (gate)
         {
             if (!closed)

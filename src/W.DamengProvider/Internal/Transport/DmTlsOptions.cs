@@ -35,6 +35,10 @@ internal sealed class DmTlsOptions
     internal static DmTlsOptions FromSettings(DmConnectionSettings settings) =>
         new(settings ?? throw new ArgumentNullException(nameof(settings)));
 
+#if NETSTANDARD2_1
+    internal DmTlsOptionsScope CreateAuthenticationScope(DmDeadline deadline) =>
+        throw new PlatformNotSupportedException("TLS is unavailable in the netstandard2.1 provider asset. Use a .NET 6 or later asset for TLS.");
+#else
     internal DmTlsOptionsScope CreateAuthenticationScope(DmDeadline deadline)
     {
         var owned = new List<X509Certificate2>();
@@ -181,6 +185,7 @@ internal sealed class DmTlsOptions
         if (!isCa) throw new AuthenticationException("TLS trust certificate is not a CA certificate.");
     }
 
+#endif
     public override string ToString() => "DmTlsOptions";
 }
 

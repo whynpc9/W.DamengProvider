@@ -60,7 +60,11 @@ public sealed class DmTimeoutException : DmException
 {
     internal DmTimeoutException(DmFailureInfo info, Exception inner = null)
         : base("The operation deadline expired.", inner) { SetFailureInfo(info); }
+#if NETSTANDARD2_1
+    public bool IsTransient => false;
+#else
     public override bool IsTransient => false;
+#endif
 }
 
 /// <summary>A canceled operation with its original token and stable failure metadata.</summary>

@@ -8,7 +8,7 @@ internal static class DmNumericInput
 {
     internal static object ToEnumUnderlying(object value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        if (value is null) throw new ArgumentNullException(nameof(value));
         if (value is not Enum number) return value;
         TypeCode code = Type.GetTypeCode(Enum.GetUnderlyingType(number.GetType()));
         return code switch
@@ -27,7 +27,7 @@ internal static class DmNumericInput
 
     internal static DmDecimal ToExactDecimal(object value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        if (value is null) throw new ArgumentNullException(nameof(value));
         value = ToEnumUnderlying(value);
         return value switch
         {
@@ -57,7 +57,7 @@ internal static class DmNumericInput
     internal static BigInteger ToIntegerExact(object value, BigInteger minimum, BigInteger maximum)
     {
         if (minimum > maximum) throw new ArgumentException("Invalid integer range.");
-        ArgumentNullException.ThrowIfNull(value);
+        if (value is null) throw new ArgumentNullException(nameof(value));
         value = ToEnumUnderlying(value);
         BigInteger integer = value switch
         {
