@@ -8,6 +8,8 @@
 
 当前版本为 [0.2.0](../release-0.2.0.md)，提供四目标、PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)。公开安装与实际发布状态见发布记录及 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。前一版本 [0.1.0-preview.1](../release-0.1.0-preview.1.md) 的历史验收不扩大到新版本；历史测试计数只证明各自受测版本。
 
+下一版本 [0.3.0 正在准备](../release-0.3.0.md)，增加受限 Standard 2.1 资产，发布工作流同时检查实际 Core 3.1 包消费；该资产尚未发布，TLS/DbBatch/日期映射差异见[旧目标说明](../compatibility/core31.md)。
+
 | 内容 | 入口 |
 | --- | --- |
 | 身份与基础兼容 | [基础兼容](../compatibility/R1.md) |

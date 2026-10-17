@@ -16,7 +16,7 @@ dotnet build tools/LegacyCompatibilityProbe/LegacyCompatibilityProbe.csproj -c R
 
 To test a locally packed NuGet instead, copy this project's `.csproj` and
 `Program.cs` to an empty ignored task directory, then restore/build that project
-with `/p:UsePackage=true /p:PackageVersion=0.2.1-core31.1` and sources pointing to
+with `/p:UsePackage=true /p:PackageVersion=0.3.0` and sources pointing to
 the candidate package directory and nuget.org. This avoids retaining project
 reference assets; the package mode has no product project reference. Inspect
 `obj/project.assets.json` to confirm both compile/runtime use
@@ -49,3 +49,5 @@ its injected late DNS failures to avoid unobserved-task pollution; it does not c
 that this establishes execution of the provider's late-fault observer. Package build
 warnings about upstream libraries not officially supporting netcoreapp3.1 remain
 visible; runtime success does not change those upstream support statements.
+
+For release validation, run `bash eng/legacy-package.sh .local/nuget-release linux/amd64` after `release.sh prepare`. It uses an exact candidate PackageReference, an independent cache, verifies the selected Standard asset against the package, and preserves build/runtime logs.

@@ -2,6 +2,8 @@
 
 当前版本 [0.2.0](release-0.2.0.md) 已发布到 NuGet，提供 .NET 6/8/9/10；四运行时公开安装与签名验证已通过，范围见发布记录。前一版本 [0.1.0-preview.1](release-0.1.0-preview.1.md) 仅提供 .NET 10。本页区分后续缺口和 0.2.0 已实现能力。历史测试计数只属于原候选。
 
+下一版本 [0.3.0 正在准备](release-0.3.0.md)，新增受限 `netstandard2.1` 资产；尚未发布。旧资产不支持 TLS、DbBatch、DateOnly/TimeOnly；当前验证范围与实库待验项见准备记录。
+
 ## 尚未发布的兼容原型
 
 新增 `netstandard2.1` 资产，供 .NET Core 3.1 与 Standard 2.1 类库消费。原型不提供 TLS、DbBatch、DateOnly/TimeOnly；现有四目标保持完整能力。具体边界和实际运行结果见[旧目标兼容记录](compatibility/core31.md)。

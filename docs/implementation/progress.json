@@ -107,10 +107,11 @@
   "unreleased_changes": [
     {
       "pull_request": 26,
-      "status": "implemented_unreleased",
+      "status": "prepared_unreleased",
       "summary": "Restricted netstandard2.1 asset for .NET Core 3.1 consumers; no TLS, DbBatch, DateOnly/TimeOnly mappings or native extensions; existing modern targets retain their contracts",
       "report": "../compatibility/core31.md",
-      "integration": "integration_pending"
+      "integration": "verified_shared_linux_arm64",
+      "preparation_report": "../release-0.3.0.md"
     }
   ],
   "validation": {
@@ -145,5 +146,40 @@
     "net9.0",
     "net10.0",
     "netstandard2.1"
-  ]
+  ],
+  "next_release": {
+    "version": "0.3.0",
+    "published": false,
+    "state": "local_preflight_passed_pending_commit_and_publish",
+    "source_commit": "a3125528ee84f775242b26da1e9e56e25b267017",
+    "source_has_preparation_diff": true,
+    "report": "../release-0.3.0.md",
+    "package_frameworks": [
+      "netstandard2.1",
+      "net6.0",
+      "net8.0",
+      "net9.0",
+      "net10.0"
+    ],
+    "legacy_integration": "verified_shared_linux_arm64",
+    "local_preflight_passed": true,
+    "offline_tests_passed": 9634,
+    "offline_tests_failed": 0,
+    "offline_tests_skipped": 0,
+    "modern_package_consumers_passed": 8,
+    "modern_first_initialization_passed": 28,
+    "legacy_runtime": "3.1.32",
+    "legacy_probe_assertions_per_architecture": 174,
+    "legacy_probe_architectures": [
+      "linux-arm64",
+      "linux-x64"
+    ],
+    "legacy_x64_integration": "integration_pending",
+    "legacy_tls": "unsupported",
+    "modern_shared_tls_smoke_passed": 8,
+    "legacy_shared_smoke_passed": 1,
+    "final_database_state": "all_exact_owned_tables_absent",
+    "independent_review": "passed",
+    "independent_validation": "passed"
+  }
 }

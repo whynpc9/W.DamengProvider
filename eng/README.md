@@ -1,6 +1,8 @@
 # 构建与验证入口
 
-发布准备入口例如 `bash eng/release.sh prepare --tag v0.2.1 --commit "$(git rev-parse HEAD)"`。它配置任务 CLI home 和单节点构建，在 .NET 6/8/9/10 实际运行时执行十三套离线测试，再验证同一个 NuGet 包的四目标资产、依赖、独立包消费及首次初始化。完整用法、实库 smoke 和发布操作见[发布指南](../docs/release.md)。该入口本身不上传包。
+发布准备入口例如 `bash eng/release.sh prepare --tag v0.3.0 --commit "$(git rev-parse HEAD)"`。它配置任务 CLI home 和单节点构建，在 .NET 6/8/9/10 实际运行时执行十三套离线测试，再验证同一个 NuGet 包的五组资产、依赖，以及四个现代目标的独立包消费和首次初始化。完整用法、实库 smoke 和发布操作见[发布指南](../docs/release.md)。该入口本身不上传包。
+
+`bash eng/legacy-package.sh .local/nuget-release linux/amd64` 消费同一个包，在实际 Core 3.1.32 容器执行受限资产检查；CI 和 tag 发布均调用此入口。支持范围及双架构命令见[发布指南](../docs/release.md)。
 
 `release.sh pack-smoke` 只执行打包和包消费，适合定位打包问题；不能代替完整 `prepare`。`release.sh version <tag>` 只校验并提取 SemVer。
 

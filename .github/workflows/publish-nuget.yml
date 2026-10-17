@@ -45,6 +45,9 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: bash eng/release.sh prepare --tag "$RELEASE_TAG" --commit "$(git rev-parse HEAD)"
+      - name: Restricted Standard asset on the actual .NET Core 3.1 runtime
+        shell: bash
+        run: bash eng/legacy-package.sh .local/nuget-release linux/amd64
       - name: Preserve validated package and results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -59,6 +62,7 @@ jobs:
             .local/nuget-release/**/*_assets.json
             .local/nuget-release/consumers.json
             .local/nuget-release/**/first-init*.json
+            .local/nuget-release/legacy-path-*.txt
           if-no-files-found: warn
           retention-days: 14
           include-hidden-files: true

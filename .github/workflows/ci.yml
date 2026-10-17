@@ -41,13 +41,7 @@ jobs:
         run: bash eng/release.sh prepare --tag "v0.0.0-ci.${{ github.run_id }}.${{ github.run_attempt }}" --commit "$(git rev-parse HEAD)"
       - name: Restricted Standard asset on the actual .NET Core 3.1 runtime
         shell: bash
-        run: |
-          version="0.0.0-ci.${{ github.run_id }}.${{ github.run_attempt }}"
-          feed="$(dirname "$(cat .local/nuget-release/package-path.txt)")"
-          project=tools/LegacyCompatibilityProbe/LegacyCompatibilityProbe.csproj
-          dotnet restore "$project" -p:UsePackage=true -p:PackageVersion="$version" --source "$feed" --source https://api.nuget.org/v3/index.json -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers
-          dotnet build "$project" --no-restore -c Release -o .local/legacy-ci -p:UsePackage=true -p:PackageVersion="$version" -m:1 /nodeReuse:false /p:UseSharedCompilation=false --disable-build-servers
-          docker run --rm --platform linux/amd64 --mount "type=bind,source=$PWD/.local/legacy-ci,target=/app,readonly" --workdir /app mcr.microsoft.com/dotnet/runtime:3.1.32-bullseye-slim dotnet W.DmProvider.LegacyCompatibilityProbe.dll
+        run: bash eng/legacy-package.sh .local/nuget-release linux/amd64
       - name: Preserve validation results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -61,6 +55,7 @@ jobs:
             .local/nuget-release/**/*_assets.json
             .local/nuget-release/consumers.json
             .local/nuget-release/**/first-init*.json
+            .local/nuget-release/legacy-path-*.txt
           if-no-files-found: warn
           retention-days: 14
           include-hidden-files: true

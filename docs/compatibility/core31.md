@@ -1,6 +1,8 @@
-# .NET Core 3.1 / .NET Standard 2.1 兼容原型
+# .NET Core 3.1 / .NET Standard 2.1 受限兼容
 
-本分支在既有 `net6.0;net8.0;net9.0;net10.0` 之外增加 `netstandard2.1` 资产，供保持 Standard 2.1 目标的 UniWeb 类库和 .NET Core 3.1 应用消费。原型尚未发布，已发布的 0.2.0 不含该资产。构建仍使用 global.json 指定 SDK 10.0.401 与 C#12。
+当前源码在既有 `net6.0;net8.0;net9.0;net10.0` 之外增加 `netstandard2.1` 资产，供保持 Standard 2.1 目标的 UniWeb 类库和 .NET Core 3.1 应用消费。该资产计划包含在准备中的 [0.3.0](../release-0.3.0.md)，尚未发布；已发布的 0.2.0 不含该资产。构建仍使用 global.json 指定 SDK 10.0.401 与 C#12。
+
+本轮 [0.3.0 准备](../release-0.3.0.md) 已完成实际 3.1.32 双架构探针及 Linux arm64 shared TEST 明文 smoke，精确表清理通过。下方 PR 历史候选的 `integration_pending` 只属于当时；不外推 x64 实库或旧资产 TLS 支持。
 
 ## 能力边界
 
@@ -24,7 +26,7 @@ await using var connection = await source.OpenConnectionAsync();
 
 现有四目标的 TLS、DbBatch、日期类型和公开基类接口保持原契约。UniWeb 的官方 `Dm.*` 类型、EF Provider 和原生 BulkCopy 仍需下游单独适配，本原型不表示可直接替换官方包。
 
-## 验证
+## 原实现验证（历史候选）
 
 2026-10-16，基线 `06616b6` 加本分支未提交 diff。产品代码稳定后执行以下检查，候选包为本地 `0.2.1-core31.1`，没有提交 tag 或上传 NuGet。
 

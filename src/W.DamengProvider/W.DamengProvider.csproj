@@ -4,9 +4,9 @@
     <AssemblyName>W.DamengProvider</AssemblyName>
     <PackageId>W.DamengProvider</PackageId>
     <RootNamespace>W.Dm</RootNamespace>
-    <Version Condition="'$(Version)' == ''">0.2.0</Version>
+    <Version Condition="'$(Version)' == ''">0.3.0</Version>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.2.0.0</FileVersion>
+    <FileVersion>0.3.0.0</FileVersion>
     <Authors>W.DamengProvider contributors</Authors>
     <Company>W.DamengProvider contributors</Company>
     <Description>Dameng ADO.NET provider for .NET 6, .NET 8, .NET 9, and .NET 10, with a reduced-feature .NET Standard 2.1 asset, asynchronous network operations, connection capacity management, bounded LOB streaming, and safe diagnostics.</Description>
