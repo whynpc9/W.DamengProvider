@@ -1,6 +1,6 @@
 # T04 开发候选包：配置与能力变更
 
-当前版本为 `0.2.0`；本页历史阶段证据仍归原候选，当前发布状态与验证范围见[发布记录](../release-0.2.0.md)。
+当前版本为 `0.3.0`；本页历史阶段证据仍归原候选，当前发布状态与验证范围见[发布记录](../release-0.3.0.md)。
 
 此文记录配置与能力的兼容变化。后续异步、池化和流式 LOB 见 [R2](R2.md) 和 [R3](R3.md)，TLS 见 [安全说明](T07-security.md)。历史 T04 验证不代表当前发布候选已验收。
 
@@ -15,6 +15,6 @@
 
 ## 暂不开放的入口
 
-statement cache、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项不能通过非默认值启用。`EnlistTransaction`、Reconnect、FLDR、DmFldrExport 和两代 BulkCopy 直接拒绝；底层 `DmFldrDllCall` 从 public 改为 internal。所有旧 `IFilterInfo.filterHead` 只接受 `null`；共享 `BaseFilter` 链不构造。`DmTrace`、`Logger` 和 `LogWriter` 的旧输出路径为 no-op，非 None 的 `DmTrace.Level` 设置拒绝。`CanCreateDataSourceEnumerator=false`；`DbProviderFactory.CanCreateBatch` 在 0.1.0-preview.1 为 false，0.2.0 起为 true（见 [I07/I08](I07-I08-array-binding-dbbatch.md)）。
+statement cache、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项不能通过非默认值启用。`EnlistTransaction`、Reconnect、FLDR、DmFldrExport 和两代 BulkCopy 直接拒绝；底层 `DmFldrDllCall` 从 public 改为 internal。所有旧 `IFilterInfo.filterHead` 只接受 `null`；共享 `BaseFilter` 链不构造。`DmTrace`、`Logger` 和 `LogWriter` 的旧输出路径为 no-op，非 None 的 `DmTrace.Level` 设置拒绝。`CanCreateDataSourceEnumerator=false`；`DbProviderFactory.CanCreateBatch` 在 0.1.0-preview.1 为 false，现代目标自 0.2.0 起为 true，Standard 2.1 资产不提供 DbBatch（见 [I07/I08](I07-I08-array-binding-dbbatch.md)）。
 
 这些守卫保留了部分兼容类型和签名，但不承诺这些功能的行为。直接池化与 DmDataSource 的现行边界见 [R3](R3.md)。

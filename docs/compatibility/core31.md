@@ -1,6 +1,6 @@
 # .NET Core 3.1 / .NET Standard 2.1 受限兼容
 
-当前源码在既有 `net6.0;net8.0;net9.0;net10.0` 之外增加 `netstandard2.1` 资产，供保持 Standard 2.1 目标的 UniWeb 类库和 .NET Core 3.1 应用消费。该资产计划包含在准备中的 [0.3.0](../release-0.3.0.md)，尚未发布；已发布的 0.2.0 不含该资产。构建仍使用 global.json 指定 SDK 10.0.401 与 C#12。
+当前源码在既有 `net6.0;net8.0;net9.0;net10.0` 之外增加 `netstandard2.1` 资产，供保持 Standard 2.1 目标的 UniWeb 类库和 .NET Core 3.1 应用消费。该资产已随 [0.3.0](../release-0.3.0.md) 发布；旧版 0.2.0 不含该资产。构建仍使用 global.json 指定 SDK 10.0.401 与 C#12。
 
 本轮 [0.3.0 准备](../release-0.3.0.md) 已完成实际 3.1.32 双架构探针及 Linux arm64 shared TEST 明文 smoke，精确表清理通过。下方 PR 历史候选的 `integration_pending` 只属于当时；不外推 x64 实库或旧资产 TLS 支持。
 
@@ -67,3 +67,7 @@ Codex 指出旧资产同步 `Open()` 在 DNS 解析忽略 token 时直接等待�
 新本地候选 `0.2.1-core31.2` 的 `pack-smoke` 退出 0：五目标包检查、四现代运行时独立包消费与 28 次初始化通过。独立 PackageReference 消费该新包，在实际 3.1.32 aarch64/x64 容器上各 **8 组、174 断言** 通过；原 167 断言结果属于上面的首轮候选。证据：`.local/pr-core31/fix-validation/nuget-s0wj6w7b`、`.local/pr-core31/package2/logs`。该修订未重新执行本地完整四运行时套件，远端 CI 将对 PR 新提交运行完整矩阵；不把先前提交的绿灯作为新提交 CI 结果。修订经独立代码审查，无新增阻塞。
 
 无真实数据库验证，状态为 `integration_pending`。Linux 发行版与 OpenSSL 依赖需按部署环境核对；本原型不恢复已结束维护的 .NET Core 3.1 运行时支持。
+
+## 0.3.0 正式包验证
+
+2026-10-17，唯一 NuGet 公开源、独立缓存及精确版本 PackageReference 安装通过，实际 .NET Core 3.1.32 / Linux arm64 与 x64 各174断言通过。上方未实库/未远端运行声明仅属于当时PR候选；正式包实际验证及当前实库范围见[0.3.0 发布记录](../release-0.3.0.md)。TLS仍不支持，x64实库仍为 integration_pending；不扩大到完整旧目标过程/元数据或下游EF矩阵。

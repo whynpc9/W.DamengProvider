@@ -6,7 +6,7 @@
 
 ## 安装
 
-版本 [`0.3.0`](https://www.nuget.org/packages/W.DamengProvider/0.3.0)；发布状态、身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.0.md)。
+当前已发布 [`0.3.0`](https://www.nuget.org/packages/W.DamengProvider/0.3.0)；发布状态、身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.0.md)。
 
 ```sh
 dotnet add package W.DamengProvider --version 0.3.0

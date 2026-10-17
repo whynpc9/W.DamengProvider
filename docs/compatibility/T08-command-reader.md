@@ -1,6 +1,6 @@
 # T08 Command 与 Reader 契约变化
 
-当前版本为 `0.2.0`；本页历史阶段证据仍归原候选，当前发布状态与验证范围见[发布记录](../release-0.2.0.md)。
+当前版本为 `0.3.0`；本页历史阶段证据仍归原候选，当前发布状态与验证范围见[发布记录](../release-0.3.0.md)。
 
 旧 `0.1.0-preview.1` 包只开放 CommandType.Text；`0.2.0` 新增 [StoredProcedure、输出参数及受管游标](I09-stored-procedures.md)。当前发布状态见 [progress.json](../implementation/progress.json)；历史协议表征见 [T08-protocol-results.md](../implementation/T08-protocol-results.md)。
 
