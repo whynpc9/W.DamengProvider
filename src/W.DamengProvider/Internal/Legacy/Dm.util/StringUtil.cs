@@ -10,6 +10,15 @@ namespace W.Dm.util;
 
 internal static class StringUtil
 {
+    private static string ConcatSpans(ReadOnlySpan<char> first, ReadOnlySpan<char> second)
+    {
+#if NETSTANDARD2_1
+        return first.ToString() + second.ToString();
+#else
+        return string.Concat(first, second);
+#endif
+    }
+
 	public static readonly string EMPTY = string.Empty;
 
 	public static readonly string LINE_SEPARATOR = Environment.NewLine;
@@ -1123,7 +1132,7 @@ internal static class StringUtil
 					reference = c;
 					ReadOnlySpan<char> readOnlySpan4 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 					reference2 = '=';
-					list.Add(string.Concat(readOnlySpan4, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+					list.Add(ConcatSpans(readOnlySpan4, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 					i++;
 				}
 				else
@@ -1143,7 +1152,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan7 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '=';
-					list.Add(string.Concat(readOnlySpan7, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan7, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '%')
@@ -1168,7 +1177,7 @@ internal static class StringUtil
 					reference = c;
 					ReadOnlySpan<char> readOnlySpan14 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 					reference2 = '=';
-					list.Add(string.Concat(readOnlySpan14, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+					list.Add(ConcatSpans(readOnlySpan14, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '|')
@@ -1193,7 +1202,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan13 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '=';
-					list.Add(string.Concat(readOnlySpan13, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan13, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '&')
@@ -1218,7 +1227,7 @@ internal static class StringUtil
 					reference = c;
 					ReadOnlySpan<char> readOnlySpan5 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 					reference2 = '=';
-					list.Add(string.Concat(readOnlySpan5, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+					list.Add(ConcatSpans(readOnlySpan5, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '<')
@@ -1239,7 +1248,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan6 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '>';
-					list.Add(string.Concat(readOnlySpan6, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan6, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else
@@ -1259,7 +1268,7 @@ internal static class StringUtil
 					reference = c;
 					ReadOnlySpan<char> readOnlySpan3 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 					reference2 = '=';
-					list.Add(string.Concat(readOnlySpan3, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+					list.Add(ConcatSpans(readOnlySpan3, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '>')
@@ -1292,7 +1301,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan8 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '=';
-					list.Add(string.Concat(readOnlySpan8, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan8, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '+')
@@ -1300,7 +1309,7 @@ internal static class StringUtil
 					reference = c;
 					ReadOnlySpan<char> readOnlySpan9 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 					reference2 = '+';
-					list.Add(string.Concat(readOnlySpan9, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+					list.Add(ConcatSpans(readOnlySpan9, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 					i++;
 				}
 				else
@@ -1320,7 +1329,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan10 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '=';
-					list.Add(string.Concat(readOnlySpan10, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan10, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else if (i + 1 < length && str[i + 1] == '-')
@@ -1337,7 +1346,7 @@ internal static class StringUtil
 						reference = c;
 						ReadOnlySpan<char> readOnlySpan11 = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 						reference2 = '-';
-						list.Add(string.Concat(readOnlySpan11, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+						list.Add(ConcatSpans(readOnlySpan11, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 						i++;
 					}
 				}
@@ -1346,7 +1355,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan12 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '>';
-					list.Add(string.Concat(readOnlySpan12, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan12, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else
@@ -1381,7 +1390,7 @@ internal static class StringUtil
 						reference = c;
 						ReadOnlySpan<char> readOnlySpan = MemoryMarshal.CreateReadOnlySpan(ref reference, 1);
 						reference2 = '=';
-						list.Add(string.Concat(readOnlySpan, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
+						list.Add(ConcatSpans(readOnlySpan, MemoryMarshal.CreateReadOnlySpan(ref reference2, 1)));
 						i++;
 					}
 					else
@@ -1416,7 +1425,7 @@ internal static class StringUtil
 					reference2 = c;
 					ReadOnlySpan<char> readOnlySpan2 = MemoryMarshal.CreateReadOnlySpan(ref reference2, 1);
 					reference = '=';
-					list.Add(string.Concat(readOnlySpan2, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
+					list.Add(ConcatSpans(readOnlySpan2, MemoryMarshal.CreateReadOnlySpan(ref reference, 1)));
 					i++;
 				}
 				else

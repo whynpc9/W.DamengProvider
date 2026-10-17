@@ -60,7 +60,7 @@ internal sealed class DmPoolOwner
             if (immediate != null)
             {
                 DmDiagnosticsCore.CompleteAcquire(stamp, DmDiagnosticResult.Success, false);
-                return ValueTask.FromResult(immediate);
+                return new ValueTask<DmPoolLease>(immediate);
             }
             return AwaitWaiter(waiter, stamp);
         }

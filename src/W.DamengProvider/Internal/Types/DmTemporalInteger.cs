@@ -64,12 +64,14 @@ internal static class DmTemporalInteger
     internal static DmTemporalFields FromDateTimeOffset(DateTimeOffset value) =>
         FromDateTime(value.DateTime, checked((int)(value.Offset.Ticks / TimeSpan.TicksPerMinute)));
 
+#if !NETSTANDARD2_1
     internal static DmTemporalFields FromTimeOnly(TimeOnly value) =>
         new(0, 0, 0, value.Hour, value.Minute, value.Second,
             checked((int)(value.Ticks % TimeSpan.TicksPerSecond) * 100));
 
     internal static DmTemporalFields FromDateOnly(DateOnly value) => new(value.Year, value.Month, value.Day, 0, 0, 0, 0);
 
+#endif
     internal static int FractionalTicksExact(int nanoseconds)
     {
         ValidateWireFraction(nanoseconds, 9);
@@ -87,6 +89,7 @@ internal static class DmTemporalInteger
             DateTimeKind.Unspecified).AddTicks(FractionalTicksExact(fields.NanosecondsWithinSecond));
     }
 
+#if !NETSTANDARD2_1
     internal static DateOnly ProjectDateOnly(DmTemporalFields fields)
     {
         ValidateDate(fields);
@@ -94,6 +97,7 @@ internal static class DmTemporalInteger
         return new DateOnly(fields.Year, fields.Month, fields.Day);
     }
 
+#endif
     internal static TimeSpan ProjectTimeSpanExact(DmTemporalFields fields)
     {
         ValidateTime(fields);
@@ -103,7 +107,16 @@ internal static class DmTemporalInteger
         return TimeSpan.FromTicks(ticks);
     }
 
+#if !NETSTANDARD2_1
     internal static TimeOnly ProjectTimeOnly(DmTemporalFields fields) => new(ProjectTimeSpanExact(fields).Ticks);
+
+#endif
+    internal static DateTime ProjectDate(DmTemporalFields fields)
+    {
+        ValidateDate(fields);
+        if (fields.Year is < 1 or > 9999) throw new OverflowException("Temporal value is outside the .NET calendar range.");
+        return new DateTime(fields.Year, fields.Month, fields.Day, 0, 0, 0, DateTimeKind.Unspecified);
+    }
 
     internal static DateTime ProjectTimeDateTime(DmTemporalFields fields) =>
         new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified).AddTicks(ProjectTimeSpanExact(fields).Ticks);

@@ -21,9 +21,16 @@ FLAGS = ["-m:1", "/nodeReuse:false", "/p:UseSharedCompilation=false", "--disable
 SUITES = ("Configuration", "Session", "Transport", "Security", "Command", "Type",
           "Transaction", "Isolation", "Async", "Pool", "Lob", "Diagnostics", "Schema")
 TFMS = ("net6.0", "net8.0", "net9.0", "net10.0")
-# Official compatibility packages per target: the product's direct dependency and the
-# exact resolved closure, each package mapped to the dependencies it must declare.
+# Standard is a restricted compatibility asset, not an additional runtime suite.
+PACKAGE_TFMS = (*TFMS, "netstandard2.1")
+# Package dependency groups are checked for every asset. Modern runtime consumers
+# also check the exact resolved closure; the legacy runtime probe is separate.
 COMPATIBILITY = {
+    "netstandard2.1": {"direct": {"Microsoft.Bcl.TimeProvider": "8.0.1",
+                                  "System.Diagnostics.DiagnosticSource": "8.0.1",
+                                  "System.Threading.Channels": "8.0.0",
+                                  "System.Text.Json": "8.0.6",
+                                  "System.Text.Encoding.CodePages": "8.0.0"}},
     "net6.0": {"direct": {"Microsoft.Bcl.TimeProvider": "8.0.1"},
                "closure": {"Microsoft.Bcl.TimeProvider/8.0.1": {"Microsoft.Bcl.AsyncInterfaces": "8.0.0"},
                            "Microsoft.Bcl.AsyncInterfaces/8.0.0": {}}},
@@ -31,10 +38,10 @@ COMPATIBILITY = {
                "closure": {"Microsoft.Bcl.Cryptography/10.0.12": {"System.Formats.Asn1": "10.0.12"},
                            "System.Formats.Asn1/10.0.12": {}}},
 }
-APPROVED_TRANSITIVE = tuple(sorted({key.split("/", 1)[0] for entry in COMPATIBILITY.values() for key in entry["closure"]}))
+APPROVED_TRANSITIVE = tuple(sorted({key.split("/", 1)[0] for entry in COMPATIBILITY.values() for key in entry.get("closure", {})}))
 RESOURCE_CULTURES = ("en", "zh-CN", "zh-HK", "zh-TW")
-ASSETS = {f"lib/{tfm}/{PACKAGE}.dll" for tfm in TFMS} | {
-    f"lib/{tfm}/{culture}/{PACKAGE}.resources.dll" for tfm in TFMS for culture in RESOURCE_CULTURES}
+ASSETS = {f"lib/{tfm}/{PACKAGE}.dll" for tfm in PACKAGE_TFMS} | {
+    f"lib/{tfm}/{culture}/{PACKAGE}.resources.dll" for tfm in PACKAGE_TFMS for culture in RESOURCE_CULTURES}
 # SemVer 2.0.0: numeric prerelease identifiers cannot have leading zeroes.
 NUM = r"(?:0|[1-9][0-9]*)"
 PRE = rf"(?:{NUM}|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)"
@@ -90,9 +97,9 @@ def inspect_package(package, version, commit, root=ROOT):
         repository = fields.get("repository")
         need(repository is not None and repository.attrib == {"type": "git", "url": REPOSITORY, "commit": commit}, "repository_commit_mismatch")
         dependencies = fields.get("dependencies")
-        need(dependencies is not None and len(dependencies) == len(TFMS), "unexpected_package_dependency")
-        groups = {group.get("targetFramework"): group for group in dependencies}
-        need(set(groups) == set(TFMS) and all(g.tag.rsplit("}", 1)[-1] == "group" for g in dependencies),
+        need(dependencies is not None and len(dependencies) == len(PACKAGE_TFMS), "unexpected_package_dependency")
+        groups = {(group.get("targetFramework") or "").replace(".NETStandard", "netstandard"): group for group in dependencies}
+        need(set(groups) == set(PACKAGE_TFMS) and all(g.tag.rsplit("}", 1)[-1] == "group" for g in dependencies),
              "unexpected_package_dependency_group")
         for tfm, group in groups.items():
             expected = direct_dependencies(tfm)
@@ -291,7 +298,7 @@ def prepare(args):
     (output / "consumers.json").write_text(json.dumps(consumers, indent=2) + "\n")
     (output / "manifest-path.txt").write_text(str(manifest_path) + "\n")
     print(json.dumps({"status": "prepared", "package": str(package), "results": str(results),
-                      "target_frameworks": list(TFMS), "offline_suites": len(SUITES) * len(TFMS) if args.command == "prepare" else 0,
+                      "target_frameworks": list(TFMS), "package_frameworks": list(PACKAGE_TFMS), "offline_suites": len(SUITES) * len(TFMS) if args.command == "prepare" else 0,
                       "integration": "integration_pending"}))
 
 

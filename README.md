@@ -18,6 +18,8 @@ dotnet add package W.DamengProvider --version 0.2.0
 
 本版本包含 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。本版本还支持 [存储过程、标量输出/返回值与受管输出游标](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I09-stored-procedures.md)。阅读兼容文档时请区分源码行为与包版本。
 
+源码分支新增受限的 `netstandard2.1` 兼容资产，供 .NET Core 3.1 应用及 Standard 2.1 类库使用；尚未发布。该资产不提供 TLS、DbBatch 或 DateOnly/TimeOnly 映射，默认 `RequireTls` 仍会拒绝不安全连接，明文必须显式配置。范围与验证见 [旧目标兼容记录](docs/compatibility/core31.md)。上述已发布 `0.2.0` 的四目标能力不受此原型说明影响。
+
 ## 使用
 
 连接串由应用配置或 secret store 提供。默认要求完整会话 TLS，并验证证书；根据服务器配置指定 CA、客户端证书和私钥路径。

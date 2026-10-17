@@ -9,8 +9,8 @@ internal static class DmProcedureCall
 {
     internal static string Create(string name, DmParameterCollection parameters)
     {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(parameters);
+        if (name is null) throw new ArgumentNullException(nameof(name));
+        if (parameters is null) throw new ArgumentNullException(nameof(parameters));
         int offset = 0;
         string identifier = ReadIdentifier(name, ref offset);
         SkipSpace(name, ref offset);

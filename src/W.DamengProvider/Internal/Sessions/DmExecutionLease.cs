@@ -65,5 +65,5 @@ internal sealed class DmExecutionLease : IDisposable, IAsyncDisposable
         try { if (owner == null) Session.EndExecution(this); }
         finally { commandCancellation.Dispose(); }
     }
-    public ValueTask DisposeAsync() { Dispose(); return ValueTask.CompletedTask; }
+    public ValueTask DisposeAsync() { Dispose(); return default; }
 }

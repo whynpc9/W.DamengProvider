@@ -166,7 +166,7 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 		set
 		{
 			using var mutation = BeginMutation();
-			if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
+			if (!Enum.IsDefined(typeof(DbType), value)) throw new ArgumentOutOfRangeException(nameof(value));
 			explicitDbType = true;
 			explicitDbTypeValue = value;
 			m_DbType = value;
@@ -849,8 +849,10 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 			string or char[] => DbType.String,
 			byte[] => DbType.Binary,
 			Guid => DbType.Guid,
+#if !NETSTANDARD2_1
 			DateOnly => DbType.Date,
 			TimeOnly => DbType.Time,
+#endif
 			DateTime => DbType.DateTime,
 			DateTimeOffset => DbType.DateTimeOffset,
 			TimeSpan => DbType.Object,
@@ -1080,7 +1082,11 @@ public class DmParameter : DbParameter, IDbDataParameter, IDataParameter, IClone
 		if (value is Stream) throw new NotSupportedException("Streaming parameter snapshots are not supported.");
 		if (value is Array) throw new NotSupportedException("Array parameter snapshots require an explicitly supported element type.");
 		if (value is string or bool or byte or sbyte or short or ushort or int or uint or long or ulong or
-			float or double or decimal or BigInteger or DmDecimal or char or Guid or DateTime or DateTimeOffset or TimeSpan or DateOnly or TimeOnly or Enum)
+			float or double or decimal or BigInteger or DmDecimal or char or Guid or DateTime or DateTimeOffset or TimeSpan
+#if !NETSTANDARD2_1
+            or DateOnly or TimeOnly
+#endif
+            or Enum)
 			return value;
 		throw new NotSupportedException("This parameter value type cannot be snapshotted safely.");
 	}

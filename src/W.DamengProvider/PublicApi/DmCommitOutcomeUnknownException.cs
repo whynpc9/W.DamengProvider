@@ -10,5 +10,9 @@ public sealed class DmCommitOutcomeUnknownException : DmException
     {
     }
 
+#if NETSTANDARD2_1
+    public bool IsTransient => false;
+#else
     public override bool IsTransient => false;
+#endif
 }

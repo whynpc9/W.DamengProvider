@@ -75,9 +75,9 @@ internal interface IDmByteChannel : IDisposable
     int Receive(byte[] buffer, int offset, int count, int timeoutMilliseconds);
     bool IsClosed { get; }
     ValueTask<int> SendAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-        ValueTask.FromException<int>(new NotSupportedException("This byte channel does not support asynchronous sends."));
+        new ValueTask<int>(Task.FromException<int>(new NotSupportedException("This byte channel does not support asynchronous sends.")));
     ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-        ValueTask.FromException<int>(new NotSupportedException("This byte channel does not support asynchronous receives."));
+        new ValueTask<int>(Task.FromException<int>(new NotSupportedException("This byte channel does not support asynchronous receives.")));
 }
 
 internal sealed class DmTransport : IDisposable
@@ -105,10 +105,28 @@ internal sealed class DmTransport : IDisposable
     {
         this.host = !string.IsNullOrWhiteSpace(host) ? host : throw new ArgumentException("Host is required.", nameof(host));
         this.port = port is > 0 and <= 65535 ? port : throw new ArgumentOutOfRangeException(nameof(port));
+#if NETSTANDARD2_1
+        // DNS has no cancellation overload here; OpenAsync bounds the wait and observes late faults.
+        resolveAddresses = resolver ?? ((name, token) => Dns.GetHostAddressesAsync(name));
+        connectSocket = connector ?? ConnectSocketAsync;
+#else
         resolveAddresses = resolver ?? Dns.GetHostAddressesAsync;
         connectSocket = connector ?? ((socket, endpoint, cancellationToken) => socket.ConnectAsync(endpoint, cancellationToken));
+#endif
         this.beforeAttempt = beforeAttempt;
     }
+
+#if NETSTANDARD2_1
+    private static async ValueTask ConnectSocketAsync(Socket socket, IPEndPoint endpoint, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        // OpenAsync retains candidate ownership and disposes it when this wait is canceled.
+        // The wait helper observes faults from the OS operation after that disposal.
+        try { await socket.ConnectAsync(endpoint).WaitAsync(token).ConfigureAwait(false); }
+        catch (Exception) when (token.IsCancellationRequested) { throw new OperationCanceledException(token); }
+        token.ThrowIfCancellationRequested();
+    }
+#endif
 
     internal DmTransport(IDmByteChannel connectedChannel) =>
         channel = connectedChannel ?? throw new ArgumentNullException(nameof(connectedChannel));
@@ -310,8 +328,14 @@ internal sealed class DmTransport : IDisposable
 
     internal void UpgradeTls(DmTlsOptions options, DmDeadline deadline)
     {
+#if NETSTANDARD2_1
         DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "tls");
-        ArgumentNullException.ThrowIfNull(options);
+        DmTransportTestHooks.TlsFailed();
+        Close();
+        throw new PlatformNotSupportedException("TLS is unavailable in the netstandard2.1 provider asset. Use a .NET 6 or later asset for TLS.");
+#else
+        DmTransportTestHooks.BeforeNetworkIo?.Invoke(false, "tls");
+        if (options is null) throw new ArgumentNullException(nameof(options));
         SocketByteChannel raw;
         lock (gate)
         {
@@ -383,12 +407,19 @@ internal sealed class DmTransport : IDisposable
                 }
             }
         }
+#endif
     }
 
     internal async Task UpgradeTlsAsync(DmTlsOptions options, DmDeadline deadline, CancellationToken cancellationToken = default)
     {
+#if NETSTANDARD2_1
         DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "tls");
-        ArgumentNullException.ThrowIfNull(options);
+        DmTransportTestHooks.TlsFailed();
+        Close();
+        throw new PlatformNotSupportedException("TLS is unavailable in the netstandard2.1 provider asset. Use a .NET 6 or later asset for TLS.");
+#else
+        DmTransportTestHooks.BeforeNetworkIo?.Invoke(true, "tls");
+        if (options is null) throw new ArgumentNullException(nameof(options));
         cancellationToken.ThrowIfCancellationRequested();
         SocketByteChannel raw;
         lock (gate)
@@ -459,6 +490,7 @@ internal sealed class DmTransport : IDisposable
                 }
             }
         }
+#endif
     }
 
     private IDmByteChannel CurrentChannel()
@@ -671,7 +703,7 @@ internal sealed class DmTransport : IDisposable
 
     private static void ValidateRange(byte[] buffer, int offset, int count)
     {
-        ArgumentNullException.ThrowIfNull(buffer);
+        if (buffer is null) throw new ArgumentNullException(nameof(buffer));
         if (offset < 0 || count < 0 || offset > buffer.Length - count)
             throw new ArgumentOutOfRangeException(nameof(count));
     }

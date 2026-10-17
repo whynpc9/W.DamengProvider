@@ -63,11 +63,11 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 	private sealed class StateChangeTicket
 	{
 		internal readonly StateChangeEventArgs Args;
-		private readonly TaskCompletionSource done = new(TaskCreationOptions.RunContinuationsAsynchronously);
+		private readonly TaskCompletionSource<bool> done = new(TaskCreationOptions.RunContinuationsAsynchronously);
 		internal StateChangeTicket(StateChangeEventArgs args) { Args = args; }
 		internal void Complete(Exception error)
 		{
-			if (error == null) done.TrySetResult(); else done.TrySetException(error);
+			if (error == null) done.TrySetResult(true); else done.TrySetException(error);
 		}
 		internal void Wait() => done.Task.GetAwaiter().GetResult();
 	}
@@ -1171,13 +1171,25 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 		=> cancellationToken.IsCancellationRequested ? Task.FromCanceled(cancellationToken) :
 			Task.FromException(new NotSupportedException("Physical database switching is unsupported."));
 
+#if NETSTANDARD2_1
+	public Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default)
+#else
 	public override Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default)
+#endif
 		=> GetSchemaAsync(null, null, cancellationToken);
 
+#if NETSTANDARD2_1
+	public Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default)
+#else
 	public override Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default)
+#endif
 		=> GetSchemaAsync(collectionName, null, cancellationToken);
 
+#if NETSTANDARD2_1
+	public async Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictionValues,
+#else
 	public override async Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictionValues,
+#endif
 		CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
@@ -1202,12 +1214,14 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 		return filterHead.CreateDbCommand(this);
 	}
 
+#if !NETSTANDARD2_1
 	public override bool CanCreateBatch => true;
 
 	public new DmBatch CreateBatch() => new(this);
 
 	protected override DbBatch CreateDbBatch() => CreateBatch();
 
+#endif
 	public DmCommand CreateCommand(string cmdText)
 	{
 		DmCommand dmCommand = do_CreateDbCommand();
@@ -1570,7 +1584,7 @@ public sealed class DmConnection : DbConnection, ICloneable, IFilterInfo
 
 	public static void ClearPool(DmConnection connection)
 	{
-		if (connection == null) throw new ArgumentNullException(nameof(connection));
+		if (connection is null) throw new ArgumentNullException(nameof(connection));
 		if (connection.dataSourceOwner != null) connection.dataSourceOwner.ClearPool();
 		else DmPoolRegistry.Shared.Clear(connection.settings);
 	}

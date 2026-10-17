@@ -1443,7 +1443,7 @@ public class DmConnectionStringBuilder : DbConnectionStringBuilder, IFilterInfo
 
 	private static string Canonical(string keyword)
 	{
-		if (keyword == null) throw new ArgumentNullException(nameof(keyword));
+		if (keyword is null) throw new ArgumentNullException(nameof(keyword));
 		keyword = keyword.Trim();
 		if (keyword.Length == 0) throw new ArgumentException("A connection setting name is required.", nameof(keyword));
 		if (keyword.Equals("host", StringComparison.OrdinalIgnoreCase)) return DmConst.PROP_KEY_SERVER;
@@ -1501,13 +1501,13 @@ public class DmConnectionStringBuilder : DbConnectionStringBuilder, IFilterInfo
 	{
 		string text = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
 		if (int.TryParse(text, out int number) && number is >= 0 and <= 3) return number;
-		if (Enum.TryParse<SupportedLanguage>(text, true, out var language) && Enum.IsDefined(language)) return (int)language;
+		if (Enum.TryParse<SupportedLanguage>(text, true, out var language) && Enum.IsDefined(typeof(SupportedLanguage), language)) return (int)language;
 		throw new ArgumentException("Invalid language setting.");
 	}
 
 	private static DmTransportSecurity ParseTransport(object value)
 	{
-		if (value is DmTransportSecurity policy && Enum.IsDefined(policy)) return policy;
+		if (value is DmTransportSecurity policy && Enum.IsDefined(typeof(DmTransportSecurity), policy)) return policy;
 		string text = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
 		if (text.Equals(nameof(DmTransportSecurity.RequireTls), StringComparison.OrdinalIgnoreCase)) return DmTransportSecurity.RequireTls;
 		if (text.Equals(nameof(DmTransportSecurity.PlaintextAllowed), StringComparison.OrdinalIgnoreCase)) return DmTransportSecurity.PlaintextAllowed;
@@ -1516,7 +1516,7 @@ public class DmConnectionStringBuilder : DbConnectionStringBuilder, IFilterInfo
 
 	private static DmTlsRevocationMode ParseTlsRevocationMode(object value)
 	{
-		if (value is DmTlsRevocationMode mode && Enum.IsDefined(mode)) return mode;
+		if (value is DmTlsRevocationMode mode && Enum.IsDefined(typeof(DmTlsRevocationMode), mode)) return mode;
 		string text = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
 		if (text.Equals(nameof(DmTlsRevocationMode.Online), StringComparison.OrdinalIgnoreCase)) return DmTlsRevocationMode.Online;
 		if (text.Equals(nameof(DmTlsRevocationMode.NoCheck), StringComparison.OrdinalIgnoreCase)) return DmTlsRevocationMode.NoCheck;

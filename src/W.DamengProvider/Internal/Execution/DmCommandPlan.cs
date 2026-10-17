@@ -42,7 +42,7 @@ internal sealed class DmCommandPlanGate
 
     internal DmCommandPlan Enter(Func<DmCommandPlan> capture)
     {
-        ArgumentNullException.ThrowIfNull(capture);
+        if (capture is null) throw new ArgumentNullException(nameof(capture));
         lock (state)
         {
             if (disposed) throw new ObjectDisposedException("DmCommand");
@@ -177,7 +177,7 @@ internal sealed class DmCommandPlan : IDisposable
     internal static DmCommandPlan Capture(string sql, CommandType commandType, int timeoutSeconds,
         DmTransaction transaction, DmConnection connection, DmParameterCollection parameters, int arrayBindCount = 0)
     {
-        ArgumentNullException.ThrowIfNull(parameters);
+        if (parameters is null) throw new ArgumentNullException(nameof(parameters));
         if (arrayBindCount != 0 && commandType != CommandType.Text)
             throw new NotSupportedException("Array binding supports only CommandType.Text.");
         DmParameter[][] rows = arrayBindCount == 0 ? null : CaptureArrayRows(parameters, arrayBindCount);
@@ -204,7 +204,7 @@ internal sealed class DmCommandPlan : IDisposable
         {
             if (outputsFailed || outputsPublished || Volatile.Read(ref disposed) != 0)
                 throw new InvalidOperationException("Output staging is no longer active.");
-            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (snapshot is null) throw new ArgumentNullException(nameof(snapshot));
             bool cursor = snapshot.DmSqlType is DmDbType.Cursor or DmDbType.RefCursor;
             if (value is DbDataReader && !cursor || cursor && value is not (null or DBNull or DbDataReader))
                 throw new InvalidOperationException("Cursor output value does not match its parameter type.");

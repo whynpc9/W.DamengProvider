@@ -56,7 +56,7 @@ public class DmdbNumeric
 
 	public void decode(byte[] values)
 	{
-		ArgumentNullException.ThrowIfNull(values);
+		if (values is null) throw new ArgumentNullException(nameof(values));
 		wire = (byte[])values.Clone();
 		value = DmNumericCodec.DecodeDecimal(wire, hasScale ? scale : null);
 	}

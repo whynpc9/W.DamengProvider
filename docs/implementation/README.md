@@ -2,6 +2,8 @@
 
 当前产品项目为 `src/W.DamengProvider`，包与程序集名为 `W.DamengProvider`，公开命名空间为 `W.Dm`，当前源码目标框架为 .NET 6/8/9/10（0.2.0 同包四目标）。驱动负责 ADO.NET、协议、传输、事务、类型、取消、容量管理与诊断；EF 模型、SQL 翻译和迁移由独立适配项目负责，驱动生产项目不引用 EF。
 
+源码分支另有尚未发布的受限 `netstandard2.1` 兼容原型，供 .NET Core 3.1 消费，详见[范围与验证](../compatibility/core31.md)。
+
 ## 当前实现与发布
 
 当前版本为 [0.2.0](../release-0.2.0.md)，提供四目标、PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)。公开安装与实际发布状态见发布记录及 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。前一版本 [0.1.0-preview.1](../release-0.1.0-preview.1.md) 的历史验收不扩大到新版本；历史测试计数只证明各自受测版本。

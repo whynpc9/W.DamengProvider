@@ -1527,7 +1527,7 @@ internal class DmSetValue
 	internal void SetResolvedTemporalObject(DmParamValue paraVal, object x, DmConnection conn,
 		string typeName, DmParameterInternal paraInternal, DmTemporalParameterBinding binding)
 	{
-		ArgumentNullException.ThrowIfNull(binding);
+		if (binding is null) throw new ArgumentNullException(nameof(binding));
 		DmTemporalBindingResolver.ValidateRequest(binding.Request);
 		byte[] encoded = null;
 		if (binding.CType is 20 or 21)

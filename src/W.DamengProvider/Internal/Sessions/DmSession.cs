@@ -52,7 +52,7 @@ internal sealed class DmSession
 
     internal void ActivateTransaction(DmTransaction transaction, OperationIdentity beginIdentity)
     {
-        ArgumentNullException.ThrowIfNull(transaction);
+        if (transaction is null) throw new ArgumentNullException(nameof(transaction));
         DmInvocation invocation = DmInvocation.Current ?? throw new InvalidOperationException("Transaction start has no invocation.");
         AdvanceInvocation(invocation, send: false, onComplete: () =>
         {
@@ -70,7 +70,7 @@ internal sealed class DmSession
 
     internal void BeginTransactionControl(DmTransaction transaction, OperationIdentity identity, DmTransactionControlKind kind)
     {
-        ArgumentNullException.ThrowIfNull(transaction);
+        if (transaction is null) throw new ArgumentNullException(nameof(transaction));
         lock (gate)
         {
             if (state != DmPhysicalSessionState.Busy || transactionState != DmLocalTransactionState.Active ||
@@ -217,8 +217,8 @@ internal sealed class DmSession
     // session gate, and a stale reader can never be selected for a new lease.
     internal void RegisterReader(DmExecutionLease lease, DmDataReader reader)
     {
-        ArgumentNullException.ThrowIfNull(lease);
-        ArgumentNullException.ThrowIfNull(reader);
+        if (lease is null) throw new ArgumentNullException(nameof(lease));
+        if (reader is null) throw new ArgumentNullException(nameof(reader));
         lock (gate)
         {
             if (!ReferenceEquals(activeLease, lease) || lease.Purpose != DmOperationPurpose.Reader ||
@@ -303,7 +303,7 @@ internal sealed class DmSession
 
     internal void AttachTransport(DmConnInstance instance)
     {
-        ArgumentNullException.ThrowIfNull(instance);
+        if (instance is null) throw new ArgumentNullException(nameof(instance));
         lock (gate)
         {
             if (state is DmPhysicalSessionState.Broken or DmPhysicalSessionState.Closed || transport != null || activeLease?.Purpose != DmOperationPurpose.Handshake)
@@ -315,7 +315,7 @@ internal sealed class DmSession
 
     internal void RegisterPendingTransport(D pending)
     {
-        ArgumentNullException.ThrowIfNull(pending);
+        if (pending is null) throw new ArgumentNullException(nameof(pending));
         bool rejected;
         lock (gate)
         {
@@ -428,9 +428,9 @@ internal sealed class DmSession
 
     internal void AcceptServerError(DmInvocation invocation, DmWireExchange exchange, DmException error, bool preserveSession, bool prepare = false)
     {
-        ArgumentNullException.ThrowIfNull(invocation);
-        ArgumentNullException.ThrowIfNull(exchange);
-        ArgumentNullException.ThrowIfNull(error);
+        if (invocation is null) throw new ArgumentNullException(nameof(invocation));
+        if (exchange is null) throw new ArgumentNullException(nameof(exchange));
+        if (error is null) throw new ArgumentNullException(nameof(error));
         // AdvanceInvocation arbitrates the original deadline/cancellation and
         // this receipt under one gate. Its action performs no external calls.
         AdvanceInvocation(invocation, send: false, onComplete: () =>

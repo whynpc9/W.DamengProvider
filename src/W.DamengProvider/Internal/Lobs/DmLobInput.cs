@@ -159,9 +159,9 @@ internal sealed class DmLobInput
             if (disposed) return;
             disposed = true;
             // The caller owns its stream/reader. This cursor owns only buffers and encoder state.
-            Array.Clear(Buffer);
-            if (characters != null) Array.Clear(characters);
-            if (encoded != null) Array.Clear(encoded);
+            Array.Clear(Buffer, 0, Buffer.Length);
+            if (characters != null) Array.Clear(characters, 0, characters.Length);
+            if (encoded != null) Array.Clear(encoded, 0, encoded.Length);
         }
     }
 }

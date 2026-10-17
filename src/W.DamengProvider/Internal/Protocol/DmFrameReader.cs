@@ -79,9 +79,9 @@ internal static class DmFrameReader
         Func<b, int, bool> validateFrame, DmDeadline deadline, Func<byte[], bool> validateHeader = null,
         int maxResponseBodyLength = MaxFrameSize - HeaderSize)
     {
-        if (readExactly == null) throw new ArgumentNullException(nameof(readExactly));
-        if (destination == null) throw new ArgumentNullException(nameof(destination));
-        if (validateFrame == null) throw new ArgumentNullException(nameof(validateFrame));
+        if (readExactly is null) throw new ArgumentNullException(nameof(readExactly));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (validateFrame is null) throw new ArgumentNullException(nameof(validateFrame));
         while (true)
         {
             deadline.ThrowIfExpired();
@@ -111,9 +111,9 @@ internal static class DmFrameReader
         CancellationToken cancellationToken = default, Func<byte[], bool> validateHeader = null,
         int maxResponseBodyLength = MaxFrameSize - HeaderSize)
     {
-        ArgumentNullException.ThrowIfNull(readExactly);
-        ArgumentNullException.ThrowIfNull(destination);
-        ArgumentNullException.ThrowIfNull(validateFrame);
+        if (readExactly is null) throw new ArgumentNullException(nameof(readExactly));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (validateFrame is null) throw new ArgumentNullException(nameof(validateFrame));
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -147,7 +147,7 @@ internal static class DmFrameReader
     internal static ValueTask<int> ReadAsync(Stream stream, b destination, bool crcBody, DmDeadline deadline,
         CancellationToken cancellationToken = default, int maxResponseBodyLength = MaxFrameSize - HeaderSize)
     {
-        ArgumentNullException.ThrowIfNull(stream);
+        if (stream is null) throw new ArgumentNullException(nameof(stream));
         return ReadAsync(async (buffer, offset, count, token) =>
         {
             int read = 0;
@@ -168,7 +168,7 @@ internal static class DmFrameReader
     internal static int Read(Stream stream, b destination, bool crcBody, DmDeadline deadline,
         int maxResponseBodyLength = MaxFrameSize - HeaderSize)
     {
-        if (stream == null) throw new ArgumentNullException(nameof(stream));
+        if (stream is null) throw new ArgumentNullException(nameof(stream));
         return Read((buffer, offset, count) =>
         {
             int read = 0;

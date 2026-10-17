@@ -17,7 +17,7 @@ internal static class DmSysTypeConvertion
 
     internal static object TypeConvertion(DmParameter parameter)
     {
-        ArgumentNullException.ThrowIfNull(parameter);
+        if (parameter is null) throw new ArgumentNullException(nameof(parameter));
         object value = parameter.do_Value;
         parameter.ValidateInputSourceRange(value);
         if (value is null or DBNull) return value;
