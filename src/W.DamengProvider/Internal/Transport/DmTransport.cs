@@ -106,7 +106,7 @@ internal sealed class DmTransport : IDisposable
         this.host = !string.IsNullOrWhiteSpace(host) ? host : throw new ArgumentException("Host is required.", nameof(host));
         this.port = port is > 0 and <= 65535 ? port : throw new ArgumentOutOfRangeException(nameof(port));
 #if NETSTANDARD2_1
-        // DNS has no cancellation overload here; OpenAsync bounds the wait and observes late faults.
+        // DNS has no cancellation overload here; both open paths bound the wait and observe late faults.
         resolveAddresses = resolver ?? ((name, token) => Dns.GetHostAddressesAsync(name));
         connectSocket = connector ?? ConnectSocketAsync;
 #else
@@ -150,7 +150,11 @@ internal sealed class DmTransport : IDisposable
         {
             IPAddress[] addresses;
             using (var dnsDeadline = LinkedDeadline(deadline))
+#if NETSTANDARD2_1
+                addresses = resolveAddresses(host, dnsDeadline.Token).WaitAsync(dnsDeadline.Token).GetAwaiter().GetResult();
+#else
                 addresses = resolveAddresses(host, dnsDeadline.Token).GetAwaiter().GetResult();
+#endif
             deadline.ThrowIfExpired();
             if (addresses.Length == 0) throw new SocketException((int)SocketError.HostNotFound);
 

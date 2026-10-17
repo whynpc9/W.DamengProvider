@@ -35,6 +35,7 @@ internal static class Program
             ArrayPlan(); Pass("array plan snapshots, NULL typing and invalid length rejection");
             Temporal(); Pass("DateTime/TimeSpan parameter semantics and timestamp wire roundtrip");
             await PendingResolver(); Pass("pending resolver cancellation and deadline");
+            await PendingSynchronousResolver(); Pass("sync pending resolver deadline and close");
             await Loopback(false); await Loopback(true); Pass("sync/async loopback bytes, deadlines, cancellation and close");
             await Tls(); Pass("legacy TLS rejection and default RequireTls");
             Check(typeof(DmConnection).Assembly.GetType("W.Dm.DmBatch") == null, "batch class absent");
@@ -228,6 +229,46 @@ internal static class Program
             Check(resolver.Task.Exception.InnerException is IOException, "late deadline DNS failure observed");
         }
     }
+    private static async Task PendingSynchronousResolver()
+    {
+        foreach (bool close in new[] { false, true })
+        {
+            var resolver = new TaskCompletionSource<IPAddress[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var transport = new DmTransport("pending.invalid", 1, (_, _) =>
+            {
+                entered.TrySetResult(true);
+                return resolver.Task; // Intentionally ignores the supplied token, like the legacy DNS API.
+            });
+            DmTransportTestHooks.Reset();
+            try
+            {
+                // Only the probe runs the synchronous API on a worker, so it can concurrently close it.
+                Task opening = Task.Run(() => transport.Open(close ? DmDeadline.Infinite : DmDeadline.Start(TimeSpan.FromMilliseconds(100))));
+                await Bounded(entered.Task);
+                Check(!resolver.Task.IsCompleted, "synchronous DNS resolver remains pending");
+                if (close)
+                {
+                    Check(!opening.IsCompleted, "synchronous open awaits DNS until close");
+                    transport.Close();
+                    await ThrowsAsync<OperationCanceledException>(() => opening);
+                }
+                else await ThrowsAsync<TimeoutException>(() => opening);
+                Check(DmTransportTestHooks.CreatedTcpSockets == 0 && DmTransportTestHooks.AttemptedTcpConnections == 0 && transport.IsClosed,
+                    "synchronous DNS interruption closes without creating or connecting TCP");
+                resolver.SetException(new IOException("synthetic late synchronous DNS failure"));
+                // Prevent this synthetic failure from contaminating other tests. This read is not
+                // evidence that the provider's late-fault continuation ran; that path is code-reviewed.
+                _ = resolver.Task.Exception;
+            }
+            finally
+            {
+                // Even a failed watchdog must release the deliberately stalled test resolver.
+                resolver.TrySetResult(Array.Empty<IPAddress>());
+            }
+        }
+    }
+
     private static async Task AsyncDeadline()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start();

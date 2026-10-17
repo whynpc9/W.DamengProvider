@@ -58,4 +58,10 @@ python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
 
 独立代码审查未发现阻塞问题。CI 新增实际 3.1 linux-x64 包消费步骤；本轮只执行本地等价命令，未运行远程 GitHub Actions。
 
+### PR #26 评审修订（2026-10-17）
+
+Codex 指出旧资产同步 `Open()` 在 DNS 解析忽略 token 时直接等待原 Task，可能超出 deadline，且 `Close()` 无法解除等待。现仅在 `NETSTANDARD2_1` 同步路径套用既有 `WaitAsync(dnsDeadline.Token)`；现代四目标原路径不变。新增同步 pending resolver 的短 deadline、并发 Close、零 TCP 创建/连接与关闭状态用例。测试自身观察注入的迟到异常以防污染，不把这一步当作产品观察器的行为证明；产品 continuation 另经独立代码审查。
+
+新本地候选 `0.2.1-core31.2` 的 `pack-smoke` 退出 0：五目标包检查、四现代运行时独立包消费与 28 次初始化通过。独立 PackageReference 消费该新包，在实际 3.1.32 aarch64/x64 容器上各 **8 组、174 断言** 通过；原 167 断言结果属于上面的首轮候选。证据：`.local/pr-core31/fix-validation/nuget-s0wj6w7b`、`.local/pr-core31/package2/logs`。该修订未重新执行本地完整四运行时套件，远端 CI 将对 PR 新提交运行完整矩阵；不把先前提交的绿灯作为新提交 CI 结果。修订经独立代码审查，无新增阻塞。
+
 无真实数据库验证，状态为 `integration_pending`。Linux 发行版与 OpenSSL 依赖需按部署环境核对；本原型不恢复已结束维护的 .NET Core 3.1 运行时支持。

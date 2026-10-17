@@ -33,7 +33,9 @@ alone does not prove old-runtime behavior.
 Coverage: typed datasource failure cleanup and lifecycle; actual three-row array
 plan snapshots, inferred NULL types and invalid length rejection; DateTime/TimeSpan
 inference, timestamp golden bytes, day-number/calendar boundaries; pending DNS
-cancellation/deadline; sync/async loopback transport bytes, caller cancellation,
+cancellation/deadline, including a token-ignoring resolver interrupted during synchronous
+Open by its deadline or concurrent Close before any TCP socket is created;
+sync/async loopback transport bytes, caller cancellation,
 deadlines and close; 12 sync/async STARTUP mode/policy combinations (mode 0 only
 reaches LOGIN with explicit PlaintextAllowed, modes 1/4 fail explicitly with EOF
 and no LOGIN/TLS hello); diagnostics initialization; deliberate lack of batch API.
@@ -42,6 +44,8 @@ exercised. The synthetic server deliberately closes after observing LOGIN; this
 does not establish successful database authentication. This is a bounded offline
 compatibility probe, not database acceptance.
 
-Successful current runs report seven groups and 167 assertions. Package build
+Successful current runs report eight groups and 174 assertions. The probe observes
+its injected late DNS failures to avoid unobserved-task pollution; it does not claim
+that this establishes execution of the provider's late-fault observer. Package build
 warnings about upstream libraries not officially supporting netcoreapp3.1 remain
 visible; runtime success does not change those upstream support statements.
