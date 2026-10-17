@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-15",
+  "updated_at": "2026-10-17",
   "product": "W.DamengProvider",
   "state": "published_and_public_install_verified",
   "release_accepted": true,
@@ -18,7 +18,7 @@
   "release_commit": "aef142f05af67d2ce300f0a9f3a9fbd198f304cc",
   "release_report": "../release-0.2.0.md",
   "roadmap": "../roadmap.md",
-  "source_state": "released_product_with_post_release_documentation",
+  "source_state": "released_product_with_unreleased_legacy_compatibility",
   "previous_release": {
     "version": "0.1.0-preview.1",
     "tag": "v0.1.0-preview.1",
@@ -104,7 +104,15 @@
       "released_in": "0.2.0"
     }
   ],
-  "unreleased_changes": [],
+  "unreleased_changes": [
+    {
+      "pull_request": 26,
+      "status": "implemented_unreleased",
+      "summary": "Restricted netstandard2.1 asset for .NET Core 3.1 consumers; no TLS, DbBatch, DateOnly/TimeOnly mappings or native extensions; existing modern targets retain their contracts",
+      "report": "../compatibility/core31.md",
+      "integration": "integration_pending"
+    }
+  ],
   "validation": {
     "local_preflight_passed": true,
     "offline_tests_passed": 9634,
@@ -130,5 +138,12 @@
     "public_integration_commands_passed": 8,
     "public_final_database_state": "all_exact_owned_tables_absent"
   },
-  "github_release": "https://github.com/whynpc9/W.DamengProvider/releases/tag/v0.2.0"
+  "github_release": "https://github.com/whynpc9/W.DamengProvider/releases/tag/v0.2.0",
+  "source_target_frameworks": [
+    "net6.0",
+    "net8.0",
+    "net9.0",
+    "net10.0",
+    "netstandard2.1"
+  ]
 }
