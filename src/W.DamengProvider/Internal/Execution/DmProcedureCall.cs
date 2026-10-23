@@ -9,18 +9,10 @@ internal static class DmProcedureCall
 {
     internal static string Create(string name, DmParameterCollection parameters)
     {
-        if (name is null) throw new ArgumentNullException(nameof(name));
         if (parameters is null) throw new ArgumentNullException(nameof(parameters));
-        int offset = 0;
-        string identifier = ReadIdentifier(name, ref offset);
-        SkipSpace(name, ref offset);
-        if (offset < name.Length && name[offset] == '.')
-        {
-            offset++;
-            identifier += "." + ReadIdentifier(name, ref offset);
-            SkipSpace(name, ref offset);
-        }
-        if (offset != name.Length) throw InvalidName();
+        string[] parts = ParseIdentifier(name);
+        string identifier = Quote(parts[0]);
+        if (parts.Length == 2) identifier += "." + Quote(parts[1]);
         int returns = 0;
         foreach (DmParameter parameter in parameters)
             if (parameter.do_Direction == ParameterDirection.ReturnValue) returns++;
@@ -37,6 +29,27 @@ internal static class DmProcedureCall
         }
         return sql.Append(')').ToString();
     }
+
+    // Share the exact execution grammar with catalog discovery. The decoded parts
+    // are values for catalog parameters, never fragments of executable SQL.
+    internal static string[] ParseIdentifier(string name)
+    {
+        if (name is null) throw new ArgumentNullException(nameof(name));
+        int offset = 0;
+        string first = ReadIdentifier(name, ref offset);
+        string second = null;
+        SkipSpace(name, ref offset);
+        if (offset < name.Length && name[offset] == '.')
+        {
+            offset++;
+            second = ReadIdentifier(name, ref offset);
+            SkipSpace(name, ref offset);
+        }
+        if (offset != name.Length) throw InvalidName();
+        return second == null ? new[] { first } : new[] { first, second };
+    }
+
+    private static string Quote(string identifier) => "\"" + identifier.Replace("\"", "\"\"") + "\"";
 
     private static string ReadIdentifier(string text, ref int offset)
     {
@@ -70,7 +83,7 @@ internal static class DmProcedureCall
             while (offset < text.Length && (char.IsLetterOrDigit(text[offset]) || text[offset] is '_' or '$' or '#')) offset++;
             decoded.Append(text.Substring(start, offset - start).ToUpperInvariant());
         }
-        return "\"" + decoded.ToString().Replace("\"", "\"\"") + "\"";
+        return decoded.ToString();
     }
 
     private static void SkipSpace(string text, ref int offset)
