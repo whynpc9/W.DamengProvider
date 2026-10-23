@@ -654,7 +654,7 @@ internal partial class B
 		return A(new GET_LOB_LEN(this, P_0));
 	}
 
-	public long A(AbstractLob P_0, int P_1)
+	public long A(AbstractLob P_0, long P_1)
 	{
 		return A(new LOB_TRUNCATE(this, P_0, P_1));
 	}
