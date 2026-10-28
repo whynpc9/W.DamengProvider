@@ -315,7 +315,7 @@ public class DmClob : AbstractLob
 		}
 		else
 		{
-			m_length = ConnInstance.GetCsi().A(this, (int)len);
+			m_length = ConnInstance.GetCsi().A(this, len);
 			RebaseReadTemplate(knownLength: true);
 			if (storageType == 1)
 			{

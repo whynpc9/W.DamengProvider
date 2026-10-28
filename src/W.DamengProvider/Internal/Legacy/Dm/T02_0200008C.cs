@@ -1,3 +1,4 @@
+using System;
 using W.Dm.Internal.Legacy.A;
 
 namespace W.Dm;
@@ -11,6 +12,11 @@ internal class LOB_TRUNCATE : MSG<long>
 	public LOB_TRUNCATE(B access, AbstractLob lob, long tlen)
 		: base(access, (short)31)
 	{
+		if (tlen < 0) throw new ArgumentOutOfRangeException(nameof(tlen));
+		// The legacy writer and response reader use an unsigned four-byte length.
+		// Validate before entering the wire operation so rejection cannot send a wrapped length.
+		if (!access.a().LongLobFlag && tlen > uint.MaxValue)
+			throw new OverflowException("LOB length exceeds the negotiated protocol limit.");
 		this.lob = lob;
 		this.tlen = tlen;
 	}
@@ -39,8 +45,9 @@ internal class LOB_TRUNCATE : MSG<long>
 	protected override long doDecode()
 	{
 		long num = (access.a().LongLobFlag ? access.__t02_field_04000AB9.e() : access.__t02_field_04000AB9.E());
+		long locatorId = access.__t02_field_04000AB9.e();
 		lob.m_length = num;
-		lob.id = access.__t02_field_04000AB9.e();
+		lob.id = locatorId;
 		lob.curFileId = lob.fileId;
 		lob.curPageNo = lob.pageNo;
 		lob.curOffset = 0;

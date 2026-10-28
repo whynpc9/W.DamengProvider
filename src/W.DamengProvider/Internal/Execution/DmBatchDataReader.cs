@@ -232,6 +232,9 @@ internal sealed class DmBatchDataReader : DbDataReader
     public override decimal GetDecimal(int ordinal) => Current.GetDecimal(ordinal);
     public override double GetDouble(int ordinal) => Current.GetDouble(ordinal);
     public override Type GetFieldType(int ordinal) => Current.GetFieldType(ordinal);
+    public override Type GetProviderSpecificFieldType(int ordinal) => Current.GetProviderSpecificFieldType(ordinal);
+    public override object GetProviderSpecificValue(int ordinal) => Current.GetProviderSpecificValue(ordinal);
+    public override int GetProviderSpecificValues(object[] values) => Current.GetProviderSpecificValues(values);
     public override float GetFloat(int ordinal) => Current.GetFloat(ordinal);
     public override Guid GetGuid(int ordinal) => Current.GetGuid(ordinal);
     public override short GetInt16(int ordinal) => Current.GetInt16(ordinal);

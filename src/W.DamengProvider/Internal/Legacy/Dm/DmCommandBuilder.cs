@@ -438,120 +438,12 @@ public sealed class DmCommandBuilder : DbCommandBuilder, IFilterInfo
 		base.Dispose(disposing);
 	}
 
-	public static void DeriveParameters(DmCommand command)
-	{
-		if (command.do_CommandType != CommandType.StoredProcedure)
-		{
-			throw new InvalidOperationException("仅支持 CommandType.StoredProcedure，不支持 CommandType.Text");
-		}
-		DmCommand dmCommand = null;
-		try
-		{
-			string commandText = command.GetCommandText();
-			string cmdText;
-			DmDataReader dmDataReader;
-			if (commandText.Contains("."))
-			{
-				string[] array = commandText.Split('.');
-				string text = array[0];
-				string text2 = array[1];
-				cmdText = "SELECT ID FROM SYS.SYSOBJECTS WHERE TYPE$ = 'SCHOBJ' AND SUBTYPE$ = 'PKG' AND NAME = '" + text + "'";
-				dmCommand = command.do_DbConnection.CreateCommand(cmdText);
-				dmDataReader = (DmDataReader)dmCommand.ExecuteReader();
-				if (!dmDataReader.do_HasRows)
-				{
-					throw new Exception("包" + text + "不存在");
-				}
-				dmDataReader.Read();
-				int @int = dmDataReader.GetInt32(0);
-				dmDataReader.Close();
-				command.do_DbParameterCollection.do_Clear();
-				cmdText = "SELECT IOFLAG,TYPE$,NAME FROM SYSPKGPROCPARAMS WHERE PKGID = " + @int + " AND MTDID IN (SELECT SYSPKGPROCINFOS.MTDID FROM SYSPKGPROCINFOS WHERE SYSPKGPROCINFOS.PKGID = " + @int + " AND name = '" + text2 + "');";
-				dmCommand.CommandText = cmdText;
-				dmDataReader = (DmDataReader)dmCommand.ExecuteReader();
-				if (dmDataReader.do_HasRows)
-				{
-					while (dmDataReader.do_Read())
-					{
-						DmParameter dmp = new DmParameter();
-						ParameterDirection paramterType = ParameterDirection.Input;
-						switch (dmDataReader.GetString(0).Trim())
-						{
-						case "I":
-							paramterType = ParameterDirection.Input;
-							break;
-						case "O":
-							paramterType = ParameterDirection.Output;
-							break;
-						case "IO":
-							paramterType = ParameterDirection.InputOutput;
-							break;
-						case "R":
-							paramterType = ParameterDirection.ReturnValue;
-							break;
-						}
-						ParameterNew(dmp, dmDataReader.GetString(2), dmDataReader.GetString(1), paramterType, command);
-					}
-				}
-				dmDataReader.do_Close();
-				return;
-			}
-			cmdText = " SELECT ID, SCHID FROM SYS.SYSOBJECTS WHERE TYPE$ = 'SCHOBJ' AND SUBTYPE$ IN('PROC','FUNC') AND NAME = '" + command.GetCommandText().ToUpperInvariant() + "'";
-			dmCommand = command.do_DbConnection.CreateCommand(cmdText);
-			dmDataReader = (DmDataReader)dmCommand.ExecuteReader();
-			if (!dmDataReader.do_HasRows)
-			{
-				throw new InvalidOperationException("不存在" + command.GetCommandText().ToUpperInvariant());
-			}
-			command.do_DbParameterCollection.do_Clear();
-			cmdText = "SELECT CASE ARG.INFO1 WHEN 0 THEN 1 WHEN 1 THEN 4 WHEN 2 THEN 2 WHEN 3 THEN 5 END AS COLUMN_TYPE, ARG.TYPE$ AS TYPE_NAME,ARG.NAME AS COLUMN_NAME FROM (SELECT ID FROM SYS.SYSOBJECTS WHERE SCHID = CURRENT_SCHID AND TYPE$ = 'SCHOBJ' AND SUBTYPE$ IN('PROC','FUNC') AND NAME = '" + command.GetCommandText().ToUpperInvariant() + "') AS PROCS, SYS.SYSCOLUMNS AS ARG WHERE PROCS.ID = ARG.ID";
-			dmCommand?.Dispose();
-			dmCommand = command.do_DbConnection.CreateCommand(cmdText);
-			dmDataReader = (DmDataReader)dmCommand.ExecuteReader();
-			DmParameter dmParameter = null;
-			if (!dmDataReader.do_HasRows)
-			{
-				return;
-			}
-			while (dmDataReader.do_Read())
-			{
-				dmParameter = new DmParameter();
-				ParameterDirection paramterType2 = ParameterDirection.Input;
-				switch (dmDataReader.do_GetInt32(0))
-				{
-				case 1:
-					paramterType2 = ParameterDirection.Input;
-					break;
-				case 2:
-					paramterType2 = ParameterDirection.InputOutput;
-					break;
-				case 4:
-					paramterType2 = ParameterDirection.Output;
-					break;
-				case 5:
-					paramterType2 = ParameterDirection.ReturnValue;
-					break;
-				}
-				ParameterNew(dmParameter, dmDataReader.GetString(2), dmDataReader.GetString(1), paramterType2, command);
-			}
-			dmDataReader.do_Close();
-		}
-		finally
-		{
-			dmCommand?.Dispose();
-		}
-	}
+	public static void DeriveParameters(DmCommand command) =>
+		W.Dm.Internal.Execution.DmDerivedParameters.Derive(command);
 
 	private void RowUpdatingHandler(object sender, DmSqlRowUpdatingEventArgs e)
 	{
 		RowUpdatingHandler(e);
 	}
 
-	private static void ParameterNew(DmParameter dmp, string name, string dbtype, ParameterDirection paramterType, DmCommand command)
-	{
-		dmp.do_ParameterName = name;
-		dmp.DmSqlType = DmSqlType.CTypeToDmDbType(DmSqlType.TypeNameToCType(dbtype));
-		dmp.do_Direction = paramterType;
-		command.do_DbParameterCollection.do_Add(dmp);
-	}
 }

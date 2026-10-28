@@ -1243,16 +1243,20 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		try
 		{
 			DmTrace.TraceMethodEnter(TraceLevel.Debug, ClassName, "IsDBNull(int i)");
-			checkClosed();
-			byte[] value = null;
-			GetByteArrayValue(i, ref value);
-			if (value == null)
-			{
-				return true;
-			}
-			return false;
+			return IsDBNullOwned(i);
 		}
 		catch { MarkProcedureFailure(); throw; }
+	}
+
+	private bool IsDBNullOwned(int ordinal)
+	{
+		checkClosed();
+		CheckIndex(ordinal);
+		byte[] value = null;
+		// A null probe advances to this column without consuming its value or
+		// resetting an active LOB cursor on the same column.
+		GetByteArrayValue(ordinal, ref value, lobPartial: true);
+		return value == null;
 	}
 
 	internal bool do_NextResult()
@@ -1582,11 +1586,7 @@ public partial class DmDataReader : DbDataReader, IFilterInfo
 		try
 		{
 			invocation.ThrowIfTerminated();
-			CheckIndex(ordinal);
-			checkClosed();
-			byte[] value = null;
-			GetByteArrayValue(ordinal, ref value); // Already fetched row bytes; no network access.
-			return CompleteReaderInvocationIfSent(invocation, Task.FromResult(value == null));
+			return CompleteReaderInvocationIfSent(invocation, Task.FromResult(IsDBNullOwned(ordinal)));
 		}
 		catch (Exception error) { MarkProcedureFailure(); throw invocation.TranslateFailure(error); }
 	}

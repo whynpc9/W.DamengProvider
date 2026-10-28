@@ -31,6 +31,18 @@ decimal amount = (decimal)total.Value;
 
 显式 `Size > 0` 限制输出字符串字符数或二进制字节数，0 表示不附加此限制，负数拒绝。DECIMAL 的 `Precision`/`Scale` 要求结果可无损表示；时间 `Scale` 也不能导致精度丢失。超限或不精确转换抛错，不截断或发布部分输出。
 
+## 派生参数
+
+以下 `DmCommandBuilder.DeriveParameters` 行为针对当前修复候选。调用要求命令未释放、未执行、`CommandType.StoredProcedure` 且连接已打开。元数据发现与过程执行共享严格的一段或两段标识符解析：普通名称转为大写，双引号名称保留大小写、点号、单引号及转义双引号；非法名称在目录 I/O 前拒绝。目录查询中的名称与对象 ID 均通过参数绑定传入。
+
+未限定名称使用服务器当前 Schema，不依赖连接配置中的 Schema 缓存。两段名称同时检查 `schema.procedure` 和当前 Schema 中的 `package.member`；两者均存在时明确拒绝歧义。独立过程与函数通过 `ALL_OBJECTS` 确认存在，参数按 `ALL_ARGUMENTS.SEQUENCE` 排列；只有对象类型为 `FUNCTION` 时，`POSITION=0` 才识别为 `ReturnValue`，即使该行名为 `V_RET` 且方向为 `OUT`。普通过程的首个参数也可能是 `POSITION=0`，不会因此变成返回值。真实存在的无参过程派生为空集合，缺失对象抛错。
+
+包成员元数据路径保留两段名称边界：先通过 `SYS.SYSPKGPROCINFOS` 确认成员存在且只有一个 `MTDID`，再读取该成员在 `SYS.SYSPKGPROCPARAMS` 中的 `IOFLAG`、`TYPE$`、`NAME`、`PARAMID`，按 `PARAMID` 排序。重载、重复或无法解释的元数据拒绝；这不增加三段名称或包执行能力。
+
+派生期间持有命令现有 mutation gate，沿用命令超时及适用的事务绑定。每个目录 Reader 在下一次查询前关闭，全部 Reader 关闭且完整参数集转换、校验成功后才一次替换参数。参数集合对象保持不变；成功后旧参数解除所有权，查询、转换、重复名或校验失败均保留原参数集合内容及所有权。
+
+包路径目前仅有离线验证。本次 `WDM_PROVIDER_TEST` 账号缺少 `CREATE PACKAGE` 权限，服务器返回 `-5528`，包成员实库验证为 `integration_pending`，不计为通过。[DeriveParametersProbe](../../tools/DeriveParametersProbe/Program.cs) 的 `--standalone-only`（或 `--skip-package`）显式跳过包创建和全部包用例，并记录 `not_run`；独立过程、函数、带引号名称、失败后同连接复用及本次精确对象清理照常验证。无该参数时保留包探针，供具备现有合法权限的环境使用。
+
 ## 输出可读时机和失败
 
 - `ExecuteNonQuery`/`ExecuteScalar`：结果终结且 Reader 清理成功后，才统一发布本次标量输出。
@@ -88,7 +100,7 @@ while (await cursor.ReadAsync())
 
 **存储过程与活动显式事务的组合在发送前拒绝。** 实测过程内部 COMMIT 后，官方事务对象仍可调用 Rollback，但业务数据已经提交；当前协议不能可靠反映这类过程事务状态。不要据取消、超时或异常推断过程已经回滚，不自动重试过程；有副作用时由新连接核查结果。没有活动显式事务时，过程内部事务控制由服务器执行。
 
-已整合主线 PR #19 的 DbBatch/数组绑定实现；数组绑定仍拒绝过程，DbBatch 在逐条预检时拒绝非 Text 命令及输出参数，因此不会先执行前序命令再拒绝后续过程。范围不含 EF 存储过程映射、分布式事务或 package 名称解析。
+已整合主线 PR #19 的 DbBatch/数组绑定实现；数组绑定仍拒绝过程，DbBatch 在逐条预检时拒绝非 Text 命令及输出参数，因此不会先执行前序命令再拒绝后续过程。过程执行范围不含 EF 存储过程映射、分布式事务或 package 名称解析；上述包名称支持仅用于派生元数据。
 
 ## 验证入口
 

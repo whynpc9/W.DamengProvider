@@ -41,6 +41,46 @@ public sealed class DmParameterCollection : DbParameterCollection, IFilterInfo
 		return copy;
 	}
 
+	// Discovery publishes one complete replacement while retaining the public
+	// collection object. Validation and attachment must not disturb its old members.
+	internal void ReplaceDerivedParameters(IReadOnlyList<DmParameter> parameters)
+	{
+		if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+		using var mutation = BeginMutation();
+		var replacement = new List<DmParameter>(parameters.Count);
+		var names = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		foreach (DmParameter parameter in parameters)
+		{
+			if (parameter == null || parameter.parameterCollection != null)
+				throw new InvalidOperationException("Derived parameters must have no collection owner.");
+			string name = parameter.do_ParameterName;
+			if (string.IsNullOrEmpty(name) || name is "?" or ":?" or "@?")
+				throw new InvalidOperationException("Derived parameter metadata has no usable name.");
+			if (names.ContainsKey(GetBasename(name)))
+				throw new InvalidOperationException("Derived parameter names are ambiguous.");
+			names.Add(GetBasename(name), replacement.Count);
+			replacement.Add(parameter);
+		}
+		int attached = 0;
+		try
+		{
+			foreach (DmParameter parameter in replacement)
+			{
+				parameter.AttachCollection(this);
+				attached++;
+			}
+		}
+		catch
+		{
+			for (int index = 0; index < attached; index++) replacement[index].DetachCollection(this);
+			throw;
+		}
+		List<DmParameter> previous = InternalList;
+		InternalList = replacement;
+		parameterNameDictionary = names;
+		foreach (DmParameter parameter in previous) parameter.DetachCollection(this);
+	}
+
 	public long ID
 	{
 		get
