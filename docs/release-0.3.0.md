@@ -1,6 +1,8 @@
-# W.DamengProvider 0.3.0
+# W.DamengProvider 0.3.0 发布记录
 
-状态：2026-10-17 已发布至 NuGet，公开安装、签名与实际运行时验证通过；正式签名载荷九次实库 smoke 与精确清理通过，状态 `published_and_public_install_verified`。
+> 历史版本记录；当前版本为 [0.3.1](release-0.3.1.md)。本页结果只适用于 0.3.0 及其当时环境。
+
+发布日期：2026-10-17。公开安装、签名和实际运行时验证通过；正式签名包的九次实库 smoke 与精确清理通过，状态为 `published_and_public_install_verified`。
 
 ## 变更范围
 

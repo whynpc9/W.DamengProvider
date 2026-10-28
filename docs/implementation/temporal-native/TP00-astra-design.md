@@ -1,5 +1,7 @@
 # TP-00 Astra 设计与 R3 新基线审阅
 
+> 阅读提示：这是时间精度专项的历史设计档案，不是当前操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 日期：2026-10-08。审阅基线：`fe89bd44abe99c1608499f71f4634a13e732c826`。输入为冻结的 [v2 计划](../temporal-dotnet-precision-plan.v2.md)、[Kimi 处置](../reviews/temporal-kimi-review-disposition.md) 和当前 [ownership](../active-ownership.md)。本文件只给设计及静态源码结论，没有运行 dotnet、数据库或读取 secrets，不代表 TP-01/02 或 A/B/C 验收通过。
 
 结论：v2 在 R3 合并后可实施，严格无损、Precision 非零拒绝、稳定默认选择、getter 分层均不需要回退。TP-01 和 TP-02 可在 TP-00 收口后分别推进。真正需要先固定的是公开 raw helper 单位契约和 metadata 来源保存点；其余未知属于明确的 profile 取证门，不应阻塞纯核心实现。

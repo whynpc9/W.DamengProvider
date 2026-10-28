@@ -1,7 +1,9 @@
-# Product identity fixtures
+# 产品身份测试数据
 
-`contract.json` records the T03 candidate identity contract from `docs/implementation/T03-design.md` and the first public API set in S02. The ten `core_types` are the initial API set. `DmDataAdapter` is listed separately as a compatibility type; its presence does not promise support or behavior coverage. This contract is source-derived and does not claim that a package build or acceptance check has passed.
+`contract.json` 记录来自 `docs/implementation/T03-design.md` 和 S02 的身份约定。十个 `core_types` 是最初公开 API 集；`DmDataAdapter` 单列为兼容类型，出现不代表行为已支持或验证。该文件来自源码设计，不表示打包或验收已通过。
 
-`resource_value_sha256` records the accepted official observation for `message.error`, copied from `official_observations.resources` in `docs/implementation/evidence/T02-validation.json`. The evidence file SHA-256 is `7fe8520b9b030395214601fac3918a7745182cb6e9a9a859d6f95ff42e071919`. Its observed culture set is exactly `neutral`, `en`, `zh-CN`, `zh-HK`, and `zh-TW`; each `value_sha256` is a non-empty lowercase 64-character hexadecimal digest. The fixed official asset is `DM.DmProvider` version `8.3.1.47463`, SHA-256 `8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b` (the recorded observed and expected hashes agree). These are official baseline expectations and were not generated from W resources.
+`resource_value_sha256` 记录 `message.error` 的官方观察值，来源为 `docs/implementation/evidence/T02-validation.json` 中的 `official_observations.resources`。证据文件 SHA-256 为 `7fe8520b9b030395214601fac3918a7745182cb6e9a9a859d6f95ff42e071919`。
 
-`smoke-cases.json` contains synthetic Unicode strings and their SHA-256 hashes over each value's UTF-8 bytes. The values are test data only and do not require a database or credentials. Hashes were independently calculated with Python's `hashlib.sha256(value.encode("utf-8"))`.
+文化集合固定为 `neutral`、`en`、`zh-CN`、`zh-HK`、`zh-TW`，每个 `value_sha256` 都是非空小写 64 位十六进制摘要。官方资产固定为 `DM.DmProvider 8.3.1.47463`，SHA-256 为 `8f6e59680d0a076df53bea50d5a2bdbd288535cd85b2d7ca5064c02adc9c6e6b`。这些预期来自官方基线，不是从 W 资源生成。
+
+`smoke-cases.json` 包含合成 Unicode 字符串及其 UTF-8 字节的 SHA-256，由 Python `hashlib.sha256(value.encode("utf-8"))` 独立计算。它们只是测试数据，不需要数据库或凭据。

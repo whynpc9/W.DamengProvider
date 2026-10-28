@@ -1,6 +1,8 @@
-# W.DamengProvider 0.2.0
+# W.DamengProvider 0.2.0 发布记录
 
-2026-10-15 发布，状态：`published_and_public_install_verified`。NuGet 公开安装、签名及四运行时包消费验证已通过。前一版本为 [0.1.0-preview.1](release-0.1.0-preview.1.md)。
+> 历史版本记录；当前版本为 [0.3.1](release-0.3.1.md)。本页结果只适用于 0.2.0 及其当时环境。
+
+发布日期：2026-10-15，状态为 `published_and_public_install_verified`。NuGet 公开安装、签名和四个运行时的包消费验证通过。前一版本为 [0.1.0-preview.1](release-0.1.0-preview.1.md)。
 
 ## 变更范围
 

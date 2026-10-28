@@ -1,20 +1,28 @@
-# T04 开发候选包：配置与能力变更
+# 与旧版驱动相比的配置变化
 
-当前版本为 `0.3.0`；本页历史阶段证据仍归原候选，当前发布状态与验证范围见[发布记录](../release-0.3.0.md)。
-
-此文记录配置与能力的兼容变化。后续异步、池化和流式 LOB 见 [R2](R2.md) 和 [R3](R3.md)，TLS 见 [安全说明](T07-security.md)。历史 T04 验证不代表当前发布候选已验收。
+本文面向从旧驱动迁移到当前 [0.3.1](../release-0.3.1.md) 的开发者。连接键和默认值见[连接选项](T04-options.md)，异步与数据源行为见[异步和取消](R2.md)及[数据源与 LOB](R3.md)。
 
 ## 连接与配置
 
-- `DmConnection` 配置在构造、ConnectionString 赋值时解析为独立快照。只有 `Closed` 可替换，`Open()` 进入网络路径前发布 `Connecting`，期间的配置 setter 抛 `InvalidOperationException`。
-- 不再提供默认管理员账号或口令。缺 Host、User、Password 时，在联网前以固定错误拒绝。
-- 默认 `TransportSecurity=RequireTls`；完整 TLS 必须通过证书链、主机名和有效期校验，未验证的协议模式明确拒绝。本地授权测试实例须显式设置 `PlaintextAllowed`。服务端协商未支持的 TLS/原生加密模式，或要求旧口令/消息加密时均在 cipher 初始化前拒绝；旧的接受任意证书路径不再使用。
-- `DmConnection.ConnectionTimeout` 返回标准秒，非零毫秒向上取整；旧连接串 `connect_timeout` 仍按毫秒输入。`DmCommand.CommandTimeout` 默认 30 秒，显式 0 仍代表无限。
-- 成功 Open 后，默认 `PersistSecurityInfo=false` 的公开 `ConnectionString` 与 `Password` 不显示口令；关闭或后续重新打开失败后继续脱敏，直到显式重新赋值。Clone 和再次 Open 使用私有快照中的原始认证信息；Clone 继承公开脱敏状态。
-- `Schema` 作为独立设置，仅 Closed 可设置；非空 Schema 始终作为单个双引号标识符执行 `set schema`，内部双引号翻倍，保留输入的精确大小写；空 Schema 不发送该语句。旧 `schemaSensitive=false` 的不加引号行为不再使用。物理 catalog 切换不支持。连接串别名、单位、冲突、未知键与不支持值由严格解析器处理；Builder 的配置读取仍可读取密码，诊断需使用 `ToRedactedString()`。
+- 连接配置在构造 `DmConnection` 或给 `ConnectionString` 赋值时解析为独立快照。只有 `Closed` 状态可以替换配置；`Open()` 进入网络流程后，配置 setter 会抛 `InvalidOperationException`。
+- 不再提供默认管理员账号或密码。缺少 Host、User、Password 时，会在联网前拒绝。
+- 默认 `TransportSecurity=RequireTls`，必须通过证书链、主机名和有效期检查。可信的本地明文测试环境必须显式设置 `PlaintextAllowed`；不支持的服务器加密模式会明确拒绝，不会接受任意证书或自动降级。
+- `DmConnection.ConnectionTimeout` 返回秒，非零毫秒向上取整；连接串 `connect_timeout` 仍按毫秒输入。`DmCommand.CommandTimeout` 默认 30 秒，0 表示不限时。
+- 默认 `PersistSecurityInfo=false`。成功打开后，公开 `ConnectionString` 和 `Password` 不显示密码；关闭或重新打开失败后仍保持脱敏，直到显式重新赋值。克隆和重新打开使用私有快照中的原始认证信息。
+- `Schema` 只能在关闭状态设置。非空 Schema 会作为单个双引号标识符执行 `set schema`，保留大小写并转义内部双引号；空 Schema 不发送语句。物理 catalog 切换不支持。
+- Builder 的配置读取仍可能返回密码；日志和诊断应使用 `ToRedactedString()`。
 
-## 暂不开放的入口
+## 保留类型但未开放的功能
 
-statement cache、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项不能通过非默认值启用。`EnlistTransaction`、Reconnect、FLDR、DmFldrExport 和两代 BulkCopy 直接拒绝；底层 `DmFldrDllCall` 从 public 改为 internal。所有旧 `IFilterInfo.filterHead` 只接受 `null`；共享 `BaseFilter` 链不构造。`DmTrace`、`Logger` 和 `LogWriter` 的旧输出路径为 no-op，非 None 的 `DmTrace.Level` 设置拒绝。`CanCreateDataSourceEnumerator=false`；`DbProviderFactory.CanCreateBatch` 在 0.1.0-preview.1 为 false，现代目标自 0.2.0 起为 true，Standard 2.1 资产不提供 DbBatch（见 [I07/I08](I07-I08-array-binding-dbbatch.md)）。
+以下功能不能用非默认值启用：语句缓存、自动重连、读写分离、Enlist、HA、压缩、SkyWalking、服务文件和旧日志选项。
 
-这些守卫保留了部分兼容类型和签名，但不承诺这些功能的行为。直接池化与 DmDataSource 的现行边界见 [R3](R3.md)。
+以下入口会明确拒绝：
+
+- `EnlistTransaction`、Reconnect、FLDR、`DmFldrExport` 和两代 BulkCopy。
+- 旧 `IFilterInfo.filterHead` 的非 `null` 值和共享 `BaseFilter` 链。
+- 非 None 的 `DmTrace.Level`；旧 `DmTrace`、`Logger`、`LogWriter` 输出路径不执行实际操作。
+- 原生 `DmFldrDllCall` 已从 public 改为 internal。
+
+`CanCreateDataSourceEnumerator=false`。现代目标框架支持 `DbBatch`，`netstandard2.1` 不提供；详见[数组绑定与 DbBatch](I07-I08-array-binding-dbbatch.md)。
+
+保留某些兼容类型或签名不代表对应功能可用。直接池化和 `DmDataSource` 的当前行为见[数据源与 LOB](R3.md)。

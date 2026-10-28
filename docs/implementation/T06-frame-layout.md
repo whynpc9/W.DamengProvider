@@ -1,6 +1,6 @@
-# T06 frame layout and decoder guards
+# T06 帧布局与解码保护（历史）
 
-Date: 2026-09-29. This records source verified fields used by T06. It does not claim a complete Dameng wire specification.
+> 2026-09-29 的源码核对记录，只列出当时确认的字段，不是完整的达梦协议规范。当前传输行为见[网络传输与消息边界](../compatibility/T06-transport-boundaries.md)。
 
 ## Source verified common frame
 

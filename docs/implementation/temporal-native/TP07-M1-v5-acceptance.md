@@ -1,5 +1,7 @@
 # TP07 mapping-v5 离线复验
 
+> 阅读提示：这是 EF 时间映射的历史离线验收，不代表实际 EF 运行或完整兼容通过。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。root 接受本轮限定离线门；L0 重验、实际 EF 运行与完整 C 门仍待完成。
 
 [FF7 表达式前置门](TP07-FF7-expression-acceptance.md) 已独立通过53项。依[限定变更设计](TP07-FF7-mapping-change-design.md)，mapping-v5 仅修改一个产品 helper 和两个测试文件：声明 fraction7 时固定生成显式 FF7 的 TO_TIMESTAMP/TO_TIMESTAMP_TZ；0…6、bare6、NULL、守卫、参数与 reader 路径保持。没有按值尾零选择 SQL，也没有修改数据库配置或 W 候选包。

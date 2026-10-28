@@ -1,5 +1,7 @@
 # TP03 writer / reader wiring acceptance
 
+> 历史专项验收：只检查固定候选在 shared/core 路径上的时间写入与读取衔接，明确不包含 TLS、TP04 绑定、TP05 getter 全覆盖或完整时间能力验收。它不是当前发布流程；下文固定哈希、命令和审批信息仅用于原样本复现。
+
 This separate policy consumes a new **candidate / shared / core-only** run from the unchanged TP01 runner. Its scope is `TP03_writer_reader_wiring`. It verifies the existing fixed-column TS/TZ six- and seven-digit writer paths and the public W typed, generic, GetValue and GetString reader continuity. TLS is rejected by this policy.
 
 It does not close TP04 binding, TP05 getter coverage or full temporal acceptance. `candidate_acceptance`, `full_temporal_acceptance`, `tp04_binding_acceptance` and `tp05_complete` are always false. DATE/TIME/interval, malformed inputs, async routes and lifecycle regressions remain separate TP03 offline gates. A passing core run must not substitute for them.

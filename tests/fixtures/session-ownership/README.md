@@ -1,29 +1,21 @@
-# T05 session ownership scenarios
+# 会话与资源生命周期测试数据
 
-scenarios.json contains deterministic synthetic vectors for the S03 session, execution-lease, invocation, and reader-lifecycle contract, plus descriptions of candidate real-database probes.
+`scenarios.json` 提供 S03 会话、执行租用、调用和 Reader 生命周期的确定性合成输入，以及候选实库过程。当前行为见[会话与资源管理](../../../docs/compatibility/T05-session-ownership.md)。
 
-## Offline vectors
+## 离线数据
 
-Each offline_scenarios entry describes client-side state-machine expectations. The shapes are:
+`offline_scenarios` 包含有序交互、身份不匹配、计数器耗尽、网络故障矩阵和嵌套 LOB 等形状。它们都是客户端状态机输入和期望，不表示实现已通过。
 
-- Ordered interaction cases: id, category, setup, steps, and expected assertions.
-- Identity mismatch case: current_operation, stale_abort_vectors, and expect_for_each_vector.
-- Counter exhaustion case: max_value_decimal, overflow_vectors, and per-counter expectations.
-- Wire-fault matrix: wire_entry_expectations with per-entry final states.
-- Nested LOB case: root_identity, child_invocations, and expect_for_each_child.
+快速失败要求异常可赋值给 `InvalidOperationException`、不等待当前占用者且没有网络活动。合成 Read 结果或 `chunk_consumed` 都是模型输入，不是数据库响应。
 
-These are synthetic inputs and desired contract outcomes; they do not report that an implementation passed. Fast-failure assertions require an exception assignable to InvalidOperationException, no wait for the current owner, and no wire activity. Values such as a synthetic Read result or chunk_consumed are model inputs, not database responses.
+身份由 session ID、lease generation、execution ID、invocation ID 组成；旧取消向量每次只改变一个分量。溢出值使用十进制字符串，避免 JSON 舍入。当前实现将计数器耗尽报告为 `InvalidOperationException`；溢出不得回绕，相关物理会话必须不可用。Open 或池验证失败最终为 Closed，已打开会话中的失败最终为 Broken。
 
-The identity tuple is session ID, lease generation, execution ID, and invocation ID. Stale-abort vectors vary one component at a time. Overflow values are decimal strings so JSON consumers cannot round the 64-bit value. The current T05 implementation reports counter exhaustion as InvalidOperationException. Overflow must reject without wrap and must leave any affected physical session unusable. An Open or pool-validation failure ends Closed; a failure in an already-open session ends Broken.
+网络矩阵覆盖 TCP connect、旧版和 MSG 收发、超时设置及当前未引用的 poll/receive 健康探测。每个活动调用点都应归属对应会话；独立 DBAliveCheckThread TCP 探测不共用会话传输。文件不包含协议包、payload 或服务器回复。
 
-The wire matrix includes abstract operation buckets and the current source call-site inventory supplied for T05: TCP connect, the legacy and MSG send/receive paths, timeout setup, and the currently unreferenced poll/receive health probe. Map each active call site to its owning session and add any further entries found. The separate DBAliveCheckThread TCP probe does not share the session transport. This fixture contains no protocol packets, payload bytes, server replies, or claimed wire traces.
+LOB 向量模拟 Reader → Stream → Chunk 的子调用：子调用保留根会话、代际和执行身份，使用不同 invocation ID，且不重新获取根执行租用。
 
-The LOB vector models a reader-to-stream-to-chunk child invocation. It expects child calls to retain the root session, generation, and execution identity with a distinct invocation ID, without reacquiring the root lease.
+## 实库过程
 
-## Real-database probe descriptions
+`real_database_probes` 只是过程描述，全部为 `planned_not_run`。实际运行使用 TEST wrapper 和 `WDM_PROVIDER_TEST`，不把本机连接配置写入 fixture；需要 LOB 数据时只创建和清理 TEST 下本轮唯一对象。
 
-Entries in real_database_probes are procedure descriptions only. Each is marked planned_not_run; no observed results are recorded. When run, use the repository test wrapper and designated test identity WDM_PROVIDER_TEST. Do not copy local connection settings into this fixture. If a probe needs stored LOB data, create and clean only uniquely named objects owned by that test in the dedicated test schema.
-
-A real database can verify provider-visible behavior for these schedules. It cannot establish internal race behavior such as stale identity matching, checked overflow, zero-byte fast failure, or exception handling at every wire entry; those require offline or internal fault-injection checks.
-
-The contract source is docs/implementation/v1/specs/03-session-and-ownership.md. Preparing these files did not open a connection or run a test.
+实库可验证驱动可见行为，但不能证明内部身份竞争、checked 溢出、零字节快速失败或每个网络入口的异常处理；这些仍需离线和故障注入测试。准备文件未打开连接或运行测试。

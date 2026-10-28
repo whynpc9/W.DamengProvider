@@ -1,5 +1,7 @@
 # TP06 same-package supplemental acceptance
 
+> 历史补充验收工具：只服务固定的 `0.1.0-temporal.20261008144915` 包，补充 G1/G2/G3 场景，不能替代完整 v11、EF 或发布验收。后续 v2–v7 段落是逐步修订记录，不代表这些源码交付已经执行或通过；更换包必须重新冻结输入，不能只改哈希。
+
 This tool implements the frozen [G1/G2/G3 coverage design](../../docs/implementation/temporal-native/TP06-coverage-audit.md). It supplements the unchanged complete v11 shared/TLS candidate gates. Its result does not establish full temporal, EF or release acceptance.
 
 The only candidate is `W.DamengProvider 0.1.0-temporal.20261008144915`: package `da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d`, DLL `843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980`, MVID `aa23e673-957c-4b1e-bf0f-291ff60077e6`. Product manifest/archive and both profile capabilities remain pinned to the frozen package preparation. The project uses exact PackageReference assets, not a project/DLL reference. The executable checks actual loaded assemblies, runtime deps, source/archive/capability bytes and tool input hashes before Configure/Open. It verifies actual TEST user/schema and the physical profile immediately after every Open, before any test DDL/DML. The runner checks archive/package identity using byte-pinned, reviewed v11 Python helpers copied into its private build.

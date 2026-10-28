@@ -1,5 +1,7 @@
 # TP06 G3 interval leading 来源补充裁决
 
+> 阅读提示：这是时间精度专项的历史设计补充，不是当前操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-08。状态：**design_accepted_for_tool_implementation / runtime_pending**。本文件只修正冻结 [coverage audit](TP06-coverage-audit.md) 中 `NATIVE_INTERVAL_REJECT_leading` 的无条件“DAY(2)列100天必须Overflow”预期；原audit及所有历史证据不回写。此次只读源码/已存资料，未运行build、tests或DB。
 
 原设计把SQL目标列声明直接等同于驱动拥有的固定参数约束，这一推论不成立。已批准的CType21/flag2/rawscale0/mask0占位规则允许advisory绑定DAY(9) TO SECOND；它不提供DAY(2)列约束。此次没有定位到可核验的原始实库raw21占位JSON，不把已批准设计和合成decoder测试称为实际服务器观察；当前候选须记录本次真实describe。

@@ -1,5 +1,7 @@
 # TP07-P1 消费桥与映射观察静态审阅
 
+> 阅读提示：这是 EF 消费桥的历史静态审阅，不是映射、实库或完整 EF 验收。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**bridge_static_accepted / Low_lock_build_observation_pending**。未发现阻塞P1窄窗口的静态问题。接受的是固定EF源码到唯一W候选的隔离消费桥和未修正mapping观察工具，不是时间mapping、EF测试全集、真实数据库或C门接受。
 
 已读 [TP07设计](TP07-astra-design.md) 与 [TP06 root接受](TP06-acceptance.md)。本次只读源码/补丁/manifest及实际文件哈希，未执行prepare、SDK、restore/build/tests、observer或DB，未修改源。High的prepare/replay收据只作作者自检输入，不能替代Low独立重建。

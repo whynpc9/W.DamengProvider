@@ -1,5 +1,7 @@
 # TP06 Supplement G2 结果 descriptor 分层补充
 
+> 阅读提示：这是时间精度专项的历史设计补充，不是当前操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。状态：**design_recommended / root_decision_pending / runtime_unverified**。本补充只读审阅 Supplement v2 的 G2 BIND 合同与 producer；不修改已冻结 [主工具triage](TP06-v2-candidate-triage.md)，不改变已经派发的主validator v12范围。本轮无源码/工具修改、build/tests/validator/DB运行。
 
 ## 1. 现有耦合与证据能力

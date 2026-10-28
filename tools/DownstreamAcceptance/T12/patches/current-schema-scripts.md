@@ -1,5 +1,7 @@
 # T12 current-schema migration-script 补丁
 
+> 历史补丁与失败修复记录：四项是契约数量，不是通过数；原 1/4 通过及后续修复待验状态均属于当时。只适用于固定输入，不能据此宣称当前脚本或 EF 已验收。
+
 状态：implementation_ready / revalidation_pending。作者没有运行 dotnet、数据库连接或脚本；四项测试是契约数量，不是通过数。验证者的原 R1 scripts 轮次为 1/4 通过，3项失败集中于 named migration ID 解析；原失败证据保留，14位 ID 修复后的 fresh snapshot 待重验。
 
 ## 固定输入与应用顺序

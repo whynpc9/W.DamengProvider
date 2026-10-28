@@ -1,6 +1,8 @@
-# W.DamengProvider 0.1.0-preview.1
+# W.DamengProvider 0.1.0-preview.1 发布记录
 
-2026-10-13 发布。状态：`published_and_public_install_verified`。这是面向 .NET 10 的驱动预览版本，支持边界见 [发布时 README](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/README.md) 与 [发布时 R3 兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/docs/compatibility/R3.md)。
+> 历史预览版记录；当前版本为 [0.3.1](release-0.3.1.md)。不要用本页的早期支持范围解释当前包。
+
+发布日期：2026-10-13，状态为 `published_and_public_install_verified`。这是仅面向 .NET 10 的预览版，支持边界见[发布时 README](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/README.md)和[发布时 R3 兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/v0.1.0-preview.1/docs/compatibility/R3.md)。
 
 ## 发布身份
 

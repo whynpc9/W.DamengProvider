@@ -1,5 +1,7 @@
 # T1：EF 事务保存点能力适配增量
 
+> 历史 EF 补丁说明：只适用于已含指定 bridge/mapping 的批准 175 项源，不能应用到外部 dirty checkout 或当前 EF。源码范围、测试数量和后续验收分别判断，不能据此宣称当前驱动或 EF 已兼容。
+
 正式 provider 的 transaction factory 现在创建适配事务，将 `SupportsSavepoints` 转发给构造时传入的同一个 `DbTransaction`。支持能力为 false 时，EF BatchExecutor 跳过自动保存点并继续原事务内的业务 batch；能力为 true 时，保存点及失败 rollback-to 路径保留。事务 ownership、Commit/Rollback/Dispose 生命周期由原 RelationalTransaction 基类实现。没有改 W 包、官方驱动、AutoSavepointsEnabled 或 AutoTransactionBehavior。
 
 新 source 从批准 prepared-v5 的 `approved_ef_source_hashes` 精确复制175项后，仅新增两个 product 类型和一个 unit 文件，并增加一行正式DI注册，实际178项。patch 只作用于已含原 bridge/mapping 的批准175 EF源；不得再应用到外部dirty checkout或已应用该增量的新source。manifest枚举实际178项、175基线及原mapping/bridge引用、新独立patch SHA和namespace边界。原temporal-mapping.patch/mapping-manifest/bridge证据不改。

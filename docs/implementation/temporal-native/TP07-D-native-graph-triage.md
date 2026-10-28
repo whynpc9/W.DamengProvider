@@ -1,5 +1,7 @@
 # TP07 D N0：FrameworkReference pruning归因与有限图校验设计
 
+> 阅读提示：这是历史依赖图失败归因与工具设计，不是当前构建或 EF 适配指南。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**D的24包及四组删边由本次明确framework pruning解释；外部准备的逐项目图合同需要修正，原N0仍保留失败。** 本轮只读实际lock/assets/dgspec、新cache和本机SDK/框架文件；未运行SDK、restore、tests、DB、模块导入或网络，未改C#、FrameworkReference、pruning设置、锁或旧证据。
 
 ## 1. 实际运行与失败边界

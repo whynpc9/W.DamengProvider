@@ -1,26 +1,26 @@
-# T08 command and result scenarios
+# Command 与结果集测试场景
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`. Cases use the shared fixture shape `case_id`, `contract`, `execution_status`, `input`, and `expected`; every synthetic case is `not_run`. The logical result descriptors are supplied by a harness to test the public command/reader contract in [command and reader compatibility contract](../../../docs/compatibility/T08-command-reader.md). They are not real DB output or protocol messages.
+`scenarios.json` 分为合成 `cases` 和 `real_database_probes`。合成用例为 `not_run`，实库过程为 `planned_not_run`；逻辑结果由测试宿主提供，用于验证[Command 与 Reader 行为](../../../docs/compatibility/T08-command-reader.md)，不是数据库输出或协议消息。
 
-Real probes are procedures only and are marked `planned_not_run`. When run, use `WDM_PROVIDER_TEST` through `scripts/with-dameng-test.sh`, create unique objects owned by the probe, check final state independently, and clean only those objects. This fixture contains no connection string, credentials, certificates, packet bytes, opcode assumptions, or fabricated server responses.
+实库运行必须使用 TEST wrapper、本轮唯一对象、独立最终状态检查，并只清理本轮对象。fixture 不含连接配置、凭据、证书、报文或 opcode 假设。
 
-## Result sequence model
+## 结果序列模型
 
-Each `input.results` array is an ordered logical sequence:
+`input.results` 是有序逻辑序列：
 
-- `rowset` has column metadata and synthetic rows. An empty `rows` array is still a rowset; a non-DML rowset uses `records_affected: -1`.
-- `update_count` carries an integer `records_affected`; `null` means unknown and must not become zero.
-- `error` carries a synthetic `sql_code` marked as fixture-only; the case checks that later errors are not suppressed.
+- `rowset`：列元数据和合成行；空 `rows` 仍是结果集，非 DML 使用 `records_affected: -1`。
+- `update_count`：整数影响行数；`null` 表示未知，不能变成 0。
+- `error`：测试专用 `sql_code`，验证后续错误不会被吞掉。
 
-`input.operations` lists the client-facing operations used by the scenario, such as `ExecuteReader`, `Read`, `NextResult`, `ExecuteScalar`, `ExecuteNonQuery`, or `Close`. Result ordering here describes the test harness contract only; it does not claim a Dameng statement produces that sequence.
+`input.operations` 包含 ExecuteReader、Read、NextResult、ExecuteScalar、ExecuteNonQuery、Close 等客户端操作。这里的顺序只约束测试宿主，不声称达梦语句会产生同样序列。
 
-## Coverage and boundaries
+## 覆盖范围与边界
 
-- CMD-01/02: UPDATE and DELETE 0/1 affected counts; DML plus `SQL%ROWCOUNT`; identity/sequence keys and multiple generated columns, with no inserted probe between DML and readback.
-- CMD-03/04: two rowsets, an empty first rowset, update count including unknown, `ExecuteScalar` no-row `null` versus SQL NULL `DBNull.Value`, and errors after earlier results or counts.
-- CMD-04: strings, comments, and quoted identifiers containing semicolons and `:p`, `@p`, and `?` do not create binds or statement splits. Parameter values are never interpolated into SQL text.
-- CMD-05/06: combined `SingleRow|CloseConnection` and `SequentialAccess|CloseConnection` flags; `SchemaOnly|KeyInfo` fails before wire activity when the metadata path is unverified; early reader close never sends an unstarted side-effect operation.
-- CMD-07: repeated Prepare/transaction/execution preserves CommandText and the active command plan’s parameter snapshot; mutable byte-array input is copied or isolated from concurrent caller mutation.
-- The `EFCoreNextResult` switch and `/*EFCOREROWCOUNT*/` occurrence count are separate characterization inputs. The fixture does not invent their historical interaction or generalize support to arbitrary DMSQL.
+- CMD-01/02：UPDATE/DELETE 的 0/1 影响行数、DML + `SQL%ROWCOUNT`、identity/sequence 键和多个生成列，DML 与回读之间不插入额外探测。
+- CMD-03/04：两个结果集、首个空结果集、已知/未知影响行数、ExecuteScalar 无行 `null` 与 SQL NULL `DBNull.Value`，以及前序结果后的错误。
+- CMD-04：字符串、注释和引号标识符中的分号、`:p`、`@p`、`?` 不产生绑定或语句拆分；参数值不插值进 SQL。
+- CMD-05/06：`SingleRow|CloseConnection`、`SequentialAccess|CloseConnection`；元数据路径未验证时 `SchemaOnly|KeyInfo` 在网络活动前拒绝；提前关闭不发送未开始的副作用操作。
+- CMD-07：重复 Prepare/事务/执行保持 CommandText 和当前参数快照；可变字节数组会复制或隔离。
+- `EFCoreNextResult` 开关和 `/*EFCOREROWCOUNT*/` 出现次数是独立观察输入，不推断历史交互或推广到任意 DMSQL。
 
-`SequentialAccess` scenarios do not claim full streaming LOB behavior; that remains S10. `SchemaOnly|KeyInfo` is represented as pre-wire `NotSupportedException` when the required describe path is not verified. Real multi-rowset probes must first identify an operation known to be supported on the target server.
+`SequentialAccess` 场景不证明完整流式 LOB；`SchemaOnly|KeyInfo` 的当前已支持范围以[元数据说明](../../../docs/compatibility/I10-metadata.md)为准，本 fixture 中未验证路径仍按发送前拒绝处理。实库多结果探针必须先选择目标服务器已知支持的操作。

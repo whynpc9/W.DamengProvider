@@ -1,5 +1,7 @@
 # TP07 EF 时间精度验收与最小映射修正设计
 
+> 阅读提示：这是 EF 时间映射的历史设计与验收档案，不是当前 EF 适配指南。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-08。状态：**design_prepared / implementation_not_activated**。依据 [v2计划](../temporal-dotnet-precision-plan.v2.md) §4/6/9 与 [TP00 EF交接](TP00-astra-design.md) §9。本次仅通过 git object 读取固定 EF 源码及既有 W 下游工具，未修改 EF 工作区、切分支、运行 dotnet/DB 或产包。TP06 最终候选身份尚待交付，本文不预填包版本或验收结果。
 
 ## 1. 固定输入、隔离与交付范围

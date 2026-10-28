@@ -1,27 +1,25 @@
-# T06 transport and frame boundary scenarios
+# 传输与帧边界测试数据
 
-`scenarios.json` contains deterministic synthetic inputs for the S04 NET-01 through NET-04 contracts. Every case is marked `execution_status: not_run`; `expected` fields state desired client behavior and are not observed test results.
+`scenarios.json` 提供 S04 NET-01 至 NET-04 的确定性合成输入。所有用例都标记为 `execution_status: not_run`；`expected` 是期望行为，不是已观察结果。
 
-## Source-backed frame fields
+## 字节字段依据
 
-The frame byte vectors use only the fields confirmed in the existing source:
+- [`T02_0200008D.cs`](../../../src/W.DamengProvider/Internal/Legacy/Dm/T02_0200008D.cs#L142) 定义 64 字节头：命令偏移 4、正文长度偏移 6、校验字节偏移 19，heartbeat 命令为 269。
+- 同文件 203–208 行写入命令和正文长度，正文长度为缓冲区长度减 64；`T02_02000092.cs` 361–370 行按 little-endian 写整数。
+- 298–335 行仅在协商 `crcBody` 且命令不是 200 时使用正文 CRC32；STARTUP 200 使用头部 XOR。338–367 行为校验实现，385–622 行为 CRC32 表。
+- Heartbeat 使用短合成正文和 `crc_body_negotiated: false`，明确覆盖 XOR 路径。
 
-- [`T02_0200008D.cs`](../../../src/W.DamengProvider/Internal/Legacy/Dm/T02_0200008D.cs#L142) defines a 64-byte header, command at byte offset 4, body length at offset 6, checksum byte at offset 19, and heartbeat command 269.
-- `T02_0200008D.cs` lines 203-208 writes command and body length after encoding; the written body length is buffer length minus 64. `T02_02000092.cs` lines 361-370 writes the integer fields little-endian.
-- `T02_0200008D.cs` lines 298-335 selects body CRC32 only when `crcBody` is negotiated and command is not 200. Startup command 200 follows the header XOR checksum path. Lines 338-367 implement the XOR and CRC32 routines; the exact CRC32 lookup tables are at lines 385-622.
-- Heartbeat command 269 is consumed as a complete frame by the S04 contract. Its vector uses a short synthetic body and `crc_body_negotiated: false` so the header XOR path is explicit.
+未建模的头字节填零，只为让解析输入可复现。这些不是合法应用消息或服务器抓包，也不推断未知字段含义或服务器协议上限。
 
-Unmodeled header bytes are zero-filled only to make small parser inputs reproducible. These are parser-level byte vectors, not valid application messages or captured server frames. The fixture does not infer unverified header meanings or a server protocol maximum.
+## 覆盖范围
 
-## Coverage
+- NET-01：逐字节头读取、分块正文、短发送、零进展发送和合并帧。
+- NET-02：头/正文 EOF、负长度、总长度溢出、64 MiB 产品帧上限、长 decimal 运算溢出、正文 CRC32 和 STARTUP XOR 不匹配。
+- NET-03：heartbeat 头和完整正文消费，原命令期限不变。
+- NET-04：DNS、TCP、TLS、LOGIN 共用一份连接期限。
 
-- NET-01: one-byte header reads, fragmented body reads, short send progress, zero-progress send, and two coalesced frames.
-- NET-02: EOF in header/body, negative body length, checked total-length overflow, the 64 MiB product frame limit, long-decimal arithmetic overflow, and both negotiated body CRC32 and startup XOR mismatch paths.
-- NET-03: heartbeat header and full-body consumption while retaining the original command deadline.
-- NET-04: one deadline across DNS, TCP, TLS, and LOGIN stages.
+64 MiB 是产品的总帧保护值，不是服务器最大值。超限输入只含小头部，不实际分配大正文。decimal 使用字符串，避免 JSON 数值舍入。
 
-The 64 MiB default is the product's total-frame protection policy from the archived S04 design specification, not a claim about the server protocol maximum. Current TLS requirements are described in the [T07 security contract](../../../docs/compatibility/T07-security.md). Over-limit vectors contain only a small header; they do not allocate 64 MiB or larger bodies. Decimal arithmetic values are strings so JSON consumers preserve their exact values.
+CRC32 示例由上述源码算法计算：64 字节头（命令 6、正文长度 8）加正文 `A1B2C3D4`，trailer 按 little-endian 写入；错误向量翻转其中一位。它只用于确定性解析测试，不证明对端会接受该消息。TLS 当前规则见[安全说明](../../../docs/compatibility/T07-security.md)。
 
-The body CRC32 sample was generated from the exact `MSG.calcCRC32` lookup tables and loop in the cited source, over a 64-byte header (command 6, declared body length 8) plus body `A1B2C3D4`; the trailer uses the source's little-endian integer write. The error vector flips one bit in that computed trailer. This establishes a deterministic parser test input only; it does not establish that a peer accepts the synthetic message.
-
-Fixture preparation does not open a socket or connect to a database.
+准备 fixture 不会打开 socket 或连接数据库。

@@ -1,16 +1,16 @@
-# T04 configuration fixtures
+# 配置解析测试数据
 
-`cases.json` contains compact synthetic input and expected assertions for the T04 configuration contract in [T04-design](../../../docs/implementation/T04-design.md) and [configuration compatibility contract](../../../docs/compatibility/T04-options.md). These are design assertions for the test suite; preparing or checking this file does not run the parser, open a socket, or validate a database.
+`cases.json` 提供 [T04 设计](../../../docs/implementation/T04-design.md)和[连接选项](../../../docs/compatibility/T04-options.md)的合成输入与预期断言。准备或检查该文件不会运行解析器、打开 socket 或连接数据库。
 
-All endpoint values are reserved documentation names (`example.invalid` and IPv6 addresses in `2001:db8::/32`). The account is `TEST_SYNTH`; `CANARY_T04` is a fixed synthetic password marker used by redaction cases. Unicode and quoted-value cases use short synthetic variants. No fixture contains local connection information.
+端点只使用保留文档名称 `example.invalid` 和 `2001:db8::/32`。账号为 `TEST_SYNTH`，`CANARY_T04` 是脱敏测试的固定合成密码标记；不包含本机连接信息。
 
-## Fixture shape
+## 数据形状
 
-- `parse_success` contains a connection string and a partial `expected` object. Expected values are the public builder values: timeout fields retain the documented units, schema and password preserve their exact text, and `transport_security` is the enum name. The duplicate cases require equivalent values to be accepted.
-- `parse_rejected` records the expected exception family (`ArgumentException` or `NotSupportedException`). If `canary` is present, the test should verify that exception text does not contain it. For the unknown-option case, also verify that the exception does not echo the input key; its value contains the canary.
-- `unsupported_nondefault` lists recognized legacy options with non-default values that must be rejected explicitly.
-- `timeout_typed.ticks` is a `TimeSpan` tick count (100 ns per tick). `expected_legacy_milliseconds` is the public millisecond value to compare, including for `CleanupTimeout`.
+- `parse_success`：连接串和部分 `expected`。预期为公开 Builder 值；超时保留文档单位，Schema 和密码保留原文，`transport_security` 使用枚举名。重复键用例要求等价值可接受。
+- `parse_rejected`：预期异常族 `ArgumentException` 或 `NotSupportedException`。存在 `canary` 时，异常文本不得包含它；未知选项用例还要求异常不回显输入键，其值含 canary。
+- `unsupported_nondefault`：已知旧选项的非默认值必须明确拒绝。
+- `timeout_typed.ticks`：`TimeSpan` tick 数（100ns/tick）；`expected_legacy_milliseconds` 是公开毫秒值，也适用于 `CleanupTimeout`。
 
-Coverage includes case-insensitive keys and documented aliases, equivalent and conflicting duplicate values, quoted semicolon/double-quote escaping, Unicode password and schema preservation, bracketed IPv6 and port conflict, invalid numeric values, `InitialCatalog` isolation, canary redaction, and non-default unsupported options. Connection pooling is an explicit valid capacity setting in R3; enlistment, HA, read/write routing, logging, statement pooling, and result-set cache remain negative cases.
+覆盖大小写不敏感键和别名、等价/冲突重复值、引号与分号/双引号转义、Unicode 密码和 Schema、带括号 IPv6 和端口冲突、非法数值、InitialCatalog 隔离、脱敏和不支持选项。
 
-`RequireTls` is recorded only as the default configuration policy. `PlaintextAllowed` is recorded only as a parseable explicit policy value. Neither case asserts TLS, asynchronous I/O, or a successful network connection.
+连接池容量是 R3 的合法配置；enlistment、HA、读写路由、日志、语句池和结果集缓存仍为负例。`RequireTls` 只表示默认策略，`PlaintextAllowed` 只表示可解析的显式值；这些用例不证明 TLS、异步 I/O 或网络连接成功。

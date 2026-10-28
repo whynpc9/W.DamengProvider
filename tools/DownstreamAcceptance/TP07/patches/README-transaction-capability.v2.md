@@ -1,5 +1,7 @@
 # T1 transaction capability：产品源 v2 单位文件修订
 
+> 历史测试源码修订记录：只改固定 v1 副本中的一个 unit 文件，解决当时的编译/分析器错误；不代表新构建或测试已通过，也不能套用到当前 EF。
+
 v2 从冻结批准的 v1 全部178项逐文件核hash后复制到新隔离 `TP07-T1-transaction-adapter-v2/ef-source`，仅修 `DamengRelationalTransactionCapabilityTests.cs`。其它177项保持，包括正式adapter/factory/DI、mapping、bridge、两locks和全部编译规则；W产品及候选包不改。
 
 本次修复针对首次实际build的8个compile/analyzer错误：`Events` 全部改为 `OperationEvents`；单batch期待序列提取为private static readonly数组；五处必要的正式DI具体类型 `Assert.IsType` 各自最小局部EF1001 pragma，立即restore并说明EF10.0.12验证意图；删除冗余 `TestTransaction.DisposeAsync`，继承DbTransaction默认异步dispose，继续保留一次性Dispose(bool)计数和base调用。没有全局抑制、弱字符串类型替代或双dispose。

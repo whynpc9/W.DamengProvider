@@ -1,5 +1,7 @@
 # TP06 v2 candidate validator 失败只读裁决
 
+> 阅读提示：这是历史验证器失败归因，不是当前产品缺陷结论或操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**validator_contract_defect / product_change_not_required_for_this_failure**。当前失败把参数编码合同用于独立的结果列合同；W GetString 的七位输出符合本次服务器 ResultColumn 声明。允许工具 owner 在新 revision 中定点修正规则并经 Low 独立验收，但本报告不把旧 candidate failure 改成通过，也不关闭 TP06。
 
 本次仅读取源码/JSON并用独立只读脚本统计字段、计算哈希；未调用 validator/suite、build/tests/DB，未修改产品、工具、旧产物或 TP07 设计。Low 已释放窗口，EF 仍未激活。

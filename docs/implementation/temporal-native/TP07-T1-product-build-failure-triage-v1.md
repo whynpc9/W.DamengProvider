@@ -1,5 +1,7 @@
 # TP07 T1产品首次build失败：单位源严格分析器窄修设计
 
+> 阅读提示：这是历史构建失败归因与测试修复记录，不是当前产品缺陷结论或操作步骤。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-10。结论：**unit_source_compile_analyzer_failure_confirmed / single_unit_file_revision_ready / build_units_pending**。实际4类8个错误全部位于新增`DamengRelationalTransactionCapabilityTests.cs`，不要求修改三个产品DI/adapter/factory逻辑、W、依赖或全局编译规则。待root确认Low完整失败snapshot后，由High在新隔离产品revision仅修该unit文件，再重新绑定source/native/build门。
 
 本轮仅只读compiler log、失败manifest/control和冻结源，计算hash；没有执行SDK、tests、validator、DB或wrapper，没有改源码、旧失败或status，仅新增本文。此前静态源码接受未识别这些严格分析器错误；以本次真实编译事实补足，不把静态API审查当作build通过。

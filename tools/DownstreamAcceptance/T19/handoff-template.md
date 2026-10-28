@@ -1,5 +1,7 @@
 # R3 EF 适配 handoff（准备模板，未发行）
 
+> 历史交接模板，所有占位符都必须替换为本次实际固定输入后才能用于复现；模板本身不是包身份、执行授权或验收结果，也不适用于当前发布流程。
+
 - EF source pin：113014cc74dd1f751ef97226a78d2ec855b32c8c；archive SHA：9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d。
 - EFCore10.0.12 / downstream SDK10.0.401；driver SDK10.0.401 单独核验。
 - 最终候选：`<exact 0.1.0-r3.UTCtimestamp>` / package SHA `<sha>` / driver DLL SHA `<sha>` / MVID `<guid>` / canonical source-manifest JSON SHA `<sha>`。

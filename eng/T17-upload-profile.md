@@ -1,5 +1,7 @@
 # T17 upload ACK profile runner
 
+> 历史 ACK 子项复现入口，只适用于固定 T16 包，不是流式输入或完整 T17 验收，也不是当前发布流程。实库仍须核验 TEST 身份并精确清理。
+
 ```sh
 eng/t17-upload-profile.sh offline 0.1.0-r3.t16.20261002143244 <absolute-accepted-feed>
 eng/t17-upload-profile.sh tls 0.1.0-r3.t16.20261002143244 <absolute-accepted-feed>

@@ -1,5 +1,7 @@
 # TP07 FF7 mapping-v5 条件变更设计
 
+> 阅读提示：这是 EF 时间映射的历史条件设计，不是当前 EF 适配指南或修改授权。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。**conditional_design_ready / product_patch_not_authorized / mapping_v5_not_activated**。本文件准备可审实施范围，不宣布 constructor 扩展通过，不修改 mapping-v4、W 产品或工具；本轮未运行 SDK、测试或 DB。
 
 激活条件是 [FF7 扩展设计](TP07-constructor-FF7-expansion-design.md) 的前 **52 项 literal 专属门**完整通过独立验收，包含 typed 同值控制、domain、DEFAULT、inline 谓词、assignment、来源与清理，并由 root 明确开启 High 的新 overlay 窄窗。SCREEN25 的普通值成功不足以激活。第 53 项 DATEADD 若单独失败，保留整体失败和独立 R04 blocker；只有 root 明确接受 52 项子范围后才可决定 literal 修复，不能通过此 patch 抹掉 DATEADD 失败。

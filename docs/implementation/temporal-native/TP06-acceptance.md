@@ -1,5 +1,7 @@
 # TP06 同包 ADO.NET 最终接受与 EF 激活
 
+> 阅读提示：这是固定候选的历史验收记录，不是当前发布或 EF 兼容结论。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。root 接受 [Astra 最终证据验收（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/temporal-native/TP06-astra-final-acceptance.md)（SHA256 `7a6263f52c365e6431f10b9ce565da176af4ff459acd8c0e652c480f6e89a97e`），关闭TP06与专项A/B门，激活TP07。C/EF、PR合并、生产发布仍未接受。
 
 同一候选 `0.1.0-temporal.20261008144915` 的388文件源、archive、nupkg、实际DLL/MVID身份保持一致。产品包SHA `da8349a2c3f49a97ae71baa5e1b9a694ca820dd21dea4faa7cf4006b0007142d`，DLL `843710bec351b65aa075cd917bb352a525fdbc6e1a6e1396eeaae46dc8946980`，MVID `aa23e673-957c-4b1e-bf0f-291ff60077e6`。无产品代码或包的后续漂移。

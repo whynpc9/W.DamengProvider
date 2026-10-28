@@ -1,5 +1,7 @@
 # T19 精确 R3 候选 EF 下游隔离验收
 
+> 历史 R3 下游验收合同，固定 EF 提交、候选包、补丁、预算和运行窗口。本文用于精确复现，不是当前 EF 兼容承诺或发布步骤；shared/TLS 的覆盖不同，旧失败和后续 overlay 结果不能互相替代。所有实库操作仍需 TEST 身份核验和精确对象清理。
+
 固定EF commit113014cc74dd1f751ef97226a78d2ec855b32c8c，archive SHA9dead07c1de4220bd13bdadab0ed2713f43008af5e7c0cf7a629549a6739096d，EFCore10.0.12，downstream SDK10.0.401。Provider自己的SDK10.0.401是另一门。最终driver为`0.1.0-r3.<UTC14timestamp>`的精确PackageReference，包/DLL SHA/MVID/root source-manifest.json实际SHA必须一致，无driver ProjectReference、official fallback或SourceLink虚构。
 
 ```sh

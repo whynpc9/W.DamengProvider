@@ -1,5 +1,7 @@
 # TP06 fixed leading 拒绝的可观察性补充
 
+> 阅读提示：这是时间精度专项的历史取证设计，不是当前操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-08。状态：**design_accepted_for_tool_implementation / runtime_pending**。补充 [leading 来源裁决](TP06-coverage-addendum.md)，不回写原audit或该裁决。仅放宽“fixed DAY2拒绝必须观察到本次已发布immutable binding”这一不符合产品发布顺序的取证要求；精确异常、真实来源、无业务Execute、fresh状态与服务器错误批准门均不放宽。此次只读源码，没有build/tests/DB或新增产品hook。
 
 ## 独立源码依据

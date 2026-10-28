@@ -1,5 +1,7 @@
 # TP01 physical v11 能力与证据修正交接
 
+> 阅读提示：这是时间精度专项的历史交接档案，不是当前操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-08。状态：**physical_baseline_evidence_reviewed / corrected_profile_handoff_accepted**。root 已接受限定设计；本次独立逐 case 复核支持按下述两个精确物理 scope 更新 compiled profile。**这不是 TP03 新 candidate、TP04/05、同包 A/B/C 或发布验收通过。**
 
 本文件补充并修正 `TP01-profile-handoff.final.md` 的身份来源，不覆盖原文、v10 报告或失败证据。旧工具将 logical ConnProperty 的 encoding/msgVersion 与 physical public ServerVersion 混合记录；实际产品 adapter 原本正确读取 physical。v11 重新使用原 v23 包跑完整基线，解决该来源缺陷。

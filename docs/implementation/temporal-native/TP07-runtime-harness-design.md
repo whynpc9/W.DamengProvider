@@ -1,5 +1,7 @@
 # TP07 最小 EF 实库 harness 分组设计
 
+> 阅读提示：这是历史 EF 实库工具设计，不是当前执行指南或运行授权。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。状态：**design_ready，runtime_not_accepted**。补充 [TP07 主设计](TP07-astra-design.md)，不替代其 EF-M01/M02、EF-R01…R06 合同。本次只读 pinned source/bridge，未运行 SDK、测试或 DB，未改产品。先交付小型 literal probe，再实施 EF 运行组与 CLI/迁移组；不等待完整套件才能发现 literal 持久化失真。
 
 ## 固定依赖与文件归属

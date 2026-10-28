@@ -1,5 +1,7 @@
 # T12 CLI 安全及候选消费补丁
 
+> 历史补丁说明：只适用于固定 EF 提交和当时候选，静态准备状态不等于 CLI、构建或实库通过。复现必须按既定顺序应用补丁，不能套到当前 EF 或用户工作区。
+
 状态：静态准备完成，未运行 dotnet、CLI、数据库。基于 clean EF commit `113014cc74dd1f751ef97226a78d2ec855b32c8c`，仅修改 `DamengDotNetEfCliFunctionalTests.cs`。哈希见 `cli-safety.json`。先在 clean archive 应用 `cli-safety.patch`，再统一替换 `using Dm;`（包含生成 Program.cs 的字符串中的 using）为 W 命名空间。
 
 Runner 必须设置四个接口：

@@ -1,5 +1,7 @@
 # TP07-D transaction v1 preparation design
 
+> 阅读提示：这是历史事务验证准备设计，不激活当前任务，也不构成运行授权。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 本报告仅固化下一任务的实施设计，不激活 D，不接受 D runtime。只读核对了 D v6 preparation、D validator/合同源、新 L0 transaction v2 来源链及 E transaction v3 实际末轮记录；没有导入项目模块、运行测试、SDK、host、数据库或 Git。旧 D v6 离线接受、旧 source195、旧 P0/N0/BC/B0 和所有失败证据保持原样。
 
 当前 E `validation.json` 的实际 SHA 为 `7ddd3743f8df499c178352965552961f7c5fd5d7e3217c27cf2d23358d723d56`，25 窗/338 例及最终 validator 已通过；最终 Astra/root 接受仍是 D 激活的前置条件。本报告不提前生成 accepted profile adapter。D 实施和验证窗口须由 root 在该依赖闭合后另行派发。

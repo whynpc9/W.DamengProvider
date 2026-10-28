@@ -1,15 +1,53 @@
-# T18 diagnostics 与 TLS资源子门
+# 诊断与 TLS 资源子项验证
 
-只消费新冻结的精确PackageReference，记录包/DLL SHA/MVID与工具/fixture输入hash。T17shared大值和恢复仍pending；本门只覆盖implementation/offline/TLS资源，不能宣称完整R3或production release通过。
+这是历史 T18 验收入口，只覆盖实现、离线和 TLS 资源行为，不代表完整 R3 或发布验收。当时 T17 shared 大值和恢复仍是独立待办，不能由本工具替代。
 
-offline运行七个独立进程首次初始化场景：normal、ShouldListenTo、InstrumentPublished、Sample、ActivityStarted/Stopped、measurement抛错。每个进程先确认dispatcher未初始化，再用最小独立scripted allocation/SET TRANSACTION/ACK channel走真实公开Open/BeginTransaction/CommitAsync，断言Committed、单commit请求、原许可归零、callbacks失败被隔离、AsyncLocal秘密不流入。它们是真实公开Activity/Meter出口与业务API的离线协议测试，不是真实数据库。DiagnosticsTests另覆盖public Commit EOF→Unknown、原token首因、慢callback/4096满队列drop、10k租约/多轮128registry、格式器/上下文和旧cachedgetter中性范围。无wire且无明确完成/失败的旧getters可以不导出，不强迫Complete来改变取消语义。
+消费者只使用新冻结的精确 PackageReference，并记录包/DLL SHA/MVID 及工具、fixture 输入哈希。
 
-TLS预声明budget固定：warmup60秒，measurement600秒且≥500完成create/use/close循环；并发≤4，5秒采样≥121点，停止业务后静默30秒再3点（间隔5秒）；总进程900秒，无强制GC。每cycle40KiB Blob stream/旧array、公开query/Begin/commit或rollback，含Clear，另真实queue-cancel/Clear/Dispose控制。只TEST/TLSwrapper，隔离本机RequireTls且无CRL测试CA显式NoCheck；本轮唯一T18R_<20hex>表精确cleanup/fresh absence。
+## 离线首次初始化
 
-每点实际采样RSS、GC heap/allocated、threads/FD/handle、pool/registry/queue、创建关闭/网络bytes/LOBchunks。平台不支持的native指标为null，并由validator报告unavailable，不填0。原始121+3样本独立validator严格核：相对warmup基线RSS≤256MiB、heap≤128MiB、thread≤16、FD≤16且quiescent FD≤baseline+8；60秒窗口后半/前半median增RSS≤64MiB、heap≤32MiB；后半threads/FD每100cycle线性增≤1/1。最后pool、socket、queue归零、registry≤128、queue≤4096，正常listener drop/callbackfailure为0。不调阈值/缩时长/减载；预算失败即非零。
+运行七个独立进程：normal、ShouldListenTo、InstrumentPublished、Sample、ActivityStarted/Stopped、measurement 抛错。
 
-业务诊断只原子数字和不可变完成记录，listener通过真实Activity/Meter统计固定instrument/有限enum标签。不存SQL/参数/用户/Schema/endpoint/locator/异常/TraceState/baggage。公开formatter仅安全枚举/代码/数值，unknown exception不输出message/type。callback/source init失败和慢回调不能影响确认Commit或Unknown；饱和drop明示。每新连接验证TEST/Schema，实际network hook只数字记录async路径sync0；这个hook仅网络证明，不冒充公开diagnostics。
+每个进程先确认 dispatcher 未初始化，再用最小独立 scripted allocation/SET TRANSACTION/ACK channel 调用真实公开 Open/BeginTransaction/CommitAsync，检查：
 
-累计count采用ObservableCounter读取process原子值，export queue只span/hist；collector保存每固定tag桶最新累计数，不累加重复poll，quiet桶sum必须等core truth。late-listener/overflow恢复也不能丢created/closed总数；显式RecordObservableInstruments的用户callback异常属于调用方，不能要求Core替外部SDK调用万能catch。固定15个实际instrument由源码集合严格验证，未知动态名称/tag拒绝且不写原值。
+- `Committed`、单次 Commit 请求、原许可归零。
+- 回调失败被隔离。
+- AsyncLocal 秘密不流入诊断。
 
-命令与退出码、源码/包前后hash、依赖、safe stdout/stderr/checkpoint保留。实现者准备源码后整体冻结，验证者单窗口执行；没有执行前不预填pass。超900秒需按checkpoint的本轮精确名字恢复，旧失败不覆盖。
+这些是公开 Activity/Meter 与业务 API 的离线协议测试，不是实库。DiagnosticsTests 另覆盖 Commit EOF→Unknown、原 token 首因、慢回调、4096 满队列 drop、10k 租用、多轮 128 registry、格式器和旧 cached getter 范围。没有网络且未明确完成/失败的旧 getter 可以不导出，不强迫 Complete 改变取消语义。
+
+## TLS 资源预算
+
+预算预先固定，不能为了通过而调整：
+
+- warmup 60 秒。
+- measurement 600 秒，至少 500 个完整 create/use/close 循环。
+- 并发不超过 4。
+- 每 5 秒采样，至少 121 点；停止业务后静默 30 秒，再取 3 点（间隔 5 秒）。
+- 进程总上限 900 秒，不强制 GC。
+
+每轮使用 40 KiB Blob stream/旧 array、公开 query/Begin/commit 或 rollback，包含 Clear，另有真实 queue-cancel/Clear/Dispose 控制。只使用 TEST/TLS wrapper、本机隔离 `RequireTls` 和无 CRL CA 的显式 `NoCheck`。唯一 `T18R_<20hex>` 表精确清理并由新连接确认不存在。
+
+## 采样与判定
+
+采样 RSS、GC heap/allocated、threads/FD/handle、pool/registry/queue、创建关闭、网络字节和 LOB chunks。平台不支持的指标记为 `null` / `unavailable`，不能填 0。
+
+独立 validator 严格检查 121+3 个样本：
+
+- 相对 warmup 基线：RSS ≤256 MiB、heap ≤128 MiB、thread ≤16、FD ≤16，quiescent FD ≤baseline+8。
+- 60 秒窗口后半/前半 median 增量：RSS ≤64 MiB、heap ≤32 MiB。
+- 后半 threads/FD 每 100 cycle 线性增长分别 ≤1/1。
+- 最终 pool、socket、queue 归零，registry ≤128，queue ≤4096。
+- 正常 listener 的 drop/callback failure 为 0。
+
+任一项不满足即非零，不能缩短时长、降低负载或调整阈值。
+
+## 诊断数据边界
+
+业务诊断只使用原子数字和不可变完成记录；listener 通过真实 Activity/Meter 统计固定 instrument 和有限枚举标签。不保存 SQL、参数、用户、Schema、endpoint、locator、异常、TraceState 或 baggage。公开 formatter 只输出安全枚举、代码和数值，未知异常不输出 message/type。
+
+callback/source 初始化失败和慢回调不能影响已确认 Commit 或 Unknown；队列饱和必须明确 drop。每个新连接验证 TEST/Schema，网络 hook 只记录数字并要求异步路径 sync=0；该 hook 不冒充公开诊断。
+
+累计 count 通过 ObservableCounter 读取进程原子值，export queue 只传 span/hist。collector 保存每个固定标签桶的最新累计值，不累加重复 poll；静默期总和必须等于核心真值。late-listener 和溢出恢复不能丢 created/closed 总数。显式 RecordObservableInstruments 的用户回调异常属于调用方，不能要求核心替外部 SDK 捕获一切。固定 15 个 instrument 由源码集合严格验证，未知动态名称或标签拒绝且不写原值。
+
+命令、退出码、源码/包前后 hash、依赖和安全输出均保留。实现冻结后由验证者在单一窗口执行，不能预填通过；超过 900 秒按 checkpoint 的本轮精确名称恢复，旧失败不覆盖。

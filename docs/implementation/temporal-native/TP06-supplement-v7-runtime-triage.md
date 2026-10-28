@@ -1,5 +1,7 @@
 # Supplement v7完整运行与v8 TLS scale3读结果窄裁决
 
+> 阅读提示：这是历史验证与工具修订记录，不是当前待办或操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**shared完整42项已接受；TLS完整采集36项，validator因两个实际legacy读描述差异仍pending**。证据支持只对exact TLS的两个G2自动Scale3成功stage增加已观察的read6备选。v8仅改validator四文件，随后用原同候选包重新完整运行两profile；不建立旧报告overlay，不回写原pending。
 
 本次只读报告、哈希和原始数值证据；没有运行SDK、测试、validator或DB，没有修改产品/工具。

@@ -1,6 +1,6 @@
-# T07 transport security and native boundary
+# T07 传输安全与原生边界（历史）
 
-Date: 2026-09-29. Status: T07 independently verified within the recorded scope. This is a source and policy record; actual interoperability evidence and limitations are in the T07 report（历史记录已归档）.
+> 2026-09-29 的源码与策略记录，T07 只在所述范围内完成独立验证；实际互操作证据和限制见已归档的 T07 报告。当前 TLS 配置和支持范围见[TLS 安全说明](../compatibility/T07-security.md)。
 
 ## Evidence layers
 

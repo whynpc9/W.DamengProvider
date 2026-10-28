@@ -1,5 +1,7 @@
 # TP07 FF7 表达式前置门限定接受
 
+> 阅读提示：这是 EF 时间映射的历史限定验收，不是当前 EF 兼容结论。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**FF7_selected_expression_prerequisites_accepted / EXPANSION53_complete / mapping_v5_evidence_activation_gate_satisfied / full_EF_C_pending**。本轮只读实际r2完整证据、固定源码与条件mapping设计，并对原始数值及文件hash作独立回读；未重新运行SDK、测试、validator或DB，未修改产品、工具、旧报告或原接受旗。
 
 本次接受选定FF7表达式的52项literal专属服务器门和第53项普通DT DATEADD上下文门。它满足 [mapping-v5条件变更设计](TP07-FF7-mapping-change-design.md)（SHA256 `dab10f3276860ffca832b6099cfc4cc0c2d0d48b1eee5d8fa1d597e59e94a696`）的证据激活条件；root可明确开启该设计规定的High新overlay窄窗。**原L0尚未修复/重跑，实际EF HasData/默认/inline/ExecuteUpdate及完整C仍未接受。**

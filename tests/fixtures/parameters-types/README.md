@@ -1,19 +1,21 @@
-# T09 parameter and type scenarios
+# 参数与类型测试场景
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`, following [type compatibility contract](../../../docs/compatibility/T09-types.md). Every synthetic case has `case_id`, `contract`, `execution_status: not_run`, `input`, and `expected`. Each real probe is `planned_not_run`; it is a procedure only, not an observed result. The fixture contains no wire bytes or assumed server responses.
+`scenarios.json` 分为合成 `cases` 和 `real_database_probes`，遵循[类型说明](../../../docs/compatibility/T09-types.md)。合成用例为 `not_run`，实库过程为 `planned_not_run`，不包含协议字节或预设服务器响应。
 
-## Lossless values
+## 无损值表示
 
-`UInt64`, signed boundary ticks, decimal coefficients, and values outside `System.Decimal` are decimal strings. `decimal(38,20)` uses an exact coefficient string and scale integer; it does not pass through JSON numbers or `double`. Date/time values are ISO strings with all seven fractional digits and explicit offsets. The unpaired surrogate uses its UTF-16 code-unit hex string (`D800`) so the JSON file itself remains valid UTF-8.
+`UInt64`、有符号边界 tick、decimal 系数和超出 `System.Decimal` 的值都使用十进制字符串。`decimal(38,20)` 使用精确系数字符串和整数 scale，不经过 JSON number 或 `double`。时间值使用带七位小数和明确偏移的 ISO 字符串。孤立代理以 UTF-16 hex `D800` 表示，保证 JSON 本身为合法 UTF-8。
 
-The UTF-8 vector includes Chinese characters, a supplementary-plane emoji, and a combining sequence. It records UTF-16 code-unit count separately from encoded byte length. The GB18030 vector is a separate Chinese-only string; it does not assume that every character is representable in both encodings.
+UTF-8 向量包含中文、补充平面 emoji 和组合序列，UTF-16 单元数与编码字节数分开。GB18030 使用独立中文文本，不假设两种编码能表示相同字符。
 
-## Coverage
+## 覆盖范围
 
-- TYP-01/02: enum and Flags underlying values, byte/ulong-backed enums, signed and unsigned limits, overflows, and non-integral numeric conversion rejection.
-- TYP-03: coefficient/scale exactness for `decimal(38,20)`, tiny signed values, trailing zeros, values outside CLR decimal precision, and explicit scale overflow without rounding. Trailing-zero scale preservation is tested as local `DmDecimal` parse/format only; DECIMAL column readback scale remains a verified-profile contract.
-- TYP-04/05: GUID-shaped CHAR/VARCHAR(36) remains text unless `GetGuid` is explicitly requested; Unicode lengths, strict encoder fallback, and no replacement with `?`.
-- TYP-06/07: CLR TimeSpan tick construction separately from server interval range/scale support, DateOnly/TimeOnly, unspecified DateTime kind, DateTimeOffset offsets, typed NULL, untyped NULL, empty strings, and empty byte arrays.
-- TYP-08/09: parameter marker matching/reuse, duplicate normalization, named/positional rejection, type-source precedence, independent type/Size Prepare invalidation, ResetDbType inference, sync/async parity, and explicit rejection of unsupported complex types.
+- TYP-01/02：enum/Flags 底层值、byte/ulong 枚举、符号边界、溢出和非整数数值转换拒绝。
+- TYP-03：`decimal(38,20)` 系数/scale、极小符号值、尾零、超出 CLR decimal 精度和显式 scale 溢出不舍入。尾零 scale 只测试本地 `DmDecimal` 解析/格式化；DECIMAL 列读回仍由服务器环境验证。
+- TYP-04/05：GUID 形状的 CHAR/VARCHAR(36) 默认仍为文本，只有显式 `GetGuid` 才转换；Unicode 长度、严格编码回退，不用 `?` 替换。
+- TYP-06/07：CLR TimeSpan tick 与服务器 INTERVAL 范围分开；DateOnly/TimeOnly、Unspecified DateTime、DateTimeOffset、typed/untyped NULL、空串和空字节数组。
+- TYP-08/09：参数标记匹配/重用、重复规范化、命名/位置拒绝、类型来源优先级、类型/Size 导致 Prepare 失效、ResetDbType、同步/异步一致和复杂类型拒绝。
 
-Server temporal and decimal results are conditional on an explicit tested profile: representable range/scale must round-trip exactly, and unsupported range/precision must reject without rounding. CLR parsing/construction vectors are separate from this server-profile contract. The synthetic GetString expectations preserve invariant-parseable temporal access; they do not invent a Dameng INTERVAL wire/string encoding. `ARRAY`, `CLASS`, `GEOMETRY`, and `XDEC` remain explicit unsupported cases. The planned database probe covers the existing EF LOB/INTERVAL/timestamp paths but remains unrun. Planned database probes use only `WDM_PROVIDER_TEST` and uniquely owned test objects when run. Preparing these files did not build, connect to a database, or encode protocol values.
+服务器时间和 decimal 结果取决于已验证环境：可表示范围必须精确往返，不可表示范围必须拒绝且不舍入。CLR 解析/构造与服务器验证分开。合成 GetString 只保留可 invariant-parse 的文本，不虚构 INTERVAL 协议或字符串格式。
+
+`ARRAY`、`CLASS`、`GEOMETRY`、`XDEC` 在这些计划中保持明确不支持；当前存储过程纯输出 XDEC 的单独范围见[存储过程说明](../../../docs/compatibility/I09-stored-procedures.md)。实库过程只使用 TEST 和本轮唯一对象。准备 fixture 未构建、连接数据库或编码协议值。

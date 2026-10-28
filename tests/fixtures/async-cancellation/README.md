@@ -1,18 +1,16 @@
-# Async cancellation and deadline scenarios
+# 异步取消与期限测试场景
 
-`scenarios.json` contains logical synthetic inputs and contract expectations. Every case is marked `not_run`. The cases use `session_id`, `session_generation`, `execution_id`, and `invocation_id` to bind each operation and cancellation to its owner.
+`scenarios.json` 包含逻辑合成输入和行为预期，所有用例为 `not_run`。`session_id`、`session_generation`、`execution_id`、`invocation_id` 用于把操作和取消绑定到正确所有者。
 
-All event timing uses a monotonic virtual clock or named barriers. No fixed sleeps are encoded. The fixture has no DM request/response bytes, cancellation opcode, native cancel acknowledgement, or server-side stop result. An abstract `send_attempted`, `partial_or_indeterminate`, or `validated_success` event is a harness state marker, not a wire trace.
+事件顺序只使用单调虚拟时钟或命名 barrier，不依赖固定 sleep。文件不包含达梦请求/响应、取消 opcode、原生 ACK 或服务器停止结果。`send_attempted`、`partial_or_indeterminate`、`validated_success` 都是测试状态标记，不是网络轨迹。
 
-## Coverage
+## 覆盖范围
 
-- ASY-01/02: async-only fake transport whose synchronous methods throw, pending tasks held at a barrier, and completion after barrier release.
-- CAN-01/02: pre-cancelled calls have zero side effects; cancellation after partial send/receive aborts the captured session without pool return, retry, or replay.
-- CAN-03/04: ExecuteReader token scope ends on return; Read uses a new token; stale identities varying session, generation, execution, or invocation cannot abort a new lease.
-- CAN-05: Cancel/Close orderings and success/cancel races release the captured transport once; Cancel with no active execution is a no-op.
-- TMO-01/02: one Connect budget across stages; PoolAcquire and Connect budgets do not overlap; idle progress may restart only the idle budget; each Read gets a fresh call budget; internal fetches and heartbeat progress do not reset total deadlines; LOB chunks share a method-call budget; cleanup uses a separate finite budget.
-- ERR-01: timeout and user cancellation retain distinct error kinds; the first terminal reason is recorded; commit after a send attempt prioritizes unknown outcome and never replays.
+- ASY-01/02：同步方法会抛错的 async-only fake transport；任务在 barrier 前 pending，释放后完成。
+- CAN-01/02：预取消零副作用；部分发送/接收后取消会中止捕获会话，不回池、重试或重放。
+- CAN-03/04：ExecuteReader 返回后旧令牌失效，Read 使用新令牌；改变会话、代际、执行或调用身份的旧取消不能中止新租用。
+- CAN-05：Cancel/Close 两种顺序和成功/取消竞争只释放一次传输；无活动执行时 Cancel 不操作。
+- TMO-01/02：Connect 各阶段共用期限；PoolAcquire 与 Connect 不重叠；idle progress 只重置 idle 预算；每次 Read 使用新调用预算，内部 Fetch/heartbeat 不重置总期限；LOB 块共用调用预算；清理使用独立有限预算。
+- ERR-01：超时和用户取消保留不同错误类别，记录首个终态原因；Commit 发送后优先 Unknown，绝不重放。
 
-The zero-timeout rule applies only to public timeouts that allow it. Internal cleanup is finite. A commit acknowledgement followed by late cancellation remains Committed; a send attempt without a validated acknowledgement is OutcomeUnknown. The fixture does not claim cancellation stopped server work.
-
-Preparing this fixture did not build, connect to a database, or exercise transport APIs.
+零超时规则只适用于允许零值的公开超时，内部清理始终有限。已确认 Commit ACK 后的迟到取消不会反转为未提交；未确认 ACK 的发送为 OutcomeUnknown。fixture 不声称取消已停止服务器工作，准备过程未构建、连接数据库或调用传输 API。

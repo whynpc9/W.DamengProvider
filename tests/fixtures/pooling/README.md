@@ -1,20 +1,22 @@
-# T15/T16 reset and pooling scenarios
+# 会话重置与连接池测试场景
 
-`scenarios.json` separates 33 synthetic contract cases from planned real-database procedures. Each synthetic case is marked `not_run`; each procedure is marked `planned_not_run`. The vectors describe state transitions, virtual time, and barrier order. They contain no protocol packets, guessed reset SQL/opcodes, credentials, pool-key secrets, certificates, or actual server outcomes.
+`scenarios.json` 分为 33 个合成用例和计划中的实库过程，分别标记 `not_run` 和 `planned_not_run`。数据描述状态转换、虚拟时间和 barrier 顺序，不包含协议包、猜测的 reset SQL/opcode、凭据、证书或真实服务器结果。
 
-## Reset policy
+## 重置策略
 
-The default is `VerifiedResetOrDiscard`. Rollback, `SELECT 1`, or a successful health check alone do not prove a session returned to baseline. Reuse requires evidence for every state dimension the profile claims to restore: transaction, autocommit, isolation, schema, role/grants, timezone/NLS/language, temporary objects, session variables/locks, open cursors/LOB locators, prepared statements, and applicable package/procedure state. Unknown raw SQL or any unverified dimension requires discard.
+默认策略为 `VerifiedResetOrDiscard`。Rollback、`SELECT 1` 或健康检查单独成功，都不能证明会话已恢复基线。
 
-Reset capability, server syntax, permissions, and supported isolation levels are deliberately profile inputs or `not_frozen`; this fixture does not assert that a DM reset opcode or full-reset mechanism exists. A synthetic savepoint/identity limit is a test harness setting, not a server maximum.
+复用必须逐项证明声明可恢复的状态：事务、autocommit、隔离级别、Schema、角色/授权、时区/NLS/语言、临时对象、会话变量/锁、打开的游标/LOB locator、已准备语句，以及适用的包/过程状态。未知 SQL 或任何未验证维度都要求销毁。
 
-## Pool and DataSource coverage
+重置能力、服务器语法、权限和隔离级别保持为环境输入或 `not_frozen`；fixture 不断言达梦存在 reset opcode 或完整重置机制。合成保存点/identity 上限是测试参数，不是服务器最大值。
 
-- POL-01/02: Min/Max capacity includes creating/resetting slots, queued waiter cancel/timeout, grant races, connect/init/cleanup failures, and exactly-once permit release.
-- POL-03: complete immutable pool identity, case-sensitive password/schema dimensions, documented alias normalization, hash collision resistance, credential/certificate separation, and redacted diagnostics.
-- POL-04/05/10: unknown dirty sessions never enter idle; reset failure discards; actual reuse/discard and validation latency remain measurements, not fixture claims.
-- POL-06/07: lease generation protects new checkout from old cancellation; ClearPool epochs retire idle and borrowed sessions safely; DataSource disposal cancels waiters and does not wait forever for borrowed connections.
-- POL-08/09: registry churn remains bounded; CreateCommand owns its connection through reader close and releases once on success or failure.
-- POL-10: idle lifetime and maintenance use virtual time and a controlled scheduler rather than one thread per connection.
+## 池与 DataSource 覆盖
 
-The real procedures use `WDM_PROVIDER_TEST` through `scripts/with-dameng-test.sh`, uniquely owned test objects, independent final-state checks, and cleanup limited to objects created by the probe. No build, database connection, pool run, or reset probe was performed while preparing these files.
+- POL-01/02：Min/Max 容量包含 creating/resetting；等待取消/超时、授权竞争、连接/初始化/清理失败，以及许可只释放一次。
+- POL-03：完整不可变池身份，密码/Schema 大小写、别名规范化、哈希碰撞、凭据/证书隔离和脱敏诊断。
+- POL-04/05/10：未知脏会话不进入 idle；重置失败销毁；实际复用/销毁和验证延迟只由测量得出。
+- POL-06/07：租用代际防止旧取消影响新租用；ClearPool 代际安全退休 idle 和已借出会话；DataSource 释放取消等待者，但不无限等待已借出连接。
+- POL-08/09：registry churn 有界；CreateCommand 持有连接到 Reader 关闭，成功或失败都只释放一次。
+- POL-10：idle 生命周期和维护使用虚拟时间及受控调度器，不为每个连接创建线程。
+
+实库过程使用 TEST wrapper、唯一对象、独立最终状态检查，并只清理探针创建的对象。准备文件未构建、连接数据库或执行池/重置探针。

@@ -1,5 +1,7 @@
 # TP07 T1 transaction capability probe
 
+> 历史事务能力探针及逐版修订档案，不是可直接执行的快速指南。四个实库场景固定为 shared sync/async、TLS sync/async；源码、离线、构建、运行授权和最终接受分别验证。后文保留原始 diff 与失败构建记录，旧计数和旧失败不得改写成通过，也不能据此推断当前 EF 或驱动已验收。
+
 This is a new independent activation probe for the transaction-capability overlay. Its only live registry is shared sync, shared async, TLS sync, TLS async, in that order. Each case owns one nonce Basic table and runs an actual EF SaveChanges for D/Z/N, reads in the same explicit ReadCommitted transaction, explicitly rolls the whole transaction back, then reads original values through a different context/connection plus the independent raw/typed/FF9 oracle. AutoSavepointsEnabled remains true. Shared expects both actual SupportsSavepoints getters true and create/release callbacks; TLS expects both false and no savepoint callbacks, joined to the same-binary shared positive controls by the independent validator.
 
 The 17-file pack contains nine host files and eight documentation/Python/policy files. The host assembly is `TP07TransactionCapabilityProbe`; it cannot claim a previous host identity. The three `host/common` helpers and two Python decoders are byte-identical copies of the fixed origins recorded in `probe-policy.json`. The guard adaptation below retains the original W package/source/physical profile/TEST/typed TLS and safe-command checks and explicitly adds the new host/startup schema and transaction roles. The old helper files are unchanged.

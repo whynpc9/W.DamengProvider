@@ -1,5 +1,7 @@
 # TP07 T1产品源v2：单unit文件修订验收
 
+> 阅读提示：这是历史源码限定验收，不等于编译、测试或实库通过。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-10。结论：**T1_unit_only_source_revision_accepted / actual_new_build_target25_full_pending**。按首次build分诊`2f94ff36…`核对四类修正，未发现源码阻塞，无需扩大产品逻辑范围。源码接受不等于编译或25场测试通过，也不接受probe/runtime。
 
 本轮只读新旧178源、patch/manifest/README及旧失败收据，计算hash、比较差异并在内存重建patch；未执行SDK、tests、validator、DB、wrapper或磁盘patch应用，没有修改source/status/旧证据，仅新增本文。

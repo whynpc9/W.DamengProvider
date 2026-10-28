@@ -1,5 +1,7 @@
 # TP07 SCREEN25限定接受与FF7扩展设计
 
+> 阅读提示：这是 EF 时间映射的历史设计与验收档案，不是当前 EF 适配指南。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**SCREEN25_characterization_accepted_in_scope / FF7_expansion_design_ready / product_patch_not_authorized / full_C_pending**。本轮只读实际SCREEN25报告、独立validator、执行/清理收据及固定源码，未运行SDK、测试或DB，未改产品、common、旧工具或旧接受旗。
 
 ## 1. SCREEN25实际证据与限定接受

@@ -1,5 +1,7 @@
 # TP07 mapping-v1 静态审阅
 
+> 阅读提示：这是 EF 时间映射的历史静态审阅，不是当前代码审查结论或操作步骤。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**changes_requested / R01与R02阻塞**。root已确认两项须修复后重新冻结；Low当前不能将本候选交SDK运行。这里只读审阅patch、全部7产品/4测试文件、P1实际观察及W调用合同，未执行SDK、测试、DB或修改源码。
 
 ## R01：缓存fixture已在行上，首次Read直接EOF

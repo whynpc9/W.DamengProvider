@@ -1,14 +1,34 @@
-# Stored procedure probes
+# 存储过程对比与行为探针
 
-`Official.csproj` characterizes DM.DmProvider 8.3.1.47463; `Candidate.csproj` verifies the current W source with explicit assertions. They produce separate JSON reports. See [I09 characterization](../../docs/compatibility/I09-characterization.md) for commands, observed protocol details, retained failures, and coverage limits.
+本目录包含两个独立程序：
 
-Both programs accept a report path as the first argument. Candidate accepts an optional case-name substring as the second argument (for example `cursors`). Official also supports the read-only `audit` command, which verifies the TEST identity and counts remaining `I09W_%` objects; it does not delete by prefix.
+- `Official.csproj`：观察官方 `DM.DmProvider 8.3.1.47463` 的实际行为。
+- `Candidate.csproj`：用明确断言验证当前 W 源码。
 
-Run with `scripts/with-dameng-test.sh` and the repository's required .NET environment/build flags. No test connection is embedded in either project. W uses an explicit `PlaintextAllowed` typed builder for this authorized shared development instance. Temporal output tests use an official-driver Text typed insert to seed a dedicated table at exact seven-digit precision; the W output assertions require exact values and offsets.
+两者分别输出 JSON，不能混用结果。命令、协议观察、保留的失败和覆盖边界见[过程对比记录](../../docs/compatibility/I09-characterization.md)。
 
-Each run records the exact unique object names it owns, drops only those names, and checks absence using a fresh connection. Candidate preserves failed test and cleanup records. If W cleanup itself fails, the probe uses an independently verified official TEST connection to recover only those same exact objects, while retaining a failing exit status.
+## 参数与运行
 
-Post-send cancellation is established by a committed marker written inside the procedure and observed from a separate connection before cancellation. The later business write is inspected independently; the report does not infer rollback solely from the client exception.
+第一个参数都是报告路径。Candidate 的第二个参数可按用例名子串过滤，例如 `cursors`。Official 还支持只读 `audit` 命令：核对 TEST 身份并统计剩余 `I09W_%` 对象，不按前缀删除。
 
+使用仓库要求的 .NET 环境、构建参数和 TEST wrapper 运行。项目不内置连接配置；共享实例中的 W 通过强类型 Builder 显式使用 `PlaintextAllowed`。
 
-After the latest metadata merge at `04ffa82`, the unchanged W probe again passed 59 cases on each actual runtime (8.0.32, 9.0.21, and 10.0.12), 177 in total, including synchronous and asynchronous calls, exact high-precision output, 100 KB LOB materialization, prepared-command reuse, output limits, independent cursor ownership, immediate cancellation revocation, batch/array preflight rejection with zero business writes, and independently observed database outcomes. Each report records the actual runtime, target framework, loaded assembly, and product module identity. The earlier 55-case run and the prior 177-case run at `7f390ed` remain recorded separately. Unsupported historical protocol frames and complex parameter types remain explicit rejections. See the characterization report for the tested assembly identity and retained failed attempts.
+时间输出测试先用官方驱动的 Text 强类型 INSERT 向专用表写入七位精度数据，再由 W 断言精确值和偏移。
+
+## 对象清理与故障观察
+
+每轮记录自己创建的精确唯一对象名，只删除这些对象，并由新连接确认不存在。Candidate 保留失败和清理记录；如果 W 清理失败，可使用独立验证的官方 TEST 连接恢复同一组精确对象，但退出状态仍为失败。
+
+发送后取消的验证先在过程内提交 marker，再由独立连接观察到 marker 后取消。后续业务写入也由独立连接检查，不只根据客户端异常推断服务器已回滚。
+
+## 历史最终结果
+
+元数据合并提交 `04ffa82` 后，未修改的 W 探针在实际运行时 8.0.32、9.0.21、10.0.12 上分别通过 59 项，共 177 项，覆盖：
+
+- 同步/异步调用和精确高精度输出。
+- 100 KB LOB 物化、Prepare 后复用和输出限制。
+- 独立游标生命周期、取消后立即失效。
+- 批处理/数组预检拒绝，且没有业务写入。
+- 独立连接观察数据库最终状态。
+
+每份报告记录实际运行时、目标框架、加载程序集和模块身份。较早的 55 项结果及 `7f390ed` 的 177 项结果分别保留。未支持的历史协议帧和复杂参数类型仍明确拒绝。

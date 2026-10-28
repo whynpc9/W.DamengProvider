@@ -1,5 +1,7 @@
 # T1 产品源 v3：W 重试合同测试
 
+> 历史测试合同修订记录：只调整固定 v2 副本中的 W 重试断言，保留旧官方错误号和失败证据；源码修订不等于构建、完整套件或实库通过，也不代表当前 EF 行为。
+
 从已审 v2 manifest `fcb1d60f…` 的实际完整178复制到新隔离 `TP07-T1-transaction-adapter-v3/ef-source`，仅修改既有 `DamengExecutionStrategyTests.cs`。其余177文件逐字不变，包括三个transaction产品文件、transaction unit `f4f689c8…` 的25场、原bridge retry产品、props/global/两locks；W产品、候选包、cache、外部dirty EF checkout和旧源/handOff/批准/失败TRX均不改。
 
 正式triage `TP07-T1-product-full-failure-triage-v1.md` SHA `a97e8c4b…` 说明旧官方错误号合同与P1已批准的W安全边界不同。十个历史code行全部保留，实际DmError/DmException精确构造后核Number、IsTransient=false，再经过生产ShouldRetryOn和Execute证明attempts=1/同异常传播。原五个非瞬态/模糊code、非W Timeout、默认设置和collection-null负例继续保留。原两个非空override成功场景分别改成合法空集合snapshot（调用方修改后才创建context/strategy）及构造阶段NotSupported/业务attempts=0；原-12345/-54321/-77777数据仍用于独立非空拒绝。

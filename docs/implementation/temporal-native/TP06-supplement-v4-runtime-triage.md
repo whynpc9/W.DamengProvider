@@ -1,5 +1,7 @@
 # Supplement v4 interval 零值失败：诊断性工具窄修
 
+> 阅读提示：这是历史失败诊断与工具修复记录，不是当前产品缺陷结论或操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**read observation取证缺口已确认；具体运行失败原因尚未定位**。不能据此认定产品interval实现错误，也不能假定server CAST只差某种格式。root批准下一版只增加安全、分步、可保留的采集；原parser/validator语义与产品不变，下一次完整工具运行同时定位，不增加独立wide probe。
 
 本次只读报告、源码与原冻结合同；没有build、tests、DB或工具/产品改动。v4写拒绝恢复已经有实际证据，不回滚该修复。

@@ -1,5 +1,7 @@
 # TP07 T1 首次完整单位门失败分诊与最小修复设计
 
+> 阅读提示：这是历史测试失败归因与修复记录，原完整门失败不得改写为通过。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-11。结论：**full_failed_preserved / W_bridge_counterpart_tests_missing / test_only_revision_required**。本次 12 项失败全部来自原官方驱动的错误号重试断言仍用于 W bridge；它们与 P1 已明确批准的保守重试边界冲突。不是本轮事务 capability adapter 回归，也没有证据要求修改 W 产品。完整门仍失败，不能把 783 项通过接受为 full，也不能将已有 target25 通过扩展为整个 T1 接受。
 
 本轮仅只读实际 TRX、独立收据、原 P1/175/178 源码和 manifest、patch、准备脚本及 TP06 源码 tar；计算文件 hash、解析 JSON/XML，没有运行 SDK、测试、准备工具、validator、程序集、数据库或 secret wrapper。唯一新增文件为本文。以下是供 root 审批的修复设计，不授权 High 开始修改或 Low 开始执行。

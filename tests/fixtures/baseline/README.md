@@ -1,5 +1,5 @@
-# Baseline parameter cases
+# 基线参数测试数据
 
-`parameter-cases.json` contains deterministic, entirely synthetic, short, non-empty strings for parameter round-trip scenarios. The cases cover ASCII, Chinese text, supplementary-plane emoji, quotes and semicolons, a line break, a combining character, and surrounding spaces. Each `utf8_sha256` is the SHA-256 of that case's exact UTF-8 bytes.
+`parameter-cases.json` 包含确定性的短非空合成字符串，覆盖 ASCII、中文、补充平面 emoji、引号、分号、换行、组合字符和首尾空格。每个 `utf8_sha256` 都是对应精确 UTF-8 字节的 SHA-256。
 
-Use these values only through SQL parameter binding; do not interpolate or concatenate them into SQL text. The fixture does not encode assumptions about empty strings, `NULL`, or server-specific semantics. It is test input only and does not show that the official implementation or any provider has passed.
+这些值只能通过 SQL 参数绑定使用，不得插值或拼接到 SQL 文本中。fixture 不预设空串、NULL 或服务器特定语义，也不表示官方驱动或任何其他驱动已经通过测试。

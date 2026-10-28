@@ -1,5 +1,7 @@
 # TP-01 temporal boundary characterization
 
+> 历史时间边界工具合同，正文按 v1–v11 逐次追加，主要用于精确复现，不是普通开发入门或当前发布清单。阅读时先看所复现版本的段落：`characterization` 只表示观察完整，`candidate` 才检查指定候选；离线 shape、loopback、实库和最终接受始终是不同证据。固定包、哈希、审批和未执行状态不得套用到当前版本。
+
 New independent tool; it does not change the old TemporalPrecisionProbe or the provider. All dotnet and DB commands belong to the verifier verification window after source freeze and review.
 
 `TemporalBoundaryProbe.csproj` uses exact PackageReference for official O and one W version. O selects the fixed net9 asset; W selects net10. One process loads O and one W assembly; baseline and candidate W use separate runs/build directories. A manifest pins nupkg SHA, package asset SHA, loaded DLL SHA/MVID, and package version. Both NuGet assets and runtime deps must identify the real package asset. An existing loose DLL or ProjectReference cannot substitute for a package.

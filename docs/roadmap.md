@@ -1,37 +1,45 @@
-# 后续工作
+# 路线图与支持缺口
 
-当前版本 [0.3.1](release-0.3.1.md) 已发布到 NuGet，提供 .NET 6/8/9/10；四运行时公开安装与签名验证已通过，范围见发布记录。最初预览版 [0.1.0-preview.1](release-0.1.0-preview.1.md) 仅提供 .NET 10。本页区分后续缺口和已发布能力。历史测试计数只属于原候选。
+当前版本为 [0.3.1](release-0.3.1.md)。本页分别列出功能限制和尚未完成的验证，避免把“暂不支持”误解为“已经支持但还没测试”。
 
-[0.3.0](release-0.3.0.md) 新增受限 `netstandard2.1` 资产。旧资产不支持 TLS、DbBatch、DateOnly/TimeOnly；当前验证范围与实库待验项见发布记录。
+## 当前功能限制
 
-## 0.3.0 已发布的受限兼容资产
-
-新增 `netstandard2.1` 资产，供 .NET Core 3.1 与 Standard 2.1 类库消费。旧资产不提供 TLS、DbBatch、DateOnly/TimeOnly；现有四目标保持完整能力。具体边界和实际运行结果见[旧目标兼容记录](compatibility/core31.md)。
-
-## 后续缺口
-
-| 方向 | Issue | 当前边界与推进方式 |
-| --- | --- | --- |
-| 物理连接复用 | [#6](https://github.com/whynpc9/W.DamengProvider/issues/6) | 调查已完成；8.1.5.60 上 TEST 无完整 reset 入口，序列 `CURRVAL` 等会话值不可恢复。继续维持每租约新建、归还销毁，待服务器提供可验证的完整复位能力。见[性能基线与阻塞记录](compatibility/I06-pool-reuse-baseline.md)。 |
-| OS 与服务器兼容覆盖 | [#11](https://github.com/whynpc9/W.DamengProvider/issues/11) | 已有 [Windows / win-x64 / DM 8.1.5.60 明文](compatibility/I11-windows.md)与 [Ubuntu WSL2 / linux-x64 离线及包消费](compatibility/I11-linux-validation.md)记录；额外服务器 profile、远程 TLS、系统信任库与真实 CRL/OCSP、长时资源压力仍需按环境补验。0.2.0 的 macOS 四目标及 shared/隔离 TLS 结果见[发布记录](release-0.2.0.md)。 |
-| 存储过程扩展 | [#9](https://github.com/whynpc9/W.DamengProvider/issues/9) | 已实现能力见下方；显式事务组合、游标输入和过程批调用仍拒绝，是否扩展由业务需求和服务器证据决定。 |
-| 元数据覆盖 | [#10](https://github.com/whynpc9/W.DamengProvider/issues/10) | 已实现能力见下方；`ReservedWords` 的系统目录访问受 TEST 权限限制，不为测试扩大授权。 |
-
-## 0.2.0 已发布能力
-
-| 能力 | 实现与边界 |
+| 功能 | 当前行为与原因 |
 | --- | --- |
-| .NET 8/9/10（[#12](https://github.com/whynpc9/W.DamengProvider/issues/12)、PR #21）及 .NET 6（[#13](https://github.com/whynpc9/W.DamengProvider/issues/13)、PR #25） | 同包四目标，统一 C#12、SDK 10.0.401。net6 使用 typed `DmDataSource`，无 `DbDataSource` 多态；TLS 不放宽证书策略。兼容依赖与原运行时验证见 [I12](compatibility/I12-multitarget.md)、[I13](compatibility/I13-net6.md)，0.2.0 发布结果见[发布记录](release-0.2.0.md)。 |
-| 数组绑定与 DbBatch（[#7](https://github.com/whynpc9/W.DamengProvider/issues/7)、[#8](https://github.com/whynpc9/W.DamengProvider/issues/8)，PR #19） | `ArrayBindCount` 单次 EXECUTE 发送多行 INSERT/UPDATE/DELETE/MERGE，失败为语句级原子；DbBatch 在独占连接上逐条执行，报告逐命令计数与失败归属，不减少往返。MERGE 使用服务器影响行数。见 [I07/I08](compatibility/I07-I08-array-binding-dbbatch.md)。 |
-| 存储过程、标量输出/返回值与受管 OUT 游标（#9，PR #23） | 严格过程调用、原子输出发布及游标所有权契约，见 [I09](compatibility/I09-stored-procedures.md)。 |
-| 异步发现及 Reader 元数据（#10，PR #22） | 统一同步/异步 GetSchema 和 GetColumnSchema；单条 SELECT 的 SchemaOnly/KeyInfo，未知键信息保持未知。见 [I10](compatibility/I10-metadata.md)。 |
-| EF 接入反馈修订（[#16](https://github.com/whynpc9/W.DamengProvider/issues/16)，PR #17/#18） | 传输失败 `FailureInfo`、事务内 DML 匿名块、8/9 位 typed NULL、Broken 提示、`ServerCapabilities`；已验证 extended profile 的 CLR 时间值 Scale 8/9 无损写入、有限 Prepare 恢复和本地绑定失败后保留会话。见 [I16](compatibility/I16-ef-integration-feedback.md)。 |
-| Windows TLS 私钥处理 | Windows 临时原生私钥导入及真实 Windows 明文验证见 [I11](compatibility/I11-windows.md)；不据此声明所有 Windows TLS profile 已通过。 |
+| 物理连接复用（[#6](https://github.com/whynpc9/W.DamengProvider/issues/6)） | 每次租用都会新建物理会话，归还时销毁。DM 8.1.5.60 上没有已验证的完整会话重置方式，序列 `CURRVAL` 等状态无法可靠恢复。详见[连接复用调查](compatibility/I06-pool-reuse-baseline.md)。 |
+| 存储过程与显式事务（[#9](https://github.com/whynpc9/W.DamengProvider/issues/9)） | 组合使用会在执行前拒绝。过程内部可能自行提交，当前协议无法可靠反映事务状态。 |
+| 游标输入与过程批调用 | 目前明确拒绝；存储过程已支持的参数和输出能力见[存储过程说明](compatibility/I09-stored-procedures.md)。 |
+| `netstandard2.1` | 不支持 TLS、`DbBatch`、DateOnly/TimeOnly 映射。完整差异见[旧目标框架说明](compatibility/core31.md)。 |
+| 其他企业功能 | 原生加密、批量装载、自动重连和分布式事务不在当前支持范围内。 |
 
-各目标分别核验构建、打包、资源、实际运行时和独立包消费；编译探测或跨主版本 roll-forward 不等于目标运行时验收。驱动兼容范围与[微软运行时维护周期](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)分别判断。
+## 尚未完成的验证
 
-## 项目边界
+| 场景 | 已有结果与待补内容 |
+| --- | --- |
+| 包内过程的参数推导 | 0.3.1 的独立过程和函数已通过实库验证；包内过程的 7 项测试因 TEST 账号缺少 `CREATE PACKAGE` 权限而仍为 `integration_pending`。详见[发布记录](release-0.3.1.md)。 |
+| `ReservedWords` 元数据（[#10](https://github.com/whynpc9/W.DamengProvider/issues/10)） | 系统目录访问受 TEST 权限限制，尚未完成验证；不会仅为测试扩大授权。 |
+| Linux 实库（[#11](https://github.com/whynpc9/W.DamengProvider/issues/11)） | Ubuntu WSL2 / linux-x64 已完成离线和包消费验证，实库验证仍待补。 |
+| 更多操作系统和服务器环境 | 已有 Windows / win-x64 / DM 8.1.5.60 明文验证；更多服务器版本、远程 TLS、系统信任库以及真实 CRL/OCSP 场景仍需逐项验证。 |
+| 长期资源压力与完整 EF 矩阵 | 当前发布检查不覆盖这些场景，需要按实际使用环境单独验证。 |
 
-EF 下游依赖切换、重新编译、各 EF Core 版本适配和 EF 特有补验由下游项目管理。本仓库不把旧权限失败、历史 `not_started`、停止标志或旧候选失败自动转成新的驱动缺陷或发布前置条件。
+`integration_pending` 表示对应实库测试尚未完成，不表示测试失败，也不表示功能已经通过。
 
-当前实现见[实现文档索引](implementation/README.md)，开发、验证和 TEST 边界见 [AGENTS.md](../AGENTS.md)。
+## 后续工作方向
+
+后续优先级由真实使用需求和可验证的服务器能力决定：
+
+- 在服务器提供完整、可验证的会话重置能力后，再评估物理连接复用。
+- 根据业务需求评估存储过程扩展，但不绕过事务和游标的现有限制。
+- 补充不同操作系统、达梦版本、编码和 TLS 配置下的验证。
+- 继续改进与下游 EF 适配层的兼容性；EF 模型、SQL 翻译和迁移仍由独立项目负责。
+
+## 当前版本已具备的主要能力
+
+- .NET 6/8/9/10，以及受限的 `netstandard2.1` 支持。
+- [数组绑定与 DbBatch](compatibility/I07-I08-array-binding-dbbatch.md)。
+- [存储过程、输出参数、函数返回值与输出游标](compatibility/I09-stored-procedures.md)。
+- [异步元数据与 SELECT SchemaOnly/KeyInfo](compatibility/I10-metadata.md)。
+- [时间精度、失败分类和会话恢复改进](compatibility/I16-ef-integration-feedback.md)。
+- [Windows TLS 私钥处理](compatibility/I11-windows.md)。
+
+当前能力的完整边界见[文档导航](implementation/README.md)，开发与实库测试规则见 [AGENTS.md](../AGENTS.md)。

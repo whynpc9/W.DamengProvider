@@ -1,41 +1,39 @@
-# Synthetic reader type vectors
+# Reader 类型与范围读取独立测试数据
 
-This directory contains independent fixture inputs and literal expected values for ROWID rendering and text `GetChars` ranges. All vectors are synthetic and `not_run`; they are not server captures, live database evidence, or real user data. Enum labels in JSON are test-only labels. The numeric `ctype` fields are dispatch inputs and make no claim about server enum names.
+本目录包含 ROWID 渲染和文本 `GetChars` 范围的独立输入及字面预期。所有向量均为合成 `not_run`，不是服务器抓包或真实用户数据。JSON 枚举名只是测试标签，数值 `ctype` 只是分派输入，不代表服务器枚举名。
 
-## Source basis
+## 来源与生成
 
-`generate_vectors.py` is a pure Python standard-library generator. It reimplements the relevant `DmRowId` shifts and field packing in Python and checks the result against fixed literal ROWID renderings. It does not load or call the product. The local source basis is:
+`generate_vectors.py` 只用 Python 标准库，重新实现相关 `DmRowId` 位移和字段打包，并对照固定 ROWID 文本；不会加载或调用产品。
 
-- `DmRowId.valueOf(byte[])` accepts the 8- and 12-byte shapes. `toString()` formats an 8-byte value through `DmConvertion.EightByteToLong` as a decimal `Int64`; 12-byte values use the local 18-character base64-like alphabet and bit shifts. The chosen 12-byte value has its first six bytes zero, satisfying the local parser prefix shape and keeping the decoded EPNO/HPNO fields at zero. Its last six bytes deliberately include invalid UTF-8. This establishes a valid local conversion shape, not server-side rowid-range validity.
-- `DmGetValue.GetString` decodes CType 0, 1, 2, and 54 bytes with the configured `ServerEncoding`; CType 28 renders a `DmRowId`. `DmDataReader.do_GetChars` uses UTF-16 code-unit offsets. The fixture provides expected CType 0/54 text ranges for the reader type-guard work; the cases are still marked `not_run`.
-- `DmDataReader.do_GetBytes` currently gates accepted binary types and rejects CType 0, 1, and 2. `getbytes_rejection_controls` records `InvalidCastException` as the compatibility expectation so adding text `GetChars` support does not broaden binary support.
+源码依据：
 
-The corresponding conversion and reader rules are described in `docs/implementation/v1/specs/06-parameters-and-types.md` and `docs/implementation/v1/specs/10-streaming-lob.md`. They keep encoded byte length separate from UTF-16 length and define `GetChars` offsets in CLR `char` units.
+- `DmRowId.valueOf(byte[])` 接受 8/12 字节形式。8 字节经 `DmConvertion.EightByteToLong` 转为 decimal `Int64`；12 字节使用本地 18 字符 base64-like 字母表和位移。所选 12 字节值前六字节为零，后六字节故意包含非法 UTF-8，只用于验证本地转换形状，不证明服务器 ROWID 范围。
+- `DmGetValue.GetString` 按 `ServerEncoding` 解码 CType 0、1、2、54；CType 28 渲染 `DmRowId`。`DmDataReader.do_GetChars` 使用 UTF-16 单元偏移。
+- `DmDataReader.do_GetBytes` 拒绝 CType 0、1、2；`getbytes_rejection_controls` 以 `InvalidCastException` 防止新增文本 GetChars 时意外扩大二进制支持。
 
-## Fixed values
+当前行为见[类型说明](../../../docs/compatibility/T09-types.md)和[数据源与 LOB](../../../docs/compatibility/R3.md)。
 
-The mixed text value is `A雪🚀e\u0301\u0000Z`: `U+0041 U+96EA U+1F680 U+0065 U+0301 U+0000 U+005A`, seven Unicode scalar values and eight UTF-16 code units (`0041 96EA D83D DE80 0065 0301 0000 005A`). Its literal reference bytes are:
+## 固定值
 
-- UTF-8: `41E99BAAF09F9A8065CC81005A` (13 bytes)
-- Python GB18030 reference codec: `41D1A995308B34658130BC37005A` (14 bytes)
+混合文本为 `A雪🚀e\u0301\u0000Z`：7 个 Unicode scalar、8 个 UTF-16 单元（`0041 96EA D83D DE80 0065 0301 0000 005A`）。
 
-The JSON repeats these vectors for synthetic CType 0 and CType 54 selectors. Each carries the complete UTF-16 code-unit array, full length query expectation, and partial ranges including an offset inside the emoji surrogate pair and a short final range. The generator checks the fixed byte literals with Python strict codecs. Its metadata records the Python runtime and codec lookup names; those results apply only to that reference runtime and do not identify server mapping versions or NCLOB behavior.
+- UTF-8：`41E99BAAF09F9A8065CC81005A`，13 字节。
+- Python GB18030：`41D1A995308B34658130BC37005A`，14 字节。
 
-The invalid-UTF-8 ROWID byte vectors and local expected renderings are:
+JSON 对 CType 0 和 54 重复这些向量，包含完整 UTF-16 数组、长度查询、落入 emoji 代理对内部的偏移和末尾短范围。生成器使用严格 codec 校验字节；结果只属于该 Python 参考运行时，不识别服务器映射或 NCLOB 行为。
 
-| Shape | Raw bytes | Expected rendering | UTF-16 units |
-|---|---|---|---:|
-| 8-byte legacy | `FFC080F59F988001` | `108254203842969855` | 18 |
-| 12-byte current | `000000000000FFC080F59F98` | `AAAAAAAAAA/8CA9Z+Y` | 18 |
+| 形状 | 原始字节 | 预期文本 | UTF-16 单元 |
+| --- | --- | --- | ---: |
+| 8 字节旧形式 | `FFC080F59F988001` | `108254203842969855` | 18 |
+| 12 字节当前形式 | `000000000000FFC080F59F98` | `AAAAAAAAAA/8CA9Z+Y` | 18 |
 
-Both raw values fail strict UTF-8 decoding. The tests consume the rendered string and partial UTF-16 ranges, never decode the binary ROWID through `ServerEncoding`.
+两个 ROWID 原始值都不能按严格 UTF-8 解码；测试只使用渲染字符串和 UTF-16 范围，不通过 ServerEncoding 解码 ROWID。
 
-## Regeneration
-
-From the repository root, run:
+## 重新生成
 
 ```sh
 python3 tests/fixtures/r3-reader-types/generate_vectors.py
 ```
 
-The script uses only Python's standard library and writes `vectors.json`. It creates no database data, credentials, large artifacts, or network traffic.
+只写 `vectors.json`，不创建数据库数据、凭据、大型制品或网络流量。

@@ -1,5 +1,7 @@
 # TP07 首个 mapping 窗口限定决定
 
+> 阅读提示：这是 EF 时间映射的历史范围决策，不是当前 EF 适配指南或执行授权。固定候选、状态和审批仅属于当时；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。状态：**root_scope_accepted / implementation_and_runtime_pending**。依据固定5863 EF的 `.local/temporal-native/TP07/v1/base-source`、已接受bridge及TP06的W合同。仅源码读取；P1的14项实际参数观察仍pending，本文不预填其Precision/Scale结果，不运行SDK/DB或修改产品。
 
 ## 1. 小数精度默认与DATE

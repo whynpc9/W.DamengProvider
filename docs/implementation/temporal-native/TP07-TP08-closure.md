@@ -1,4 +1,6 @@
-# TP07/TP08 收口：EF 七位精度实库验收与交付
+# TP07/TP08 完成记录：EF 七位精度实库验收与交付
+
+> 阅读提示：这是固定候选的历史 EF 实库验收与交付记录，不是当前 EF 兼容声明。旧失败和旧工具证据保持原样；当前驱动行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
 
 2026-10-12。本报告接替 [HANDOFF（历史）](https://github.com/whynpc9/W.DamengProvider/blob/309110800c4e81f795ff96ee006f58bd12f1952d/docs/implementation/temporal-native/HANDOFF-2026-10-12.md) 第 7 节待办。按用户对本轮的授权，不再沿用交接中的恢复 adapter/进程回收夹具与多层审批链；下述验证直接以产品行为和实库结果为门。旧 D guarded 失败、恢复工具 v1–v5 及其证据原样保留，不改写成通过。
 

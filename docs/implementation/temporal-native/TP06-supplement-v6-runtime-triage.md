@@ -1,5 +1,7 @@
 # Supplement v6 负interval服务器显示：v7最小裁决
 
+> 阅读提示：这是历史失败归因与工具修复记录，不是当前产品缺陷结论或操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**真实server显示采用引号外单负号，现工具server guard尚未覆盖；批准仅工具server通道增加此精确形式**。W规范文本、产品public parser/formatter及其它验收门不变。本次只读核验，无SDK、tests、DB或代码修改。
 
 ## 实际证据

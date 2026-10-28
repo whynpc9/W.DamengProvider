@@ -1,5 +1,7 @@
 # Supplement v5 interval 文本通道根因与v6限定设计
 
+> 阅读提示：这是历史失败归因与工具修复记录，不是当前产品缺陷结论或操作步骤。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 2026-10-09。结论：**已确认工具server文本guard误拒绝真实显示格式；产品零值写入/解码/getter在该前缀观察中精确**。root批准v6只对工具I/J的DAY TO SECOND文本分通道校验：W值文本保持规范补零，server显示允许受限的一至两位时分秒。本文不关闭完整interval/TP06门，不修改产品public parse/format，不回写旧失败。
 
 本次仅回读原始报告和源码，无build/tests/validator/DB运行，没有修改产品或工具。

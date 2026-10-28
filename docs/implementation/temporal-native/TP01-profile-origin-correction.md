@@ -1,5 +1,7 @@
 # TP-01 profile 来源修正：待重新取证
 
+> 阅读提示：这是时间精度专项的历史证据修正，不是当前待办。固定候选、状态和审批仅属于当时；当前行为见[时间精度说明](../../compatibility/TP-temporal-precision.md)，档案导航见[本目录说明](README.md)。
+
 日期：2026-10-08。状态：physical_profile_revalidation_pending。
 
 TP-03-v5 候选的同包 shared core 完成 260 个场景并清理成功，但七位写入被 NotSupported 拒绝，生产 wiring validator 未通过。定位后发现 TP-01-v10 的 ProfileInfo 混合了两个来源：版本来自实际物理连接，编码和 message version 来自逻辑 ConnProperty。逻辑对象的默认编码不能证明物理连接的协商编码。

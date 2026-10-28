@@ -1,22 +1,20 @@
-# T17 streaming LOB scenarios
+# 流式 LOB 测试场景
 
-`scenarios.json` separates synthetic `cases` from `real_database_probes`. Every synthetic case is `not_run`; every real procedure is `planned_not_run`. The fixture contains generator parameters, lengths, hashes, and logical API operations, not binary payloads, DM packets, LOB locators, or captured server responses.
+`scenarios.json` 分为合成 `cases` 和 `real_database_probes`。合成用例为 `not_run`，实库过程为 `planned_not_run`。文件只包含生成参数、长度、哈希和逻辑 API 操作，不包含二进制载荷、达梦报文、LOB locator 或服务器响应。
 
-## Deterministic data generation
+## 确定性数据
 
-`byte_cycle_v1` defines `byte[i] = (seed + stride*i) mod 256` with seed 17 and stride 131. The expected SHA-256 is computed over exactly `length_bytes` in order, using incremental hash updates and bounded generator chunks. The listed boundary hashes cover lengths immediately below, at, and above the synthetic 4096-byte chunk boundary and its second multiple. The 1 GiB+ case stores no byte array; its digest is calculated incrementally by the test.
+`byte_cycle_v1` 定义为 `byte[i] = (seed + stride*i) mod 256`，seed 17、stride 131。预期 SHA-256 按顺序覆盖恰好 `length_bytes`，使用有限块增量计算。边界哈希覆盖合成 4096 字节块及其二倍边界的前后位置。1 GiB+ 用例不保存字节数组，由测试增量计算摘要。
 
-The CLOB vectors repeat `A雪🚀é` for UTF-8 and `达梦数据库` for GB18030. UTF-16 character units and encoded byte lengths are separate. Chunk sizes are synthetic harness parameters, not protocol limits. Splits deliberately cross multibyte sequences and the emoji surrogate pair; final decoder flush rejects incomplete tails rather than replacing or dropping them.
+CLOB 向量分别重复 `A雪🚀é`（UTF-8）和 `达梦数据库`（GB18030）。UTF-16 单元数与编码字节数分开记录；块大小是测试参数，不是协议限制。切分故意跨多字节字符和 emoji 代理对，最终 decoder flush 必须拒绝不完整尾部。
 
-## Coverage
+## 覆盖范围
 
-- LOB-01/02: lazy stream open, deterministic chunk hashes, non-seekable unknown-length input, incremental TextReader encoding, and memory bounds independent of total LOB size. The generator model simulates 1 GiB+ without preallocating the payload.
-- LOB-03/06: UTF-8/GB18030 multibyte boundaries, surrogate pairs, strict invalid-tail handling, GetBytes byte offsets, GetChars CLR UTF-16-unit offsets, length queries, buffer bounds, zero-length reads, short reads, EOF, and unexpected truncation.
-- LOB-04/05: one active field stream, two LOB columns, invalidation on NextResult/reader close/transaction end/session-generation change, forward-only seek rejection, and midstream cancellation without replay.
-- LOB-07/08: materialized-value limit behavior is distinct from streaming; `GetString` remains materializing, so EF string consumers do not establish stream memory bounds.
+- LOB-01/02：惰性打开流、分块哈希、不可 seek 的未知长度输入、增量 TextReader 编码，以及与 LOB 总大小无关的内存边界。
+- LOB-03/06：UTF-8/GB18030 多字节边界、代理对、非法尾部、GetBytes 字节偏移、GetChars UTF-16 偏移、长度查询、缓冲区边界、零长度/短读、EOF 和意外截断。
+- LOB-04/05：单活动字段流、两个 LOB 列、NextResult/Reader 关闭/事务结束/会话代际变化后的失效、只进 seek 拒绝和流中取消不重放。
+- LOB-07/08：完整物化限制与流式读取分开；`GetString` 仍会物化，EF 字符串路径不能证明流式内存边界。
 
-## Real large-object probes
+实库大对象测试前必须只读检查现有环境的安全容量，使用 TEST 下唯一对象并只清理该对象，不变更表空间。容量不足时保持未运行并报告 `integration_pending`，不能假定有数百 MiB 可用。
 
-Before any large test object is created, the procedure requires a read-only capacity preflight in the existing test environment. It uses a unique object under `WDM_PROVIDER_TEST`, cleans only that object, and makes no tablespace changes. If the configured safe capacity is insufficient, leave the probe unrun and report `integration_pending`; do not assume hundreds of MiB are available.
-
-The moderate EF 40KiB compatibility path is listed separately from large streamed-object tests. Preparing this fixture did not build, connect to a database, or generate a binary file.
+EF 40 KiB 兼容路径与大流式对象测试分开。准备 fixture 未构建、连接数据库或生成二进制文件。

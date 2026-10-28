@@ -1,5 +1,7 @@
 # TP07-P1 固定 EF 消费桥
 
+> 历史样本准备工具：只生成固定 EF 提交与固定 W 包的隔离消费桥和未修正映射观察，不执行 restore、构建、测试或数据库。原锁仍引用官方驱动，因此不能宣称可直接 locked restore/compile；后续验证、时间映射接受和数据库授权均属于独立范围。
+
 > 历史样本重现入口：固定候选、manifest、approval 字段和下游提交属于工具输入契约。文中的旧窗口与角色不约束当前模型或 harness，也不授予新的运行权限。当前开发遵循 [AGENTS.md](../../../AGENTS.md)，当前支持范围见实现文档索引。
 
 本目录只准备可重放的 W 消费桥及**未修正映射观察**。不运行 restore、构建、测试或数据库，不代表 TP07/C 接受。原 EF dirty checkout 只用于 `git rev-parse <pin>^{tree}` 和 `git archive <pin>`，不读取其工作树源码、bin/obj 或 secrets。

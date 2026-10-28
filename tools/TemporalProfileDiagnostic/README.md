@@ -1,5 +1,7 @@
 # TP03-v5 physical profile diagnostic
 
+> 历史只读诊断：比较逻辑连接与物理连接实际读取到的服务器环境信息，固定使用 TP03-v5 包。它不是当前发布步骤，不创建数据库对象，也不能证明时间能力已开放。下文命令用于原环境复现，执行前必须重新核对固定输入和 TEST 边界。
+
 This one-off diagnostic consumes only `W.DamengProvider 0.1.0-tp03.20261008053249` through an exact `PackageReference` on .NET 10. It compares the logical connection property with the physical instance property that `DmTemporalLegacyAdapter.Profile(connection)` actually reads. It creates no database objects and makes no business writes, session-setting calls or temporal SQL probes.
 
 The only two SQL statements are `SELECT USER FROM DUAL` and `SELECT SF_GET_SCHEMA_NAME_BY_ID(CURRENT_SCHID()) FROM DUAL`, immediately after opening one shared TEST connection. Both must equal `WDM_PROVIDER_TEST` before profile observations. Configuration follows the existing shared TP01 probe: typed W builder, explicit `PlaintextAllowed`, TEST schema, logging off, pooling off, bounded connect/command timeout, and no encoding override added by this tool. The original TEST wrapper supplies the sole connection variable; no secrets are copied into the diagnostic folder or build snapshot.

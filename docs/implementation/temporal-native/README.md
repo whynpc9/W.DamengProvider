@@ -1,13 +1,30 @@
-# 时间精度历史输入与验收记录
+# 时间精度历史设计与验证档案
 
-当前实现以[时间精度兼容说明](../../compatibility/TP-temporal-precision.md)和[issue #16 修订](../../compatibility/I16-ef-integration-feedback.md)为入口，当前发布见[发布记录](../../release-0.3.0.md)。
+本目录用于追溯时间精度实现的设计依据、固定输入和历史验证。**普通开发者应先读当前文档，不需要按编号依次执行这些材料。**
 
-本目录仅保留以下材料：
+当前入口：
 
-- 工具按路径/字节读取的原设计与失败解释，以及 manifest 中仍引用的设计标识。为保持这些历史输入可解释，不改写其中的原候选或 hash。
-- [物理 profile 决策](TP01-profile-handoff.physical-v11.md)及[来源更正](TP01-profile-origin-correction.md)，解释源码中的 profile 身份。
-- [TP06 ADO.NET 接受记录](TP06-acceptance.md)与[TP07/TP08 EF 收口](TP07-TP08-closure.md)，保留各自候选的证据范围。
+- [时间精度说明](../../compatibility/TP-temporal-precision.md)：当前参数、读取、服务器环境和 EF 迁移行为。
+- [EF 接入带来的驱动改进](../../compatibility/I16-ef-integration-feedback.md)：失败分类、Prepare 恢复和能力快照。
+- [0.3.1 发布记录](../../release-0.3.1.md)：最新发布状态与覆盖范围。
 
-这些材料中的模型名、root/High/Low、窗口、冻结、approval 与运行权限均是历史记录；不指定当前使用的模型、harness 或人员，不自动授予数据库/发布权限，不新增当前开发审批步骤。原设计中的未实施、停止或待验收状态不代表当前源码状态。
+## 如何查阅本目录
 
-重复审阅、交接、失败重试流水和专项 status.json 已清理，完整历史可从文档清理前的 Git 提交 `3091108` 查询。保留文件中指向 Git 固定提交的链接仅供查阅历史。
+| 目的 | 主要材料 |
+| --- | --- |
+| 理解最初设计和边界 | `TP00-*`、`TP06-coverage-audit.md`、`TP07-astra-design.md` |
+| 解释服务器环境（profile）的来源 | [物理环境决策](TP01-profile-handoff.physical-v11.md)、[来源更正](TP01-profile-origin-correction.md) |
+| 查看 ADO.NET 时间能力验证 | [TP06 验收记录](TP06-acceptance.md)及 `TP06-supplement-*` |
+| 查看 EF 映射、事务和运行工具验证 | `TP07-*` |
+| 查看阶段完成结论 | [TP07/TP08 完成记录](TP07-TP08-closure.md) |
+
+部分工具仍按路径和字节读取原设计，或在 manifest 中引用设计标识。为保持这些输入可复现，保留原候选、哈希、失败和审批记录，不把后续结果回写到旧文档。
+
+## 历史术语与状态
+
+- “候选”指当时受测的某一份源码或包，不是当前版本。
+- “冻结”“窗口”“root/High/Low”“approval”描述当时的协作和输入控制，不构成当前审批流程。
+- “未实施”“停止”“待验收”只表示当时状态；当前能力以最新兼容文档为准。
+- 模型名、工具名和角色名只用于解释原记录，不指定当前人员或工具，也不授予数据库、发布或权限维护操作。
+
+重复审阅、过期交接、失败重试流水和专项 `status.json` 已清理。清理前文档基线为 `3091108`，完整历史可通过 Git 查阅；保留文件中的固定提交链接仅供历史参考。
