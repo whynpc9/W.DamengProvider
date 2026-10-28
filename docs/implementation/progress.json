@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-17",
+  "updated_at": "2026-10-28",
   "product": "W.DamengProvider",
   "state": "published_and_public_install_verified",
   "release_accepted": true,
@@ -18,7 +18,7 @@
   "release_commit": "870312e70bd094c7caf37eebf7ef902008f46ec2",
   "release_report": "../release-0.3.0.md",
   "roadmap": "../roadmap.md",
-  "source_state": "released_product",
+  "source_state": "release_preparation",
   "previous_release": {
     "version": "0.2.0",
     "tag": "v0.2.0",
@@ -145,7 +145,16 @@
       "released_in": "0.3.0"
     }
   ],
-  "unreleased_changes": [],
+  "unreleased_changes": [
+    {
+      "pull_request": 27,
+      "merged_commit": "9c1eb577c97b0fe1be234ec78578d7381ae0d80b",
+      "status": "merged_release_preparation",
+      "planned_version": "0.3.1",
+      "summary": "LOB truncate and Stream contracts, SequentialAccess null checks, batch provider-specific getters, safe atomic parameter derivation",
+      "report": "../release-0.3.1.md"
+    }
+  ],
   "validation": {
     "local_preflight_passed": true,
     "offline_tests_passed": 9634,
@@ -204,5 +213,24 @@
     "net9.0",
     "net10.0",
     "netstandard2.1"
-  ]
+  ],
+  "release_preparation": {
+    "version": "0.3.1",
+    "state": "local_candidate_verified_with_documented_pending_coverage",
+    "report": "../release-0.3.1.md",
+    "local_preflight_passed": true,
+    "offline_tests_passed": 10094,
+    "offline_suites": 52,
+    "modern_database_smokes_passed": 8,
+    "legacy_offline_architectures": [
+      "x64",
+      "arm64"
+    ],
+    "legacy_assertions_per_architecture": 174,
+    "derive_standalone_cases_passed": 9,
+    "derive_package_integration": "integration_pending_missing_create_package_privilege",
+    "source_commit": "9c1eb577c97b0fe1be234ec78578d7381ae0d80b",
+    "source_has_preparation_diff": true,
+    "published": false
+  }
 }

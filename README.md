@@ -6,6 +6,8 @@
 
 ## 安装
 
+当前正在准备 **0.3.1**：包含 PR #27 的 LOB、顺序读取、DbBatch provider-specific 值与过程参数推导修复；候选验证状态见[0.3.1 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)，尚未发布。
+
 当前已发布 [`0.3.0`](https://www.nuget.org/packages/W.DamengProvider/0.3.0)；发布状态、身份、公开安装验证和覆盖范围见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.0.md)。
 
 ```sh
