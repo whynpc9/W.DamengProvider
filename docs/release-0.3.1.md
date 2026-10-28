@@ -1,6 +1,6 @@
 # W.DamengProvider 0.3.1
 
-状态：本地候选发布准备与独立验证完成；包内过程实库覆盖仍有明确待验证项。尚未创建 tag 或上传 NuGet。
+状态：2026-10-28 已发布至 NuGet 与 GitHub；公开安装和签名验证通过。包内过程实库覆盖仍有明确待验证项。
 
 ## 变更范围
 
@@ -41,4 +41,21 @@ bash eng/release.sh prepare --tag v0.3.1 --commit "$(git rev-parse HEAD)" --outp
 
 候选包 SHA256：`8e1135b1e7931de24a3b47e43091c086b9f7a9044f7609a196631080d46d13de`。旧目标本轮仅完成离线包探针，未进行 Core 3.1 实库检查；不扩大到完整下游 EF、长期压力或其他服务器 profile。
 
-包内过程的真实库验证需要 TEST 的 CREATE PACKAGE 权限；当前任务不变更数据库授权，相关七项保持 `integration_pending`。正式发布前须提交并合入准备修改，在实际发布提交上完成发布准备及相关实库验证；本页不表示已创建 tag、上传 NuGet 或验证公开安装。
+包内过程的真实库验证需要 TEST 的 CREATE PACKAGE 权限；当前任务不变更数据库授权，相关七项保持 `integration_pending`。以上为准备阶段候选的历史记录；正式提交及公开验证见下文。
+
+## 正式发布与公开验证
+
+- 发布提交：`a71ef401084eacfdb9593d10e1e245a005d43d57`；[tag v0.3.1](https://github.com/whynpc9/W.DamengProvider/tree/v0.3.1)。
+- [普通 CI 40631308138](https://github.com/whynpc9/W.DamengProvider/actions/runs/40631308138) 和 [tag 发布 40631797644](https://github.com/whynpc9/W.DamengProvider/actions/runs/40631797644) 均成功；各 52 份 TRX，共 **10094/10094**，失败、跳过、中止均为 0。tag 的五资产组、八现代消费者、28 次初始化和实际 Core 3.1 x64 174 断言通过。Actions 现代 runtime 为 6.0.36/8.0.33/9.0.22/10.0.14。
+- 正式提交的本地完整 `prepare` 及独立验证再次通过：同包现代 8 次 shared/TLS smoke、9 项独立过程推导及精确清理，Core 3.1 双架构各 174 断言。正式本地包 SHA256 为 `a0eb396b79958cbe2a4b8d552de2e56c42435aefa156d5711e6f5430094038f4`；记录在 ignored `.local/release-0.3.1-final/nuget-9_s0irwl/` 和 `independent-validation/`。本地结果不冒充 Actions 载荷实库结果。
+- [GitHub Release](https://github.com/whynpc9/W.DamengProvider/releases/tag/v0.3.1) 为正式版；[NuGet 0.3.1](https://www.nuget.org/packages/W.DamengProvider/0.3.1) 已公开。上传日志明确返回 Created 和 Your package was pushed；等待索引传播后完成公开检查，没有重复上传。
+
+Actions 原包 SHA256：`f422a186eea7c2920216550486571f3b61da0692f5b3a55385294b0ae984a8f2`。
+
+公开签名包 SHA256：`c0641bf1e77cc8da6bb924c03ee8c172f504187bac4d4e04784a60221661318c`。
+
+`dotnet nuget verify --all` 退出 0；公开包仅新增 `.signature.p7s`，其余 ZIP 项与 Actions 原包逐字节相同。仅使用 nuget.org 唯一源及各自全新缓存，以精确 `[0.3.1]` 安装八个现代消费者与一个 Core 3.1 消费者；已核对缓存签名包、所选资产和加载 DLL。现代四 runtime 为 6.0.36/8.0.20/9.0.9/10.0.12，包消费/文化回退和 28 次首次初始化通过；实际 Core 3.1.32 x64/arm64 各 174 断言通过。本次公开检查 29 条命令均退出 0；证据在 ignored `.local/release-0.3.1-final/public/`，Actions 原制品在 `actions/`。
+
+公开正式签名载荷独立实库验证 **11 条命令全部退出 0**：四现代 runtime 的 shared/严格 TLS **8/8**，每份报告均核对上方公开包 SHA256、`WDM_PROVIDER_TEST` 用户及 Schema，提交/回滚完成、连接关闭，精确本轮表由新连接确认 `owned_table_absent`。唯一 nuget.org 源、全新缓存的参数推导消费者核对签名包和 net10 加载 DLL，9 项独立过程场景通过，4 个本轮精确对象清理确认。记录在 `public-integration/commands.json` 和 `validation-summary.json`。
+
+独立审查和独立验证均通过。包内过程相关 7 项继续为 `integration_pending`（TEST 无 CREATE PACKAGE 权限），本轮未运行旧目标实库、完整下游 EF 或长期压力；旧资产 TLS 不支持。历史 0.3.0 的旧目标实库结果不归入本次发布验收。

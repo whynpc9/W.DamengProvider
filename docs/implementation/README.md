@@ -6,7 +6,7 @@
 
 ## 当前实现与发布
 
-当前版本为 [0.3.0](../release-0.3.0.md)，提供现代四目标及受限 Standard 2.1 资产，包含 PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)。公开安装与实际发布状态见发布记录及 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。前一版本 [0.2.0](../release-0.2.0.md) 的历史验收不扩大到新版本；历史测试计数只证明各自受测版本。
+当前版本为 [0.3.1](../release-0.3.1.md)，提供现代四目标及受限 Standard 2.1 资产，包含 PR #17/#18 的 [issue #16 修订](../compatibility/I16-ef-integration-feedback.md)、[数组绑定与 DbBatch](../compatibility/I07-I08-array-binding-dbbatch.md)、PR #23 的[存储过程与游标](../compatibility/I09-stored-procedures.md)、PR #22 的[异步元数据](../compatibility/I10-metadata.md)。0.3.1 另包含 PR #27 的 LOB、顺序读取、批量 provider-specific 值及参数推导修复。公开安装与实际发布状态见发布记录及 [progress.json](progress.json)，后续缺口见[路线图](../roadmap.md)。前一版本 [0.3.0](../release-0.3.0.md) 的历史验收不扩大到新版本；历史测试计数只证明各自受测版本。
 
 [0.3.0](../release-0.3.0.md) 已发布，增加受限 Standard 2.1 资产，发布工作流同时检查实际 Core 3.1 包消费；TLS/DbBatch/日期映射差异见[旧目标说明](../compatibility/core31.md)。
 
@@ -24,7 +24,7 @@
 | 物理连接复用前置调查 | [issue #6 性能基线与复位阻塞（8.1.5.60 无完整复位，维持销毁）](../compatibility/I06-pool-reuse-baseline.md) |
 | 服务器错误恢复 | [恢复条件与白名单](../compatibility/server-error-recovery.md) |
 | Windows / win-x64 实库兼容 | [issue #11 Windows 记录](../compatibility/I11-windows.md) |
-| .NET 8/9/10 多目标 | [原三目标验证记录](../compatibility/I12-multitarget.md)、[当前发布记录](../release-0.3.0.md) |
+| .NET 8/9/10 多目标 | [原三目标验证记录](../compatibility/I12-multitarget.md)、[当前发布记录](../release-0.3.1.md) |
 | .NET 6 兼容层 | [数据源 API 差异、TLS 等价验证、时间 API；验证记录](../compatibility/I13-net6.md) |
 | Linux 兼容性验证 | [Ubuntu WSL2 / linux-x64 离线与包消费；实库 pending](../compatibility/I11-linux-validation.md) |
 

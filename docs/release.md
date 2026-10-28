@@ -1,13 +1,13 @@
 # W.DamengProvider 发布指南
 
-当前准备版本为 [0.3.1](release-0.3.1.md)，已发布版本仍为 0.3.0。
+当前已发布 [0.3.1](release-0.3.1.md)。
 
 ## 版本与身份
 
-- 当前已发布 `0.3.0`，四运行时公开安装及签名验证通过；发布 commit 和覆盖范围见[发布记录](release-0.3.0.md)。以下流程用于后续新版本，不要重新创建已存在的 tag。
+- 当前已发布 `0.3.1`，四运行时公开安装及签名验证通过；发布 commit 和覆盖范围见[发布记录](release-0.3.1.md)。以下流程用于后续新版本，不要重新创建已存在的 tag。
 - NuGet 包、产品项目和程序集：`W.DamengProvider`；公开命名空间：`W.Dm`。
 - 产品源码：`src/W.DamengProvider/W.DamengProvider.csproj`。旧 `W.DmProvider` 包依赖和程序集引用必须更新并重新编译；测试项目及诊断源名称保留原标识。
-- 项目默认版本为准备中的 `0.3.1`，见[候选记录](release-0.3.1.md)。后续发布由新的 `v` 开头合法 SemVer tag 决定；本轮准备 tag 为 `v0.3.1`；完成候选验证后才创建发布 tag。不能将普通分支推送或 PR 当成发布操作。
+- 项目默认版本为已发布的 `0.3.1`，见[发布记录](release-0.3.1.md)。后续发布由新的 `v` 开头合法 SemVer tag 决定；后续版本应先更新项目版本并完成验证，不能重新创建已有 tag。不能将普通分支推送或 PR 当成发布操作。
 - SDK 按 `global.json` 固定为 10.0.401，产品和测试统一 C#12；安装 .NET 6/8/9/10 运行时。包另含受限 `netstandard2.1`，其实际 Core 3.1 检查使用 Docker，不以现代运行时替代。
 
 ## 发布前检查
@@ -16,7 +16,7 @@
 
 ```sh
 python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
-bash eng/release.sh prepare --tag v0.3.1 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
+bash eng/release.sh prepare --tag v0.3.2 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
 bash eng/legacy-package.sh .local/nuget-release linux/amd64
 ```
 
@@ -57,14 +57,14 @@ done
 
 ```sh
 # 示例：仅在决定发布这个新版本且完成检查后执行。
-git tag -a v0.3.1 -m 'W.DamengProvider 0.3.1'
-git push origin v0.3.1
+git tag -a v0.3.2 -m 'W.DamengProvider 0.3.2'
+git push origin v0.3.2
 ```
 
 `.github/workflows/publish-nuget.yml` 仅由 `v*` tag push 触发，严格解析版本，在 tag 指向的源码上重新运行四现代运行时发布准备及真实 Core 3.1 包探针，成功后才使用仓库 secret `NUGET_API_KEY` 上传本次已审计包到 nuget.org。该 secret 仅交给上传步骤；不写入源码、制品或本地配置。普通 CI 不上传包。
 
 版本发布后不可覆盖，也不要移动 tag；发布失败应先查看具体失败步骤。上传成功后，从公开源下载该版本，核对 ID/版本/仓库 commit，并在隔离 consumer 中验证安装。NuGet 返回 404 或列表尚未更新时先检查传播情况，不盲目重复上传。
 
-首次改名与预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)；当前版本验证见 [0.3.0](release-0.3.0.md)。
+首次改名与预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)；当前版本验证见 [0.3.1](release-0.3.1.md)。
 
 配置依据：[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。
