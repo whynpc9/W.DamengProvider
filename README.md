@@ -18,7 +18,32 @@ dotnet add package W.DamengProvider --version 0.3.1
 
 本版本包含 [issue #16 修订及后续调整](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I16-ef-integration-feedback.md)，包括传输失败分类、事务内 DML 块、时间 typed NULL、已验证 profile 的 CLR 时间值 Scale 8/9 无损写入、有限的 Prepare/绑定失败恢复和 `ServerCapabilities`。本版本还支持 [存储过程、标量输出/返回值与受管输出游标](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I09-stored-procedures.md)。阅读兼容文档时请区分源码行为与包版本。
 
+`0.3.1` 修复了 LOB 截断和 Stream 契约、顺序读取空值检查、DbBatch 的 provider-specific 值及参数推导。独立过程推导已通过实库验证；包内过程相关七项测试受 TEST 权限限制仍待验证，详见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)。
+
 `0.3.0` 在现有四目标之外新增受限 `netstandard2.1` 资产，供 .NET Core 3.1 应用及 Standard 2.1 类库消费。该资产不提供 TLS、DbBatch 或 DateOnly/TimeOnly 映射；默认 `RequireTls` 不变，仅明确允许明文的服务器与显式 `PlaintextAllowed` 组合可以连接。范围见[旧目标兼容记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/core31.md)，0.3.0 的历史检查见[0.3.0 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.0.md)。已发布 `0.2.0` 不含旧资产。
+
+## 与官方驱动对比
+
+如果你在使用官方驱动时遇到过**存储过程参数静默错绑、函数返回值位置受限、过程时间参数被舍入或时区偏移无法保留**，W.DamengProvider 重点解决的就是这些问题。
+
+| 开发痛点 | 官方驱动实测行为 | W.DamengProvider 0.3.1 |
+| --- | --- | --- |
+| 存储过程参数名写错 | 未知名称会回退为按参数集合位置绑定，可能把值传给错误的参数 | 直接拒绝未知名称，不猜测调用者意图 |
+| 函数返回值不放在参数集合首位 | `ReturnValue` 位于不同位置时可能得到不同、甚至错误的结果 | 支持放在集合中的不同位置，返回结果一致 |
+| 存储过程需要七位小数秒 | 时间输入会由七位降为六位，例如 `.1234567` 被舍入为 `.123457000` | 已验证 profile 下保留 CLR 的 100ns 精度，不做隐式舍入 |
+| 读取带时区的时间列 | `GetValue` 返回 `DateTime`，无法通过返回值保留原始偏移 | 返回 `DateTimeOffset`，明确保留时区偏移 |
+
+除此之外，还面向现代 .NET 应用提供：
+
+- **真正的异步网络 I/O**：Open、Prepare、Execute、Read、NextResult 等异步路径不通过 `Task.Run` 或基类同步 I/O 回退实现。
+- **批量操作**：数组绑定可减少逐行写入的网络往返；同时提供标准 `DbBatch` API。
+- **流式 BLOB/CLOB**：支持流式读写，不必先把整个大对象加载到内存。
+- **默认严格 TLS**：现代目标默认要求 TLS 并验证证书，明文连接需要显式允许；受限的 `netstandard2.1` 资产不支持 TLS。
+- **标准 .NET 诊断**：提供 `ActivitySource` 和 `Meter`，便于接入现有链路追踪与指标系统。
+
+从官方驱动迁移时，时间参数的小数秒位数应使用 `Scale`，例如将原来的 `Precision=7` 改为 `Scale=7`。
+
+官方驱动行为以 `DM.DmProvider 8.3.1.47463` 的实测为依据；过程相关测试基于 DM 8.1.5.60，不代表所有官方版本。详见[过程表征记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/I09-characterization.md)和[时间精度说明](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/compatibility/TP-temporal-precision.md)。各能力的验证范围和支持限制见[兼容说明](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/implementation/README.md)。
 
 ## 使用
 
