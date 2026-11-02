@@ -99,9 +99,25 @@ git tag -a v0.3.2 -m 'W.DamengProvider 0.3.2'
 git push origin v0.3.2
 ```
 
-`.github/workflows/publish-nuget.yml` 只由 `v*` tag push 触发。工作流会解析版本，在 tag 指向的源码上重新运行四个现代运行时的发布准备和真实 .NET Core 3.1 包探针；全部成功后才使用仓库 secret `NUGET_API_KEY` 上传已检查包。
+`.github/workflows/publish-nuget.yml` 只由 `v*` tag push 触发。工作流会解析版本，在 tag 指向的源码上重新运行四个现代运行时的发布准备和真实 .NET Core 3.1 包探针；全部成功后才通过 Trusted Publishing 上传已检查包。
 
-该 secret 只交给上传步骤，不写入源码、制品或本地配置。普通 CI 不上传包。
+### Trusted Publishing 配置
+
+在 GitHub 仓库的 Actions variables 中配置 `NUGET_USER`，值为创建 NuGet.org 信任策略的账号用户名（个人资料名称，不是邮箱）。工作流会在构建前检查该变量是否为空。
+
+NuGet.org 的 Trusted Publishing 策略必须与本仓库匹配：
+
+| 配置项 | 值 |
+| --- | --- |
+| Repository Owner | `whynpc9` |
+| Repository | `W.DamengProvider` |
+| Workflow File | `publish-nuget.yml`（只填文件名） |
+| Environment | 留空（当前发布 job 未使用 GitHub Environment） |
+| 包范围 | `W.DamengProvider`，允许发布新版本 |
+
+策略所属用户或组织必须拥有该包。若策略指定了 Environment，发布 job 的 `environment` 必须与之相同。
+
+发布 job 单独授予 `id-token: write`；`NuGet/login` 在所有验证和制品保存成功后才请求 GitHub OIDC token，并向 NuGet.org 换取短期 API key，紧接着交给上传步骤。短期 key 不写入源码、制品或本地配置，也不再读取仓库 secret `NUGET_API_KEY`。确认 Trusted Publishing 发布成功后可删除旧 secret，并在 NuGet.org 撤销旧的长期 key。普通 CI 不上传包。
 
 ## 5. 上传后的核对
 
@@ -116,4 +132,4 @@ git push origin v0.3.2
 
 首次改名和预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)，当前版本验证见 [0.3.1](release-0.3.1.md)。
 
-配置参考：[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。
+配置参考：[NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)、[NuGet/login](https://github.com/NuGet/login)、[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。

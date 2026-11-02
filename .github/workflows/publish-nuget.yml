@@ -28,6 +28,15 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: bash eng/release.sh version "$RELEASE_TAG"
+      - name: Validate NuGet publishing account
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [[ -z "$NUGET_USER" ]]; then
+            echo '::error::Set the NUGET_USER repository variable to the NuGet.org username that owns the Trusted Publishing policy.'
+            exit 1
+          fi
       - name: Initialize writable .NET CLI home
         shell: bash
         run: printf 'DOTNET_CLI_HOME=%s/dotnet-home\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
@@ -69,12 +78,11 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
           include-hidden-files: true
-      - name: NuGet login (OIDC)
+      - name: NuGet login with Trusted Publishing
         id: nuget-login
-        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
-          user: whynpc
-
+          user: ${{ vars.NUGET_USER }}
       - name: Push validated package to nuget.org
         shell: bash
         env:
