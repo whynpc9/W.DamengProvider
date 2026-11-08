@@ -23,6 +23,7 @@ public sealed class DmBatch : DbBatch
 	private DmTransaction transaction;
 	private int timeout = -1;
 	private DmBatchExecution activeExecution;
+	private DmDataSourceExecution dataSourceExecution;
 
 	public DmBatch()
 	{
@@ -42,7 +43,7 @@ public sealed class DmBatch : DbBatch
 	/// <summary>Seconds for the whole batch (each reader navigation receives a fresh budget); 0 waits indefinitely.</summary>
 	public override int Timeout
 	{
-		get => timeout >= 0 ? timeout : connection?.ConnProperty.CommandTimeout ?? 30;
+		get => GetTimeout(Connection);
 		set
 		{
 			using var mutation = gate.BeginMutation();
@@ -53,7 +54,7 @@ public sealed class DmBatch : DbBatch
 
 	public new DmConnection Connection
 	{
-		get => connection;
+		get => Volatile.Read(ref dataSourceExecution)?.Connection ?? connection;
 		set
 		{
 			using var mutation = gate.BeginMutation();
@@ -63,7 +64,7 @@ public sealed class DmBatch : DbBatch
 
 	protected override DbConnection DbConnection
 	{
-		get => connection;
+		get => Connection;
 		set => Connection = (DmConnection)value;
 	}
 
@@ -89,6 +90,11 @@ public sealed class DmBatch : DbBatch
 
 	/// <summary>Stops the running batch like <see cref="DmCommand.Cancel"/>; the connection is not reusable afterwards.</summary>
 	public override void Cancel() => Volatile.Read(ref activeExecution)?.Cancel();
+
+	// The shortcut owns this binding from closed connection creation through physical close.
+	internal void BindDataSourceExecution(DmDataSourceExecution execution) => Volatile.Write(ref dataSourceExecution, execution);
+	internal void UnbindDataSourceExecution(DmDataSourceExecution execution) =>
+		Interlocked.CompareExchange(ref dataSourceExecution, null, execution);
 
 	public override int ExecuteNonQuery()
 	{
@@ -194,13 +200,16 @@ public sealed class DmBatch : DbBatch
 		var execution = new DmBatchExecution(this);
 		try
 		{
+			DmDataSourceExecution shortcut = Volatile.Read(ref dataSourceExecution);
+			DmConnection connection = shortcut?.Connection ?? this.connection;
 			execution.Capture(commands.Snapshot(), connection, transaction);
 			if (purpose is { } leasePurpose)
 			{
-				int seconds = Timeout;
+				int seconds = GetTimeout(connection);
 				if (connection == null) throw new InvalidOperationException("Batch has no connection.");
 				// Publish first: a Cancel racing with acquisition is applied to the new lease.
 				Volatile.Write(ref activeExecution, execution);
+				shortcut?.BindBatch(execution);
 				execution.Acquire(connection.BeginExecution(leasePurpose,
 					DmDeadline.FromSeconds(seconds, connection.OperationClock), seconds));
 			}
@@ -213,7 +222,7 @@ public sealed class DmBatch : DbBatch
 		}
 	}
 
-	internal bool IsDisposed => gate.IsDisposed;
+	private int GetTimeout(DmConnection connection) => timeout >= 0 ? timeout : connection?.ConnProperty.CommandTimeout ?? 30;
 
 	internal void Release(DmBatchExecution execution)
 	{
