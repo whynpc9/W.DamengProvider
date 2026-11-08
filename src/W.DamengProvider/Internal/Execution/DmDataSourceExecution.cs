@@ -13,6 +13,9 @@ internal sealed class DmDataSourceExecution : IDisposable
     private readonly CancellationToken openToken;
     private CancellationTokenRegistration callerRegistration;
     private DmCommandPlan plan;
+#if !NETSTANDARD2_1
+    private DmBatchExecution batch;
+#endif
     private bool commandCanceled, retired;
     private int cancellationCalls;
     private int openCancelSource;
@@ -30,12 +33,18 @@ internal sealed class DmDataSourceExecution : IDisposable
     private void RequestCancellation(bool user)
     {
         DmCommandPlan captured;
+#if !NETSTANDARD2_1
+        DmBatchExecution capturedBatch;
+#endif
         lock (gate)
         {
             if (retired) return;
             if (!user) commandCanceled = true;
             Interlocked.CompareExchange(ref openCancelSource, (int)(user ? DmCancelSource.User : DmCancelSource.Command), 0);
             captured = user ? null : plan;
+#if !NETSTANDARD2_1
+            capturedBatch = user ? null : batch;
+#endif
             cancellationCalls++;
         }
         try
@@ -43,7 +52,13 @@ internal sealed class DmDataSourceExecution : IDisposable
             // CTS callbacks and a plan's transport abort may block. Neither runs
             // under a lifecycle/state lock, nor can either target a later call.
             try { openCancellation.Cancel(); }
-            finally { captured?.RequestCancellation(); }
+            finally
+            {
+                captured?.RequestCancellation();
+#if !NETSTANDARD2_1
+                capturedBatch?.Cancel();
+#endif
+            }
         }
         finally
         {
@@ -64,6 +79,23 @@ internal sealed class DmDataSourceExecution : IDisposable
         }
         if (cancel) captured.RequestCancellation();
     }
+
+#if !NETSTANDARD2_1
+    // Batch execution and reader calls already receive their own caller tokens.
+    internal void StopObservingCallerForOpen() => callerRegistration.Dispose();
+
+    internal void BindBatch(DmBatchExecution captured)
+    {
+        bool cancel;
+        lock (gate)
+        {
+            if (retired) return;
+            batch = captured;
+            cancel = commandCanceled;
+        }
+        if (cancel) captured.Cancel();
+    }
+#endif
 
     internal void Open()
     {
@@ -106,6 +138,9 @@ internal sealed class DmDataSourceExecution : IDisposable
             if (retired) return;
             retired = true;
             plan = null;
+#if !NETSTANDARD2_1
+            batch = null;
+#endif
             dispose = cancellationCalls == 0;
         }
         // Unregister waits for an already-running caller callback outside gate.

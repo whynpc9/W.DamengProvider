@@ -359,6 +359,14 @@ internal sealed class DmDataSourceBatch : DbBatch
 {
     private readonly DmDataSource source;
     private readonly DmBatch batch = new();
+    private readonly object lifecycleGate = new();
+    private DmDataSourceExecution activeExecution;
+    private bool disposed;
+    private bool readerDelivered;
+
+    internal static Action AfterOpen;
+    internal static Action AfterCancelCaptured;
+
     internal DmDataSourceBatch(DmDataSource source) => this.source = source;
     protected override DbBatchCommandCollection DbBatchCommands => batch.BatchCommands;
     public override int Timeout { get => batch.Timeout; set => batch.Timeout = value; }
@@ -367,83 +375,179 @@ internal sealed class DmDataSourceBatch : DbBatch
     protected override DbTransaction DbTransaction
     { get => null; set => throw new NotSupportedException("Use a data source connection for transactions."); }
     protected override DbBatchCommand CreateDbBatchCommand() => new DmBatchCommand();
-    public override void Cancel() => batch.Cancel();
+
+    public override void Cancel()
+    {
+        DmDataSourceExecution captured;
+        lock (lifecycleGate) captured = activeExecution;
+        Volatile.Read(ref AfterCancelCaptured)?.Invoke();
+        captured?.RequestCancellation();
+    }
+
     public override void Prepare() => batch.Prepare();
     public override Task PrepareAsync(CancellationToken cancellationToken = default) => batch.PrepareAsync(cancellationToken);
 
-    private DmConnection Attach(DmConnection connection)
+    private DmDataSourceExecution Begin(CancellationToken token)
     {
-        try { batch.Connection = connection; return connection; }
-        catch { connection.Dispose(); throw; }
+        token.ThrowIfCancellationRequested();
+        var execution = new DmDataSourceExecution(token);
+        try
+        {
+            lock (lifecycleGate)
+            {
+                if (disposed) throw new ObjectDisposedException(nameof(DmDataSourceBatch));
+                if (activeExecution != null)
+                    throw new InvalidOperationException("A data source batch is already executing or owns a reader.");
+                execution.Connection = source.CreateConnection();
+                batch.BindDataSourceExecution(execution);
+                activeExecution = execution;
+                return execution;
+            }
+        }
+        catch { execution.Dispose(); execution.Connection?.Dispose(); throw; }
     }
 
-    private void Detach(DmConnection connection)
+    private DbDataReader PublishReader(DbDataReader reader, DmDataSourceExecution execution)
     {
-        // A disposed batch is no longer configurable; its reader still returns the connection.
-        try { if (!batch.IsDisposed && ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
-        finally { connection.Dispose(); }
+        lock (lifecycleGate)
+        {
+            if (disposed) throw new ObjectDisposedException(nameof(DmDataSourceBatch));
+            var wrapper = new DmDataSourceReader(reader, () => End(execution), () => EndAsync(execution));
+            readerDelivered = true;
+            return wrapper;
+        }
     }
 
-    private async ValueTask DetachAsync(DmConnection connection)
+    private void End(DmDataSourceExecution execution)
     {
-        // A disposed batch is no longer configurable; its reader still returns the connection.
-        try { if (!batch.IsDisposed && ReferenceEquals(batch.Connection, connection)) batch.Connection = null; }
-        finally { await connection.DisposeAsync().ConfigureAwait(false); }
+        try { execution.Connection.Dispose(); }
+        finally { execution.Connection.RunAfterPhysicalClose(() => Release(execution)); }
     }
 
-    public override int ExecuteNonQuery()
+    private async ValueTask EndAsync(DmDataSourceExecution execution)
     {
-        DmConnection connection = Attach(source.OpenConnection());
-        try { return batch.ExecuteNonQuery(); }
-        finally { Detach(connection); }
+        try { await execution.Connection.DisposeAsync().ConfigureAwait(false); }
+        finally { execution.Connection.RunAfterPhysicalClose(() => Release(execution)); }
     }
 
-    public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default)
+    private void Release(DmDataSourceExecution execution)
     {
-        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
-        try { return await batch.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false); }
-        finally { await DetachAsync(connection).ConfigureAwait(false); }
+        lock (lifecycleGate)
+        {
+            if (!ReferenceEquals(activeExecution, execution)) return;
+            batch.UnbindDataSourceExecution(execution);
+            readerDelivered = false;
+            activeExecution = null;
+        }
+        execution.Dispose();
     }
 
-    public override object ExecuteScalar()
+    public override int ExecuteNonQuery() => Execute(batch.ExecuteNonQuery);
+
+    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default) =>
+        ExecuteAsync(batch.ExecuteNonQueryAsync, cancellationToken);
+
+    public override object ExecuteScalar() => Execute(batch.ExecuteScalar);
+
+    public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default) =>
+        ExecuteAsync(batch.ExecuteScalarAsync, cancellationToken);
+
+    private T Execute<T>(Func<T> run)
     {
-        DmConnection connection = Attach(source.OpenConnection());
-        try { return batch.ExecuteScalar(); }
-        finally { Detach(connection); }
+        DmDataSourceExecution execution = Begin(CancellationToken.None);
+        Exception primary = null;
+        try
+        {
+            execution.Open();
+            execution.StopObservingCallerForOpen();
+            Volatile.Read(ref AfterOpen)?.Invoke();
+            return run();
+        }
+        catch (Exception error) { primary = error; throw; }
+        finally { if (primary == null) End(execution); else try { End(execution); } catch { } }
     }
 
-    public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default)
+    private async Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> run, CancellationToken token)
     {
-        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
-        try { return await batch.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false); }
-        finally { await DetachAsync(connection).ConfigureAwait(false); }
+        DmDataSourceExecution execution = Begin(token);
+        Exception primary = null;
+        try
+        {
+            await execution.OpenAsync().ConfigureAwait(false);
+            execution.StopObservingCallerForOpen();
+            Volatile.Read(ref AfterOpen)?.Invoke();
+            return await run(token).ConfigureAwait(false);
+        }
+        catch (Exception error) { primary = error; throw; }
+        finally
+        {
+            if (primary == null) await EndAsync(execution).ConfigureAwait(false);
+            else try { await EndAsync(execution).ConfigureAwait(false); } catch { }
+        }
     }
 
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
-        DmConnection connection = Attach(source.OpenConnection());
+        DmDataSourceExecution execution = Begin(CancellationToken.None);
+        DbDataReader reader = null;
         try
         {
-            DbDataReader reader = batch.ExecuteReader(behavior);
-            return new DmDataSourceReader(reader, () => Detach(connection), () => DetachAsync(connection));
+            execution.Open();
+            execution.StopObservingCallerForOpen();
+            Volatile.Read(ref AfterOpen)?.Invoke();
+            reader = batch.ExecuteReader(behavior);
+            return PublishReader(reader, execution);
         }
-        catch { Detach(connection); throw; }
+        catch
+        {
+            // Close normally drains later steps. Cancel before cleaning up an undelivered reader.
+            if (reader != null) try { execution.RequestCancellation(); } catch { }
+            try { reader?.Dispose(); } catch { }
+            try { End(execution); } catch { }
+            throw;
+        }
     }
 
     protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
     {
-        DmConnection connection = Attach(await source.OpenConnectionAsync(cancellationToken).ConfigureAwait(false));
+        DmDataSourceExecution execution = Begin(cancellationToken);
+        DbDataReader reader = null;
         try
         {
-            DbDataReader reader = await batch.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
-            return new DmDataSourceReader(reader, () => Detach(connection), () => DetachAsync(connection));
+            await execution.OpenAsync().ConfigureAwait(false);
+            execution.StopObservingCallerForOpen();
+            Volatile.Read(ref AfterOpen)?.Invoke();
+            reader = await batch.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
+            return PublishReader(reader, execution);
         }
-        catch { await DetachAsync(connection).ConfigureAwait(false); throw; }
+        catch
+        {
+            if (reader != null) try { execution.RequestCancellation(); } catch { }
+            try { if (reader != null) await reader.DisposeAsync().ConfigureAwait(false); } catch { }
+            try { await EndAsync(execution).ConfigureAwait(false); } catch { }
+            throw;
+        }
     }
 
-    public override void Dispose() => batch.Dispose();
+    public override void Dispose()
+    {
+        DmDataSourceExecution pending;
+        lock (lifecycleGate)
+        {
+            if (disposed) return;
+            disposed = true;
+            // A published reader owns cleanup, even after its batch is disposed.
+            pending = readerDelivered ? null : activeExecution;
+        }
+        try { batch.Dispose(); }
+        finally { pending?.RequestCancellation(); }
+    }
 
-    public override ValueTask DisposeAsync() => batch.DisposeAsync();
+    public override ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
 }
 
 #endif
