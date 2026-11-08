@@ -20,6 +20,9 @@ internal sealed class ShortcutWireChannel(bool asynchronous) : IDmByteChannel
     internal readonly TaskCompletionSource PhysicalClosed = NewSignal();
     internal readonly TaskCompletionSource ReleasePhysicalClose = NewSignal();
     internal bool HoldQueryReply, PausePhysicalClose;
+    internal int? AffectedRows, ScalarValue;
+    internal int[] ParameterTypes = [];
+    internal Action<short, byte[]>? ObserveRequest;
     internal int SyncCalls, AsyncCalls, DisposeCalls;
     internal Action? BeforeDispose;
     public bool IsClosed { get; private set; }
@@ -45,15 +48,44 @@ internal sealed class ShortcutWireChannel(bool asynchronous) : IDmByteChannel
     {
         opcode = BinaryPrimitives.ReadInt16LittleEndian(buffer.AsSpan(offset + 4));
         Opcodes.Add(opcode);
-        Assert.Contains(opcode, new short[] { 3, 5, 91, 4 });
+        ObserveRequest?.Invoke(opcode, buffer.AsSpan(offset, count).ToArray());
+        Assert.True(opcode switch
+        {
+            3 or 5 or 91 or 4 => true,
+            6 or 13 => ParameterTypes.Length != 0,
+            26 or 90 => ParameterTypes.Contains(12),
+            44 => AffectedRows != null,
+            _ => false
+        }, $"Unexpected synthetic opcode {opcode}.");
         // Opcode 5 carries both prepare and execute. Its byte-21 flag
         // distinguishes their different reply header layouts.
-        bool query = opcode == 91 || opcode == 5 && buffer[offset + 21] == 1;
-        reply = new byte[query ? 64 + 32 + 5 : 64];
-        BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(4), opcode);
-        BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(6), reply.Length - 64);
+        bool prepare = opcode == 5 && buffer[offset + 21] != 1;
+        bool execute = opcode is 6 or 13 or 91 || opcode == 5 && !prepare;
+        bool query = execute && AffectedRows == null;
+        bool row = query && ScalarValue != null;
+        byte[] uploadAck = opcode == 26
+            ? Convert.FromHexString("020102030405060708090A0B0C0D0E0F1011121314") : [];
+        int bodyLength = prepare ? 33 * ParameterTypes.Length : query ? 37 + (row ? 22 : 0) : uploadAck.Length;
+        reply = new byte[64 + bodyLength];
+        BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(4), opcode switch { 26 => 261, 44 => 0, _ => opcode });
+        BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(6), bodyLength);
+        if (opcode == 44) BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(10), 111); // no more results
         if (opcode == 3) BinaryPrimitives.WriteInt32LittleEndian(reply, 41);
-        if (opcode is 5 or 91) BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(20), 160);
+        if (opcode == 26) uploadAck.CopyTo(reply, 64);
+        if (prepare || execute) BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(20), execute && !query ? (short)158 : (short)160);
+        if (prepare)
+        {
+            BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(22), (short)ParameterTypes.Length);
+            for (int index = 0; index < ParameterTypes.Length; index++)
+            {
+                Span<byte> parameter = reply.AsSpan(64 + 33 * index, 33);
+                BinaryPrimitives.WriteInt32LittleEndian(parameter, ParameterTypes[index]);
+                BinaryPrimitives.WriteInt32LittleEndian(parameter[12..], 1);
+                BinaryPrimitives.WriteInt16LittleEndian(parameter[24..], 1);
+                parameter[32] = (byte)('p' + index);
+            }
+        }
+        if (execute && !query) BinaryPrimitives.WriteInt64LittleEndian(reply.AsSpan(24), AffectedRows!.Value);
         if (query)
         {
             BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(22), 1);
@@ -63,7 +95,15 @@ internal sealed class ShortcutWireChannel(bool asynchronous) : IDmByteChannel
             BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(68), 4);
             BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(76), 1);
             BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(88), 5);
-            new byte[] { 86, 65, 76, 85, 69 }.CopyTo(reply, 96);
+            "VALUE"u8.CopyTo(reply.AsSpan(96));
+            if (row)
+            {
+                BinaryPrimitives.WriteInt64LittleEndian(reply.AsSpan(24), 1);
+                BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(35), 1);
+                // 2-byte row prefix, 12-byte row id, 2-byte column ordinal and 2-byte value length.
+                BinaryPrimitives.WriteInt16LittleEndian(reply.AsSpan(117), 4);
+                BinaryPrimitives.WriteInt32LittleEndian(reply.AsSpan(119), ScalarValue!.Value);
+            }
         }
         for (int index = 0; index < 19; index++) reply[19] ^= reply[index];
         position = 0; return count;

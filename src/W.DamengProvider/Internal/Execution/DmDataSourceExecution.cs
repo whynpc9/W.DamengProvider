@@ -13,8 +13,10 @@ internal sealed class DmDataSourceExecution : IDisposable
     private readonly CancellationToken openToken;
     private CancellationTokenRegistration callerRegistration;
     private DmCommandPlan plan;
+    private DmCommandPlan pendingPlan;
 #if !NETSTANDARD2_1
     private DmBatchExecution batch;
+    private DmBatchExecution pendingBatch;
 #endif
     private bool commandCanceled, retired;
     private int cancellationCalls;
@@ -73,12 +75,23 @@ internal sealed class DmDataSourceExecution : IDisposable
         bool cancel;
         lock (gate)
         {
-            if (retired) return;
-            plan = captured;
+            if (retired || plan != null) throw new InvalidOperationException("The shortcut cannot own another command plan.");
+            plan = pendingPlan = captured;
             cancel = commandCanceled;
         }
         if (cancel) captured.RequestCancellation();
     }
+
+    // Only the running shortcut transfers or releases these pending inputs.
+    // Cancellation retains its reference to the same execution after transfer.
+    internal DmCommandPlan TakePlan(DmCommandPlan expected)
+    {
+        if (expected == null || !ReferenceEquals(Interlocked.CompareExchange(ref pendingPlan, null, expected), expected))
+            throw new InvalidOperationException("The shortcut does not own this pending command plan.");
+        return expected;
+    }
+
+    internal DmCommandPlan TakePendingPlan() => Interlocked.Exchange(ref pendingPlan, null);
 
 #if !NETSTANDARD2_1
     // Batch execution and reader calls already receive their own caller tokens.
@@ -89,12 +102,14 @@ internal sealed class DmDataSourceExecution : IDisposable
         bool cancel;
         lock (gate)
         {
-            if (retired) return;
-            batch = captured;
+            if (retired || batch != null) throw new InvalidOperationException("The shortcut cannot own another batch.");
+            batch = pendingBatch = captured;
             cancel = commandCanceled;
         }
         if (cancel) captured.Cancel();
     }
+
+    internal DmBatchExecution TakePendingBatch() => Interlocked.Exchange(ref pendingBatch, null);
 #endif
 
     internal void Open()

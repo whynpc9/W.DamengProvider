@@ -98,26 +98,40 @@ public sealed class DmBatch : DbBatch
 
 	public override int ExecuteNonQuery()
 	{
-		using DmBatchExecution execution = Begin(DmOperationPurpose.Query);
-		return execution.RunNonQuery();
+		return ExecuteNonQueryCore(Begin(DmOperationPurpose.Query));
 	}
 
 	public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		using DmBatchExecution execution = Begin(DmOperationPurpose.Query);
-		return await execution.RunNonQueryAsync(cancellationToken).ConfigureAwait(false);
+		return await ExecuteNonQueryCoreAsync(Begin(DmOperationPurpose.Query), cancellationToken).ConfigureAwait(false);
 	}
 
-	public override object ExecuteScalar()
+	internal static int ExecuteNonQueryCore(DmBatchExecution execution)
 	{
-		using DbDataReader reader = ExecuteDbDataReader(CommandBehavior.Default);
-		return reader.Read() && reader.FieldCount > 0 ? reader.GetValue(0) : null;
+		using (execution) return execution.RunNonQuery();
+	}
+
+	internal static async Task<int> ExecuteNonQueryCoreAsync(DmBatchExecution execution, CancellationToken cancellationToken)
+	{
+		using (execution) return await execution.RunNonQueryAsync(cancellationToken).ConfigureAwait(false);
+	}
+
+	public override object ExecuteScalar() => ReadScalar(ExecuteDbDataReader(CommandBehavior.Default));
+
+	internal static object ReadScalar(DbDataReader reader)
+	{
+		using (reader) return reader.Read() && reader.FieldCount > 0 ? reader.GetValue(0) : null;
 	}
 
 	public override async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default)
 	{
 		DbDataReader reader = await ExecuteDbDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+		return await ReadScalarAsync(reader, cancellationToken).ConfigureAwait(false);
+	}
+
+	internal static async Task<object> ReadScalarAsync(DbDataReader reader, CancellationToken cancellationToken)
+	{
 		await using (reader.ConfigureAwait(false))
 		{
 			return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) && reader.FieldCount > 0
@@ -128,7 +142,11 @@ public sealed class DmBatch : DbBatch
 	protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 	{
 		CheckBehavior(behavior);
-		DmBatchExecution execution = Begin(DmOperationPurpose.Reader);
+		return ExecuteReaderCore(Begin(DmOperationPurpose.Reader), behavior);
+	}
+
+	internal static DbDataReader ExecuteReaderCore(DmBatchExecution execution, CommandBehavior behavior)
+	{
 		var reader = new DmBatchDataReader(execution, behavior);
 		try
 		{
@@ -146,7 +164,12 @@ public sealed class DmBatch : DbBatch
 	{
 		cancellationToken.ThrowIfCancellationRequested();
 		CheckBehavior(behavior);
-		DmBatchExecution execution = Begin(DmOperationPurpose.Reader);
+		return await ExecuteReaderCoreAsync(Begin(DmOperationPurpose.Reader), behavior, cancellationToken).ConfigureAwait(false);
+	}
+
+	internal static async Task<DbDataReader> ExecuteReaderCoreAsync(DmBatchExecution execution, CommandBehavior behavior,
+		CancellationToken cancellationToken)
+	{
 		var reader = new DmBatchDataReader(execution, behavior);
 		try
 		{
@@ -163,7 +186,7 @@ public sealed class DmBatch : DbBatch
 	/// <summary>Validates every command locally. Statements are prepared when the batch executes.</summary>
 	public override void Prepare()
 	{
-		using DmBatchExecution execution = Begin(purpose: null);
+		using DmBatchExecution execution = Capture(forExecution: false);
 	}
 
 	public override Task PrepareAsync(CancellationToken cancellationToken = default)
@@ -192,27 +215,52 @@ public sealed class DmBatch : DbBatch
 			throw new NotSupportedException("A batch reader supports only SequentialAccess and CloseConnection.");
 	}
 
-	// Freezes the batch: captures every step's plan (SQL, parameters, binding) and only
-	// then takes the connection. Nothing reaches the server if any command is invalid.
-	private DmBatchExecution Begin(DmOperationPurpose? purpose)
+	private DmBatchExecution Begin(DmOperationPurpose purpose)
+	{
+		DmBatchExecution execution = Capture(forExecution: true);
+		try { execution.Acquire(purpose); return execution; }
+		catch { execution.Dispose(); throw; }
+	}
+
+	internal void CaptureDataSourceBatch(DmDataSourceExecution shortcut, CommandBehavior behavior)
+	{
+		CheckBehavior(behavior);
+		DmBatchExecution execution = Capture(forExecution: true, shortcut);
+		try { shortcut.BindBatch(execution); }
+		catch { execution.Dispose(); throw; }
+	}
+
+	internal DmBatchExecution TakeDataSourceBatch(DmDataSourceExecution shortcut, DmOperationPurpose purpose)
+	{
+		if (gate.IsDisposed) throw new ObjectDisposedException(nameof(DmBatch));
+		DmBatchExecution execution = shortcut.TakePendingBatch() ??
+			throw new InvalidOperationException("The shortcut has no pending batch.");
+		try
+		{
+			execution.ValidateConnectedPlans();
+			execution.Acquire(purpose);
+			return execution;
+		}
+		catch
+		{
+			execution.Dispose();
+			throw;
+		}
+	}
+
+	// Freeze every step before taking a lease. Shortcuts capture before opening
+	// and validate the negotiated profile once the connection is open.
+	private DmBatchExecution Capture(bool forExecution, DmDataSourceExecution shortcut = null)
 	{
 		gate.EnterExecution(nameof(DmBatch));
 		var execution = new DmBatchExecution(this);
 		try
 		{
-			DmDataSourceExecution shortcut = Volatile.Read(ref dataSourceExecution);
-			DmConnection connection = shortcut?.Connection ?? this.connection;
-			execution.Capture(commands.Snapshot(), connection, transaction);
-			if (purpose is { } leasePurpose)
-			{
-				int seconds = GetTimeout(connection);
-				if (connection == null) throw new InvalidOperationException("Batch has no connection.");
-				// Publish first: a Cancel racing with acquisition is applied to the new lease.
-				Volatile.Write(ref activeExecution, execution);
-				shortcut?.BindBatch(execution);
-				execution.Acquire(connection.BeginExecution(leasePurpose,
-					DmDeadline.FromSeconds(seconds, connection.OperationClock), seconds));
-			}
+			DmConnection capturedConnection = shortcut?.Connection ?? connection;
+			execution.Capture(commands.Snapshot(), capturedConnection, transaction, GetTimeout(capturedConnection),
+				deferConnectedValidation: shortcut != null);
+			// Publish first: a Cancel racing with acquisition is applied to the new lease.
+			if (forExecution) Volatile.Write(ref activeExecution, execution);
 			return execution;
 		}
 		catch

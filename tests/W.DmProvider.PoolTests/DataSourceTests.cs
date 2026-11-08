@@ -113,11 +113,20 @@ public sealed class DataSourceTests
     {
         using var hook = new SyntheticPoolHandshake();
         using var source = new DmDataSource(PoolApiSettings.Text);
-        var fake = new ShortcutCommand();
-        await using var command = new DmDataSourceCommand(source, "SELECT :p FROM DUAL", fake);
+        var first = new ShortcutWireChannel(true) { ParameterTypes = [7], ScalarValue = 8 };
+        var second = new ShortcutWireChannel(true) { ParameterTypes = [7], ScalarValue = 9 };
+        byte[]? firstExecute = null, secondExecute = null;
+        first.ObserveRequest = (opcode, frame) => { if (opcode is 6 or 13) firstExecute = frame; };
+        second.ObserveRequest = (opcode, frame) => { if (opcode is 6 or 13) secondExecute = frame; };
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        {
+            hook.Install(candidate, hook.Channels.Count == 0 ? first : second);
+            return ValueTask.CompletedTask;
+        };
+        await using var command = source.CreateCommand("SELECT :p FROM DUAL");
         var parameter = new DmParameter("p", DmDbType.Int32) { Value = 8 };
         command.Parameters.Add(parameter);
-        var reader = await command.ExecuteReaderAsync();
+        await using var reader = await command.ExecuteReaderAsync();
         Assert.Equal(1, source.Snapshot.Leased);
         Assert.True(await reader.ReadAsync());
         Assert.Equal(8, await reader.GetFieldValueAsync<int>(0));
@@ -129,8 +138,12 @@ public sealed class DataSourceTests
         parameter.Value = 9;
         Assert.Equal(9, await command.ExecuteScalarAsync());
         Assert.Equal(0, source.Snapshot.PhysicalCount);
-        Assert.Equal(0, fake.SyncCalls);
-        Assert.Equal(2, fake.AsyncCalls);
+        first.AssertIoPath();
+        second.AssertIoPath();
+        Assert.NotNull(firstExecute);
+        Assert.NotNull(secondExecute);
+        Assert.Equal(8, System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(firstExecute.AsSpan(^4)));
+        Assert.Equal(9, System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(secondExecute.AsSpan(^4)));
     }
 
     [Theory]
@@ -140,8 +153,12 @@ public sealed class DataSourceTests
     {
         using var hook = new SyntheticPoolHandshake();
         using var source = new DmDataSource(PoolApiSettings.Text);
-        var fake = new ShortcutCommand();
-        await using var command = new DmDataSourceCommand(source, "synthetic", fake);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        {
+            hook.Install(candidate, new ShortcutWireChannel(asynchronous) { AffectedRows = 1, ParameterTypes = [7] });
+            return ValueTask.CompletedTask;
+        };
+        await using var command = source.CreateCommand("INSERT INTO SYNTHETIC_TABLE VALUES (:p)");
         command.Parameters.Add(new DmParameter("p", DmDbType.Int32) { Value = 10 });
         if (asynchronous)
         {
@@ -150,12 +167,17 @@ public sealed class DataSourceTests
         }
         else { Assert.Equal(1, command.ExecuteNonQuery()); command.Prepare(); }
         Assert.Equal(0, source.Snapshot.PhysicalCount);
-        fake.Failure = new InvalidOperationException("synthetic execution failure");
-        if (asynchronous) await Assert.ThrowsAsync<InvalidOperationException>(() => command.ExecuteScalarAsync());
-        else Assert.Throws<InvalidOperationException>(() => command.ExecuteScalar());
+        DmDataSourceCommand.AfterOpen = () => throw new InvalidOperationException("synthetic execution failure");
+        try
+        {
+            if (asynchronous) await Assert.ThrowsAsync<InvalidOperationException>(() => command.ExecuteScalarAsync());
+            else Assert.Throws<InvalidOperationException>(() => command.ExecuteScalar());
+        }
+        finally { DmDataSourceCommand.AfterOpen = null; }
         Assert.Equal(0, source.Snapshot.PhysicalCount);
-        Assert.Equal(asynchronous ? 0 : 3, fake.SyncCalls);
-        Assert.Equal(asynchronous ? 3 : 0, fake.AsyncCalls);
+        Assert.Equal(3, hook.Channels.Count);
+        foreach (ShortcutWireChannel channel in hook.Channels.Take(2)) channel.AssertIoPath();
+        Assert.Empty(((ShortcutWireChannel)hook.Channels[2]).Opcodes);
         Assert.All(hook.Channels, channel => Assert.True(channel.IsClosed));
     }
 
@@ -166,14 +188,18 @@ public sealed class DataSourceTests
         using var source = new DmDataSource(PoolApiSettings.Text);
         var primary = new DmTimeoutException(new DmFailureInfo(DmErrorKind.Timeout, DmFailurePhase.Receive,
             "WDM_TIMEOUT", DmOperationOutcome.Unknown, null, false, DmCancelSource.TotalDeadline));
-        var fake = new ShortcutCommand { Failure = primary };
-        await using var command = new DmDataSourceCommand(source, "synthetic", fake);
+        await using var command = source.CreateCommand("synthetic");
         DmPendingOpenTestHooks.AfterCapacityAcquired = connection => connection.StateChange += (_, change) =>
         { if (change.CurrentState == ConnectionState.Closed) throw new InvalidOperationException("synthetic cleanup failure"); };
-        var error = await Assert.ThrowsAsync<DmTimeoutException>(() => command.ExecuteNonQueryAsync());
-        Assert.Same(primary, error);
-        Assert.Equal(DmOperationOutcome.Unknown, error.FailureInfo.OperationOutcome);
-        Assert.Equal(0, source.Snapshot.PhysicalCount);
+        DmDataSourceCommand.AfterOpen = () => throw primary;
+        try
+        {
+            var error = await Assert.ThrowsAsync<DmTimeoutException>(() => command.ExecuteNonQueryAsync());
+            Assert.Same(primary, error);
+            Assert.Equal(DmOperationOutcome.Unknown, error.FailureInfo.OperationOutcome);
+            Assert.Equal(0, source.Snapshot.PhysicalCount);
+        }
+        finally { DmDataSourceCommand.AfterOpen = null; }
     }
 
     [Fact]
@@ -193,13 +219,24 @@ public sealed class DataSourceTests
     {
         using var hook = new SyntheticPoolHandshake();
         using var source = new DmDataSource(PoolApiSettings.Text);
-        var fake = new ShortcutCommand();
-        using var command = new DmDataSourceCommand(source, "synthetic", fake);
-        fake.BeforeReaderReturn = () => command.Dispose();
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => command.ExecuteReaderAsync());
-        Assert.NotNull(fake.LastReader);
-        Assert.True(fake.LastReader!.IsClosed);
-        Assert.Equal(0, source.Snapshot.PhysicalCount);
+        var channel = new ShortcutWireChannel(true);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        { hook.Install(candidate, channel); return ValueTask.CompletedTask; };
+        using var command = source.CreateCommand("SELECT VALUE FROM SYNTHETIC_TABLE");
+        DbDataReader? unpublished = null;
+        DmDataSourceCommand.BeforeReaderPublished = reader =>
+        {
+            unpublished = reader;
+            command.Dispose();
+        };
+        try
+        {
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => command.ExecuteReaderAsync());
+            Assert.NotNull(unpublished);
+            Assert.True(unpublished.IsClosed);
+            Assert.Equal(0, source.Snapshot.PhysicalCount);
+        }
+        finally { DmDataSourceCommand.BeforeReaderPublished = null; }
     }
 
     [Fact]
@@ -260,32 +297,4 @@ public sealed class DataSourceTests
         public void Dispose() { IsClosed = true; aborted.TrySetResult(); }
     }
 
-    private sealed class ShortcutCommand : DmCommand
-    {
-        internal int SyncCalls, AsyncCalls;
-        internal Exception? Failure;
-        internal Action? BeforeReaderReturn;
-        internal DbDataReader? LastReader;
-        private object Value => Parameters.Count == 0 ? 1 : Parameters[0].Value;
-        private void Check() { if (Failure != null) throw Failure; }
-        public override int ExecuteNonQuery() { SyncCalls++; Check(); return 1; }
-        public override object ExecuteScalar() { SyncCalls++; Check(); return Value; }
-        public override void Prepare() { SyncCalls++; Check(); }
-        public override Task<int> ExecuteNonQueryAsync(CancellationToken token) { AsyncCalls++; Check(); return Task.FromResult(1); }
-        public override Task<object> ExecuteScalarAsync(CancellationToken token) { AsyncCalls++; Check(); return Task.FromResult(Value); }
-        public override Task PrepareAsync(CancellationToken token = default) { AsyncCalls++; Check(); return Task.CompletedTask; }
-        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
-        { SyncCalls++; Check(); return Reader(); }
-        protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken token)
-        { AsyncCalls++; Check(); return Task.FromResult(Reader()); }
-        private DbDataReader Reader()
-        {
-            var table = new DataTable();
-            table.Columns.Add("VALUE", typeof(int));
-            table.Rows.Add(Value);
-            LastReader = table.CreateDataReader();
-            BeforeReaderReturn?.Invoke();
-            return LastReader;
-        }
-    }
 }

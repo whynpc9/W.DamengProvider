@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using W.Dm.Internal.Execution;
+using W.Dm.Internal.Sessions;
 
 namespace W.Dm;
 
@@ -18,6 +19,7 @@ internal sealed class DmDataSourceCommand : DbCommand
     private DmDataSourceReader activeReader;
     private DmDataSourceExecution activeExecution;
     internal static Action AfterOpen;
+    internal static Action<DbDataReader> BeforeReaderPublished;
     internal static Action AfterCancelCaptured;
     private int active, disposed;
     private readonly object lifecycleGate = new();
@@ -58,7 +60,6 @@ internal sealed class DmDataSourceCommand : DbCommand
                 connection = source.CreateConnection();
                 command.Connection = connection;
                 execution.Connection = connection;
-                command.BindDataSourceExecution(execution);
                 activeExecution = execution;
                 activeConnection = connection;
                 active = 1;
@@ -70,6 +71,7 @@ internal sealed class DmDataSourceCommand : DbCommand
 
     private DbDataReader PublishReader(DbDataReader reader, DmDataSourceExecution execution)
     {
+        Volatile.Read(ref BeforeReaderPublished)?.Invoke(reader);
         lock (lifecycleGate)
         {
             if (disposed != 0) throw new ObjectDisposedException(nameof(DmDataSourceCommand));
@@ -97,6 +99,7 @@ internal sealed class DmDataSourceCommand : DbCommand
         }
         try
         {
+            command.ReleaseDataSourcePlan(execution);
             if (!skipSetter)
             {
                 try { command.Connection = null; }
@@ -112,17 +115,37 @@ internal sealed class DmDataSourceCommand : DbCommand
             lock (lifecycleGate)
             {
                 if (ReferenceEquals(activeExecution, execution))
-                { command.UnbindDataSourceExecution(execution); activeExecution = null; activeConnection = null; activeReader = null; active = 0; }
+                { activeExecution = null; activeConnection = null; activeReader = null; active = 0; }
             }
             execution.Dispose();
         }
+    }
+
+    private void Open(DmDataSourceExecution execution, bool arrayBindingAllowed, CommandBehavior behavior = CommandBehavior.Default)
+    {
+        command.CaptureDataSourcePlan(execution, arrayBindingAllowed, behavior);
+        execution.Open();
+        Volatile.Read(ref AfterOpen)?.Invoke();
+    }
+
+    private async ValueTask OpenAsync(DmDataSourceExecution execution, bool arrayBindingAllowed, CancellationToken token,
+        CommandBehavior behavior = CommandBehavior.Default)
+    {
+        command.CaptureDataSourcePlan(execution, arrayBindingAllowed, behavior);
+        await execution.OpenAsync().ConfigureAwait(false);
+        Volatile.Read(ref AfterOpen)?.Invoke();
+        token.ThrowIfCancellationRequested();
     }
 
     public override int ExecuteNonQuery()
     {
         DmDataSourceExecution execution = Begin(CancellationToken.None);
         Exception primary = null;
-        try { execution.Open(); Volatile.Read(ref AfterOpen)?.Invoke(); return command.ExecuteNonQuery(); }
+        try
+        {
+            Open(execution, arrayBindingAllowed: true);
+            return command.ExecuteNonQueryCore(command.TakeDataSourcePlan(execution));
+        }
         catch (Exception error) { primary = error; throw; }
         finally { if (primary == null) End(execution); else try { End(execution); } catch { } }
     }
@@ -130,7 +153,11 @@ internal sealed class DmDataSourceCommand : DbCommand
     {
         DmDataSourceExecution execution = Begin(CancellationToken.None);
         Exception primary = null;
-        try { execution.Open(); Volatile.Read(ref AfterOpen)?.Invoke(); return command.ExecuteScalar(); }
+        try
+        {
+            Open(execution, arrayBindingAllowed: false);
+            return command.ExecuteScalarCore(command.TakeDataSourcePlan(execution));
+        }
         catch (Exception error) { primary = error; throw; }
         finally { if (primary == null) End(execution); else try { End(execution); } catch { } }
     }
@@ -140,9 +167,9 @@ internal sealed class DmDataSourceCommand : DbCommand
         Exception primary = null;
         try
         {
-            await execution.OpenAsync().ConfigureAwait(false);
-            Volatile.Read(ref AfterOpen)?.Invoke();
-            return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await OpenAsync(execution, arrayBindingAllowed: true, cancellationToken).ConfigureAwait(false);
+            return (int)await command.ExecuteCompleteCoreAsync(false, command.TakeDataSourcePlan(execution),
+                batchLease: null, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception error) { primary = error; throw; }
         finally
@@ -157,9 +184,9 @@ internal sealed class DmDataSourceCommand : DbCommand
         Exception primary = null;
         try
         {
-            await execution.OpenAsync().ConfigureAwait(false);
-            Volatile.Read(ref AfterOpen)?.Invoke();
-            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            await OpenAsync(execution, arrayBindingAllowed: false, cancellationToken).ConfigureAwait(false);
+            return await command.ExecuteCompleteCoreAsync(true, command.TakeDataSourcePlan(execution),
+                batchLease: null, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception error) { primary = error; throw; }
         finally
@@ -172,7 +199,11 @@ internal sealed class DmDataSourceCommand : DbCommand
     {
         DmDataSourceExecution execution = Begin(CancellationToken.None);
         Exception primary = null;
-        try { execution.Open(); Volatile.Read(ref AfterOpen)?.Invoke(); command.Prepare(); }
+        try
+        {
+            Open(execution, arrayBindingAllowed: true);
+            command.PrepareCore(command.TakeDataSourcePlan(execution));
+        }
         catch (Exception error) { primary = error; throw; }
         finally { if (primary == null) End(execution); else try { End(execution); } catch { } }
     }
@@ -182,9 +213,8 @@ internal sealed class DmDataSourceCommand : DbCommand
         Exception primary = null;
         try
         {
-            await execution.OpenAsync().ConfigureAwait(false);
-            Volatile.Read(ref AfterOpen)?.Invoke();
-            await command.PrepareAsync(cancellationToken).ConfigureAwait(false);
+            await OpenAsync(execution, arrayBindingAllowed: true, cancellationToken).ConfigureAwait(false);
+            await command.PrepareCoreAsync(command.TakeDataSourcePlan(execution), cancellationToken).ConfigureAwait(false);
         }
         catch (Exception error) { primary = error; throw; }
         finally
@@ -199,8 +229,8 @@ internal sealed class DmDataSourceCommand : DbCommand
         DbDataReader reader = null;
         try
         {
-            execution.Open(); Volatile.Read(ref AfterOpen)?.Invoke();
-            reader = command.ExecuteReader(behavior);
+            Open(execution, arrayBindingAllowed: false, behavior);
+            reader = command.ExecuteDbDataReaderCore(behavior, command.TakeDataSourcePlan(execution), batchLease: null);
             return PublishReader(reader, execution);
         }
         catch
@@ -216,9 +246,9 @@ internal sealed class DmDataSourceCommand : DbCommand
         DbDataReader reader = null;
         try
         {
-            await execution.OpenAsync().ConfigureAwait(false);
-            Volatile.Read(ref AfterOpen)?.Invoke();
-            reader = await command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
+            await OpenAsync(execution, arrayBindingAllowed: false, cancellationToken, behavior).ConfigureAwait(false);
+            reader = await command.ExecuteDbDataReaderCoreAsync(behavior, command.TakeDataSourcePlan(execution),
+                batchLease: null, cancellationToken).ConfigureAwait(false);
             return PublishReader(reader, execution);
         }
         catch
@@ -432,51 +462,65 @@ internal sealed class DmDataSourceBatch : DbBatch
 
     private void Release(DmDataSourceExecution execution)
     {
-        lock (lifecycleGate)
+        try { execution.TakePendingBatch()?.Dispose(); }
+        finally
         {
-            if (!ReferenceEquals(activeExecution, execution)) return;
-            batch.UnbindDataSourceExecution(execution);
-            readerDelivered = false;
-            activeExecution = null;
+            lock (lifecycleGate)
+            {
+                if (ReferenceEquals(activeExecution, execution))
+                {
+                    batch.UnbindDataSourceExecution(execution);
+                    readerDelivered = false;
+                    activeExecution = null;
+                }
+            }
+            execution.Dispose();
         }
-        execution.Dispose();
     }
 
-    public override int ExecuteNonQuery() => Execute(batch.ExecuteNonQuery);
+    public override int ExecuteNonQuery() => Execute(DmOperationPurpose.Query, DmBatch.ExecuteNonQueryCore);
 
     public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default) =>
-        ExecuteAsync(batch.ExecuteNonQueryAsync, cancellationToken);
+        ExecuteAsync(DmOperationPurpose.Query, DmBatch.ExecuteNonQueryCoreAsync, cancellationToken);
 
-    public override object ExecuteScalar() => Execute(batch.ExecuteScalar);
+    public override object ExecuteScalar() => Execute(DmOperationPurpose.Reader,
+        execution => DmBatch.ReadScalar(DmBatch.ExecuteReaderCore(execution, CommandBehavior.Default)));
 
     public override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default) =>
-        ExecuteAsync(batch.ExecuteScalarAsync, cancellationToken);
+        ExecuteAsync(DmOperationPurpose.Reader, async (execution, token) =>
+        {
+            DbDataReader reader = await DmBatch.ExecuteReaderCoreAsync(execution, CommandBehavior.Default, token).ConfigureAwait(false);
+            return await DmBatch.ReadScalarAsync(reader, token).ConfigureAwait(false);
+        }, cancellationToken);
 
-    private T Execute<T>(Func<T> run)
+    private T Execute<T>(DmOperationPurpose purpose, Func<DmBatchExecution, T> run)
     {
         DmDataSourceExecution execution = Begin(CancellationToken.None);
         Exception primary = null;
         try
         {
+            batch.CaptureDataSourceBatch(execution, CommandBehavior.Default);
             execution.Open();
             execution.StopObservingCallerForOpen();
             Volatile.Read(ref AfterOpen)?.Invoke();
-            return run();
+            return run(batch.TakeDataSourceBatch(execution, purpose));
         }
         catch (Exception error) { primary = error; throw; }
         finally { if (primary == null) End(execution); else try { End(execution); } catch { } }
     }
 
-    private async Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> run, CancellationToken token)
+    private async Task<T> ExecuteAsync<T>(DmOperationPurpose purpose, Func<DmBatchExecution, CancellationToken, Task<T>> run, CancellationToken token)
     {
         DmDataSourceExecution execution = Begin(token);
         Exception primary = null;
         try
         {
+            batch.CaptureDataSourceBatch(execution, CommandBehavior.Default);
             await execution.OpenAsync().ConfigureAwait(false);
             execution.StopObservingCallerForOpen();
             Volatile.Read(ref AfterOpen)?.Invoke();
-            return await run(token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            return await run(batch.TakeDataSourceBatch(execution, purpose), token).ConfigureAwait(false);
         }
         catch (Exception error) { primary = error; throw; }
         finally
@@ -492,10 +536,11 @@ internal sealed class DmDataSourceBatch : DbBatch
         DbDataReader reader = null;
         try
         {
+            batch.CaptureDataSourceBatch(execution, behavior);
             execution.Open();
             execution.StopObservingCallerForOpen();
             Volatile.Read(ref AfterOpen)?.Invoke();
-            reader = batch.ExecuteReader(behavior);
+            reader = DmBatch.ExecuteReaderCore(batch.TakeDataSourceBatch(execution, DmOperationPurpose.Reader), behavior);
             return PublishReader(reader, execution);
         }
         catch
@@ -514,10 +559,13 @@ internal sealed class DmDataSourceBatch : DbBatch
         DbDataReader reader = null;
         try
         {
+            batch.CaptureDataSourceBatch(execution, behavior);
             await execution.OpenAsync().ConfigureAwait(false);
             execution.StopObservingCallerForOpen();
             Volatile.Read(ref AfterOpen)?.Invoke();
-            reader = await batch.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            reader = await DmBatch.ExecuteReaderCoreAsync(batch.TakeDataSourceBatch(execution, DmOperationPurpose.Reader),
+                behavior, cancellationToken).ConfigureAwait(false);
             return PublishReader(reader, execution);
         }
         catch
