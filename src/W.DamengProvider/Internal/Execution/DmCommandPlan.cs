@@ -256,16 +256,24 @@ internal sealed class DmCommandPlan : IDisposable
     private static DmParameter[][] CaptureArrayRows(DmParameterCollection parameters, int count)
     {
         if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "ArrayBindCount cannot be negative.");
-        if (parameters.do_Count == 0)
+        int parameterCount = parameters.do_Count;
+        if (parameterCount == 0)
             throw new InvalidOperationException("Array binding requires at least one parameter.");
-        var rows = new DmParameter[count][];
-        for (int row = 0; row < count; row++) rows[row] = new DmParameter[parameters.do_Count];
-        for (int index = 0; index < parameters.do_Count; index++)
+        var columns = new (DmParameter Parameter, Array Values)[parameterCount];
+        for (int index = 0; index < parameterCount; index++)
         {
             DmParameter parameter = parameters.do_GetParameter(index);
             if (parameter.do_Value is not Array values || values.Rank != 1 || values.Length != count)
                 throw new InvalidOperationException(
                     $"Array-bound parameter '{parameter.do_ParameterName}' requires a one-dimensional array of ArrayBindCount values.");
+            columns[index] = (parameter, values);
+        }
+
+        var rows = new DmParameter[count][];
+        for (int row = 0; row < count; row++) rows[row] = new DmParameter[parameterCount];
+        for (int index = 0; index < parameterCount; index++)
+        {
+            var (parameter, values) = columns[index];
             DmParameter typed = null;
             for (int row = 0; row < count; row++)
             {
