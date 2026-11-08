@@ -4,6 +4,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using W.Dm.Internal.Sessions;
+using W.Dm.Internal.Transport;
 
 namespace W.Dm.Internal.Execution;
 
@@ -19,6 +20,7 @@ internal sealed class DmBatchExecution : IDisposable
     private DmCommand[] steps = Array.Empty<DmCommand>();
     private DmCommandPlan[] plans = Array.Empty<DmCommandPlan>();
     private DmExecutionLease lease;
+    private int timeoutSeconds;
     private int next;
     private int cancelRequested;
     private int disposed;
@@ -30,10 +32,12 @@ internal sealed class DmBatchExecution : IDisposable
     /// <summary>False once the batch was canceled or its connection can no longer run a step.</summary>
     internal bool CanContinue => Volatile.Read(ref cancelRequested) == 0 && Connection?.State == ConnectionState.Open;
 
-    internal void Capture(DmBatchCommand[] commands, DmConnection connection, DmTransaction transaction)
+    internal void Capture(DmBatchCommand[] commands, DmConnection connection, DmTransaction transaction, int timeoutSeconds,
+        bool deferConnectedValidation)
     {
         if (commands.Length == 0) throw new InvalidOperationException("Batch has no commands.");
         Connection = connection;
+        this.timeoutSeconds = timeoutSeconds;
         sources = commands;
         var seen = new HashSet<DmCommandPlanGate>(ReferenceEqualityComparer.Instance);
         foreach (DmBatchCommand command in commands)
@@ -42,7 +46,7 @@ internal sealed class DmBatchExecution : IDisposable
             command.Gate.EnterExecution(nameof(DmBatchCommand));
             enteredGates.Add(command.Gate);
         }
-        foreach (DmBatchCommand command in commands) command.SetRecordsAffected(-1);
+        if (!deferConnectedValidation) ResetRecordsAffected();
         steps = new DmCommand[commands.Length];
         plans = new DmCommandPlan[commands.Length];
         for (int index = 0; index < commands.Length; index++)
@@ -51,16 +55,32 @@ internal sealed class DmBatchExecution : IDisposable
             if (source.CommandType != CommandType.Text)
                 throw new NotSupportedException("DbBatch supports only Text commands.");
             steps[index] = DmCommand.ForBatchStep(source.CommandText, source.CommandType, source.Parameters, connection, transaction);
-            plans[index] = steps[index].EnterBatchPlan();
+            plans[index] = steps[index].EnterBatchPlan(deferConnectedValidation);
             // Transaction-control text is rejected for every step before the first one runs.
             if (connection != null)
                 DmTransaction.ValidateCommandSql(connection, transaction, plans[index].Sql, plans[index].Binding.MarkerCount != 0);
         }
     }
 
-    internal void Acquire(DmExecutionLease acquired)
+    internal void ValidateConnectedPlans()
     {
-        lease = acquired;
+        // Shortcut calls retain the previous counts until Open succeeds.
+        ResetRecordsAffected();
+        for (int index = 0; index < plans.Length; index++)
+            steps[index].ValidateConnectedPlan(plans[index]);
+    }
+
+    private void ResetRecordsAffected()
+    {
+        foreach (DmBatchCommand source in sources) source.SetRecordsAffected(-1);
+    }
+
+    internal void Acquire(DmOperationPurpose purpose)
+    {
+        if (Connection == null) throw new InvalidOperationException("Batch has no connection.");
+        DmExecutionLease acquired = Connection.BeginExecution(purpose,
+            DmDeadline.FromSeconds(timeoutSeconds, Connection.OperationClock), timeoutSeconds);
+        Volatile.Write(ref lease, acquired);
         if (Volatile.Read(ref cancelRequested) != 0) acquired.Cancel();
     }
 

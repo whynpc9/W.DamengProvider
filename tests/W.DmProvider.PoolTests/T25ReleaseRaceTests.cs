@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Reflection;
 using W.Dm;
+using W.Dm.Internal.Sessions;
 using Xunit;
 
 namespace W.DmProvider.PoolTests;
@@ -16,7 +17,9 @@ public sealed class T25ReleaseRaceTests
         using var handshake = new SyntheticPoolHandshake();
         await using var source = new DmDataSource(PoolApiSettings.Text);
         var inner = new SetterBarrierCommand();
-        var shortcut = new DmDataSourceCommand(source, "synthetic", inner);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        { handshake.Install(candidate, new ShortcutWireChannel(true) { AffectedRows = 1 }); return ValueTask.CompletedTask; };
+        var shortcut = new DmDataSourceCommand(source, "UPDATE SYNTHETIC_TABLE SET VALUE = 1", inner);
         Task<int> call = Task.Run(() => shortcut.ExecuteNonQueryAsync());
         try
         {
@@ -57,7 +60,9 @@ public sealed class T25ReleaseRaceTests
             _ => new InvalidOperationException("Synthetic unrelated setter failure.")
         };
         var inner = new SetterBarrierCommand { SetterFailure = expected };
-        var shortcut = new DmDataSourceCommand(source, "synthetic", inner);
+        DmPendingOpenTestHooks.Handshake = (candidate, _, _) =>
+        { handshake.Install(candidate, new ShortcutWireChannel(true) { AffectedRows = 1 }); return ValueTask.CompletedTask; };
+        var shortcut = new DmDataSourceCommand(source, "UPDATE SYNTHETIC_TABLE SET VALUE = 1", inner);
         Task<int> call = Task.Run(() => shortcut.ExecuteNonQueryAsync());
         try
         {
@@ -104,7 +109,5 @@ public sealed class T25ReleaseRaceTests
                 base.DbConnection = value;
             }
         }
-        public override Task<int> ExecuteNonQueryAsync(CancellationToken token)
-        { token.ThrowIfCancellationRequested(); return Task.FromResult(1); }
     }
 }

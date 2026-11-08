@@ -72,9 +72,6 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 	// Procedure calls may mutate server state and produce OUT values on every
 	// invocation. Their statement-local row buffer is never a reusable result.
 	internal bool AllowsGlobalResultCache => (ActivePlan?.CommandType ?? m_CommandType) == CommandType.Text;
-	private DmDataSourceExecution dataSourceExecution;
-	internal void BindDataSourceExecution(DmDataSourceExecution execution) => Volatile.Write(ref dataSourceExecution, execution);
-	internal void UnbindDataSourceExecution(DmDataSourceExecution execution) => Interlocked.CompareExchange(ref dataSourceExecution, null, execution);
 	internal static Action<DmExecutionLease> AfterExecutionCaptured;
 	internal static Action AfterPlanCaptured;
 	private DmParameterCollection ExecutionParameters => activePlan?.Parameters ?? m_Paras;
@@ -85,7 +82,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		return commandPlanGate.BeginMutation();
 	}
 
-	private DmCommandPlan EnterPlan(bool arrayBindingAllowed = false)
+	private DmCommandPlan CapturePlan(bool arrayBindingAllowed)
 	{
 		CheckDisposed();
 		DmCommandPlan plan = commandPlanGate.Enter(() =>
@@ -108,14 +105,15 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		ResetProcedureOutputCapture();
 		procedureCursorStatements.Clear();
 		procedureCursorReaders.Clear();
+		return plan;
+	}
+
+	private DmCommandPlan EnterPlan(bool arrayBindingAllowed = false)
+	{
+		DmCommandPlan plan = CapturePlan(arrayBindingAllowed);
 		try
 		{
-			Volatile.Read(ref dataSourceExecution)?.BindPlan(plan);
-			foreach (DmParameter parameter in plan.Parameters)
-				if (parameter.do_Value is DmLobInput && (plan.Connection?.GetConnInstance()?.ConnProperty.msgVersion ?? 0) < 10)
-					throw new NotSupportedException("Streaming LOB input requires a negotiated modern parameter upload profile.");
-			Volatile.Read(ref AfterPlanCaptured)?.Invoke();
-			if (commandPlanGate.IsDisposed) throw new ObjectDisposedException(nameof(DmCommand));
+			ValidateConnectedPlan(plan);
 			return plan;
 		}
 		catch
@@ -124,6 +122,40 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 			throw;
 		}
 	}
+
+	internal void ValidateConnectedPlan(DmCommandPlan plan)
+	{
+		foreach (DmParameter parameter in plan.Parameters)
+			if (parameter.do_Value is DmLobInput && (plan.Connection?.GetConnInstance()?.ConnProperty.msgVersion ?? 0) < 10)
+				throw new NotSupportedException("Streaming LOB input requires a negotiated modern parameter upload profile.");
+		Volatile.Read(ref AfterPlanCaptured)?.Invoke();
+		if (commandPlanGate.IsDisposed) throw new ObjectDisposedException(nameof(DmCommand));
+	}
+
+	internal void CaptureDataSourcePlan(DmDataSourceExecution execution, bool arrayBindingAllowed, CommandBehavior behavior)
+	{
+		CheckCommandBehavior(behavior);
+		DmCommandPlan plan = CapturePlan(arrayBindingAllowed);
+		try { execution.BindPlan(plan); }
+		catch { ReleasePlan(plan); throw; }
+	}
+
+	internal DmCommandPlan TakeDataSourcePlan(DmDataSourceExecution execution)
+	{
+		DmCommandPlan plan = execution.TakePlan(ActivePlan);
+		try
+		{
+			ValidateConnectedPlan(plan);
+			return plan;
+		}
+		catch
+		{
+			ReleasePlan(plan);
+			throw;
+		}
+	}
+
+	internal void ReleaseDataSourcePlan(DmDataSourceExecution execution) => ReleasePlan(execution.TakePendingPlan());
 
 	private void ReleasePlan(DmCommandPlan plan)
 	{
@@ -568,9 +600,10 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		Volatile.Read(ref activePlan)?.RequestCancellation();
 	}
 
-	internal virtual int do_ExecuteNonQuery()
+	internal virtual int do_ExecuteNonQuery() => ExecuteNonQueryCore(EnterPlan(arrayBindingAllowed: true));
+
+	internal int ExecuteNonQueryCore(DmCommandPlan plan)
 	{
-		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		try
 		{
 			RejectCursorCompletion(plan);
@@ -591,7 +624,8 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 	}
 
 	/// <summary>Captures and validates this command's plan before a batch executes any step.</summary>
-	internal DmCommandPlan EnterBatchPlan() => EnterPlan();
+	internal DmCommandPlan EnterBatchPlan(bool deferConnectedValidation) =>
+		deferConnectedValidation ? CapturePlan(arrayBindingAllowed: false) : EnterPlan();
 
 	internal void ReleaseBatchPlan(DmCommandPlan plan) => ReleasePlan(plan);
 
@@ -739,9 +773,10 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		finally { AfterExecute(); }
 	}
 
-	internal virtual object do_ExecuteScalar()
+	internal virtual object do_ExecuteScalar() => ExecuteScalarCore(EnterPlan());
+
+	internal object ExecuteScalarCore(DmCommandPlan plan)
 	{
-		DmCommandPlan plan = EnterPlan();
 		try
 		{
 			RejectCursorCompletion(plan);
@@ -793,9 +828,10 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		finally { ReleasePlan(plan); }
 	}
 
-	internal void do_Prepare()
+	internal void do_Prepare() => PrepareCore(EnterPlan(arrayBindingAllowed: true));
+
+	internal void PrepareCore(DmCommandPlan plan)
 	{
-		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
 		try
 		{
 			using var lease = BeginValidatedUserExecution(plan, DmOperationPurpose.Query);
@@ -834,7 +870,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 	internal DmDataReader ExecuteBatchReader(DmCommandPlan plan, DmExecutionLease batchLease, CommandBehavior behavior)
 		=> ExecuteDbDataReaderCore(behavior, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)));
 
-	private DmDataReader ExecuteDbDataReaderCore(CommandBehavior behavior, DmCommandPlan plan, DmExecutionLease batchLease)
+	internal DmDataReader ExecuteDbDataReaderCore(CommandBehavior behavior, DmCommandPlan plan, DmExecutionLease batchLease)
 	{
 		DmExecutionLease lease = null;
 		DmDataReader reader = null;
@@ -1193,7 +1229,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		=> (int)await ExecuteCompleteCoreAsync(false, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)),
 			cancellationToken).ConfigureAwait(false);
 
-	private async Task<object> ExecuteCompleteCoreAsync(bool scalar, DmCommandPlan plan, DmExecutionLease batchLease,
+	internal async Task<object> ExecuteCompleteCoreAsync(bool scalar, DmCommandPlan plan, DmExecutionLease batchLease,
 		CancellationToken cancellationToken)
 	{
 		DmDataReader reader = null;
@@ -1266,7 +1302,7 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 		CommandBehavior behavior, CancellationToken cancellationToken)
 		=> ExecuteDbDataReaderCoreAsync(behavior, plan, batchLease ?? throw new ArgumentNullException(nameof(batchLease)), cancellationToken);
 
-	private async Task<DmDataReader> ExecuteDbDataReaderCoreAsync(CommandBehavior behavior, DmCommandPlan plan,
+	internal async Task<DmDataReader> ExecuteDbDataReaderCoreAsync(CommandBehavior behavior, DmCommandPlan plan,
 		DmExecutionLease batchLease, CancellationToken cancellationToken)
 	{
 		DmExecutionLease lease = null;
@@ -1320,7 +1356,11 @@ public partial class DmCommand : DbCommand, ICloneable, IFilterInfo
 	public override async Task PrepareAsync(CancellationToken cancellationToken = default)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		DmCommandPlan plan = EnterPlan(arrayBindingAllowed: true);
+		await PrepareCoreAsync(EnterPlan(arrayBindingAllowed: true), cancellationToken).ConfigureAwait(false);
+	}
+
+	internal async Task PrepareCoreAsync(DmCommandPlan plan, CancellationToken cancellationToken)
+	{
 		DmExecutionLease lease = null;
 		bool verifiedServerError = false;
 		try
