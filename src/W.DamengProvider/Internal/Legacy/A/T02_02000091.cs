@@ -723,53 +723,45 @@ internal partial class B
 		return A(new GET_LOB_DATA(this, P_0, P_1, P_2));
 	}
 
-	public int A(AbstractLob P_0, long P_1, string P_2, string P_3)
+	public int A(AbstractLob lob, long position, string value, string encoding)
 	{
-		byte[] array = ByteUtil.fromString(P_2, P_3);
-		int num = 0;
-		int num2 = array.Length;
-		int num3 = 0;
-		int num4 = 0;
-		int num5 = 0;
-		int num6 = num2 / a().MaxLobDataLenPerMsg + 1;
-		byte b2 = 0;
-		byte b3 = 1;
-		byte b4 = 2;
-		for (int i = 0; i < num6; i++)
+		byte[] bytes = ByteUtil.fromString(value, encoding);
+		int chunkSize = a().MaxLobDataLenPerMsg;
+		if (chunkSize <= 0)
 		{
-			b2 = 0;
-			if (i == 0)
+			throw new InvalidDataException("Invalid negotiated LOB chunk size.");
+		}
+		int offset = 0;
+		int written = 0;
+		while (true)
+		{
+			int remaining = bytes.Length - offset;
+			int length = Math.Min(remaining, chunkSize);
+			if (length < remaining)
 			{
-				b2 |= b3;
-			}
-			if (i == num6 - 1)
-			{
-				b2 |= b4;
-			}
-			num5 = num2 - num4;
-			if (num5 > a().MaxLobDataLenPerMsg)
-			{
-				num5 = a().MaxLobDataLenPerMsg;
-			}
-			if (num + num5 != num2)
-			{
-				num5 = DriverUtil.checkCompleteCharLen(array, num, num5, P_3);
-				if (num5 <= 0)
+				length = DriverUtil.checkCompleteCharLen(bytes, offset, length, encoding);
+				if (length <= 0)
 				{
 					throw new Exception("invalid Object Blob Data");
 				}
 			}
-			int num7 = A(P_0, b2, P_1, array, num, num5);
-			if (num7 <= 0)
+
+			// A full-sized final data frame is followed by an empty last frame.
+			bool last = remaining < chunkSize;
+			byte flags = (byte)((offset == 0 ? 1 : 0) | (last ? 2 : 0));
+			int acknowledged = A(lob, flags, position, bytes, offset, length);
+			if (acknowledged <= 0)
 			{
-				return num3;
+				return written;
 			}
-			P_1 += num7;
-			num3 += num7;
-			num4 += num5;
-			num += num5;
+			written += acknowledged;
+			if (last)
+			{
+				return written;
+			}
+			position += acknowledged;
+			offset += length;
 		}
-		return num3;
 	}
 
 	public int A(AbstractLob P_0, long P_1, byte[] P_2, int P_3, int P_4)
