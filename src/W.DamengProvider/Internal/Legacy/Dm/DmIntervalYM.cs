@@ -35,16 +35,32 @@ public class DmIntervalYM
 
 	public DmIntervalYM(long months, int leadScale)
 	{
-		years = (int)(months / 12);
-		this.months = (int)(months % 12);
-		checkSignAndReset();
-		this.leadScale = leadScale;
-		if ((double)years > Math.Pow(10.0, this.leadScale) - 1.0 || (double)years < 1.0 - Math.Pow(10.0, this.leadScale))
+		long yearMagnitude = Math.Abs(months / 12);
+		long monthMagnitude = Math.Abs(months % 12);
+		if (leadScale < 0 || yearMagnitude > GetMaxYearMagnitude(leadScale))
 		{
 			DmError.ThrowDmException(DmErrorDefinition.ECNET_INVALID_TIME_INTERVAL);
 		}
+		negative = months < 0;
+		years = checked((int)yearMagnitude);
+		this.months = checked((int)monthMagnitude);
+		this.leadScale = leadScale;
 		type = 1;
 		scaleForSvr = (byte)((this.leadScale << 4) | 0);
+	}
+
+	private static long GetMaxYearMagnitude(int leadScale)
+	{
+		if (leadScale >= 10)
+		{
+			return int.MaxValue;
+		}
+		long limit = 0;
+		for (int digit = 0; digit < leadScale; digit++)
+		{
+			limit = limit * 10 + 9;
+		}
+		return limit;
 	}
 
 	public DmIntervalYM(byte[] bs, int leadScale)
