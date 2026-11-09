@@ -19,7 +19,7 @@ dotnet add package W.DamengProvider
 | `net6.0` | 额外依赖 `Microsoft.Bcl.TimeProvider 8.0.1`。由于 .NET 6 没有 `DbDataSource`，`DmDataSource` 不能通过该基类或 `DbProviderFactory` 多态使用。 |
 | `netstandard2.1` | 供 .NET Core 3.1 应用和 Standard 2.1 类库使用；不支持 TLS、`DbBatch`、DateOnly/TimeOnly 映射，且只能显式选择 `PlaintextAllowed` 连接。 |
 
-各目标的验证结果见 [0.3.1 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)。运行时是否仍受微软支持，请单独查看 [.NET 生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)。
+各目标的验证结果见 [0.3.2 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.2.md)。运行时是否仍受微软支持，请单独查看 [.NET 生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)。
 
 ## 快速开始
 
@@ -80,7 +80,7 @@ DbProviderFactories.RegisterFactory("W.DamengProvider", DmClientFactory.Instance
 
 ## 文档与开发
 
-- [0.3.2 发布说明草稿](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.2.md)
+- [0.3.2 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.2.md)
 - [0.3.1 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)
 - [路线图与待验证事项](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/roadmap.md)
 - [发布指南](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release.md)

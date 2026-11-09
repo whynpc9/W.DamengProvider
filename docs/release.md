@@ -1,6 +1,6 @@
 # W.DamengProvider 发布指南
 
-当前已发布 [0.3.1](release-0.3.1.md)。本文用于后续新版本发布；不要重新创建已存在的 tag，也不要把普通分支推送或 PR 当成发布。
+当前已发布 [0.3.2](release-0.3.2.md)。本文用于后续新版本发布；不要重新创建已存在的 tag，也不要把普通分支推送或 PR 当成发布。
 
 ## 1. 版本与环境
 
@@ -18,7 +18,7 @@
 
 ```sh
 python3 -B -m unittest discover -s tools/NuGetRelease -p 'test_*.py'
-bash eng/release.sh prepare --tag v0.3.2 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
+bash eng/release.sh prepare --tag v0.3.3 --commit "$(git rev-parse HEAD)" --output .local/nuget-release
 bash eng/legacy-package.sh .local/nuget-release linux/amd64
 ```
 
@@ -95,8 +95,8 @@ done
 
 ```sh
 # 示例：仅在决定发布这个新版本且完成检查后执行。
-git tag -a v0.3.2 -m 'W.DamengProvider 0.3.2'
-git push origin v0.3.2
+git tag -a v0.3.3 -m 'W.DamengProvider 0.3.3'
+git push origin v0.3.3
 ```
 
 `.github/workflows/publish-nuget.yml` 只由 `v*` tag push 触发。工作流会解析版本，在 tag 指向的源码上重新运行四个现代运行时的发布准备和真实 .NET Core 3.1 包探针；全部成功后才通过 Trusted Publishing 上传已检查包。
@@ -130,6 +130,6 @@ NuGet.org 的 Trusted Publishing 策略必须与本仓库匹配：
 3. 在隔离消费者中验证公开安装。
 4. 如果 NuGet 返回 404 或列表尚未更新，先检查索引传播情况。
 
-首次改名和预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)，当前版本验证见 [0.3.1](release-0.3.1.md)。
+首次改名和预览版发布见 [0.1.0-preview.1](release-0.1.0-preview.1.md)，当前版本验证见 [0.3.2](release-0.3.2.md)。
 
 配置参考：[NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)、[NuGet/login](https://github.com/NuGet/login)、[GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[NuGet package authoring best practices](https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices)。
