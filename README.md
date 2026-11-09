@@ -6,10 +6,10 @@ W.DamengProvider 是社区维护的达梦数据库 ADO.NET 驱动，支持异步
 
 ## 安装
 
-当前版本为 [`0.3.1`](https://www.nuget.org/packages/W.DamengProvider/0.3.1)：
+从 NuGet 安装。已发布版本见 [NuGet 包页面](https://www.nuget.org/packages/W.DamengProvider)。
 
 ```sh
-dotnet add package W.DamengProvider --version 0.3.1
+dotnet add package W.DamengProvider
 ```
 
 | 目标框架 | 说明 |
@@ -19,7 +19,7 @@ dotnet add package W.DamengProvider --version 0.3.1
 | `net6.0` | 额外依赖 `Microsoft.Bcl.TimeProvider 8.0.1`。由于 .NET 6 没有 `DbDataSource`，`DmDataSource` 不能通过该基类或 `DbProviderFactory` 多态使用。 |
 | `netstandard2.1` | 供 .NET Core 3.1 应用和 Standard 2.1 类库使用；不支持 TLS、`DbBatch`、DateOnly/TimeOnly 映射，且只能显式选择 `PlaintextAllowed` 连接。 |
 
-各目标的验证结果见[发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)。运行时是否仍受微软支持，请单独查看 [.NET 生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)。
+各目标的验证结果见 [0.3.1 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)。运行时是否仍受微软支持，请单独查看 [.NET 生命周期政策](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)。
 
 ## 快速开始
 
@@ -52,7 +52,7 @@ DbProviderFactories.RegisterFactory("W.DamengProvider", DmClientFactory.Instance
 
 如果你在使用官方驱动时遇到过**存储过程参数静默错绑、函数返回值位置受限、过程时间参数被舍入或时区偏移无法保留**，W.DamengProvider 重点解决的就是这些问题。
 
-| 开发痛点 | 官方驱动实测行为 | W.DamengProvider 0.3.1 |
+| 开发痛点 | 官方驱动实测行为 | W.DamengProvider |
 | --- | --- | --- |
 | 存储过程参数名写错 | 未知名称会回退为按参数集合位置绑定，可能把值传给错误的参数 | 直接拒绝未知名称，不猜测调用者意图 |
 | 函数返回值不放在参数集合首位 | `ReturnValue` 位于不同位置时可能得到不同、甚至错误的结果 | 支持放在集合中的不同位置，返回结果一致 |
@@ -80,7 +80,8 @@ DbProviderFactories.RegisterFactory("W.DamengProvider", DmClientFactory.Instance
 
 ## 文档与开发
 
-- [当前版本发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)
+- [0.3.2 发布说明草稿](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.2.md)
+- [0.3.1 发布记录](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release-0.3.1.md)
 - [路线图与待验证事项](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/roadmap.md)
 - [发布指南](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/release.md)
 - [本地达梦测试环境](https://github.com/whynpc9/W.DamengProvider/blob/main/docs/implementation/local-dameng.md)
